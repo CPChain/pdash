@@ -1,0 +1,6 @@
+* CPChain
+CPChain is a blockchain-based data sharing platform.
+
+Visit us at [[http://cpchain.io/][cpchain.io]].
+
+
