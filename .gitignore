@@ -1,0 +1,50 @@
+# -*- mode: conf-unix; -*-
+
+*.egg-info/
+.eggs/
+*.o
+*.py[co]
+*.so
+*.DS_Store
+_trial_temp*/
+build/
+dropin.cache
+doc/
+docs/_build/
+dist/
+venv/
+htmlcov/
+.coverage*
+*~
+*.lock
+apidocs/
+.automat_visualize
+
+# macOS related files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# tags
+.tags
+GPATH
+GRTAGS
+GTAGS
+
+# vim files
+*.sw[po]
+*.un~
+.netrwhist
+*~
+
+# intellij files
+*.iml
+*.ipr
+*.iws
+.idea/
+# clion
+cmake-build-*
