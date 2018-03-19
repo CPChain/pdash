@@ -3,6 +3,7 @@ class Trans:
         self.chain = chain
         self.contract = contract
 
+
 class BuyerTrans(Trans):
     def place_order(order_info) -> "order id":
         pass
