@@ -7,6 +7,12 @@ os.chdir(os.path.join(pwd, '../cpchain/chain/assets/'))
 from cpchain.chain import trans
 
 
+def create_chain(project):
+    print("hi")
+    print(project)
+        # with project.get_chain('tester') as chain:
+
+
 @pytest.fixture()
 def contract(chain):
     contract_name = 'Trading'
