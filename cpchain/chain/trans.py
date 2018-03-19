@@ -3,12 +3,11 @@ class Trans:
         self.chain = chain
         self.contract = contract
 
-    def _deploy_contract():
+class BuyerTrans(Trans):
+    def place_order(order_info) -> "order id":
         pass
 
-
-class BuyerTrans(Trans):
-    def place_order(item_order) -> "order id":
+    def withdraw_order(order_id):
         pass
 
     def confirm_order(order_id):
@@ -21,7 +20,6 @@ class BuyerTrans(Trans):
 class SellerTrans(Trans):
     def claim_timeout():
         pass
-
 
     
 class ProxyTrans(Trans):
