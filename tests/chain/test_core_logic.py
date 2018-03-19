@@ -1,4 +1,4 @@
-def test_initiate_transaction(chain):
+def test_initiate_order(chain):
     greeter, _ = chain.provider.get_or_deploy_contract('Greeter')
 
     greeting = greeter.call().greet()
