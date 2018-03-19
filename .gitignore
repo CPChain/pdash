@@ -1,5 +1,7 @@
 # -*- mode: conf-unix; -*-
 
+# python
+.pytest_cache
 *.egg-info/
 .eggs/
 *.o
