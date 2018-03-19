@@ -1,6 +1,3 @@
-
-class Chain:
-    pass
-
-class Contract:
-    pass
+class ItemOrder:
+    def __init__(self, **kwargs):
+        pass

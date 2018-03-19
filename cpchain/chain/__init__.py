@@ -1,3 +1,1 @@
-from .models import (
-    Chain
-)
+from .trans import (BuyerTrans, SellerTrans, ProxyTrans)
