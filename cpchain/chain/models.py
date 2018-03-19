@@ -1,6 +1,6 @@
+from typing import NamedTuple
 
-class Chain:
-    pass
 
-class Contract:
-    pass
+class OrderInfo(NamedTuple):
+    item_hash: int
+    token: int
