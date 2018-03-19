@@ -20,9 +20,9 @@ contract Trading {
         address buyerAddress;
         address sellerAddress;
         address proxyAddress;
-        address backupProxyAddress;
+        address secondaryProxyAddress;
         uint offeredPrice;
-        uint payProxyRatio; // ratio / 10000 = percentage
+        uint proxyFee;
         bytes32 deliverHash;
         uint endTime;
         State state;
@@ -43,18 +43,16 @@ contract Trading {
     modifier onlyProxy(uint id) {
         require(
             msg.sender == orderRecords[id].proxyAddress ||
-            msg.sender == orderRecords[id].backupProxyAddress
+            msg.sender == orderRecords[id].secondaryProxyAddress
         );
         _;
     }
     modifier inState(uint id, State _state) { require(orderRecords[id].state == _state); _; }
 
     function Trading() public {
-        // Maybe useful in the future.
     }
 
     function() payable {
-        // Maybe useful in the future.
     }
 
     event OrderInitiated(
@@ -67,8 +65,8 @@ contract Trading {
         bytes32 descHash,
         address seller,
         address proxy,
-        address backupProxy,
-        uint payProxyRatio
+        address secondaryProxy,
+        uint proxyFee
     )
         public
         payable
@@ -79,10 +77,10 @@ contract Trading {
             buyerAddress: msg.sender,
             sellerAddress: seller,
             proxyAddress: proxy,
-            backupProxyAddress: backupProxy,
+            secondaryProxyAddress: secondaryProxy,
             deliverHash: bytes32(0),
             offeredPrice: msg.value,
-            payProxyRatio: payProxyRatio,
+            proxyFee: proxyFee,
             endTime: now + timeAllowed,
             state: State.Created
         });
@@ -152,35 +150,36 @@ contract Trading {
     function sellerRateProxy(uint id, uint rate)
         public
         onlySeller(id)
-        inState(State.Finished)
+        inState(id, State.Finished)
     {
         require(rate >= 0 && rate <= 100);
         orderRecords[id].state = State.Rated;
         proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress] + rate;
-        proxyCredits[orderRecords[id].backupProxyAddress] = proxyCredits[orderRecords[id].backupProxyAddress] + rate;
+        proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress] + rate;
     }
 
     function buyerRateProxy(uint id, uint rate)
         public
         onlyBuyer(id)
-        inState(State.Finished)
+        inState(id, State.Finished)
     {
         require(rate >= 0 && rate <= 100);
         orderRecords[id].state = State.Rated;
         proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress] + rate;
-        proxyCredits[orderRecords[id].backupProxyAddress] = proxyCredits[orderRecords[id].backupProxyAddress] + rate;
+        proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress] + rate;
     }
 
     function finalizeOrder(uint id, address beneficiary)
         private
     {
         orderRecords[id].state = State.Finished;
-        uint payProxy = orderRecords[id].offeredPrice * (orderRecords[id].payProxyRatio / 100);
+        uint payProxy = orderRecords[id].proxyFee;
         uint payBeneficiary = orderRecords[id].offeredPrice - payProxy * 2;
         beneficiary.transfer(payBeneficiary);
+	    // FIXME
+	// this logic is wrong.
         orderRecords[id].proxyAddress.transfer(payProxy);
-        orderRecords[id].backupProxyAddress.transfer(payProxy);
+        orderRecords[id].secondaryProxyAddress.transfer(payProxy);
     }
 
 }
-

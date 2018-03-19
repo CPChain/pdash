@@ -1,6 +1,9 @@
 from typing import NamedTuple
 
-
 class OrderInfo(NamedTuple):
-    item_hash: int
-    token: int
+    desc_hash: int
+    seller: int
+    proxy: int
+    secondary_proxy: int
+    proxy_value: int
+    value: int

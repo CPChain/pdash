@@ -14,7 +14,12 @@
 #     greeting = greeter.call().greet()
 #     assert greeting == 'Guten Tag'
 
+from cpchain.chain.model import OrderInfo
 
-def test_initiate_order(btrans):
+
+def test_place_order(btrans):
+    order_info = OrderInfo(desc_hash=0x1, seller=, proxy=, secondary_proxy=, pay_ratio=)
+    btrans.place_order()
+
     assert False
     print("hi")

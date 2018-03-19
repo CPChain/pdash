@@ -9,24 +9,23 @@ from cpchain.chain import trans
 
 @pytest.fixture()
 def contract(chain):
-    return chain.provider.get_or_deploy_contract('xxx')
+    contract_name = 'Trading'
+    return chain.provider.get_or_deploy_contract('Trading')
 
 
 @pytest.fixture()
-def btrans(chain):
-    trans_obj = trans.BuyerTrans(chain, "")
-
+def btrans(chain, contract):
+    trans_obj = trans.BuyerTrans(chain, contract)
     return trans_obj
 
 
 @pytest.fixture()
-def strans(chain):
-    trans_obj = None
-
+def strans(chain, contract):
+    trans_obj = trans.SellerTrans(chain, contract)
     return trans_obj
 
 
 @pytest.fixture()
-def ptrans(chain):
-    trans_obj = None
+def ptrans(chain, contract):
+    trans_obj = trans.ProxyTrans(chain, contract)
     return trans_obj
