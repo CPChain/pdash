@@ -1,7 +1,7 @@
 pragma solidity ^0.4.0;
 
 /*
-    A Trading Contract for basic transactions in CPChain.
+    A Trading Contract for order processing in CPChain.
 */
 contract Trading {
 
@@ -10,11 +10,12 @@ contract Trading {
         Delivered,
         Confirmed,
         Finished,
+        Rated,
         Disputed,
         Withdrawn
     }
 
-    struct TransInfo {
+    struct OrderInfo {
         bytes32 descHash;
         address buyerAddress;
         address sellerAddress;
@@ -28,25 +29,25 @@ contract Trading {
     }
 
     uint public timeAllowed = 600; // Unit is second
-    uint public numTrans = 0;
+    uint public numOrders = 0;
     // TODO let records to be public or only let relevant address to be a accessible
-    mapping(uint => TransInfo) public transRecords;
+    mapping(uint => OrderInfo) public orderRecords;
 
     mapping(address => uint) public proxyCredits;
 
     // Security Checks
     modifier onlyBefore(uint time) { require(now < time); _; }
     modifier onlyAfter(uint time) { require(now > time); _; }
-    modifier onlyBuyer(uint id) { require(msg.sender == transRecords[id].buyerAddress); _; }
-    modifier onlySeller(uint id) { require(msg.sender == transRecords[id].sellerAddress); _; }
+    modifier onlyBuyer(uint id) { require(msg.sender == orderRecords[id].buyerAddress); _; }
+    modifier onlySeller(uint id) { require(msg.sender == orderRecords[id].sellerAddress); _; }
     modifier onlyProxy(uint id) {
         require(
-            msg.sender == transRecords[id].proxyAddress ||
-            msg.sender == transRecords[id].backupProxyAddress
+            msg.sender == orderRecords[id].proxyAddress ||
+            msg.sender == orderRecords[id].backupProxyAddress
         );
         _;
     }
-    modifier inState(uint id, State _state) { require(transRecords[id].state == _state); _; }
+    modifier inState(uint id, State _state) { require(orderRecords[id].state == _state); _; }
 
     function Trading() public {
         // Maybe useful in the future.
@@ -56,13 +57,13 @@ contract Trading {
         // Maybe useful in the future.
     }
 
-    event TransInitiated(
+    event OrderInitiated(
         address indexed from,
-        uint transId,
+        uint orderId,
         uint value
     );
 
-    function createTransaction(
+    function placeOrder(
         bytes32 descHash,
         address seller,
         address proxy,
@@ -72,8 +73,8 @@ contract Trading {
         public
         payable
     {
-        uint thisID = numTrans++;
-        transRecords[thisID] = TransInfo({
+        uint thisID = numOrders++;
+        orderRecords[thisID] = OrderInfo({
             descHash: descHash,
             buyerAddress: msg.sender,
             sellerAddress: seller,
@@ -85,78 +86,100 @@ contract Trading {
             endTime: now + timeAllowed,
             state: State.Created
         });
-        TransInitiated(msg.sender, thisID, msg.value);
+        OrderInitiated(msg.sender, thisID, msg.value);
     }
 
     function buyerWithdraw(uint id)
         public
         onlyBuyer(id)
-        onlyBefore(transRecords[id].endTime)
+        onlyBefore(orderRecords[id].endTime)
         inState(id, State.Created)
     {
-        transRecords[id].state = State.Withdrawn;
-        transRecords[id].buyerAddress.transfer(transRecords[id].offeredPrice);
+        orderRecords[id].state = State.Withdrawn;
+        orderRecords[id].buyerAddress.transfer(orderRecords[id].offeredPrice);
     }
 
     function buyerDispute(uint id)
         public
         onlyBuyer(id)
-        onlyBefore(transRecords[id].endTime)
+        onlyBefore(orderRecords[id].endTime)
         inState(id, State.Delivered)
     {
-        transRecords[id].state = State.Disputed;
+        orderRecords[id].state = State.Disputed;
     }
 
     function proxyJudge(uint id, bool decision)
         public
         onlyProxy(id)
-        onlyBefore(transRecords[id].endTime)
+        onlyBefore(orderRecords[id].endTime)
         inState(id, State.Disputed)
     {
         if (decision == true)
-            finalizeTransaction(id, transRecords[id].sellerAddress);
+            finalizeOrder(id, orderRecords[id].sellerAddress);
         else
-            finalizeTransaction(id, transRecords[id].buyerAddress);
+            finalizeOrder(id, orderRecords[id].buyerAddress);
     }
 
     function deliverMsg(bytes32 deliverHash, uint id)
         public
         onlySeller(id)
-        onlyBefore(transRecords[id].endTime)
+        onlyBefore(orderRecords[id].endTime)
         inState(id, State.Created)
     {
-        transRecords[id].deliverHash = deliverHash;
-        transRecords[id].state = State.Delivered;
+        orderRecords[id].deliverHash = deliverHash;
+        orderRecords[id].state = State.Delivered;
     }
 
     function confirmDeliver(uint id)
         public
         onlyBuyer(id)
-        onlyBefore(transRecords[id].endTime)
+        onlyBefore(orderRecords[id].endTime)
         inState(id, State.Delivered)
     {
-        transRecords[id].state = State.Confirmed;
-        finalizeTransaction(id, transRecords[id].sellerAddress);
+        orderRecords[id].state = State.Confirmed;
+        finalizeOrder(id, orderRecords[id].sellerAddress);
     }
 
     function sellerClaimTimedOut(uint id)
         public
         onlySeller(id)
         inState(id, State.Delivered)
-        onlyAfter(transRecords[id].endTime)
+        onlyAfter(orderRecords[id].endTime)
     {
-        finalizeTransaction(id, transRecords[id].sellerAddress);
+        finalizeOrder(id, orderRecords[id].sellerAddress);
     }
 
-    function finalizeTransaction(uint id, address beneficiary)
+    function sellerRateProxy(uint id, uint rate)
+        public
+        onlySeller(id)
+        inState(State.Finished)
+    {
+        require(rate >= 0 && rate <= 100);
+        orderRecords[id].state = State.Rated;
+        proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress] + rate;
+        proxyCredits[orderRecords[id].backupProxyAddress] = proxyCredits[orderRecords[id].backupProxyAddress] + rate;
+    }
+
+    function buyerRateProxy(uint id, uint rate)
+        public
+        onlyBuyer(id)
+        inState(State.Finished)
+    {
+        require(rate >= 0 && rate <= 100);
+        orderRecords[id].state = State.Rated;
+        proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress] + rate;
+        proxyCredits[orderRecords[id].backupProxyAddress] = proxyCredits[orderRecords[id].backupProxyAddress] + rate;
+    }
+
+    function finalizeOrder(uint id, address beneficiary)
         private
     {
-        transRecords[id].state = State.Finished;
-        uint payProxy = transRecords[id].offeredPrice * (transRecords[id].payProxyRatio / 100);
-        uint payBeneficiary = transRecords[id].offeredPrice - payProxy * 2;
+        orderRecords[id].state = State.Finished;
+        uint payProxy = orderRecords[id].offeredPrice * (orderRecords[id].payProxyRatio / 100);
+        uint payBeneficiary = orderRecords[id].offeredPrice - payProxy * 2;
         beneficiary.transfer(payBeneficiary);
-        transRecords[id].proxyAddress.transfer(payProxy);
-        transRecords[id].backupProxyAddress.transfer(payProxy);
+        orderRecords[id].proxyAddress.transfer(payProxy);
+        orderRecords[id].backupProxyAddress.transfer(payProxy);
     }
 
 }
