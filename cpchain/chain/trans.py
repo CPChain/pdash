@@ -1,8 +1,6 @@
 class Trans:
-    def __init__(self, chain, contract):
-        self.chain = chain
-        self.contract = contract
-
+    def __init__(self, web3=None, contract_name=""):
+        pass
 
 class BuyerTrans(Trans):
     def place_order(order_info) -> "order id":
