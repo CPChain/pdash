@@ -7,7 +7,7 @@ from cpchain import config
 if config['chain']['mode'] == "test":
     w3 = Web3(TestRPCProvider())
 else:
-    w3 = Web3(HTTPProvider(config.default_provider))
+    w3 = Web3(HTTPProvider(config['chain']['default_provider']))
 
 
 def read_contract_interface(interface_path, contract_name):
