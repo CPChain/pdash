@@ -1,0 +1,25 @@
+# Server Certificate
+
+## SSL server needs to provide a certificate for authentification, you can request one from a 3rd party orgnization like "let's encrypt" or follow the instructions below to generate a self signed cerificate.
+
+### Generate the server's private key using a secret, which is SuperSecretPassword in this case.
+```
+openssl genrsa -aes256 -passout pass:SuperSecretPassword -out server.key 2048
+```
+
+### Perform a CSR (certificate signing request). Ensure the FQDN (fully qualified domain name) matches the hostname of the server, otherwise the server won't be properly validated.
+```
+openssl req -new -key server.key -passin pass:SuperSecretPassword -out server.csr
+# Common Name (e.g. server FQDN or YOUR name) []:cpchain.io
+openssl x509 -req -passin pass:SuperSecretPassword -days 1024 -in server.csr -signkey server.key -out server.crt
+```
+
+### For development purposes, remove the password from the certificate.
+```
+openssl rsa -in server.key -out server_no_pass.key -passin pass:SuperSecretPassword
+```
+
+### Although not necessary, it's convenient to have the key and certificate in the same PEM file.
+```
+cat server.crt server.key > server.pem
+```
