@@ -3,6 +3,8 @@
 # for sample configuration, cf. https://github.com/toml-lang/toml/tree/master/examples
 
 [chain]
-contract_src_dir = ""
-contract_build_dir = ""
-core_contract = "Trade"
+contract_src_dir = "../cpchain/assets/chain/contracts/Trading.sol"
+contract_build_dir = "../cpchain/assets/chain/build/Trading.json"
+core_contract = "Trading"
+mode = "test"
+default_provider = "http://127.0.0.1:8545"

@@ -1,9 +1,13 @@
 import json
 
 from web3 import Web3, HTTPProvider, TestRPCProvider
+from cpchain import config
 
-# To be replaced with real provider
-w3 = Web3(TestRPCProvider())
+
+if config['chain']['mode'] == "test":
+    w3 = Web3(TestRPCProvider())
+else:
+    w3 = Web3(HTTPProvider(config.default_provider))
 
 
 def read_contract_interface(interface_path, contract_name):
