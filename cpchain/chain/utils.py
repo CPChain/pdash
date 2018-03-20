@@ -1,6 +1,7 @@
 import json
 
 from web3 import Web3, HTTPProvider, TestRPCProvider
+
 from cpchain import config
 
 
@@ -11,10 +12,10 @@ else:
 
 
 def read_contract_interface(interface_path, contract_name):
-    interface_file = open(interface_path, "r")
-    all_contracts = json.load(interface_file.read())
-    contract_interface = all_contracts['<stdin>:' + contract_name]
-    interface_file.close()
+    with open(interface_path, "r") as file:
+        all_contracts = json.load(file.read())
+        contract_interface = all_contracts['<stdin>:' + contract_name]
+        file.close()
     return contract_interface
 
 

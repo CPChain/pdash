@@ -1,7 +1,10 @@
-from solc import compile_source
 import sys
 import json
-from cpchain import config
+import os.path as osp
+
+from solc import compile_source
+
+from cpchain import config, root_dir
 
 
 # A naive approach without sufficient error handling
@@ -19,7 +22,10 @@ def compile_solidity(contract_src_dir, contract_build_dir):
 
 def main():
     if len(sys.argv) < 3:
-        compile_solidity(config['chain']['contract_src_dir'], config['chain']['contract_build_dir'])
+        compile_solidity(
+            osp.join(root_dir, config['chain']['contract_src_dir']),
+            osp.join(root_dir, config['chain']['contract_build_dir'])
+        )
     else:
         compile_solidity(sys.argv[1], sys.argv[2])
 
