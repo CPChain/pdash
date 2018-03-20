@@ -1,1 +1,1 @@
-from .trans import (BuyerTrans, SellerTrans, ProxyTrans)
+from .trans import BuyerTrans, SellerTrans, ProxyTrans
