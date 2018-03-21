@@ -1,7 +1,7 @@
 # -*- mode: conf-unix; -*-
 
 # custom
-_local/
+_local*
 
 # python
 .pytest_cache
