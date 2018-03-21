@@ -1,6 +1,12 @@
+from web3 import Web3
+
+from cpchain import config
+
+
 class Trans:
-    def __init__(self, web3=None, contract_name=""):
-        pass
+    def __init__(self, web3, contract_name):
+        self.web3 = web3
+
 
 class BuyerTrans(Trans):
     def place_order(order_info) -> "order id":
@@ -16,9 +22,11 @@ class BuyerTrans(Trans):
         pass
 
 
+
 class SellerTrans(Trans):
     def claim_timeout():
         pass
+
 
     
 class ProxyTrans(Trans):
@@ -27,3 +35,7 @@ class ProxyTrans(Trans):
 
     def handle_dispute():
         pass
+
+
+def create_trans(cls, ):
+    pass
