@@ -1,8 +1,8 @@
 import os.path as osp
+import logging
 import toml
 
 root_dir = osp.abspath(osp.join(osp.dirname(osp.abspath(__file__)), '../'))
-
 
 class Config:
     def __init__(self, conf):
@@ -17,3 +17,7 @@ class Config:
         return self.conf[key]
 
 config = Config(toml.load(osp.join(root_dir, 'cpchain/cpchain.toml')))
+
+
+# logging
+logging.basicConfig(format="%(levelname)s:%(module)s:%(funcName)s:L%(lineno)d:%(message)s", level=logging.DEBUG)
