@@ -2,3 +2,4 @@
 
 # for usage, cf. https://github.com/toml-lang/toml 
 toml
+boto3
