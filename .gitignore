@@ -2,6 +2,8 @@
 
 # custom
 _local*
+# sqlite3
+*.db
 
 # python
 .pytest_cache
