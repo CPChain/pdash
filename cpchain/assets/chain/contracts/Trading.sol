@@ -120,7 +120,7 @@ contract Trading {
 
     function deliverMsg(bytes32 deliverHash, uint id)
         public
-        onlySeller(id)
+        onlyProxy(id)
         onlyBefore(orderRecords[id].endTime)
         inState(id, State.Created)
     {
