@@ -4,7 +4,7 @@ from cpchain.chain.models import OrderInfo
 
 
 test_trans_id = 0
-time_allowed = 10
+time_allowed = 20
 
 
 def test_place_order(btrans):
