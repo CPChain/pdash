@@ -8,6 +8,8 @@ time_allowed = 20
 
 
 def test_place_order(btrans):
+    global test_trans_id
+
     order_info = OrderInfo(
         desc_hash=bytearray([0, 1, 2, 3] * 8),
         seller=btrans.web3.eth.defaultAccount,
@@ -17,7 +19,7 @@ def test_place_order(btrans):
         value=20,
         time_allowed=time_allowed
     )
-    global test_trans_id
+
     test_trans_id = btrans.place_order(order_info)
     assert test_trans_id == 0
     test_record = btrans.query_order(test_trans_id)
