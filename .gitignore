@@ -1,7 +1,9 @@
 # -*- mode: conf-unix; -*-
 
 # custom
-_local/
+_local*
+# sqlite3
+*.db
 
 # python
 .pytest_cache

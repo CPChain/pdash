@@ -1,10 +1,17 @@
 # -*- mode: conf; -*-
 
 # for sample configuration, cf. https://github.com/toml-lang/toml/tree/master/examples
-
 [chain]
 contract_src_dir = "cpchain/assets/chain/contracts/Trading.sol"
 contract_build_dir = "cpchain/assets/chain/build/Trading.json"
 core_contract = "Trading"
 mode = "test"
 default_provider = "http://127.0.0.1:8545"
+
+[storage.s3]
+bucket = "cpchain-bucket"
+secret_access_key = "TlLYyyb6avQvdf8BU0UzEj7P83tbVjSLyv9kTppd"
+access_key_id = "AKIAI34GNTRZVNJ5ZMZA"
+
+[wallet]
+dbpath = "cpchain/assets/wallet/wallet.db"
