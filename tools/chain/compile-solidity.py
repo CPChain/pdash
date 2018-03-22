@@ -21,8 +21,8 @@ def compile_solidity(contract_src_dir, contract_build_dir):
 def main():
     if len(sys.argv) < 3:
         compile_solidity(
-            osp.join(root_dir, config['chain']['contract_src_dir']),
-            osp.join(root_dir, config['chain']['contract_build_dir'])
+            osp.join(root_dir, config.chain.contract_src_dir),
+            osp.join(root_dir, config.chain.contract_build_dir)
         )
     else:
         compile_solidity(sys.argv[1], sys.argv[2])
@@ -30,4 +30,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

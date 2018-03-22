@@ -1,5 +1,7 @@
-import pytest
 import os
+import os.path as osp
+
+import pytest
 
 from web3 import contract
 import web3
@@ -8,8 +10,7 @@ from cpchain.chain import trans, utils
 from cpchain import config
 
 
-pwd = os.path.dirname(os.path.abspath(__file__))
-os.chdir(os.path.join(pwd, '../'))
+os.chdir(osp.join(osp.dirname(osp.abspath(__file__)), '../'))
 
 
 @pytest.fixture(scope="module")
@@ -21,8 +22,8 @@ def w3():
 @pytest.fixture(scope="module")
 def contract(w3):
     w3.eth.defaultAccout = w3.eth.accounts[0]
-    contract_name = config['chain']['core_contract']
-    test_contract = utils.read_contract_interface(config['chain']['contract_build_dir'], contract_name)
+    contract_name = config.chain.core_contract
+    test_contract = utils.read_contract_interface(config.chain.contract_build_dir, contract_name)
     contract_obj = utils.deploy_contract(test_contract)
     return contract_obj
 
