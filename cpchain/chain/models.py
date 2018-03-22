@@ -8,3 +8,4 @@ class OrderInfo(NamedTuple):
     secondary_proxy: bytearray
     proxy_value: int
     value: int
+    time_allowed: int

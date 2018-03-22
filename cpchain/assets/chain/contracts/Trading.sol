@@ -28,7 +28,6 @@ contract Trading {
         State state;
     }
 
-    uint public timeAllowed = 600; // Unit is second
     uint public numOrders = 0;
     // TODO let records to be public or only let relevant address to be a accessible
     mapping(uint => OrderInfo) public orderRecords;
@@ -75,7 +74,8 @@ contract Trading {
         address seller,
         address proxy,
         address secondaryProxy,
-        uint proxyFee
+        uint proxyFee,
+        uint timeAllowed
     )
         public
         payable

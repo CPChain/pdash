@@ -38,7 +38,8 @@ class BuyerTrans(Trans):
             order_info.seller,
             order_info.proxy,
             order_info.secondary_proxy,
-            order_info.proxy_value
+            order_info.proxy_value,
+            order_info.time_allowed
         )
         print("Thank you for using CPChain! Initiated Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash, timeout=180)
