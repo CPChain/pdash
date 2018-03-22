@@ -1,3 +1,5 @@
+import logging
+
 from populus.utils.wait import wait_for_transaction_receipt
 
 from cpchain import config
@@ -15,7 +17,7 @@ class Trans:
 
     def query_order(self, order_id) -> models.OrderInfo:
         order_record = self.contract.call().orderRecords(order_id)
-        print("Order record NO.{:d}: {record}\n".format(order_id, record=order_record))
+        logging.info("Order record NO.{:d}: {record}\n".format(order_id, record=order_record))
         return order_record
 
 
@@ -41,31 +43,31 @@ class BuyerTrans(Trans):
             order_info.proxy_value,
             order_info.time_allowed
         )
-        print("Thank you for using CPChain! Initiated Tx hash {tx}".format(tx=tx_hash))
+        logging.info("Thank you for using CPChain! Initiated Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash, timeout=180)
         # Get order id through emitted event
         order_id = event_filter.get()[0]['args']['orderId']
-        print("TransactionID: {:d}".format(order_id))
+        logging.info("TransactionID: {:d}".format(order_id))
         return order_id
 
     def withdraw_order(self, order_id):
         transaction = {'value': 0, 'from': self.web3.eth.defaultAccount}
         tx_hash = self.contract.transact(transaction).buyerWithdraw(order_id)
-        print("Thank you for your using! Order is withdrawn, Tx hash {tx}".format(tx=tx_hash))
+        logging.info("Thank you for your using! Order is withdrawn, Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash, timeout=180)
         return tx_hash
 
     def confirm_order(self, order_id):
         transaction = {'value': 0, 'from': self.web3.eth.defaultAccount}
         tx_hash = self.contract.transact(transaction).confirmDeliver(order_id)
-        print("Thank you for confirming deliver! Tx hash {tx}".format(tx=tx_hash))
+        logging.info("Thank you for confirming deliver! Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash, timeout=180)
         return tx_hash
 
     def dispute(self, order_id):
         transaction = {'value': 0, 'from': self.web3.eth.defaultAccount}
         tx_hash = self.contract.transact(transaction).buyerDispute(order_id)
-        print("You have started a dispute! Tx hash {tx}".format(tx=tx_hash))
+        logging.info("You have started a dispute! Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash, timeout=180)
         return tx_hash
 
@@ -77,7 +79,7 @@ class SellerTrans(Trans):
     def claim_timeout(self, order_id):
         transaction = {'value': 0, 'from': self.web3.eth.defaultAccount}
         tx_hash = self.contract.transact(transaction).sellerClaimTimedOut(order_id)
-        print("Your money is claimed because of time out! Tx hash {tx}".format(tx=tx_hash))
+        logging.info("Your money is claimed because of time out! Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash, timeout=180)
         return tx_hash
 
@@ -89,14 +91,14 @@ class ProxyTrans(Trans):
     def claim_relay(self, order_id, relay_hash):
         transaction = {'value': 0, 'from': self.web3.eth.defaultAccount}
         tx_hash = self.contract.transact(transaction).deliverMsg(relay_hash, order_id)
-        print("You have registered relay of file on CPChain! Tx hash {tx}".format(tx=tx_hash))
+        logging.info("You have registered relay of file on CPChain! Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash, timeout=180)
         return tx_hash
 
     def handle_dispute(self, order_id, result):
         transaction = {'value': 0, 'from': self.web3.eth.defaultAccount}
         tx_hash = self.contract.transact(transaction).proxyJudge(order_id, result)
-        print("You have submit the result for dispute on CPChain! Tx hash {tx}".format(tx=tx_hash))
+        logging.info("You have submit the result for dispute on CPChain! Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash, timeout=180)
         return tx_hash
 
