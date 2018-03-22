@@ -7,10 +7,13 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 
 class Sentinel:
-    def __init__(self, key=None):
+    def __init__(self, key):
         self.backend = default_backend()
-        # NB we use aes-128
-        self.key = key or os.urandom(16)
+        self.key = key
+
+    @staticmethod
+    def generate_key():
+        return os.urandom(16)
 
     def encrypt(self, fpath, outpath):
         with open(fpath, "rb") as infile, open(outpath, "wb") as outfile:
