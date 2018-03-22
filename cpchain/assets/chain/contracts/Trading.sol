@@ -56,7 +56,7 @@ contract Trading {
     }
 
     event OrderInitiated(
-        address indexed from,
+        address from,
         uint orderId,
         uint value
     );

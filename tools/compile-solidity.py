@@ -10,14 +10,12 @@ from cpchain import config, root_dir
 # A naive approach without sufficient error handling
 def compile_solidity(contract_src_dir, contract_build_dir):
     # First read the source code and compile the code
-    contract_source_file = open(contract_src_dir, "r")
-    contract_source_code = contract_source_file.read()
-    contract_source_file.close()
+    with open(contract_src_dir, "r") as file:
+        contract_source_code = file.read()
     # Then extract the compiled contract and write contract interface to local file
     compiled_sol = compile_source(contract_source_code)
-    compiled_file = open(contract_build_dir, "w")
-    compiled_file.write(json.dumps(compiled_sol))
-    compiled_file.close()
+    with open(contract_build_dir, "w") as file:
+        file.write(json.dumps(compiled_sol))
 
 
 def main():

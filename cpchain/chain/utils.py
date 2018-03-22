@@ -13,9 +13,8 @@ else:
 
 def read_contract_interface(interface_path, contract_name):
     with open(interface_path, "r") as file:
-        all_contracts = json.load(file.read())
+        all_contracts = json.load(file)
         contract_interface = all_contracts['<stdin>:' + contract_name]
-        file.close()
     return contract_interface
 
 
@@ -26,6 +25,7 @@ def deploy_contract(contract_interface):
     # Get tx receipt to get contract address
     tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
     contract_address = tx_receipt['contractAddress']
-    return contract_address
+    new_contract.address = contract_address
+    return new_contract, contract_address
 
 
