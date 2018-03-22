@@ -2,6 +2,15 @@ import boto3
 
 from cpchain import config
 
+from cryptography.fernet import Fernet
+key = Fernet.generate_key()
+cipher_suite = Fernet(key)
+text = b"A really secret message. Not for prying eyes."
+cipher_suite.encrypt(b"A really secret message. Not for prying eyes.")
+cipher_suite.encrypt(b"A dxxxxxsddasdfsdssasdfasasdasdasdasdfasdasdfsadfffffddfsxxxxsdkly secret message. Not for prying eyes.")
+cipher_text = cipher_suite.encrypt(b"A xxxxxreally secret message. Not for prying eyes.")
+plain_text = cipher_suite.decrypt(cipher_text)
+
 
 class Storage:
     def __init__(self):
@@ -59,3 +68,7 @@ class S3Storage(Storage):
             self.s3.download_file(bucket or self.bucket, remote_fpath, fpath, Callback=self.ProgressPercentage(fpath, fsize))
         else:
             self.s3.download_file(bucket or self.bucket, remote_fpath, fpath)
+
+
+
+
