@@ -55,11 +55,20 @@ contract Trading {
     function() payable {
     }
 
+    // Some events that help tracking the status of the chain
     event OrderInitiated(
         address from,
         uint orderId,
         uint value
     );
+    event OrderWithdrawn(address from);
+    event OrderConfirmed(address from);
+    event OrderDisputed(address from);
+    event SellerClaimTimeout(address from);
+    event ProxyClaimRelay(address from);
+    event ProxyHandleDispute(address from);
+    event ProxyRated(address from);
+    event OrderFinalized(uint id);
 
     function placeOrder(
         bytes32 descHash,
@@ -95,6 +104,7 @@ contract Trading {
     {
         orderRecords[id].state = State.Withdrawn;
         orderRecords[id].buyerAddress.transfer(orderRecords[id].offeredPrice);
+        OrderWithdrawn(msg.sender);
     }
 
     function buyerDispute(uint id)
@@ -104,6 +114,7 @@ contract Trading {
         inState(id, State.Delivered)
     {
         orderRecords[id].state = State.Disputed;
+        OrderDisputed(msg.sender);
     }
 
     function proxyJudge(uint id, bool decision)
@@ -116,6 +127,8 @@ contract Trading {
             finalizeOrder(id, orderRecords[id].sellerAddress);
         else
             finalizeOrder(id, orderRecords[id].buyerAddress);
+
+        ProxyHandleDispute(msg.sender);
     }
 
     function deliverMsg(bytes32 deliverHash, uint id)
@@ -126,6 +139,7 @@ contract Trading {
     {
         orderRecords[id].deliverHash = deliverHash;
         orderRecords[id].state = State.Delivered;
+        ProxyClaimRelay(msg.sender);
     }
 
     function confirmDeliver(uint id)
@@ -136,6 +150,7 @@ contract Trading {
     {
         orderRecords[id].state = State.Confirmed;
         finalizeOrder(id, orderRecords[id].sellerAddress);
+        OrderConfirmed(msg.sender);
     }
 
     function sellerClaimTimedOut(uint id)
@@ -145,6 +160,7 @@ contract Trading {
         onlyAfter(orderRecords[id].endTime)
     {
         finalizeOrder(id, orderRecords[id].sellerAddress);
+        SellerClaimTimeout(msg.sender);
     }
 
     function sellerRateProxy(uint id, uint rate)
@@ -154,8 +170,11 @@ contract Trading {
     {
         require(rate >= 0 && rate <= 100);
         orderRecords[id].state = State.Rated;
-        proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress] + rate;
-        proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress] + rate;
+        proxyCredits[orderRecords[id].proxyAddress] =
+            proxyCredits[orderRecords[id].proxyAddress] + rate;
+        proxyCredits[orderRecords[id].secondaryProxyAddress] =
+            proxyCredits[orderRecords[id].secondaryProxyAddress] + rate;
+        ProxyRated(msg.sender);
     }
 
     function buyerRateProxy(uint id, uint rate)
@@ -165,8 +184,11 @@ contract Trading {
     {
         require(rate >= 0 && rate <= 100);
         orderRecords[id].state = State.Rated;
-        proxyCredits[orderRecords[id].proxyAddress] = proxyCredits[orderRecords[id].proxyAddress] + rate;
-        proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress] + rate;
+        proxyCredits[orderRecords[id].proxyAddress] =
+            proxyCredits[orderRecords[id].proxyAddress] + rate;
+        proxyCredits[orderRecords[id].secondaryProxyAddress] =
+            proxyCredits[orderRecords[id].secondaryProxyAddress] + rate;
+        ProxyRated(msg.sender);
     }
 
     function finalizeOrder(uint id, address beneficiary)
@@ -180,6 +202,7 @@ contract Trading {
 	// this logic is wrong.
         orderRecords[id].proxyAddress.transfer(payProxy);
         orderRecords[id].secondaryProxyAddress.transfer(payProxy);
+        OrderFinalized(id);
     }
 
 }

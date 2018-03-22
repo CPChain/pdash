@@ -1,23 +1,8 @@
-from web3 import Web3
-
-# def test_initiate_order(chain):
-#     greeter, _ = chain.provider.get_or_deploy_contract('Greeter')
-
-#     greeting = greeter.call().greet()
-#     assert greeting == 'Hello'
-
-
-# def test_custom_greeting(chain):
-#     greeter, _ = chain.provider.get_or_deploy_contract('Greeter')
-
-#     set_txn_hash = greeter.transact().setGreeting('Guten Tag')
-#     chain.wait.for_receipt(set_txn_hash)
-
-#     greeting = greeter.call().greet()
-#     assert greeting == 'Guten Tag'
-
-
 from cpchain.chain.models import OrderInfo
+
+
+def test_query_order():
+    pass
 
 
 def test_place_order(btrans):
@@ -37,4 +22,28 @@ def test_place_order(btrans):
 
 
 def test_withdraw_order(btrans):
+    pass
+
+
+def test_relay_claim():
+    pass
+
+
+def test_confirm_order():
+    pass
+
+
+def test_dispute():
+    pass
+
+
+def test_seller_claim_timeout():
+    pass
+
+
+def test_proxy_claim_relay():
+    pass
+
+
+def test_handle_dispute():
     pass

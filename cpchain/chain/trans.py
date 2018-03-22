@@ -26,8 +26,8 @@ class BuyerTrans(Trans):
 
     # order_info is a dictionary that contains parameters for an order
     def place_order(self, order_info: models.OrderInfo) -> "order id":
-        transfer_filter = self.contract.on('OrderInitiated', {'filter': {'from': self.web3.eth.defaultAccount}})
-        # Initiate a transaction
+        event_filter = self.contract.on('OrderInitiated', {'filter': {'from': self.web3.eth.defaultAccount}})
+        # Initiate an order
         offered_price = self.ONE_ETH_IN_WEI * order_info.value
         transaction = {
             'value': offered_price,
@@ -42,8 +42,8 @@ class BuyerTrans(Trans):
         )
         print("Thank you for using CPChain! Initiated Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash, timeout=180)
-        # Get transaction through emitted event
-        order_id = transfer_filter.get()[0]['args']['orderId']
+        # Get order id through emitted event
+        order_id = event_filter.get()[0]['args']['orderId']
         print("TransactionID: {:d}".format(order_id))
         return order_id
 
@@ -51,18 +51,21 @@ class BuyerTrans(Trans):
         transaction = {'value': 0, 'from': self.web3.eth.defaultAccount}
         tx_hash = self.contract.transact(transaction).buyerWithdraw(order_id)
         print("Thank you for your using! Order is withdrawn, Tx hash {tx}".format(tx=tx_hash))
+        wait_for_transaction_receipt(self.web3, tx_hash, timeout=180)
         return tx_hash
 
     def confirm_order(self, order_id):
         transaction = {'value': 0, 'from': self.web3.eth.defaultAccount}
         tx_hash = self.contract.transact(transaction).confirmDeliver(order_id)
         print("Thank you for confirming deliver! Tx hash {tx}".format(tx=tx_hash))
+        wait_for_transaction_receipt(self.web3, tx_hash, timeout=180)
         return tx_hash
 
     def dispute(self, order_id):
         transaction = {'value': 0, 'from': self.web3.eth.defaultAccount}
         tx_hash = self.contract.transact(transaction).buyerDispute(order_id)
         print("You have started a dispute! Tx hash {tx}".format(tx=tx_hash))
+        wait_for_transaction_receipt(self.web3, tx_hash, timeout=180)
         return tx_hash
 
 
@@ -74,6 +77,7 @@ class SellerTrans(Trans):
         transaction = {'value': 0, 'from': self.web3.eth.defaultAccount}
         tx_hash = self.contract.transact(transaction).sellerClaimTimedOut(order_id)
         print("Your money is claimed because of time out! Tx hash {tx}".format(tx=tx_hash))
+        wait_for_transaction_receipt(self.web3, tx_hash, timeout=180)
         return tx_hash
 
     
@@ -85,14 +89,17 @@ class ProxyTrans(Trans):
         transaction = {'value': 0, 'from': self.web3.eth.defaultAccount}
         tx_hash = self.contract.transact(transaction).deliverMsg(relay_hash, order_id)
         print("You have registered relay of file on CPChain! Tx hash {tx}".format(tx=tx_hash))
+        wait_for_transaction_receipt(self.web3, tx_hash, timeout=180)
         return tx_hash
 
     def handle_dispute(self, order_id, result):
         transaction = {'value': 0, 'from': self.web3.eth.defaultAccount}
         tx_hash = self.contract.transact(transaction).proxyJudge(order_id, result)
         print("You have submit the result for dispute on CPChain! Tx hash {tx}".format(tx=tx_hash))
+        wait_for_transaction_receipt(self.web3, tx_hash, timeout=180)
         return tx_hash
 
 
-def create_trans(cls, web3, contract, account):
-    return cls(web3, contract, account)
+# Not useful currently
+# def create_trans(cls, web3, contract, account):
+#     return cls(web3, contract, account)
