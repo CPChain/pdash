@@ -26,6 +26,6 @@ def deploy_contract(contract_interface):
     tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
     contract_address = tx_receipt['contractAddress']
     new_contract.address = contract_address
-    return new_contract, contract_address
+    return new_contract
 
 

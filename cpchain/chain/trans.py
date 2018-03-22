@@ -31,8 +31,7 @@ class BuyerTrans(Trans):
         offered_price = self.ONE_ETH_IN_WEI * order_info.value
         transaction = {
             'value': offered_price,
-            'from': self.web3.eth.defaultAccount,
-            'to': self.contract.address
+            'from': self.web3.eth.defaultAccount
         }
         tx_hash = self.contract.transact(transaction).placeOrder(
             order_info.desc_hash,
