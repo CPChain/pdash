@@ -11,26 +11,31 @@ os.chdir(root_dir)
 
 
 @pytest.fixture(scope="module")
-def contract():
-    contract_name = config.chain.core_contract
-    contract_interface = chain.utils.read_contract_interface(config.chain.contract_json, contract_name)
-    contract_obj = chain.utils.deploy_contract(contract_interface)
-    return contract_obj
+def contract_name():
+    new_contract_name = config.chain.core_contract
+    chain.utils.deploy_contract(new_contract_name)
+    return new_contract_name
 
 
 @pytest.fixture(scope="module")
-def btrans(w3, contract):
-    trans_obj = chain.trans.BuyerTrans(w3, contract, utils.w3.eth.accounts[0])
+def btrans(contract_name):
+    buyer_web3 = chain.utils.default_web3
+    print('buyer: defaultAccount:'.format(buyer_web3.eth.defaultAccount))
+    trans_obj = chain.trans.BuyerTrans(buyer_web3, contract_name=contract_name)
     return trans_obj
 
 
 @pytest.fixture()
-def strans(w3, contract):
-    trans_obj = chain.trans.SellerTrans(w3, contract, utils.w3.eth.accounts[0])
+def strans(contract_name):
+    seller_web3 = chain.utils.default_web3
+    print('seller: defaultAccount:'.format(seller_web3.eth.defaultAccount))
+    trans_obj = chain.trans.SellerTrans(chain.utils.default_web3, contract_name=contract_name)
     return trans_obj
 
 
 @pytest.fixture()
-def ptrans(w3, contract):
-    trans_obj = chain.trans.ProxyTrans(w3, contract, utils.w3.eth.accounts[0])
+def ptrans(contract_name):
+    proxy_web3 = chain.utils.default_web3
+    print('seller: defaultAccount:'.format(proxy_web3.eth.defaultAccount))
+    trans_obj = chain.trans.ProxyTrans(chain.utils.default_web3, contract_name=contract_name)
     return trans_obj

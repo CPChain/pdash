@@ -4,6 +4,7 @@
 [chain]
 contract_src_dir = "cpchain/assets/chain/contracts/Trading.sol"
 contract_json = "cpchain/assets/chain/build/Trading.json"
+registrar_json = "cpchain/assets/chain/registrar.json"
 core_contract = "Trading"
 is_test = true
 rpc_provider_addr = ""

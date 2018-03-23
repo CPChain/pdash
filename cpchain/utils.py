@@ -4,6 +4,7 @@ import toml
 
 root_dir = osp.abspath(osp.join(osp.dirname(osp.abspath(__file__)), '../'))
 
+
 class Config:
     def __init__(self, conf):
         self.conf = conf
@@ -15,6 +16,7 @@ class Config:
 
     def __getitem__(self, key):
         return self.conf[key]
+
 
 config = Config(toml.load(osp.join(root_dir, 'cpchain/cpchain.toml')))
 
