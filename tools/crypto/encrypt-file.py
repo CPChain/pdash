@@ -2,13 +2,13 @@ import os.path as osp
 import subprocess
 
 import cpchain
-from cpchain.crypto import Sentinel
+from cpchain.crypto import AESSentinel
 
 
 key = b'\xaf\x1a8\x9f_=\xac\xb5"$.\xd2\xcb\xdf\xfb\xeb'
 
 
-sentinel = Sentinel(key)
+sentinel = AESSentinel(key)
 
 fpath = osp.join(cpchain.root_dir, "tools/assets/shakespeare.txt")
 outpath = osp.join(cpchain.root_dir, "tools/crypto/_local_en-sp.txt")
