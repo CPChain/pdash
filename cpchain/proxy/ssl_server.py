@@ -21,7 +21,9 @@ class SSLServerProtocol(protocol.Protocol):
         self.factory.numConnections += 1
         self.request = {
             'tran_state' : 'connect_to_client',
-            'fd' : None
+            'fd' : None,
+            'tran_size' : 0,
+            'file_list' : []
             }
 
         self.peer = str(self.transport.getPeer())
@@ -34,6 +36,7 @@ class SSLServerProtocol(protocol.Protocol):
             if client_tran_state == 'client_put_file_hash':
                 self.request['file_hash'] = data[1]
                 file_name = data[2]
+                self.request['file_size'] = int(data[3])
                 self.request['tran_state'] = 'server_get_file_hash'
                 self.str_write(self.request['tran_state'] + \
                     ":" + self.request['file_hash'])
@@ -41,12 +44,14 @@ class SSLServerProtocol(protocol.Protocol):
                                         file_name, 'wb')
                 self.request['tran_state'] = 'server_get_file'
 
-            elif client_tran_state == 'client_list_file':
+            elif client_tran_state == 'client_get_file_list_size':
                 for file_name in list_all_files(TOP_FILE_DIR):
                     file_name = file_name[len(TOP_FILE_DIR)+1:]
-                    self.str_write(file_name)
-                self.request['tran_state'] = 'server_list_file'
-                self.transport.loseConnection()
+                    self.request['file_list'].append(file_name)
+                    self.request['tran_size'] += len(file_name)
+                self.request['tran_state'] = 'server_put_file_list_size'
+                self.str_write(self.request['tran_state'] + ':' +\
+                                str(self.request['tran_size']))
             elif client_tran_state == 'client_get_file_hash':
                 self.request['file_path'] = TOP_FILE_DIR + "/" + data[1]
                 if not os.path.isfile(self.request['file_path']):
@@ -55,12 +60,23 @@ class SSLServerProtocol(protocol.Protocol):
                     self.request['tran_state'] = 'server_put_file_hash'
                     self.request['file_hash'] = \
                         get_file_md5_hash(self.request['file_path'])
+                    self.request['file_size'] = os.path.getsize(\
+                                    self.request['file_path'])
                     self.str_write(self.request['tran_state'] + \
-                        ":" + self.request['file_hash'])
+                        ":" + self.request['file_hash'] \
+                        + ":" + str(self.request['file_size']))
             else:
                 print(self.peer + " sent wrong data: " + str(data))
                 self.transport.loseConnection()
-
+        elif self.request['tran_state'] == 'server_put_file_list_size':
+            data = clean_and_split_input(data)
+            if data[0] == 'client_list_file':
+                for file_name in self.request['file_list']:
+                    self.str_write(file_name)
+                self.request['tran_state'] = 'wait_for_client_ack_finish'
+            else:
+                print(self.peer + " sent wrong data: " + str(data))
+                self.transport.loseConnection()
         elif self.request['tran_state'] == 'server_put_file_hash':
             data = clean_and_split_input(data)
             client_tran_state = data[0]
@@ -68,11 +84,22 @@ class SSLServerProtocol(protocol.Protocol):
                 self.request['tran_state'] = 'server_put_file'
                 for byte in read_bytes_from_file(self.request['file_path']):
                     self.transport.write(byte)
+                self.request['tran_state'] = 'wait_for_client_ack_finish'
             else:
                 print("failed at server_put_file_hash")
             self.transport.loseConnection()
         elif self.request['tran_state'] == 'server_get_file':
             self.request['fd'].write(data)
+            self.request['tran_size'] += len(data)
+            if self.request['file_size']  == self.request['tran_size']:
+                self.str_write('server_ack_finish')
+                self.request['tran_state'] = 'file_transaction_finished'
+
+        elif self.request['tran_state'] == 'wait_for_client_ack_finish':
+            data = clean_and_split_input(data)
+            if data[0] == 'client_ack_finish':
+                self.request['tran_state'] = 'file_transaction_finished'
+                self.transport.loseConnection()
 
     def connectionLost(self, reason):
         self.factory.numConnections -= 1

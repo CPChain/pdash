@@ -20,6 +20,7 @@ class SSLClientProtocol(protocol.Protocol):
         self.request['tran_state'] = 'connect_to_server'
         self.request['fd'] = None
         self.request['file_list'] = []
+        self.request['tran_size'] = 0
 
         if self.request['cmd'] == 'put':
             self.request['file_hash'] = \
@@ -27,10 +28,13 @@ class SSLClientProtocol(protocol.Protocol):
             file_name = os.path.basename(\
                             self.request['local_file_path'])
             self.request['tran_state'] = 'client_put_file_hash'
+            self.request['file_size'] = os.path.getsize(\
+                                    self.request['local_file_path'])
             self.str_write(self.request['tran_state'] + \
-                ":" + self.request['file_hash'] + ":" + file_name)
+                ":" + self.request['file_hash'] + ":" + file_name \
+                + ":" + str(self.request['file_size']))
         elif self.request['cmd'] == 'list':
-            self.request['tran_state'] = 'client_list_file'
+            self.request['tran_state'] = 'client_get_file_list_size'
             self.str_write(self.request['tran_state'])
         elif self.request['cmd'] == 'get':
             self.request['tran_state'] = 'client_get_file_hash'
@@ -49,14 +53,27 @@ class SSLClientProtocol(protocol.Protocol):
                 for byte in read_bytes_from_file(\
                                 self.request['local_file_path']):
                     self.transport.write(byte)
-                self.transport.loseConnection()
+                self.request['tran_state'] = 'wait_for_server_ack_finish'
 
             else:
                 print("failed at client_put_file_hash")
                 self.transport.loseConnection()
 
+        elif self.request['tran_state'] == 'client_get_file_list_size':
+            data = clean_and_split_input(data)
+            if data[0] == 'server_put_file_list_size':
+                self.request['file_size'] = int(data[1])
+                self.request['tran_state'] = 'client_list_file'
+                self.str_write(self.request['tran_state'])
+            else:
+                print(self.peer + " sent wrong data: " + str(data))
+                self.transport.loseConnection()
         elif self.request['tran_state'] == 'client_list_file':
             self.request['file_list'].append(data.decode())
+            self.request['tran_size'] += len(data)
+            if self.request['file_size']  == self.request['tran_size']:
+                self.str_write('client_ack_finish')
+                self.request['tran_state'] = 'file_transaction_finished'
 
         elif self.request['tran_state'] == 'client_get_file_hash':
             data = clean_and_split_input(data)
@@ -65,6 +82,7 @@ class SSLClientProtocol(protocol.Protocol):
                 self.transport.loseConnection()
             elif data[0] == 'server_put_file_hash':
                 self.request['file_hash'] = data[1]
+                self.request['file_size'] = int(data[2])
                 self.request['tran_state'] = 'client_get_file'
                 self.str_write(self.request['tran_state'])
                 self.request['fd'] = open(\
@@ -72,6 +90,16 @@ class SSLClientProtocol(protocol.Protocol):
 
         elif self.request['tran_state'] == 'client_get_file':
             self.request['fd'].write(data)
+            self.request['tran_size'] += len(data)
+            if self.request['file_size']  == self.request['tran_size']:
+                self.str_write('client_ack_finish')
+                self.request['tran_state'] = 'file_transaction_finished'
+
+        elif self.request['tran_state'] == 'wait_for_server_ack_finish':
+            data = clean_and_split_input(data)
+            if data[0] == 'server_ack_finish':
+                self.request['tran_state'] = 'file_transaction_finished'
+                self.transport.loseConnection()
 
         else:
             print(self.peer + " sent wrong data: " + data.decode())
@@ -86,7 +114,7 @@ class SSLClientProtocol(protocol.Protocol):
                 print("The file is not properly tranmitted.")
 
         print("lost connection to client %s at %s stage" % (self.peer, \
-                self.request['tran_state']))
+                 self.request['tran_state']))
 
     def str_write(self, data):
         self.transport.write(data.encode('utf-8'))
@@ -178,6 +206,9 @@ def file_transaction(request):
         print(file_transaction.__doc__)
         return error
 
+    print("start request:")
+    for key in request:
+        print("\t%s : %s" % (key, request[key]))
     start_client(request)
 
 
