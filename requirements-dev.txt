@@ -5,3 +5,4 @@ toml
 boto3
 sqlalchemy
 cryptography
+ipfsapi
