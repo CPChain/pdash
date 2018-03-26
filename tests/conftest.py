@@ -1,37 +1,41 @@
+import os
+import os.path as osp
+
 import pytest
 
-import os
-pwd = os.path.dirname(os.path.abspath(__file__))
-os.chdir(os.path.join(pwd, '../cpchain/chain/assets/'))
-
-from cpchain.chain import trans
+from cpchain import chain, config, root_dir
 
 
-def create_chain(project):
-    print("hi")
-    print(project)
-        # with project.get_chain('tester') as chain:
+# NB, we switch to the package root dir
+os.chdir(root_dir)
 
 
-@pytest.fixture()
-def contract(chain):
-    contract_name = 'Trading'
-    return chain.provider.get_or_deploy_contract('Trading')
+@pytest.fixture(scope="module")
+def contract_name():
+    new_contract_name = config.chain.core_contract
+    chain.utils.deploy_contract(new_contract_name)
+    return new_contract_name
 
 
-@pytest.fixture()
-def btrans(chain, contract):
-    trans_obj = trans.BuyerTrans(chain, contract)
+@pytest.fixture(scope="module")
+def btrans(contract_name):
+    buyer_web3 = chain.utils.default_web3
+    print('buyer: defaultAccount:'.format(buyer_web3.eth.defaultAccount))
+    trans_obj = chain.trans.BuyerTrans(buyer_web3, contract_name=contract_name)
     return trans_obj
 
 
 @pytest.fixture()
-def strans(chain, contract):
-    trans_obj = trans.SellerTrans(chain, contract)
+def strans(contract_name):
+    seller_web3 = chain.utils.default_web3
+    print('seller: defaultAccount:'.format(seller_web3.eth.defaultAccount))
+    trans_obj = chain.trans.SellerTrans(chain.utils.default_web3, contract_name=contract_name)
     return trans_obj
 
 
 @pytest.fixture()
-def ptrans(chain, contract):
-    trans_obj = trans.ProxyTrans(chain, contract)
+def ptrans(contract_name):
+    proxy_web3 = chain.utils.default_web3
+    print('seller: defaultAccount:'.format(proxy_web3.eth.defaultAccount))
+    trans_obj = chain.trans.ProxyTrans(chain.utils.default_web3, contract_name=contract_name)
     return trans_obj

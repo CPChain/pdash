@@ -58,7 +58,3 @@ class S3Storage(Storage):
             self.s3.download_file(bucket or self.bucket, remote_fpath, fpath, Callback=self.ProgressPercentage(fpath, fsize))
         else:
             self.s3.download_file(bucket or self.bucket, remote_fpath, fpath)
-
-
-
-
