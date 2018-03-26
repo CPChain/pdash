@@ -1,4 +1,5 @@
 import boto3
+import ipfsapi
 
 from cpchain import config
 
@@ -58,3 +59,20 @@ class S3Storage(Storage):
             self.s3.download_file(bucket or self.bucket, remote_fpath, fpath, Callback=self.ProgressPercentage(fpath, fsize))
         else:
             self.s3.download_file(bucket or self.bucket, remote_fpath, fpath)
+
+
+class IPFSStorage(Storage):
+    def __init__(self, addr=None, port=None):
+        addr = server or config.storage.ipfs.addr
+        port = port or config.storage.ipfs.port
+        # TODO make this non-blocking
+        backend = ipfsapi.connect(addr, port)
+
+
+    # cf. https://github.com/ipfs/py-ipfs-api
+    def upload_file(self, fpath):
+        return self.backend.add(fpath)
+        
+
+    def download_file(self, fhash, fpath):
+        return self.backend.get(fhash, filepath=fpath)
