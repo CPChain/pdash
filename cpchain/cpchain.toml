@@ -16,3 +16,8 @@ access_key_id = "AKIAI34GNTRZVNJ5ZMZA"
 
 [wallet]
 dbpath = "cpchain/assets/wallet/wallet.db"
+
+[proxy]
+server_port = 8000
+server_key = 'assets/proxy/key/server_no_pass.key'
+server_crt = 'assets/proxy/key/server.crt'

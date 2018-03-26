@@ -5,11 +5,14 @@
 # See LICENSE for details.
 
 import sys, os
+from twisted.internet import reactor, protocol, ssl, defer
+from twisted.python import log
+
+from cpchain import config, root_dir
 
 from file_ops import *
 
-from twisted.internet import reactor, protocol, ssl, defer
-from twisted.python import log
+
 
 TOP_FILE_DIR = '/tmp/cpc_test/server'
 
@@ -128,11 +131,13 @@ def start_ssl_server(port):
     factory = SSLServerFactory()
 
     reactor.listenSSL(port, factory,
-            ssl.DefaultOpenSSLContextFactory(
-            'key/server_no_pass.key', 'key/server.crt'))
+                      ssl.DefaultOpenSSLContextFactory(
+                          osp.join(root_dir, config.proxy.server_key),
+                          osp.join(root_dir, config.prxy.server_crt)))
     reactor.run()
 
     log.startLogging(sys.stdout)
 
+
 if __name__ == '__main__':
-    start_ssl_server(8000)
+    start_ssl_server(config.proxy.server_port)
