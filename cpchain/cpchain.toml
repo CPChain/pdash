@@ -14,6 +14,10 @@ bucket = "cpchain-bucket"
 secret_access_key = "TlLYyyb6avQvdf8BU0UzEj7P83tbVjSLyv9kTppd"
 access_key_id = "AKIAI34GNTRZVNJ5ZMZA"
 
+[storage.ipfs]
+addr = '192.168.0.132'
+port = 5001
+
 [wallet]
 dbpath = "cpchain/assets/wallet/wallet.db"
 
