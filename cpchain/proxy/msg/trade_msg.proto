@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package cpchain;
+
+message Message {
+	enum MessageType {
+		SELLER_UPLOAD_KEY_FILEURI = 0;
+		BUYER_DOWNLOAD_KEY_FILE = 1;
+	}
+
+	MessageType type = 1;
+	bytes seller_addr = 2;
+	bytes buyer_addr = 3;
+	bytes market_hash = 4;
+
+	message Storage {
+		enum StorageType {
+			IPFS = 0;
+			S3 = 1;
+		}
+
+		message IPFS_Storage {
+			bytes file_hash = 1;
+			string default_gateway = 2;
+		}
+
+		message S3_Storage {
+			string uri = 1;
+		}
+
+		StorageType type = 1;
+		oneof storage {
+			IPFS_Storage ipfs = 2;
+			S3_Storage s3 = 3;
+		}
+	}
+
+	Storage storage = 5;
+}
