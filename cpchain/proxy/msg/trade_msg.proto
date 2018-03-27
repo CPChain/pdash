@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package cpchain;
+
+message TradeMSG {
+	string type = 1;
+	bytes seller = 2;
+	bytes buyer = 3;
+	bytes hash = 4;
+	string storage = 5;
+	string URI = 6;
+}
