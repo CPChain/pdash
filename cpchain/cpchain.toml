@@ -25,3 +25,7 @@ dbpath = "cpchain/assets/wallet/wallet.db"
 server_port = 8000
 server_key = 'assets/proxy/key/server_no_pass.key'
 server_crt = 'assets/proxy/key/server.crt'
+
+[market]
+server_addr = "192.168.0.132"
+server_port = 8083

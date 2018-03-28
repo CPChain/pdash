@@ -1,5 +1,3 @@
-
-
 from twisted.internet.protocol import ServerFactory, ClientFactory
 from twisted.protocols.basic import NetstringReceiver
 
@@ -7,7 +5,6 @@ from cpchain.utils import logging
 
 
 class SellerClient(NetstringReceiver):
-
     def connectionMade(self):
         logging.info("connnected to master.")
 
