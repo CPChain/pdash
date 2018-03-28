@@ -8,7 +8,6 @@ router.register(r'products', ProductViewSet)
 
 urlpatterns = [
     url(r'^', include(router.urls)),
-    url(r'^admin/', admin.site.urls),
     url(r'^register', UserRegisterAPIView.as_view()),
     url(r'^login', UserLoginAPIView.as_view()),
 ]

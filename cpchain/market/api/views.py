@@ -2,7 +2,9 @@
 # response string with encrypted(random string)
 # if client decrypt correctly ,login success
 # else response with HTTP_400_BAD_REQUEST
+from django.db.models import Q
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -11,6 +13,7 @@ from rest_framework.views import APIView
 
 from .permissions import IsOwnerOrReadOnly
 from .serializers import *
+from .models import Product
 
 
 PUBLIC_KEY = "public_key"
@@ -88,6 +91,18 @@ class ProductViewSet(viewsets.ModelViewSet):
         user_id = self.request.session.get('user_id')
         print('userId:' + user_id)
         serializer.save(owner=User.objects.get(id=user_id))
+
+    def list(self, request, *args, **kwargs):
+        params = request.query_params
+        keyword = params.get('keyword')
+        if keyword is not None:
+            print("keyword is ", keyword)
+            queryset = Product.objects.filter(Q(title__contains=keyword) | Q(description__contains=keyword))
+        else:
+            queryset = Product.objects.all()
+
+        serializer = ProductSerializer(queryset, many=True)
+        return Response(data=serializer.data)
 
 
 class UserViewSet(viewsets.ModelViewSet):
