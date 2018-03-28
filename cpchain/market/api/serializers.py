@@ -3,6 +3,7 @@ import hashlib
 from .models import Product, User
 from rest_framework import serializers
 import datetime
+from django.utils import timezone
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -11,13 +12,14 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = ('id', 'owner_address', 'title', 'description', 'price', 'created_date', 'expired_date', 'verify_code')
 
     def create(self, validated_data):
+        now = timezone.now()
         product = Product(
             owner_address=validated_data['owner_address'],
             title=validated_data['title'],
             description=validated_data['description'],
             price=validated_data['price'],
-            created_date=datetime.datetime.now(),
-            expired_date=datetime.datetime.now(),
+            created_date=now,
+            expired_date=now,
             owner=validated_data['owner'],
         )
         # hash(product.title,product.description)
@@ -32,6 +34,7 @@ def md5(source):
     digest = hashlib.md5()
     digest.update(source)
     return digest.hexdigest()
+
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
