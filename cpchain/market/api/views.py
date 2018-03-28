@@ -84,15 +84,23 @@ class ProductViewSet(viewsets.ModelViewSet):
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    # permission_classes = (AllowAny,)
-    permission_classes = (IsOwnerOrReadOnly,)
+    permission_classes = (AllowAny,)
+    # permission_classes = (IsOwnerOrReadOnly,)
 
     def perform_create(self, serializer):
         user_id = self.request.session.get('user_id')
-        print('userId:' + user_id)
+        print(user_id)
+
+        # just for debug
+        if user_id is None:
+            user_id = 1
+
         serializer.save(owner=User.objects.get(id=user_id))
 
     def list(self, request, *args, **kwargs):
+        """
+        query product by keyword
+        """
         params = request.query_params
         keyword = params.get('keyword')
         if keyword is not None:
