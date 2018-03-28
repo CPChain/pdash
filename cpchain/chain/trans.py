@@ -1,9 +1,9 @@
-from populus.utils.wait import wait_for_transaction_receipt
-
-from cpchain import config     
+from cpchain import config
 from cpchain.chain import models
 from cpchain.utils import logging
 from cpchain.chain import utils
+
+from .wait_utils import wait_for_transaction_receipt
 
 
 # base transaction class for interacting with cpchain
@@ -22,6 +22,11 @@ class Trans:
         order_record = self.contract.call().orderRecords(order_id)
         logging.debug("Order record NO.{:d}: {record}\n".format(order_id, record=order_record))
         return order_record
+
+    def get_order_num(self) -> "number of orders":
+        order_num = self.contract.call().numOrders()
+        logging.debug("Total number of orders: {:d}\n".format(order_num))
+        return order_num
 
 
 class BuyerTrans(Trans):
@@ -84,6 +89,15 @@ class SellerTrans(Trans):
         logging.debug("Your money is claimed because of time out! Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
+
+    def filter_seller_range(self, start_id, end_id, account=None):
+        account = account or self.web3.eth.defaultAccount
+        id_list = []
+        for current_id in range(start_id, end_id + 1):
+            current_seller = self.query_order(current_id)[2]
+            if current_seller == account:
+                id_list.append(current_id)
+        return id_list
 
     
 class ProxyTrans(Trans):
