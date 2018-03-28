@@ -6,6 +6,20 @@ from web3.providers.tester import (
     EthereumTesterProvider,
     TestRPCProvider,
 )
+from eth_utils import (
+    is_same_address,
+)
+
+
+def is_account_locked(web3, account):
+    if isinstance(web3.providers[0], (EthereumTesterProvider, TestRPCProvider)):
+        return not any((is_same_address(account, a) for a in web3.eth.accounts[:10]))
+    try:
+        web3.eth.sign(account, 'simple-test-data')
+    except ValueError as err:
+        return 'account is locked' in str(err)
+    else:
+        return False
 
 
 class Timeout(Exception):
@@ -114,8 +128,6 @@ def wait_for_block_number(web3, block_number=1, timeout=120, poll_interval=None)
 
 
 def wait_for_unlock(web3, account=None, timeout=120, poll_interval=None):
-    from .accounts import is_account_locked
-
     if account is None:
         account = web3.eth.coinbase
 
