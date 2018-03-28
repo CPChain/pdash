@@ -1,9 +1,9 @@
-from populus.utils.wait import wait_for_transaction_receipt
-
-from cpchain import config     
+from cpchain import config
 from cpchain.chain import models
 from cpchain.utils import logging
 from cpchain.chain import utils
+
+from .wait_utils import wait_for_transaction_receipt
 
 
 # base transaction class for interacting with cpchain
