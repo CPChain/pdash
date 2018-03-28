@@ -81,18 +81,13 @@ class ProductViewSet(viewsets.ModelViewSet):
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = (AllowAny,)
-    # permission_classes = (IsOwnerOrReadOnly,)
+    # permission_classes = (AllowAny,)
+    permission_classes = (IsOwnerOrReadOnly,)
 
     def perform_create(self, serializer):
-        # user_id = self.request.session.get('user_id')
-        # print('userId:' + user_id)
-        # if user_id is None:
-        #     print("userId is none")
-        #     user_id = 1
-        #     print('user_id:', user_id)
-
-        serializer.save(owner=User.objects.get(id=1))
+        user_id = self.request.session.get('user_id')
+        print('userId:' + user_id)
+        serializer.save(owner=User.objects.get(id=user_id))
 
 
 class UserViewSet(viewsets.ModelViewSet):
