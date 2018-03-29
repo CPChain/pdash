@@ -3,10 +3,12 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer
 from sqlalchemy.dialects.mysql import BINARY, TIMESTAMP
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from datetime import datetime, timedelta
+from cpchain import config
 
 Base = declarative_base()
+
+default_db = 'sqlite:///' + config.proxy.dbpath
 
 class Trade(Base):
     __tablename__ = 'Trade'
@@ -26,7 +28,7 @@ class Trade(Base):
             self.seller_addr, self.market_hash, self.AES_key, \
             self.file_hash, self.time_stamp)
 
-def db_session_create(db='sqlite:///./trade.db'):
+def db_session_create(db=default_db):
     engine = create_engine(db, echo=False)
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
@@ -34,20 +36,20 @@ def db_session_create(db='sqlite:///./trade.db'):
     return session
 
 def db_count(session, trade):
-    count = session.query(Trade).filter(\
+    count = session.query(Trade).filter(
                 Trade.buyer_addr ==  trade.buyer_addr,
-                Trade.seller_addr == trade.seller_addr, \
-                Trade.market_hash == trade.market_hash, \
-                Trade.AES_key == trade.AES_key, \
+                Trade.seller_addr == trade.seller_addr,
+                Trade.market_hash == trade.market_hash,
+                Trade.AES_key == trade.AES_key,
                 Trade.file_hash == trade.file_hash).count()
     return count
 
 def db_query(session, trade):
-    instances = session.query(Trade).filter(\
+    instances = session.query(Trade).filter(
                 Trade.buyer_addr ==  trade.buyer_addr,
-                Trade.seller_addr == trade.seller_addr, \
-                Trade.market_hash == trade.market_hash, \
-                Trade.AES_key == trade.AES_key, \
+                Trade.seller_addr == trade.seller_addr,
+                Trade.market_hash == trade.market_hash,
+                Trade.AES_key == trade.AES_key,
                 Trade.file_hash == trade.file_hash).all()
     return instances
 
@@ -63,11 +65,11 @@ def db_delete(session, trade):
 def db_session_close(session):
     session.close()
 
-def db_reclaim(db='sqlite:///./trade.db'):
+def db_reclaim(db=default_db):
     session = db_session_create(db)
 
     reclaim_period = datetime.now() - timedelta(days=3)
-    for instance in session.query(Trade).filter(\
+    for instance in session.query(Trade).filter(
                     Trade.time_stamp < reclaim_period).all():
         db_delete(session, instance)
 
