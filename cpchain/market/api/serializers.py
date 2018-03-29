@@ -39,7 +39,7 @@ def md5(source):
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('public_key',)
+        fields = ('public_key', 'date_of_birth')
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -47,4 +47,4 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('public_key', 'product_set')
+        fields = ('public_key', 'date_of_birth', 'product_set')

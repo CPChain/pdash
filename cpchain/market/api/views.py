@@ -3,7 +3,7 @@
 # if client decrypt correctly ,login success
 # else response with HTTP_400_BAD_REQUEST
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 from .permissions import IsOwnerOrReadOnly
 from .serializers import *
 from .models import Product
-
+from rest_framework.authtoken.models import Token
 
 PUBLIC_KEY = "public_key"
 
@@ -35,6 +35,9 @@ class UserLoginAPIView(APIView):
         if user.password == password:
             serializer = UserSerializer(user)
             new_data = serializer.data
+
+            token = Token.objects.create(user=user)
+            print(token.key)
             # set userid ins session
             self.request.session['user_id'] = user.id
             return Response(new_data, status= HTTP_200_OK)
@@ -55,8 +58,12 @@ class UserRegisterAPIView(APIView):
         if User.objects.filter(public_key__exact=public_key):
             return Response("public_key already exists!", HTTP_400_BAD_REQUEST)
         serializer = UserRegisterSerializer(data=data)
+
         if serializer.is_valid(raise_exception=True):
             serializer.save()
+            user_in_db = User.objects.get(public_key__exact=public_key)
+            token = Token.objects.create(user=user_in_db)
+            print(token.key)
             # return Response(serializer.data, status=HTTP_200_OK)
             d = {
                 'status': 1,
@@ -70,12 +77,20 @@ class LogoutAPIView(APIView):
     """
     API endpoint that logout.
     """
-    def post(self):
-        if self.request.session['user_id'] is not None:
-            self.request.session['user_id'] = None
-            return Response({"message": "logout success"}, status= HTTP_200_OK)
-        else:
-            return Response({"message": "not login"}, status= HTTP_400_BAD_REQUEST)
+
+    def post(self, request):
+        print("logout")
+        user_id = request._request.session['user_id']
+
+        # user_id = self.request.session['user_id']
+        # print("user_id:" + user_id)
+        # # return Response({"message": "not login"}, status=HTTP_400_BAD_REQUEST)
+        # if user_id is not None:
+        #     self.request.session['user_id'] = None
+        #     return Response({"message": "logout success"}, status= HTTP_200_OK)
+        # else:
+        #     return Response({"message": "not login"}, status= HTTP_400_BAD_REQUEST)
+        return Response({"message": "not login"}, status= HTTP_400_BAD_REQUEST)
 
 
 class ProductViewSet(viewsets.ModelViewSet):
