@@ -4,24 +4,22 @@ package cpchain;
 
 message Message {
 	enum MessageType {
-		SELLER_UPLOAD_KEY_FILEURI = 0;
-		BUYER_DOWNLOAD_KEY_FILE = 1;
+		RESERVED = 0;
+		SELLER_DATA = 1;
+		BUYER_DATA = 2;
+		PROXY_REPLY = 3;
 	}
-
-	MessageType type = 1;
-	bytes seller_addr = 2;
-	bytes buyer_addr = 3;
-	bytes market_hash = 4;
 
 	message Storage {
 		enum StorageType {
-			IPFS = 0;
-			S3 = 1;
+			RESERVED = 0;
+			IPFS = 1;
+			S3 = 2;
 		}
 
 		message IPFS_Storage {
 			bytes file_hash = 1;
-			string default_gateway = 2;
+			string gateway = 2;
 		}
 
 		message S3_Storage {
@@ -29,11 +27,33 @@ message Message {
 		}
 
 		StorageType type = 1;
-		oneof storage {
-			IPFS_Storage ipfs = 2;
-			S3_Storage s3 = 3;
-		}
+		IPFS_Storage ipfs = 2;
+		S3_Storage s3 = 3;
 	}
 
-	Storage storage = 5;
+	message SellerData {
+		bytes seller_addr = 1;
+		bytes buyer_addr = 2;
+		bytes market_hash = 3;
+		bytes AES_key = 4;
+		Storage storage = 5;
+	}
+
+	message BuyerData{
+		bytes seller_addr = 1;
+		bytes buyer_addr = 2;
+		bytes market_hash = 3;
+	}
+
+	message ProxyReply {
+		bool valid = 1;
+		bytes AES_key = 2;
+		bytes file_hash = 3;
+		int64 file_size = 4;
+	}
+
+	MessageType type = 1;
+	SellerData seller_data = 2;
+	BuyerData buyer_data = 3;
+	ProxyReply proxy_reply = 4;
 }
