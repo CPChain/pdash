@@ -21,7 +21,7 @@ class Product(models.Model):
     price = models.FloatField()
     created_date = models.DateTimeField('date created', default=datetime.datetime.now())
     expired_date = models.DateTimeField('date expired', null=True)
-    verify_code = models.CharField(max_length=200)
+    verify_code = models.CharField(max_length=200, null=True)
 
     def __str__(self):
         return self.title
