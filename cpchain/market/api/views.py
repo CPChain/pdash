@@ -161,15 +161,13 @@ class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = (IsOwnerOrReadOnly,)
 
     def perform_create(self, serializer):
-        user_id = self.request.session.get('user_id')
-        print(user_id)
+        public_key = self.request.META.get('HTTP_MARKETKEY')
+        print("public_key:" + str(public_key))
 
-        # TODO just for debug
-        if user_id is None:
-            print("not login user,use default user 1 for test.")
-            user_id = 1
+        if public_key is None:
+            return create_invalid_response()
 
-        serializer.save(owner=WalletUser.objects.get(id=user_id))
+        serializer.save(owner=WalletUser.objects.get(public_key=public_key))
 
     def list(self, request, *args, **kwargs):
         """

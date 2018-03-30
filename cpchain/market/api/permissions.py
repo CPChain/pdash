@@ -20,8 +20,8 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         # return obj.owner.id == request.session.get('user_id')
 
     def check_permission(self, request):
-        public_key = request.META.get('HTTP_MARKET_KEY', 'unknown')
-        token = request.META.get('HTTP_MARKET_TOKEN', 'unknown')
+        public_key = request.META.get('HTTP_MARKETKEY', 'unknown')
+        token = request.META.get('HTTP_MARKETTOKEN', 'unknown')
         print('public_key:' + str(public_key) + " token:" + str(token))
 
         return Token.objects.filter(public_key__exact=public_key).filter(key__exact=token).exists()
