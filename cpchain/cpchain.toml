@@ -27,3 +27,6 @@ server_key = 'cpchain/assets/proxy/key/server_no_pass.key'
 server_crt = 'cpchain/assets/proxy/key/server.crt'
 dbpath = "cpchain/assets/proxy/proxy.db"
 
+[market]
+server_addr = "192.168.0.132"
+server_port = 8083
