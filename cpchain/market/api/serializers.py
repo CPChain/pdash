@@ -1,7 +1,7 @@
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import Product, WalletUser
+from .models import Product, WalletUser,Token
 from .utils import md5
 
 
@@ -41,3 +41,10 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = WalletUser
         fields = ('public_key', 'created', 'product_set')
+
+
+class TokenSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Token
+        fields = ('public_key', 'key')

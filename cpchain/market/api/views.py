@@ -4,24 +4,27 @@
 # else response with HTTP_400_BAD_REQUEST
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
-from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
 
+from django.core.cache import cache
+
 from .permissions import IsOwnerOrReadOnly
 from .serializers import *
-from .models import Product
-from rest_framework.authtoken.models import Token
+from .models import Product,Token
+from .utils import *
 
 PUBLIC_KEY = "public_key"
+VERIFY_CODE = "code"
+TIMEOUT = 1000
 
 
 class UserLoginAPIView(APIView):
     """
-    API endpoint that used to login.
+    API endpoint that used to login and fetch verify code.
     """
     queryset = WalletUser.objects.all()
     serializer_class = UserSerializer
@@ -30,22 +33,71 @@ class UserLoginAPIView(APIView):
     def post(self, request):
         data = request.data
         public_key = data.get(PUBLIC_KEY)
-        password = data.get('password')
-        user = WalletUser.objects.get(public_key__exact= public_key)
 
-        token = Token.objects.create(user=user)
-        print(token.key)
+        # if is existing public key, generate verify code and put it into cache
+        if WalletUser.objects.filter(public_key__exact=public_key):
+            return self.generate_verifycode(public_key)
 
-        # if user.password == password:
-        #     serializer = UserSerializer(user)
-        #     new_data = serializer.data
-        #
-        #     token = Token.objects.create(user=user)
-        #     print(token.key)
-        #     # set userid ins session
-        #     self.request.session['user_id'] = user.id
-        #     return Response(new_data, status= HTTP_200_OK)
-        return Response('password error', HTTP_400_BAD_REQUEST)
+        # register wallet user, generate verify code and put it into cache
+        serializer = UserRegisterSerializer(data=data)
+
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return self.generate_verifycode(public_key)
+
+        return Response(serializer.errors, status= HTTP_400_BAD_REQUEST)
+
+    def generate_verifycode(self, public_key):
+        code = generate_random_str(6)
+        print("put cache public_key:" + public_key + ", code:" + code)
+        cache.set(public_key, code, TIMEOUT)
+        # response with encrypted verify code
+        encrypted_code = encrypte_verify_code(public_key, code)
+        return JsonResponse({"success": True, "message": encrypted_code})
+
+
+class UserLoginConfirmAPIView(APIView):
+    """
+    API endpoint that used to confirm login code and create token.
+    """
+    queryset = WalletUser.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        data = request.data
+        public_key = data.get(PUBLIC_KEY)
+        code = data.get(VERIFY_CODE)
+        print("public_key:" + str(public_key) + ",code:" + str(code))
+        if public_key is None or code is None:
+            print("public_key is None or code is None. public_key:" + str(public_key))
+            return create_invalid_response()
+
+        verify_code = cache.get(public_key)
+        print("verify_code:" + str(verify_code))
+        if verify_code is None:
+            print("verify_code not found for public_key:" + public_key)
+            return create_invalid_response()
+
+        if not is_valid_verify_code(public_key, verify_code):
+            return create_invalid_response()
+
+        try:
+            user = WalletUser.objects.get(public_key__exact=public_key)
+        except WalletUser.DoesNotExist:
+            return create_invalid_response()
+
+        try:
+            existing_token = Token.objects.get(public_key=public_key)
+        except Token.DoesNotExist:
+            existing_token = Token.objects.create(user=user, public_key=public_key)
+
+        serializer = TokenSerializer(existing_token)
+        return JsonResponse({"success": True, "message": serializer.data['key']})
+
+
+def create_invalid_response():
+    return JsonResponse({"success": False, "message": "invalid request."})
 
 
 class UserRegisterAPIView(APIView):
@@ -77,20 +129,26 @@ class LogoutAPIView(APIView):
     """
     API endpoint that logout.
     """
-
     def post(self, request):
-        print("logout")
-        user_id = request._request.session['user_id']
+        data = request.data
+        public_key = data.get(PUBLIC_KEY)
+        token = data.get('token')
+        print("public_key:" + str(public_key) + ",code:" + str(token))
+        if public_key is None or token is None:
+            print("public_key is None or token is None. public_key:" + str(public_key))
+            return create_invalid_response()
 
-        # user_id = self.request.session['user_id']
-        # print("user_id:" + user_id)
-        # # return Response({"message": "not login"}, status=HTTP_400_BAD_REQUEST)
-        # if user_id is not None:
-        #     self.request.session['user_id'] = None
-        #     return Response({"message": "logout success"}, status= HTTP_200_OK)
-        # else:
-        #     return Response({"message": "not login"}, status= HTTP_400_BAD_REQUEST)
-        return Response({"message": "not login"}, status= HTTP_400_BAD_REQUEST)
+        try:
+            existing_token = Token.objects.get(public_key=public_key)
+            serializer = TokenSerializer(existing_token)
+            if serializer.data['key'] != token:
+                return create_invalid_response()
+
+            existing_token.delete()
+            return JsonResponse({"success": True, "message": "logout success"})
+        except Token.DoesNotExist:
+            print("logout public_key:" + str(public_key) + " not login")
+            return create_invalid_response()
 
 
 class ProductViewSet(viewsets.ModelViewSet):

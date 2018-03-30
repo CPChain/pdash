@@ -11,5 +11,8 @@ urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^register', UserRegisterAPIView.as_view()),
     url(r'^login', UserLoginAPIView.as_view()),
+
+    url(r'^confirm', UserLoginConfirmAPIView.as_view()),
+
     url(r'^logout', LogoutAPIView.as_view()),
 ]

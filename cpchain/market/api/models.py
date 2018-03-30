@@ -5,6 +5,9 @@ from django.contrib.auth.models import (
 )
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
+import datetime
+
 
 class WalletUser(models.Model):
     public_key = models.CharField(max_length=200, unique=True)
@@ -43,14 +46,9 @@ class Token(models.Model):
         on_delete=models.CASCADE, verbose_name=_("WalletUser")
     )
     created = models.DateTimeField(_("Created"), auto_now_add=True)
+    public_key = models.CharField(max_length=200, unique=True)
 
     class Meta:
-        # Work around for a bug in Django:
-        # https://code.djangoproject.com/ticket/19422
-        #
-        # Also see corresponding ticket:
-        # https://github.com/encode/django-rest-framework/issues/705
-        # abstract = 'rest_framework.authtoken' not in settings.INSTALLED_APPS
         verbose_name = _("Token")
         verbose_name_plural = _("Tokens")
 
@@ -58,6 +56,10 @@ class Token(models.Model):
         if not self.key:
             self.key = self.generate_key()
         return super(Token, self).save(*args, **kwargs)
+
+    def is_expired(self):
+        now = timezone.now()
+        return now + datetime.timedelta(minutes=-30) > self.created
 
     def generate_key(self):
         return binascii.hexlify(os.urandom(20)).decode()
