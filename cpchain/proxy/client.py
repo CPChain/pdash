@@ -6,123 +6,53 @@
 
 import sys, os
 
-from file_ops import *
-
 from twisted.internet import reactor, protocol, ssl, defer
+from twisted.protocols.basic import NetstringReceiver
 from twisted.python import log
 
-class SSLClientProtocol(protocol.Protocol):
+from cpchain import config
+from cpchain.proxy.msg.trade_msg_pb2 import Message
+from cpchain.proxy.message import message_sanity_check, proxy_reply_copy
+
+
+class SSLClientProtocol(NetstringReceiver):
     def __init__(self, factory):
         self.factory = factory
-        self.request = self.factory.request
+        self.message = self.factory.message
 
     def connectionMade(self):
-        self.request['tran_state'] = 'connect_to_server'
-        self.request['fd'] = None
-        self.request['file_list'] = []
-        self.request['tran_size'] = 0
-
-        if self.request['cmd'] == 'put':
-            self.request['file_hash'] = \
-                get_file_md5_hash(self.request['local_file_path'])
-            file_name = os.path.basename(\
-                            self.request['local_file_path'])
-            self.request['tran_state'] = 'client_put_file_hash'
-            self.request['file_size'] = os.path.getsize(\
-                                    self.request['local_file_path'])
-            self.str_write(self.request['tran_state'] + \
-                ":" + self.request['file_hash'] + ":" + file_name \
-                + ":" + str(self.request['file_size']))
-        elif self.request['cmd'] == 'list':
-            self.request['tran_state'] = 'client_get_file_list_size'
-            self.str_write(self.request['tran_state'])
-        elif self.request['cmd'] == 'get':
-            self.request['tran_state'] = 'client_get_file_hash'
-            self.str_write(self.request['tran_state'] + \
-                ":" + self.request['remote_file_path'])
-
         self.peer = str(self.transport.getPeer())
         print("connect to server " + self.peer)
 
-    def dataReceived(self, data):
-        if self.request['tran_state'] == 'client_put_file_hash':
-            data = clean_and_split_input(data)
-            if data[0] == 'server_get_file_hash' \
-                and self.request['file_hash'] == data[1]:
-                self.request['tran_state'] = 'client_put_file'
-                for byte in read_bytes_from_file(\
-                                self.request['local_file_path']):
-                    self.transport.write(byte)
-                self.request['tran_state'] = 'wait_for_server_ack_finish'
+        string = self.message.SerializeToString()
+        self.sendString(string)
 
+    def stringReceived(self, string):
+        message = Message()
+        message.ParseFromString(string)
+        valid = message_sanity_check(message)
+        if valid and message.type == Message.PROXY_REPLY:
+            proxy_reply = message.proxy_reply
+            proxy_reply_copy(proxy_reply,
+                            self.message.proxy_reply)
+
+            if proxy_reply.error:
+                print('error: ' + proxy_reply.error)
             else:
-                print("failed at client_put_file_hash")
-                self.transport.loseConnection()
-
-        elif self.request['tran_state'] == 'client_get_file_list_size':
-            data = clean_and_split_input(data)
-            if data[0] == 'server_put_file_list_size':
-                self.request['file_size'] = int(data[1])
-                self.request['tran_state'] = 'client_list_file'
-                self.str_write(self.request['tran_state'])
-            else:
-                print(self.peer + " sent wrong data: " + str(data))
-                self.transport.loseConnection()
-        elif self.request['tran_state'] == 'client_list_file':
-            self.request['file_list'].append(data.decode())
-            self.request['tran_size'] += len(data)
-            if self.request['file_size']  == self.request['tran_size']:
-                self.str_write('client_ack_finish')
-                self.request['tran_state'] = 'file_transaction_finished'
-
-        elif self.request['tran_state'] == 'client_get_file_hash':
-            data = clean_and_split_input(data)
-            if data[0] == 'remote_file_does_not_exist':
-                print("remote file does not exist")
-                self.transport.loseConnection()
-            elif data[0] == 'server_put_file_hash':
-                self.request['file_hash'] = data[1]
-                self.request['file_size'] = int(data[2])
-                self.request['tran_state'] = 'client_get_file'
-                self.str_write(self.request['tran_state'])
-                self.request['fd'] = open(\
-                                self.request['local_file_path'], 'wb')
-
-        elif self.request['tran_state'] == 'client_get_file':
-            self.request['fd'].write(data)
-            self.request['tran_size'] += len(data)
-            if self.request['file_size']  == self.request['tran_size']:
-                self.str_write('client_ack_finish')
-                self.request['tran_state'] = 'file_transaction_finished'
-
-        elif self.request['tran_state'] == 'wait_for_server_ack_finish':
-            data = clean_and_split_input(data)
-            if data[0] == 'server_ack_finish':
-                self.request['tran_state'] = 'file_transaction_finished'
-                self.transport.loseConnection()
-
+                print('AES_key: ' + proxy_reply.AES_key.decode())
+                print('file_hash: ' + proxy_reply.file_hash.decode())
+                print('file_size: ' + str(proxy_reply.file_size))
         else:
-            print(self.peer + " sent wrong data: " + data.decode())
-            self.transport.loseConnection()
+            print("wrong server response")
+
+        self.transport.loseConnection()
 
     def connectionLost(self, reason):
-        if self.request['fd']:
-            self.request['fd'].close()
-            if not validate_file_md5_hash(self.request['fd'].name, \
-                self.request['file_hash']):
-                os.unlink(self.request['fd'].name)
-                print("The file is not properly tranmitted.")
-
-        print("lost connection to client %s at %s stage" % (self.peer, \
-                 self.request['tran_state']))
-
-    def str_write(self, data):
-        self.transport.write(data.encode('utf-8'))
-
+        print("lost connection to client %s" % (self.peer))
 
 class SSLClientFactory(protocol.ClientFactory):
-    def __init__(self, request):
-        self.request = request
+    def __init__(self, message):
+        self.message = message
 
     def buildProtocol(self, addr):
         return SSLClientProtocol(self)
@@ -134,90 +64,17 @@ class SSLClientFactory(protocol.ClientFactory):
         reactor.stop()
 
 
+def start_client(message):
 
-def file_transaction(request):
-    """
-    file transaction request format:
-    {
-        'host' : 'cpctest.com',
-        'port' : 8000,
-        'cmd' : 'put/get/list',
-        'remote_file_path' :'remote file path on server',
-        'local_file_path' : 'local file path on client'
-    }
-    """
+    host = config.proxy.server_host
+    port = config.proxy.server_port
 
-    host = None
-    port = None
-    cmd = None
-    local_file_path = None
-    remote_file_path = None
-    error = []
-
-    if type(request) != dict:
-        error.append("wrong request format")
-        print(error)
-        print(file_transaction.__doc__)
+    valid = message_sanity_check(message)
+    if not valid:
+        print("wrong message format")
         return
 
-    if 'host' in request:
-        host = request['host']
-    if 'port' in request:
-        port = request['port']
-    if 'cmd' in request:
-        cmd = request['cmd']
-    if 'local_file_path' in request:
-        local_file_path = request['local_file_path']
-    if 'remote_file_path' in request:
-        remote_file_path = request['remote_file_path']
-
-    if not host:
-        error.append("missing host")
-    elif not port:
-        error.append("missing port")
-    elif not cmd:
-        error.append("missing command")
-    elif cmd == 'put':
-        if not local_file_path:
-            error.append("missing local file path")
-        else:
-            if not os.path.isfile(local_file_path):
-                error.append(local_file_path + " file does not exist")
-
-    elif cmd == 'get':
-        if not remote_file_path:
-            error.append("missing remote file path")
-
-        if not local_file_path:
-            error.append("missing local file path")
-        else:
-            if os.path.isfile(local_file_path):
-                error.append(local_file_path + " file already exists")
-
-            local_file_dir = os.path.dirname(local_file_path)
-            if not os.path.isdir(local_file_dir):
-                error.append("local file dir doesn't exist")
-
-    elif cmd != 'list':
-        error.append("wrong command")
-
-    if len(error):
-        print(error)
-        print(file_transaction.__doc__)
-        return error
-
-    print("start request:")
-    for key in request:
-        print("\t%s : %s" % (key, request[key]))
-    start_client(request)
-
-
-def start_client(request):
-
-    host = request['host']
-    port = request['port']
-
-    factory = SSLClientFactory(request)
+    factory = SSLClientFactory(message)
     reactor.connectSSL(host, port, factory,
             ssl.ClientContextFactory())
     reactor.run()
@@ -225,28 +82,31 @@ def start_client(request):
     log.startLogging(sys.stdout)
 
 if __name__ == '__main__':
-    request = {
-        'host' : 'cpctest.com',
-        'port' : 8000,
-        'cmd' : 'put',
-        'local_file_path' : '/tmp/cpc_test/client/client_send'
-    }
-    file_transaction(request)
 
-    # request = {
-    #     'host' : 'cpctest.com',
-    #     'port' : 8000,
-    #     'cmd' : 'get',
-    #     'remote_file_path' : 'server_send',
-    #     'local_file_path' : '/tmp/cpc_test/client/client_received'
-    # }
-    # file_transaction(request)
+    test_type = "seller_data"
 
-    # request = {
-    #     'host' : 'cpctest.com',
-    #     'port' : 8000,
-    #     'cmd' : 'list'
-    #     }
-    # file_transaction(request)
-    # if 'file_list' in request:
-    #     print(request['file_list'])
+    message = Message()
+    if test_type == "seller_data":
+        data = message.seller_data
+        message.type = Message.SELLER_DATA
+        data.seller_addr = b'SELLER_ADDR'
+        data.buyer_addr = b'BUYER_ADDR'
+        data.market_hash = b'MARKET_HASH'
+        data.AES_key = b'AES_key'
+        storage = data.storage
+        storage.type = Message.Storage.IPFS
+        ipfs = storage.ipfs
+        ipfs.file_hash = b'QmVSdf3qf7kGhaQF2CKFTKN3gwuhz1wcoQBJNCmB4yGzPM'
+        ipfs.gateway = "192.168.0.132:5001"
+    elif test_type == "buyer_data":
+        data = message.buyer_data
+        message.type = Message.BUYER_DATA
+        data.seller_addr = b'SELLER_ADDR'
+        data.buyer_addr = b'BUYER_ADDR'
+        data.market_hash = b'MARKET_HASH'
+    elif test_type == "proxy_reply":
+        message.type = Message.PROXY_REPLY
+        proxy_reply = message.proxy_reply
+        proxy_reply.error = "error"
+
+    start_client(message)

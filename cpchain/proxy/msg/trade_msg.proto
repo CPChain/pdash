@@ -46,7 +46,7 @@ message Message {
 	}
 
 	message ProxyReply {
-		bool valid = 1;
+		string error = 1;
 		bytes AES_key = 2;
 		bytes file_hash = 3;
 		int64 file_size = 4;
