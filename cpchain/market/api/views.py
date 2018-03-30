@@ -23,7 +23,7 @@ class UserLoginAPIView(APIView):
     """
     API endpoint that used to login.
     """
-    queryset = User.objects.all()
+    queryset = WalletUser.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
@@ -31,7 +31,7 @@ class UserLoginAPIView(APIView):
         data = request.data
         public_key = data.get(PUBLIC_KEY)
         password = data.get('password')
-        user = User.objects.get(public_key__exact= public_key)
+        user = WalletUser.objects.get(public_key__exact= public_key)
         if user.password == password:
             serializer = UserSerializer(user)
             new_data = serializer.data
@@ -48,20 +48,20 @@ class UserRegisterAPIView(APIView):
     """
     API endpoint that used to register user account.
     """
-    queryset = User.objects.all()
+    queryset = WalletUser.objects.all()
     serializer_class = UserRegisterSerializer
     permission_classes = (AllowAny,)
 
     def post(self, request):
         data = request.data
         public_key = data.get(PUBLIC_KEY)
-        if User.objects.filter(public_key__exact=public_key):
+        if WalletUser.objects.filter(public_key__exact=public_key):
             return Response("public_key already exists!", HTTP_400_BAD_REQUEST)
         serializer = UserRegisterSerializer(data=data)
 
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            user_in_db = User.objects.get(public_key__exact=public_key)
+            user_in_db = WalletUser.objects.get(public_key__exact=public_key)
             token = Token.objects.create(user=user_in_db)
             print(token.key)
             # return Response(serializer.data, status=HTTP_200_OK)
@@ -99,18 +99,19 @@ class ProductViewSet(viewsets.ModelViewSet):
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = (AllowAny,)
-    # permission_classes = (IsOwnerOrReadOnly,)
+    # permission_classes = (AllowAny,)
+    permission_classes = (IsOwnerOrReadOnly,)
 
     def perform_create(self, serializer):
         user_id = self.request.session.get('user_id')
         print(user_id)
 
-        # just for debug
+        # TODO just for debug
         if user_id is None:
+            print("not login user,use default user 1 for test.")
             user_id = 1
 
-        serializer.save(owner=User.objects.get(id=user_id))
+        serializer.save(owner=WalletUser.objects.get(id=user_id))
 
     def list(self, request, *args, **kwargs):
         """
@@ -132,5 +133,5 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows Products to be viewed by anyone.
     """
-    queryset = User.objects.all()
+    queryset = WalletUser.objects.all()
     serializer_class = UserSerializer

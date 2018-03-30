@@ -1,9 +1,9 @@
 import hashlib
 
-from .models import Product, User
-from rest_framework import serializers
-import datetime
 from django.utils import timezone
+from rest_framework import serializers
+
+from .models import Product, WalletUser
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -38,13 +38,13 @@ def md5(source):
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ('public_key', 'date_of_birth')
+        model = WalletUser
+        fields = ('public_key', 'created_date')
 
 
 class UserSerializer(serializers.ModelSerializer):
     product_set = serializers.PrimaryKeyRelatedField(many=True, queryset=Product.objects.all())
 
     class Meta:
-        model = User
-        fields = ('public_key', 'date_of_birth', 'product_set')
+        model = WalletUser
+        fields = ('public_key', 'created_date', 'product_set')
