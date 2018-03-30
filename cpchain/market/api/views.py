@@ -157,8 +157,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = (AllowAny,)
-    # permission_classes = (IsOwnerOrReadOnly,)
+    # permission_classes = (AllowAny,)
+    permission_classes = (IsOwnerOrReadOnly,)
 
     def perform_create(self, serializer):
         user_id = self.request.session.get('user_id')
