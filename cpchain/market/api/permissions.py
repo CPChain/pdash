@@ -1,6 +1,9 @@
-from django.db.models import Q
 from rest_framework import permissions
+
 from .models import Token
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
@@ -23,6 +26,6 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         public_key = request.META.get('HTTP_MARKET_KEY', 'unknown')
         token = request.META.get('HTTP_MARKET_TOKEN', 'unknown')
 
-        print('public_key:' + str(public_key) + " token:" + str(token))
+        logger.info('public_key:' + str(public_key) + " token:" + str(token))
 
         return Token.objects.filter(public_key__exact=public_key).filter(key__exact=token).exists()

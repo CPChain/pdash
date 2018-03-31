@@ -17,10 +17,8 @@ from .serializers import *
 from .models import Product,Token
 from .utils import *
 
-# import the logging library
 import logging
 
-# Get an instance of a logger
 logger = logging.getLogger(__name__)
 
 PUBLIC_KEY = "public_key"
@@ -74,15 +72,14 @@ class UserLoginConfirmAPIView(APIView):
         data = request.data
         public_key = data.get(PUBLIC_KEY)
         code = data.get(VERIFY_CODE)
-        print("public_key:" + str(public_key) + ",code:" + str(code))
+        logger.info("public_key:" + str(public_key) + ",code:" + str(code))
         if public_key is None or code is None:
-            print("public_key is None or code is None. public_key:" + str(public_key))
+            logger.info("public_key is None or code is None. public_key:" + str(public_key))
             return create_invalid_response()
 
         verify_code = cache.get(public_key)
-        print("verify_code:" + str(verify_code))
         if verify_code is None:
-            print("verify_code not found for public_key:" + public_key)
+            logger.info("verify_code not found for public_key:" + public_key)
             return create_invalid_response()
 
         if not is_valid_verify_code(public_key, verify_code):
