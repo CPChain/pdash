@@ -30,10 +30,14 @@ class Product(models.Model):
     owner_address = models.CharField(max_length=200)
     title = models.CharField(max_length=100)
     description = models.TextField()
+    tags = models.CharField(max_length=200, null=True)
     price = models.FloatField()
     created = models.DateTimeField('Created', auto_now_add=True)
     expired_date = models.DateTimeField('date expired', null=True)
-    verify_code = models.CharField(max_length=200, null=True)
+    status = models.IntegerField('0:normal,1:frozen', default=0)
+    file_md5 = models.CharField(max_length=32,null=True)
+    # verify wallet hash(title,description,expired_date,price,tags)
+    signature = models.CharField(max_length=200, null=True)
 
 
 class Token(models.Model):
