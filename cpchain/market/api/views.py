@@ -147,21 +147,23 @@ class ProductPublishAPIViewSet(APIView):
         try:
             msg_seq = WalletMsgSequence.objects.get(public_key=public_key)
             msg_seq.seq = msg_seq.seq+1
-            msg_seq.save()
         except WalletMsgSequence.DoesNotExist:
-            wallet_seq = WalletMsgSequence(seq=0,public_key=public_key,user=WalletUser.objects.get(public_key=public_key))
-            wallet_seq.save()
-            print("wallet_seq:" + str(wallet_seq.seq))
-            msg_seq = wallet_seq
+            msg_seq = WalletMsgSequence(seq=0,public_key=public_key,user=WalletUser.objects.get(public_key=public_key))
+            print("msg_seq:" + str(msg_seq.seq))
 
         print("seq:" + str(msg_seq.seq))
 
         data['seq'] = msg_seq.seq
 
         serializer = ProductSerializer(data=data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save(owner=WalletUser.objects.get(public_key=public_key))
-            return create_success_response()
+
+        try:
+            if serializer.is_valid(raise_exception=True):
+                msg_seq.save()
+                serializer.save(owner=WalletUser.objects.get(public_key=public_key))
+                return create_success_response()
+        except Exception:
+            pass
 
         return create_invalid_response()
 

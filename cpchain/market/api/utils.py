@@ -21,7 +21,16 @@ def generate_random_str(randomlength=16):
 
 
 def is_valid_signature(public_key, verify_code, signature):
-    # verify signature of public_key+verify_code
+    # TODO verify signature of public_key+verify_code
     print("is_valid_verify_code public_key:" + public_key + ",verify_code:" + verify_code + ",signature:" + signature)
-    return True
+    return md5("".join([public_key,verify_code]).encode("utf-8")) == signature
 
+
+def generate_signature(signature_source):
+    # TODO replace me!
+    return md5(signature_source)
+
+
+def generate_msg_hash(msg_hash_source):
+    # TODO replace me!
+    return md5(msg_hash_source)

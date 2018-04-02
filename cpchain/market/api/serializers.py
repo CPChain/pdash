@@ -1,8 +1,8 @@
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import Product, WalletUser,Token,WalletMsgSequence
-from .utils import md5
+from .models import Product, WalletUser,Token
+from .utils import generate_signature,generate_msg_hash
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -27,18 +27,20 @@ class ProductSerializer(serializers.ModelSerializer):
             owner=validated_data['owner'],
             seq=validated_data['seq'],
         )
-        # TODO change to other algorithm.
-        # verify signature
-        signature = md5("".join([product.owner_address, product.description]).encode("utf-8"))
-        print(signature)
+        # TODO change to other algorithm.verify signature
+        signature_source = product.get_signature_source()
+        signature = generate_signature(signature_source)
+        print("signature:" + str(signature) + ",signature_source:" + str(signature_source))
+        if signature != validated_data['signature']:
+            print("invalid signature for " + product.owner_address)
+            raise Exception("invalid signature")
+
         product.signature = signature
 
         # generate msg hash
-        source = "".join([product.owner_address, product.title, product.description,
-                              product.price, product.created, product.start_date, product.end_date,
-                              product.signature, product.seq]).encode("utf-8")
-        print("source:" + source)
-        product.msg_hash = md5(source)
+        msg_hash_source = product.get_msg_hash()
+        print("msg_hash_source:" + msg_hash_source)
+        product.msg_hash = generate_msg_hash(msg_hash_source)
         print("msg_hash:" + product.msg_hash)
         product.save()
         return product

@@ -43,6 +43,14 @@ class Product(models.Model):
     msg_hash = models.CharField('Msg hash(owner_address,title,description,price,created,expired)'
                                 , max_length=256, null=True)
 
+    def get_signature_source(self):
+        return "".join([str(self.owner_address), str(self.description), str(self.price),
+                        str(self.created), str(self.start_date), str(self.end_date),
+                        str(self.seq),str(self.file_md5)]).encode("utf-8");
+
+    def get_msg_hash(self):
+        return (self.get_signature_source()+ self.signature).encode("utf-8")
+
 
 class Token(models.Model):
     """
