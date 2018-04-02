@@ -10,6 +10,10 @@ from twisted.internet import reactor, protocol, ssl, defer
 from twisted.protocols.basic import NetstringReceiver
 from twisted.python import log
 
+from twisted.web.resource import Resource, NoResource, ForbiddenResource
+from twisted.web.server import Site
+from twisted .web.static import File
+
 from cpchain import config, root_dir
 from cpchain.proxy.msg.trade_msg_pb2 import Message
 from cpchain.proxy.message import message_sanity_check
@@ -115,16 +119,46 @@ class SSLServerFactory(protocol.Factory):
         reactor.stop()
 
 
-def start_ssl_server():
-    factory = SSLServerFactory()
 
-    port = config.proxy.server_port
+class FileServer(File):
+
+    def getChild(self, path, request):
+        if not self.request_auth(request):
+            return ForbiddenResource()
+
+        # don't expose the file list under root dir
+        # for security consideration
+        if path == b'':
+            return ForbiddenResource()
+
+        file_path = server_root + '/' + path.decode()
+        return File(file_path)
+
+    # TODO: user request authentication
+    def request_auth(self, request):
+        return True
+
+
+def start_ssl_server():
+
+    # control channel
+    factory = SSLServerFactory()
+    control_port = config.proxy.server_ctrl_port
     server_key = os.path.join(root_dir, config.proxy.server_key)
     server_crt = os.path.join(root_dir, config.proxy.server_crt)
 
-    reactor.listenSSL(port, factory,
+    reactor.listenSSL(control_port, factory,
             ssl.DefaultOpenSSLContextFactory(
             server_key, server_crt))
+
+    # data channel
+    root = FileServer(server_root)
+    data_port = config.proxy.server_data_port
+    file_factory = Site(root)
+    reactor.listenSSL(data_port, file_factory,
+            ssl.DefaultOpenSSLContextFactory(
+            server_key, server_crt))
+
     reactor.run()
 
     log.startLogging(sys.stdout)
