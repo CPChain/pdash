@@ -33,11 +33,15 @@ class Product(models.Model):
     tags = models.CharField(max_length=200, null=True)
     price = models.FloatField()
     created = models.DateTimeField('Created', auto_now_add=True)
-    expired_date = models.DateTimeField('date expired', null=True)
+    start_date = models.DateTimeField('Start time', null=True)
+    end_date = models.DateTimeField('End time', null=True)
     status = models.IntegerField('0:normal,1:frozen', default=0)
+    seq = models.IntegerField('Sequence increase')
     file_md5 = models.CharField(max_length=32,null=True)
     # verify wallet hash(title,description,expired_date,price,tags)
-    signature = models.CharField(max_length=200, null=True)
+    signature = models.CharField('Signature created by client',max_length=200, null=True)
+    msg_hash = models.CharField('Msg hash(owner_address,title,description,price,created,expired)'
+                                , max_length=256, null=True)
 
 
 class Token(models.Model):
@@ -70,3 +74,26 @@ class Token(models.Model):
 
     def __str__(self):
         return self.key
+
+
+class WalletMsgSequence(models.Model):
+    """
+    The wallet message sequence model.
+    """
+    public_key = models.CharField(_("PublicKey"), max_length=200, primary_key=True)
+    # key = models.CharField(_("Key"), max_length=40, primary_key=True)
+    user = models.OneToOneField(
+        WalletUser, related_name='wallet_msg_sequence',
+        on_delete=models.CASCADE, verbose_name=_("WalletUser")
+    )
+    seq = models.IntegerField(_("seq"), default=0)
+
+    class Meta:
+        verbose_name = _("WalletUserSequence")
+        verbose_name_plural = _("WalletUserSequences")
+
+    def save(self, *args, **kwargs):
+        return super(WalletMsgSequence, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return self.public_key

@@ -1,5 +1,8 @@
 import hashlib
 import random
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def md5(source):
@@ -17,15 +20,8 @@ def generate_random_str(randomlength=16):
     return random_str
 
 
-def encrypte_verify_code(public_key, code):
-    """
-
-    :param public_key:
-    :param code:
-    :return:
-    """
-    return code
-
-
-def is_valid_verify_code(public_key, verify_code):
+def is_valid_signature(public_key, verify_code, signature):
+    # verify signature of public_key+verify_code
+    print("is_valid_verify_code public_key:" + public_key + ",verify_code:" + verify_code + ",signature:" + signature)
     return True
+
