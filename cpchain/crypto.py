@@ -70,7 +70,7 @@ class AESCipher(BaseCipher):
 class ECCipher:
     # NB we shall use ec for signature only.  using ecies is too contrived.
     def __init__(self, priv_key:'ec secp256k1'):
-        self.priv_key = key
+        self.priv_key = priv_key
         self.backend = default_backend()
         self.ecdsa = ec.ECDSA(hashes.SHA256())
 
@@ -82,6 +82,13 @@ class ECCipher:
     def get_public_key(data):
         return serialization.load_der_public_key(data, backend=default_backend())
 
+    @staticmethod
+    def get_private_key(data):
+        return serialization.load_der_private_key(data, backend=default_backend())
+
+    @staticmethod
+    def get_eccipher(priv_key):
+        return ECCipher(priv_key)
 
     def sign(self, data):
         return self.priv_key.sign(data, self.ecdsa)
@@ -143,3 +150,12 @@ class RSACipher:
                                                       algorithm=hashes.SHA1(),
                                                       label=None))
             outfile.write(data)
+
+if __name__ == '__main__':
+    private_key = ECCipher.generate_private_key()
+    ec = ECCipher(private_key)
+    serialized_private = private_key.private_bytes(
+    encoding = serialization.Encoding.DER,
+    format = serialization.PrivateFormat.PKCS8,
+    encryption_algorithm = serialization.NoEncryption())
+    print(serialized_private)
