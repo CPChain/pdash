@@ -1,6 +1,7 @@
 import hashlib
 import logging
 import random
+import traceback
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -9,6 +10,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 
 logger = logging.getLogger(__name__)
 
+PASSWORD = b'^-_-^cpchain@2018^-_-^'
 
 def md5(source):
     digest = hashlib.md5()
@@ -44,14 +46,14 @@ def generate_msg_hash(msg_hash_source):
 def generate_keys():
     # SECP384R1,SECP256R1
     private_key = ec.generate_private_key(
-        ec.SECP384R1(), default_backend()
+        ec.SECP256K1(), default_backend()
     )
 
     serialized_private = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
         # encryption_algorithm=serialization.NoEncryption
-        encryption_algorithm=serialization.BestAvailableEncryption(b'testpassword11')
+        encryption_algorithm=serialization.BestAvailableEncryption(PASSWORD)
     )
 
     private_key_list = []
@@ -93,16 +95,19 @@ def sign(pri_key_string, raw_data):
     try:
         loaded_private_key = serialization.load_pem_private_key(
             pri_key_string,
+            password=PASSWORD,
             backend=default_backend()
         )
-        signature = loaded_private_key.sign(
-            raw_data, ec.ECDSA(hashes.SHA256()))
-        print("hex sign:" + byte_to_hex(signature))
+        signature_string = loaded_private_key.sign(
+            raw_data,
+            ec.ECDSA(hashes.SHA256()))
+        # print("hex sign:" + byte_to_hex(signature_string))
 
-        to_hex = byte_to_hex(signature)
+        to_hex = byte_to_hex(signature_string)
         return to_hex
     except Exception:
-        print("error")
+        exstr = traceback.format_exc()
+        print (exstr)
         return None
 
 
@@ -115,30 +120,48 @@ def hex_to_byte(hex_string):
 
 
 if __name__ == '__main__':
-    private_key_string, public_key_string = generate_keys()
-    print("pri key:%r", private_key_string)
-    print("pub key:%r", public_key_string)
+    test_private_key_string = '''-----BEGIN ENCRYPTED PRIVATE KEY-----
+MIHsMFcGCSqGSIb3DQEFDTBKMCkGCSqGSIb3DQEFDDAcBAjzToaLuvPQzwICCAAw
+DAYIKoZIhvcNAgkFADAdBglghkgBZQMEASoEEOZ1gvi979iOQ0tEAG34vVoEgZA1
+FUgBPISB9LpKJECvQ5Vu6ftYWRiIlg8JOQbP45VdlaeHqNSFhieq3L8G+NaXtLKN
+GZpWE+Y/yKRMI1+fDu4Z/OAOCPiwjaoaNA3bRx740Gi3HD7PcD7viv3fMwHG0FgU
+sT8i5fYH4n7jzD4FS1/+c7SkwH/eLdTvYGmX+uzCOMJ8VGntnq1xR3LigXAnXrg=
+-----END ENCRYPTED PRIVATE KEY-----'''.encode(encoding="utf-8")
 
-    private_key_string = '''-----BEGIN ENCRYPTED PRIVATE KEY-----
-MIIBHDBXBgkqhkiG9w0BBQ0wSjApBgkqhkiG9w0BBQwwHAQIGXjZc/lY2fICAggA
-MAwGCCqGSIb3DQIJBQAwHQYJYIZIAWUDBAEqBBCkoLS2yLTnddr+1P3DJz02BIHA
-KsNPNwSuQcc9fueSqqcJf9ZL8yweIEKXsqN0j+u1DPdBPFipcY1eMSMYs5NbiO8r
-MLRrpVZWhLvm6TkMxpaKuLoOGdduUZBhJ6ZME+KC0ntW2/sPxhh+g48E/xOlGWnZ
-jp9bAqDz5fRAguKW5hUugLHij0qlzrowZkY4YlpY951PyCIgOxTT0KAuxqc06uGe
-eIPNUIpOMC1gePIL/pzGnOMmJrBmDU0gCeOBSHixrMHpTuhUTjsUIlXHpYFjKn9K
------END ENCRYPTED PRIVATE KEY-----'''
-
-    signature = sign(private_key_string, "hello")
-    print(signature)
-    is_valid_sign = verify_signature(public_key_string,signature,"hello")
-    print("is valid signature:" + str(is_valid_sign))
-
-    data = "dsfdsfdsf".encode(encoding="utf-8")
-    hex = "306402307F6782A9FF09D8DBCE78925C0AE140813A3E35427CF27040302AB6D6E42719657BDD3FC6727E1EAF1C4BC77EE1EF5D0002307F58AEE673623AA73312B8BC64AAC9469F7A5891AD998EF44ADD98DCF23CF1F87B92B185F357C072F11AD1A8C5210C40"
-    public_key = '''-----BEGIN PUBLIC KEY-----
-MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEIQxH3M3v6r+db0IJvAK1H0zl5EIZxYUD
-Nt55TAF7TbgEgz4Ocj5HexsjY0R7jsxC5fjmWTEbwF7zUYEj9l0REksK19Ubl7aN
-ap81GPcZp2bqzGubL7mv0CwoQaDf7XLD
+    test_public_key = '''-----BEGIN PUBLIC KEY-----
+MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEFTgSuaPEkOfJicDM0+Y2fZw2lbQEebFp
+erZxolqxK6hu+9jKTfXtImfn5R5flHjzkA0NTHohdXZIE9prp8C9bQ==
 -----END PUBLIC KEY-----'''.encode(encoding="utf-8")
 
-    logger.info("is valid:%r", verify_signature(pub_key_string=public_key, signature=hex, raw_data=data))
+    expected_signature = "3044022057399397A98750206F9E2CCCD341C86A6BD917A7EAB16F385ED45F8E2E181FE3022044C0C7545A808182E1CBDBF1E4477A6BFD617F4130B3AE12F0919B51B5274660"
+    print("test_private_key_string:")
+    print(test_private_key_string)
+    print("test_public_key:")
+    print(test_public_key)
+    print("expected_signature:")
+    print(expected_signature)
+
+    print("\n========= start sign =========")
+    sample = "hello".encode(encoding="utf-8")
+
+    print("sample string:")
+    print(sample)
+
+    test_signature = sign(test_private_key_string, sample)
+    print("test_signature is:")
+    print(test_signature)
+
+    is_valid_sign = verify_signature(test_public_key, test_signature, sample)
+    print("verify signature:" + str(is_valid_sign))
+
+    print("================generate keys=================")
+    private_key_string, public_key_string = generate_keys()
+    print("pri key:\n", private_key_string)
+    print("pub key:\n", public_key_string)
+    new_signature = sign(private_key_string.encode(encoding="utf-8"), sample)
+    print("new_signature is:")
+    print(new_signature)
+
+    is_valid_sign = verify_signature(public_key_string.encode(encoding="utf-8"), new_signature, sample)
+    print("is valid new_signature:" + str(is_valid_sign))
+
