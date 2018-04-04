@@ -22,8 +22,9 @@ port = 5001
 dbpath = "cpchain/assets/wallet/wallet.db"
 
 [proxy]
-server_host = 'cpctest.com'
-server_port = 8000
+server_host = 'localhost'
+server_ctrl_port = 8000
+server_data_port = 8001
 server_key = 'cpchain/assets/proxy/key/server.key'
 server_crt = 'cpchain/assets/proxy/key/server.crt'
 dbpath = "cpchain/assets/proxy/proxy.db"
