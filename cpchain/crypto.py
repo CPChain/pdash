@@ -119,7 +119,7 @@ class ECCipher:
                 pub_key_string,
                 backend=default_backend()
             )
-            loaded_public_key.verify(self.hex_to_byte(signature), raw_data, ec.ECDSA(hashes.SHA256()))
+            loaded_public_key.verify(Encoder.hex_to_byte(signature), raw_data, ec.ECDSA(hashes.SHA256()))
             return True
         except Exception:
             return False
@@ -137,20 +137,12 @@ class ECCipher:
                 ec.ECDSA(hashes.SHA256()))
             # print("hex sign:" + byte_to_hex(signature_string))
 
-            to_hex = self.byte_to_hex(signature_string)
+            to_hex = Encoder.byte_to_hex(signature_string)
             return to_hex
         except Exception:
             exstr = traceback.format_exc()
             print (exstr)
             return None
-
-    @staticmethod
-    def byte_to_hex(self,hex_bytes):
-        return ''.join(["%02X" % x for x in hex_bytes]).strip()
-
-    @staticmethod
-    def hex_to_byte(self,hex_string):
-        return bytes.fromhex(hex_string)
 
 
 class RSACipher:
@@ -207,3 +199,25 @@ class RSACipher:
                                                       algorithm=hashes.SHA1(),
                                                       label=None))
             outfile.write(data)
+
+
+class SHA256HashCipher:
+
+    @staticmethod
+    def generate_hash(data):
+            digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
+            digest.update(data.encode(encoding="utf-8"))
+            digest_data = digest.finalize()
+            digest_string = Encoder.byte_to_hex(digest_data)
+            return digest_string
+
+
+class Encoder:
+
+    @staticmethod
+    def byte_to_hex(hex_bytes):
+        return ''.join(["%02X" % x for x in hex_bytes]).strip()
+
+    @staticmethod
+    def hex_to_byte(hex_string):
+        return bytes.fromhex(hex_string)

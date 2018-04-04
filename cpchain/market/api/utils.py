@@ -8,6 +8,8 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
+from cpchain.crypto import SHA256HashCipher
+
 logger = logging.getLogger(__name__)
 
 PASSWORD = b'^-_-^cpchain@2018^-_-^'
@@ -17,6 +19,10 @@ def md5(source):
     digest.update(source)
     return digest.hexdigest()
 
+def sha256(s):
+    digest_string = SHA256HashCipher.generate_hash(s)
+    print(digest_string)
+    return digest_string
 
 def generate_random_str(randomlength=16):
     random_str = ''
@@ -162,4 +168,6 @@ erZxolqxK6hu+9jKTfXtImfn5R5flHjzkA0NTHohdXZIE9prp8C9bQ==
 
     is_valid_sign = verify_signature(public_key_string.encode(encoding="utf-8"), new_signature, sample)
     print("is valid new_signature:" + str(is_valid_sign))
+
+    sha256("hello")
 
