@@ -79,8 +79,7 @@ class ECCipher:
         pass
 
     @staticmethod
-    def generate_keys(self,password=PASSWORD):
-        # SECP384R1,SECP256R1
+    def generate_keys(password=PASSWORD):
         private_key = ec.generate_private_key(
             ec.SECP256K1(), default_backend()
         )
@@ -112,8 +111,8 @@ class ECCipher:
         pub_key_string = ''.join(public_key_list)
         return pri_key_string, pub_key_string
 
-
-    def verify_signature(self,pub_key_string, signature, raw_data):
+    @staticmethod
+    def verify_signature(pub_key_string, signature, raw_data):
         try:
             loaded_public_key = serialization.load_pem_public_key(
                 pub_key_string,
@@ -124,8 +123,8 @@ class ECCipher:
         except Exception:
             return False
 
-
-    def sign(self,pri_key_string, raw_data,password=PASSWORD):
+    @staticmethod
+    def sign(pri_key_string, raw_data,password=PASSWORD):
         try:
             loaded_private_key = serialization.load_pem_private_key(
                 pri_key_string,
@@ -136,7 +135,6 @@ class ECCipher:
                 raw_data,
                 ec.ECDSA(hashes.SHA256()))
             # print("hex sign:" + byte_to_hex(signature_string))
-
             to_hex = Encoder.byte_to_hex(signature_string)
             return to_hex
         except Exception:

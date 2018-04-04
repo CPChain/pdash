@@ -2,7 +2,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from .models import Product, WalletUser,Token
-from .utils import generate_signature,generate_msg_hash
+from .utils import generate_msg_hash,verify_signature
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -29,13 +29,11 @@ class ProductSerializer(serializers.ModelSerializer):
         )
         # TODO change to other algorithm.verify signature
         signature_source = product.get_signature_source()
-        signature = generate_signature(signature_source)
-        print("signature:" + str(signature) + ",signature_source:" + str(signature_source))
-        if signature != validated_data['signature']:
-            print("invalid signature for " + product.owner_address)
-            raise Exception("invalid signature")
+        is_valid_signature = verify_signature(product.owner_address, product.signature, signature_source)
+        print("is_valid_signature:" + str(is_valid_signature) + ",signature_source:" + str(signature_source))
 
-        product.signature = signature
+        if not is_valid_signature:
+            raise Exception("invalid_signature")
 
         # generate msg hash
         msg_hash_source = product.get_msg_hash()
