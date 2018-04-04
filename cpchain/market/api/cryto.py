@@ -12,18 +12,17 @@ logger = logging.getLogger(__name__)
 def test(signature_source):
 
     # TODO replace me!
-    # data = b"this is some data I'd like to sign"
     data = signature_source.encode(encoding="utf-8")
     print(type(data))
     private_key = ec.generate_private_key(
-        ec.SECP384R1(), default_backend()
+        ec.SECP256K1(), default_backend()
     )
 
     serialized_private = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.BestAvailableEncryption(b'testpassword11')
-        # encryption_algorithm=serialization.NoEncryption
+        encryption_algorithm=serialization.BestAvailableEncryption(b'cpchain@2018')
+        # encryption_algorithm=serialization.NoEncryption,
     )
     print("private key:")
     pls=serialized_private.splitlines()
@@ -83,7 +82,7 @@ Q35TpG0FghR3T0XTwj6IfbCJacMS/egd
 
     loaded_public_key = serialization.load_pem_public_key(
         public_key,
-        backend = default_backend()
+        backend=default_backend()
     )
     print("loaded_public_key:")
     print(loaded_public_key)
@@ -92,17 +91,21 @@ Q35TpG0FghR3T0XTwj6IfbCJacMS/egd
     loaded_public_key.verify(hexSign, data, ec.ECDSA(hashes.SHA256()))
 
     private_key ='''-----BEGIN ENCRYPTED PRIVATE KEY-----
-MIIBHDBXBgkqhkiG9w0BBQ0wSjApBgkqhkiG9w0BBQwwHAQIym4J0AldqFoCAggA
-MAwGCCqGSIb3DQIJBQAwHQYJYIZIAWUDBAEqBBA3Y6UDkUA+YB0EyuJkd/aqBIHA
-0L8SbnxJYhAoRrfTTghTN3LLHMm6HXGmXHvSrWpDx3Lpz/Tt75SM4kPij+8Go1hz
-zTvjJsVtqjzrAoAN064pyVpuhaXOnHkhgVOMfzqnEcv42a88NoNzBZseil6vP/Rd
-o0dmj9HJQ+I2PRnECOTDtcQMx2tb5O1kYhwUZPOVcOwsUvlkhUBiD/RtEa20xXPS
-0azgmCReVBcCrhgOnbbM73vdjLeThJ3089blgqfTIAJHtc18vUqJOOqvbRdpVDVF
------END ENCRYPTED PRIVATE KEY-----'''
+MIIBHDBXBgkqhkiG9w0BBQ0wSjApBgkqhkiG9w0BBQwwHAQIot74uUdk0HcCAggA
+MAwGCCqGSIb3DQIJBQAwHQYJYIZIAWUDBAEqBBD3+SLFJSHgcpnuPVLW/8RHBIHA
+ENJi/Eo2qwfpWe3wCJWXK67YunDx59Gp4to9fp2iNlooU0gGJpPUHWjecu2KwszA
+/ih2J1EOHu2u3lchaRyuKNsU1sLJjPJYUL4Sq7pYk5zOmB00jJazMc4y5w5b91AR
+enN91L+xmMp2q/zJDynGy7T6MECVayFvPBp7CWMqLuNXdw7rUDfiAWo9BwrInKGc
+WLJv4zY85H+SeZRyypC6v5P3aCOnA6OgxYrBLj0oz12Bg0OfAFYuJLcOozqZqpU0
+-----END ENCRYPTED PRIVATE KEY-----'''.encode(encoding="utf-8")
+    print("loaded_private_key:")
     loaded_private_key = serialization.load_pem_private_key(
         private_key,
+        password=b"cpchain@2018",
         backend=default_backend()
     )
+    print("loaded_private_key:")
+    print(loaded_private_key)
 
     return True
 
