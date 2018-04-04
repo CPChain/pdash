@@ -15,8 +15,9 @@ from twisted.web.server import Site
 from twisted .web.static import File
 
 from cpchain import config, root_dir
-from cpchain.proxy.msg.trade_msg_pb2 import Message
-from cpchain.proxy.message import message_sanity_check
+from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
+from cpchain.proxy.message import message_sanity_check, sign_message_verify
+
 from cpchain.proxy.ipfs import IPFS
 from cpchain.proxy.proxy_db import Trade, ProxyDB
 
@@ -34,18 +35,30 @@ class SSLServerProtocol(NetstringReceiver):
         print("connect to client " + self.peer)
 
     def stringReceived(self, string):
-        proxy_db = self.proxy_db
-        trade = Trade()
-        error = None
-        file_size = 0
+        sign_message = SignMessage()
+        sign_message.ParseFromString(string)
+
+        valid = sign_message_verify(sign_message)
+
+        if not valid:
+            error = 'wrong signature'
+            self.proxy_reply_error(error)
+            return
 
         message = Message()
-        message.ParseFromString(string)
+        message.ParseFromString(sign_message.data)
         valid = message_sanity_check(message)
         if not valid or message.type == Message.PROXY_REPLY:
             error = "wrong client request"
+            self.proxy_reply_error(error)
+            return
 
-        elif message.type == Message.SELLER_DATA:
+        proxy_db = self.proxy_db
+        trade = Trade()
+        file_size = 0
+        error = None
+
+        if message.type == Message.SELLER_DATA:
             data = message.seller_data
             trade.seller_addr = data.seller_addr
             trade.buyer_addr = data.buyer_addr
@@ -84,24 +97,33 @@ class SSLServerProtocol(NetstringReceiver):
             else:
                 error = "trade record not found in database"
 
-        reply_message = Message()
-        reply_message.type = Message.PROXY_REPLY
-        proxy_reply = reply_message.proxy_reply
-
         if error:
-            proxy_reply.error = error
-        else:
-            proxy_reply.AES_key = trade.AES_key
-            proxy_reply.file_hash = trade.file_hash
-            proxy_reply.file_size = file_size
+            self.proxy_reply_error(error)
+            return
 
-        string = reply_message.SerializeToString()
+
+        message.type = Message.PROXY_REPLY
+        proxy_reply = message.proxy_reply
+        proxy_reply.AES_key = trade.AES_key
+        proxy_reply.file_hash = trade.file_hash
+        proxy_reply.file_size = file_size
+
+        string = message.SerializeToString()
         self.sendString(string)
         self.transport.loseConnection()
 
     def connectionLost(self, reason):
         self.factory.numConnections -= 1
         print("lost connection to client %s" % (self.peer))
+
+    def proxy_reply_error(self, error):
+        message = Message()
+        message.type = Message.PROXY_REPLY
+        proxy_reply = message.proxy_reply
+        proxy_reply.error = error
+        string = message.SerializeToString()
+        self.sendString(string)
+        self.transport.loseConnection()
 
 class SSLServerFactory(protocol.Factory):
     numConnections = 0
@@ -141,6 +163,8 @@ class FileServer(File):
 
 def start_ssl_server():
 
+    log.startLogging(sys.stdout)
+
     # control channel
     factory = SSLServerFactory()
     control_port = config.proxy.server_ctrl_port
@@ -161,7 +185,7 @@ def start_ssl_server():
 
     reactor.run()
 
-    log.startLogging(sys.stdout)
+
 
 if __name__ == '__main__':
     start_ssl_server()
