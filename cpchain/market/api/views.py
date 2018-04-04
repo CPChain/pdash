@@ -48,7 +48,8 @@ class UserLoginAPIView(APIView):
         return Response(serializer.errors, status= HTTP_400_BAD_REQUEST)
 
     def generate_verify_code(self, public_key):
-        nonce = generate_random_str(6)
+        # nonce = generate_random_str(6)
+        nonce = "qZaQ6S"
         logger.info("put cache public_key:" + public_key + ", nonce:" + nonce)
         cache.set(public_key, nonce, TIMEOUT)
         return JsonResponse({"success": True, "message": nonce})
@@ -152,8 +153,36 @@ class ProductPublishAPIViewSet(APIView):
             print("msg_seq:" + str(msg_seq.seq))
 
         print("seq:" + str(msg_seq.seq))
+        now = timezone.now()
+        product = Product(data)
+        product.seq = msg_seq.seq
+        product.owner_address = data['owner_address']
+        product.title = data['title']
+        product.description = data['description'],
+        product.price = data['price'],
+        product.created = now,
+        product.start_date = data['start_date']
+        product.end_date = data['end_date']
+        product.signature = data['signature']
+        product.file_md5 = data['file_md5']
+        product.owner_address = data['owner_address']
 
-        data['seq'] = msg_seq.seq
+        signature_source = product.get_signature_source()
+        print(signature_source)
+        is_valid_signature = verify_signature(product.owner_address, product.signature, signature_source)
+        print("is_valid_signature:" + str(is_valid_signature) + ",signature_source:" + str(signature_source))
+
+        if not is_valid_signature:
+            logger.error("invalid_signature")
+            return create_invalid_response()
+
+        # generate msg hash
+        msg_hash_source = product.get_msg_hash()
+        print("msg_hash_source:" + msg_hash_source)
+        product.msg_hash = generate_msg_hash(msg_hash_source)
+        print("msg_hash:" + product.msg_hash)
+        data['msg_hash'] = product.msg_hash
+        data['seq']=msg_seq.seq
 
         serializer = ProductSerializer(data=data)
 
@@ -163,6 +192,8 @@ class ProductPublishAPIViewSet(APIView):
                 serializer.save(owner=WalletUser.objects.get(public_key=public_key))
                 return create_success_response()
         except Exception:
+            exstr = traceback.format_exc()
+            print(exstr)
             pass
 
         return create_invalid_response()

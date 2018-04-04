@@ -10,7 +10,7 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = (
         'id', 'owner_address', 'title', 'description', 'tags', 'price',
-        'created', 'start_date', 'end_date', 'seq',
+        'created', 'start_date', 'end_date', 'seq','file_md5',
         'signature','msg_hash')
 
     def create(self, validated_data):
@@ -25,21 +25,10 @@ class ProductSerializer(serializers.ModelSerializer):
             end_date=validated_data['end_date'],
             signature=validated_data['signature'],
             owner=validated_data['owner'],
+            file_md5=validated_data['file_md5'],
             seq=validated_data['seq'],
         )
         # TODO change to other algorithm.verify signature
-        signature_source = product.get_signature_source()
-        is_valid_signature = verify_signature(product.owner_address, product.signature, signature_source)
-        print("is_valid_signature:" + str(is_valid_signature) + ",signature_source:" + str(signature_source))
-
-        if not is_valid_signature:
-            raise Exception("invalid_signature")
-
-        # generate msg hash
-        msg_hash_source = product.get_msg_hash()
-        print("msg_hash_source:" + msg_hash_source)
-        product.msg_hash = generate_msg_hash(msg_hash_source)
-        print("msg_hash:" + product.msg_hash)
         product.save()
         return product
 

@@ -1,3 +1,4 @@
+import base64
 import os
 import functools
 import traceback
@@ -112,6 +113,44 @@ class ECCipher:
         return pri_key_string, pub_key_string
 
     @staticmethod
+    def generate_der_keys(password=PASSWORD):
+        private_key = ec.generate_private_key(
+            ec.SECP256K1(), default_backend()
+        )
+
+        serialized_private = private_key.private_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.BestAvailableEncryption(password)
+        )
+
+        pri_key_string = Encoder.byte_to_hex(serialized_private)
+        print("pri_key_string:"+pri_key_string)
+        puk = private_key.public_key()
+        serialized_public = puk.public_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        pub_key_string = Encoder.byte_to_hex(serialized_public)
+        print("pub_key_string:" + pub_key_string)
+        return pri_key_string, pub_key_string
+
+    @staticmethod
+    def verify_der_signature(pub_key_string, signature, raw_data_string):
+        try:
+            pub_key_string_bytes = Encoder.hex_to_byte(pub_key_string)
+            loaded_public_key = serialization.load_der_public_key(
+                pub_key_string_bytes,
+                backend=default_backend()
+            )
+            loaded_public_key.verify(Encoder.hex_to_byte(signature), raw_data_string.encode(encoding="utf-8"), ec.ECDSA(hashes.SHA256()))
+            return True
+        except Exception:
+            exstr = traceback.format_exc()
+            print(exstr)
+            return False
+
+    @staticmethod
     def verify_signature(pub_key_string, signature, raw_data):
         try:
             loaded_public_key = serialization.load_pem_public_key(
@@ -134,7 +173,26 @@ class ECCipher:
             signature_string = loaded_private_key.sign(
                 raw_data,
                 ec.ECDSA(hashes.SHA256()))
-            # print("hex sign:" + byte_to_hex(signature_string))
+            to_hex = Encoder.byte_to_hex(signature_string)
+            return to_hex
+        except Exception:
+            exstr = traceback.format_exc()
+            print (exstr)
+            return None
+
+
+    @staticmethod
+    def sign_der(pri_key_string, raw_data,password=PASSWORD):
+        try:
+            pri_key_string_bytes = Encoder.hex_to_byte(pri_key_string)
+            loaded_private_key = serialization.load_der_private_key(
+                pri_key_string_bytes,
+                password=password,
+                backend=default_backend()
+            )
+            signature_string = loaded_private_key.sign(
+                raw_data.encode(encoding="utf-8"),
+                ec.ECDSA(hashes.SHA256()))
             to_hex = Encoder.byte_to_hex(signature_string)
             return to_hex
         except Exception:
