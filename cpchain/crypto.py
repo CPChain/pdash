@@ -70,9 +70,9 @@ class AESCipher(BaseCipher):
             outfile.write(data)
 
 
-
 class ECCipher:
     # NB we shall use ec for signature only.  using ecies is too contrived.
+
     def __init__(self, key:'ec secp256k1'):
         # self.backend = default_backend()
         # self.key = key
@@ -147,14 +147,14 @@ class RSACipher:
     def __init__(self, priv_bytes, pub_bytes):
         self.backend = default_backend()
         self.priv_key = serialization.load_pem_private_key(priv_bytes,
-                                                         password=None,
-                                                         backend=self.backend)
+                                                           password=None,
+                                                           backend=self.backend)
         self.pub_key = serialization.load_pem_public_key(pub_bytes,
                                                          backend=self.backend)
 
 
     @staticmethod
-    def generate_key() -> "returns key bytes":
+    def generate_private_key() -> "returns key bytes":
         priv_key = rsa.generate_private_key(public_exponent=65537,
                                             key_size=4096,
                                             backend=default_backend())
