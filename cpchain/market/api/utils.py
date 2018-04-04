@@ -43,7 +43,7 @@ def generate_msg_hash(msg_hash_source):
     return md5(msg_hash_source)
 
 
-def generate_keys():
+def generate_keys(password=PASSWORD):
     # SECP384R1,SECP256R1
     private_key = ec.generate_private_key(
         ec.SECP256K1(), default_backend()
@@ -52,8 +52,7 @@ def generate_keys():
     serialized_private = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
-        # encryption_algorithm=serialization.NoEncryption
-        encryption_algorithm=serialization.BestAvailableEncryption(PASSWORD)
+        encryption_algorithm=serialization.BestAvailableEncryption(password)
     )
 
     private_key_list = []
@@ -62,7 +61,6 @@ def generate_keys():
         private_key_list.append(p.decode("utf-8"))
         private_key_list.append('\n')
     pri_key_string = ''.join(private_key_list)
-    # print("private key:\n" + pri_key_string)
 
     public_key_list = []
     puk = private_key.public_key()
@@ -91,11 +89,11 @@ def verify_signature(pub_key_string, signature, raw_data):
         return False
 
 
-def sign(pri_key_string, raw_data):
+def sign(pri_key_string, raw_data,password=PASSWORD):
     try:
         loaded_private_key = serialization.load_pem_private_key(
             pri_key_string,
-            password=PASSWORD,
+            password=password,
             backend=default_backend()
         )
         signature_string = loaded_private_key.sign(
