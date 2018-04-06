@@ -1,4 +1,5 @@
-from cpchain.proxy.msg.trade_msg_pb2 import Message
+from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
+from cpchain.proxy.crypto import ECCipher
 
 def message_sanity_check(message):
 
@@ -42,10 +43,15 @@ def message_sanity_check(message):
 
     return False
 
-def proxy_reply_copy(src, dst):
-    if src.error:
-        dst.error = src.error
+def sign_message_verify(sign_message):
+
+    ec = ECCipher()
+
+    ec.load_public_key(sign_message.public_key)
+    ec.encode_signature(sign_message.signature)
+    ec.load_sign_data(sign_message.data)
+
+    if not ec.verify_signature():
+        return False
     else:
-        dst.AES_key = src.AES_key
-        dst.file_hash = src.file_hash
-        dst.file_size = src.file_size
+        return True

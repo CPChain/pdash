@@ -13,7 +13,7 @@ class IPFS(object):
         try:
             self.client = ipfsapi.connect(host, port)
         except:
-            sys.stderr.write(sys.exc_info())
+            sys.stderr.write(str(sys.exc_info()))
             return False
         else:
             return True
@@ -26,7 +26,7 @@ class IPFS(object):
         try:
             self.client.ls(file_hash)
         except:
-            sys.stderr.write(sys.exc_info())
+            sys.stderr.write(str(sys.exc_info()))
             return False
         else:
             return True
@@ -40,16 +40,14 @@ class IPFS(object):
             try:
                 file_nodes = self.client.add(file_path, recursive=True)
             except:
-                errorno = sys.exc_info()
-                sys.stderr.write(errorno)
+                sys.stderr.write(str(sys.exc_info()))
             else:
                 return file_nodes[-1]['Hash']
         elif os.path.isfile(file_path):
             try:
                 file_node = self.client.add(file_path)
             except:
-                errorno = sys.exc_info()
-                sys.stderr.write(errorno)
+                sys.stderr.write(str(sys.exc_info()))
             else:
                 return file_node['Hash']
         else:
@@ -68,8 +66,7 @@ class IPFS(object):
             try:
                 self.client.get(file_hash)
             except:
-                errorno = sys.exc_info()
-                sys.stderr.write(errorno)
+                sys.stderr.write(str(sys.exc_info()))
                 os.chdir(cwd)
                 return False
             else:
