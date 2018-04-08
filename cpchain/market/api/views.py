@@ -168,7 +168,9 @@ class ProductPublishAPIViewSet(APIView):
         product.owner_address = data['owner_address']
 
         signature_source = product.get_signature_source()
-        print(signature_source)
+        # print("owner_address:"+product.owner_address)
+        # print("product.signature:"+product.signature)
+        # print("signature_source:"+signature_source)
         is_valid_signature = verify_signature(product.owner_address, product.signature, signature_source)
         print("is_valid_signature:" + str(is_valid_signature) + ",signature_source:" + str(signature_source))
 
