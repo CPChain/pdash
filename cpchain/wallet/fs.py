@@ -30,7 +30,7 @@ def encrypt_file(file_in_path, file_out_path):
     encrypter = AESCipher(new_key)
     encrypter.encrypt(file_in_path, file_out_path)
     session.query(FileInfo).filter(FileInfo.path == file_in_path).\
-        update({FileInfo.aes_key: new_key}, synchronize_session=False)
+        update({FileInfo.aes_key: bytes.decode(new_key)}, synchronize_session=False)
     session.commit()
 
 
