@@ -1,17 +1,17 @@
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet import defer, reactor
 from treq.client import HTTPClient
-from cpchain.proxy.msg.trade_msg_pb2 import Message
+#from cpchain.proxy.msg.trade_msg_pb2 import Message
 
-from cpchain.utils import logging
-from cpchain.proxy import client
+#from cpchain.utils import logging
+#from cpchain.proxy import client
 import json
 from cpchain import crypto
 
 class MarketClient:
-    def __init__(self, priv_keyfile, pub_keyfile):
+    def __init__(self):
         self.client = HTTPClient(reactor)
-        self.url = 'localhost'  #get url from chain
+        self.url = 'http://localhost:8000/api/v1'  #get url from chain
         self.pub_key = '111' #crypto.ECCipher.get_public_key(pub_keyfile)
         self.priv_key = '222' #crypto.ECCipher.get_private_key(priv_keyfile)
         self.token = 'aaa' #self.login_confirm()
@@ -19,8 +19,8 @@ class MarketClient:
     @inlineCallbacks
     def login(self):
         header = {'Content-Type': 'application/json'}
-        data = json.dumps({'public_key': self.pub_key})
-        confirm_info = yield self.client.post(url=self.url+'login', headers=header, data=data)
+        data = {'public_key': self.pub_key}
+        confirm_info = yield self.client.post(url=self.url+'login/', headers=header, json=data)
         confirm_info = json.loads(confirm_info)
         if confirm_info['success'] == False:
             print('login failed')
@@ -31,7 +31,7 @@ class MarketClient:
         nonce = '213' #self.login()
         signature = 'sig'+nonce #ECCipher.sign(nonce)
         header = {'Content-Type': 'application/json'}
-        data = json.dumps({'public_key': self.pub_key, 'code': signature})
+        data = {'public_key': self.pub_key, 'code': signature}
         confirm_info = yield self.client.post(self.url+'confirm', headers=header, data=data)
         confirm_info = json.loads(confirm_info)
         if confirm_info['success'] == False:
@@ -40,17 +40,15 @@ class MarketClient:
 
     @inlineCallbacks
     def publish_product(self, title, description, price, start_date, end_date):
-        header = ['Content-Type: application/json']
-        market_key = 'MARKET-KEY: '+self.pub_key
-        header.append(market_key)
-        market_token = self.token
-        header.append(market_token)
-        body = {'owner_address': self.pub_key, 'title': title, 'description': description, 'price': price,
+        header = {'Content-Type': 'application/json'}
+        header['MARKET-KEY'] = self.pub_key
+        header['MARKET-TOKEN'] = 'jjkk'
+        data = {'owner_address': self.pub_key, 'title': title, 'description': description, 'price': price,
                 'start_date': start_date, 'end_date': end_date}
-        signature = crypto.ECCipher.get_eccipher(self.priv_key).sign(body)
-        body['signature'] = signature
+        signature = crypto.ECCipher.get_eccipher(self.priv_key).sign(data)
+        data['signature'] = signature
         body = str(body)
-        confirm = yield self.client.post(self.url+'product', headers=header, data=body)
+        confirm = yield self.client.post(self.url+'product', headers=header, json=data)
         return confirm
 
     @inlineCallbacks
@@ -73,3 +71,5 @@ class MarketClient:
         confirm = yield self.client.post(url=self.url+'logout', headers=header, data=body)
         return confirm
 
+if __name__ == '__main__':
+    print(MarketClient().login())
