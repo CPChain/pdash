@@ -179,7 +179,7 @@ class ProductPublishAPIViewSet(APIView):
             return create_invalid_response()
 
         # generate msg hash
-        msg_hash_source = product.get_msg_hash()
+        msg_hash_source = product.get_msg_hash_source()
         print("msg_hash_source:" + msg_hash_source)
         product.msg_hash = generate_msg_hash(msg_hash_source)
         print("msg_hash:" + product.msg_hash)
