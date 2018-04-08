@@ -206,7 +206,8 @@ class ProductPublishAPIViewSet(APIView):
         keyword = params.get('keyword')
         if keyword is not None:
             logger.info("keyword is ", keyword)
-            queryset = Product.objects.filter(Q(title__contains=keyword) | Q(description__contains=keyword))
+            queryset = Product.objects.filter(
+                Q(title__contains=keyword) | Q(description__contains=keyword) | Q(tags__contains=keyword))
         else:
             queryset = Product.objects.all()
 
