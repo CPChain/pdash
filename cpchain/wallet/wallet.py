@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import sys
 
-from PyQt5.QtWidgets import QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QVBoxLayout, QGridLayout, QWidget, QScrollArea, QListWidget
+from PyQt5.QtWidgets import QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QVBoxLayout, QGridLayout, QWidget, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 
@@ -17,7 +17,12 @@ class Header(QFrame):
 
 
     def init_ui(self):
-        pass
+
+        def set_layout():
+            self.main_layout = main_layout = QHBoxLayout(self)
+            stub_label = QLabel("Stub")
+            main_layout.addWidget(stub_label)
+        set_layout()
 
 
     # drag support
@@ -48,6 +53,8 @@ class SideBar(QScrollArea):
         super().__init__(parent)
         # needed
         self.parent = parent
+        self.content_tabs = parent.content_tabs
+
         self.init_ui()
 
 
@@ -96,18 +103,33 @@ class SideBar(QScrollArea):
 
         def add_lists():
             self.seller_mode_list = QListWidget()            
+            self.seller_mode_list.addItem("My Data")
             self.seller_mode_list.addItem("Publish Data")
+            self.seller_mode_list.addItem(QListWidgetItem(QIcon(), "Test"))
+            self.seller_mode_list.setCurrentRow(0)
         add_lists()
+
+
+        def bind_slots():
+            def seller_mode_list_clicked(item):
+                if item.text() == "My Data":
+                    self.content_tabs.setCurrentIndex(0)
+
+            self.seller_mode_list.itemPressed.connect(seller_mode_list_clicked)
+
+        bind_slots()
+
 
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self.frame)
             main_layout.addLayout(btn_layout)
             main_layout.addWidget(self.seller_mode_list)
 
+            main_layout.setContentsMargins(0, 8, 0, 0)
+
             self.setLayout(self.main_layout)
 
         set_layout()
-        # self.setContentsMargins(0, 0, 0, 0)
 
 
         with open(join_with_root(config.wallet.qss.sidebar)) as f:
@@ -139,6 +161,19 @@ class MainWindow(QMainWindow):
             self.move(qrect.topLeft())
         set_geometry()
 
+        def add_content_tabs():
+            self.content_tabs = content_tabs = QTabWidget()
+            content_tabs.tabBar().setObjectName("content_tabs")
+
+            def create_file_tab():
+                from cpchain.wallet.file_ui import FileTab
+                return FileTab(self)
+
+            file_tab = create_file_tab()
+            content_tabs.addTab(file_tab, "")
+
+        add_content_tabs()
+
 
         # def add_component(name, cls, *args):
         #     setattr(self, name, cls(self, *args))
@@ -148,16 +183,23 @@ class MainWindow(QMainWindow):
         self.header = Header(self)
         self.sidebar = SideBar(self)
 
+
         # set layout
         def set_layout():
             # cf. http://yu00.hatenablog.com/entry/2015/09/17/204338
-            self.main_layout = QGridLayout()
-            self.main_layout.setSpacing(0)
-            self.main_layout.setContentsMargins(0, 0, 0, 0)
+            self.main_layout = main_layout = QGridLayout()
+            main_layout.setSpacing(0)
+            main_layout.setContentsMargins(0, 0, 0, 0)
 
-            self.main_layout.addWidget(self.sidebar, 0, 0, 2, 1)
-            self.main_layout.addWidget(self.header, 0, 1)
+            main_layout.addWidget(self.sidebar, 0, 0, 2, 1)
+            main_layout.addWidget(self.header, 0, 1)
 
+            main_layout.addWidget(self.content_tabs, 1, 1)
+
+            main_layout.setRowStretch(0, 1)
+            main_layout.setRowStretch(1, 7)
+
+            
             wid = QWidget(self)
             wid.setLayout(self.main_layout)
             self.setCentralWidget(wid)
