@@ -53,6 +53,8 @@ class SSLServerProtocol(NetstringReceiver):
             self.proxy_reply_error(error)
             return
 
+        public_key = sign_message.public_key
+
         proxy_db = self.proxy_db
         trade = Trade()
         file_size = 0
@@ -64,6 +66,11 @@ class SSLServerProtocol(NetstringReceiver):
             trade.buyer_addr = data.buyer_addr
             trade.market_hash = data.market_hash
             trade.AES_key = data.AES_key
+
+            if public_key != data.seller_addr:
+                error = "not seller's signature"
+                self.proxy_reply_error(error)
+                return
 
             storage = data.storage
             if storage.type == Message.Storage.IPFS:
@@ -90,6 +97,12 @@ class SSLServerProtocol(NetstringReceiver):
             trade.seller_addr = data.seller_addr
             trade.buyer_addr = data.buyer_addr
             trade.market_hash = data.market_hash
+
+            if public_key != data.buyer_addr:
+                error = "not buyer's signature"
+                self.proxy_reply_error(error)
+                return
+
             if proxy_db.count(trade):
                 trade = proxy_db.query(trade)[0]
                 file_path = server_root + '/' + trade.file_hash.decode()
