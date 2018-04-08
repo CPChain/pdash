@@ -21,6 +21,11 @@ port = 5001
 [wallet]
 dbpath = "cpchain/assets/wallet/wallet.db"
 
+[wallet.qss]
+main_window = "cpchain/assets/wallet/qss/main_window.qss"
+sidebar = "cpchain/assets/wallet/qss/sidebar.qss"
+
+
 [proxy]
 server_host = 'localhost'
 server_ctrl_port = 8000
@@ -33,3 +38,4 @@ server_root = 'cpchain/assets/proxy/server_root'
 [market]
 server_addr = "192.168.0.132"
 server_port = 8083
+default_password = "^-_-^cpchain@2018^-_-^"
