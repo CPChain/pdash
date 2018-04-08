@@ -1,8 +1,7 @@
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import Product, WalletUser,Token
-from .utils import generate_msg_hash,verify_signature
+from .models import Product, WalletUser, Token
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -27,6 +26,8 @@ class ProductSerializer(serializers.ModelSerializer):
             owner=validated_data['owner'],
             file_md5=validated_data['file_md5'],
             seq=validated_data['seq'],
+            msg_hash=validated_data['msg_hash'],
+            tags=validated_data['tags'],
         )
         # TODO change to other algorithm.verify signature
         product.save()

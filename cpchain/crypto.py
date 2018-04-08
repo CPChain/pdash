@@ -7,8 +7,13 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
+from cpchain import config
 
-PASSWORD = b'^-_-^cpchain@2018^-_-^'
+
+def examine_password(password):
+    password = password or config.market.default_password
+    password_bytes = password.encode(encoding="utf-8")
+    return password_bytes
 
 
 class BaseCipher:
@@ -80,7 +85,9 @@ class ECCipher:
         pass
 
     @staticmethod
-    def generate_keys(password=PASSWORD):
+    def generate_keys(password=None):
+        password = examine_password(password)
+
         private_key = ec.generate_private_key(
             ec.SECP256K1(), default_backend()
         )
@@ -113,7 +120,8 @@ class ECCipher:
         return pri_key_string, pub_key_string
 
     @staticmethod
-    def generate_der_keys(password=PASSWORD):
+    def generate_der_keys(password=None):
+        password = examine_password(password)
         private_key = ec.generate_private_key(
             ec.SECP256K1(), default_backend()
         )
@@ -121,29 +129,30 @@ class ECCipher:
         serialized_private = private_key.private_bytes(
             encoding=serialization.Encoding.DER,
             format=serialization.PrivateFormat.PKCS8,
+            # encryption_algorithm= serialization.NoEncryption
             encryption_algorithm=serialization.BestAvailableEncryption(password)
         )
 
-        pri_key_string = Encoder.byte_to_hex(serialized_private)
+        pri_key_string = Encoder.bytes_to_base64_str(serialized_private)
         print("pri_key_string:"+pri_key_string)
         puk = private_key.public_key()
         serialized_public = puk.public_bytes(
             encoding=serialization.Encoding.DER,
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
-        pub_key_string = Encoder.byte_to_hex(serialized_public)
+        pub_key_string = Encoder.bytes_to_base64_str(serialized_public)
         print("pub_key_string:" + pub_key_string)
         return pri_key_string, pub_key_string
 
     @staticmethod
     def verify_der_signature(pub_key_string, signature, raw_data_string):
         try:
-            pub_key_string_bytes = Encoder.hex_to_byte(pub_key_string)
+            pub_key_string_bytes = Encoder.str_to_base64_byte(pub_key_string)
             loaded_public_key = serialization.load_der_public_key(
                 pub_key_string_bytes,
                 backend=default_backend()
             )
-            loaded_public_key.verify(Encoder.hex_to_byte(signature), raw_data_string.encode(encoding="utf-8"), ec.ECDSA(hashes.SHA256()))
+            loaded_public_key.verify(Encoder.str_to_base64_byte(signature), raw_data_string.encode(encoding="utf-8"), ec.ECDSA(hashes.SHA256()))
             return True
         except Exception:
             exstr = traceback.format_exc()
@@ -157,14 +166,15 @@ class ECCipher:
                 pub_key_string,
                 backend=default_backend()
             )
-            loaded_public_key.verify(Encoder.hex_to_byte(signature), raw_data, ec.ECDSA(hashes.SHA256()))
+            loaded_public_key.verify(Encoder.str_to_base64_byte(signature), raw_data, ec.ECDSA(hashes.SHA256()))
             return True
         except Exception:
             return False
 
     @staticmethod
-    def sign(pri_key_string, raw_data,password=PASSWORD):
+    def sign(pri_key_string, raw_data,password=None):
         try:
+            password = examine_password(password)
             loaded_private_key = serialization.load_pem_private_key(
                 pri_key_string,
                 password=password,
@@ -173,7 +183,7 @@ class ECCipher:
             signature_string = loaded_private_key.sign(
                 raw_data,
                 ec.ECDSA(hashes.SHA256()))
-            to_hex = Encoder.byte_to_hex(signature_string)
+            to_hex = Encoder.bytes_to_base64_str(signature_string)
             return to_hex
         except Exception:
             exstr = traceback.format_exc()
@@ -182,9 +192,10 @@ class ECCipher:
 
 
     @staticmethod
-    def sign_der(pri_key_string, raw_data,password=PASSWORD):
+    def sign_der(pri_key_string, raw_data,password=None):
         try:
-            pri_key_string_bytes = Encoder.hex_to_byte(pri_key_string)
+            password = examine_password(password)
+            pri_key_string_bytes = Encoder.str_to_base64_byte(pri_key_string)
             loaded_private_key = serialization.load_der_private_key(
                 pri_key_string_bytes,
                 password=password,
@@ -193,7 +204,7 @@ class ECCipher:
             signature_string = loaded_private_key.sign(
                 raw_data.encode(encoding="utf-8"),
                 ec.ECDSA(hashes.SHA256()))
-            to_hex = Encoder.byte_to_hex(signature_string)
+            to_hex = Encoder.bytes_to_base64_str(signature_string)
             return to_hex
         except Exception:
             exstr = traceback.format_exc()
@@ -229,51 +240,51 @@ class RSACipher:
         return priv_bytes, pub_bytes
 
 
-    def encrypt(self, fpath, outpath):
+    # def encrypt(self, fpath, outpath):
+    #
+    #     ciphertext = self.public_key.encrypt(
+    #         text,
+    #         self._get_padding()
+    #     )
+    #     if use_base64 is True:
+    #         ciphertext = base64.b64encode(ciphertext)
+    #     return ciphertext
+    #
+    #     with open(fpath, "rb") as infile, open(outpath, "wb") as outfile:
+    #
+    #         cipherdata = self.pub_key.encrypt(infile.read(),
+    #                                           padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA1()),
+    #                                                        algorithm=hashes.SHA1(),
+    #                                                        label=None))
+    #         outfile.write(cipherdata)
+    #
+    #
+    # def decrypt(self, fpath, outpath):
+    #     with open(fpath, 'rb') as infile, open(outpath, 'wb') as outfile:
+    #         data = self.priv_key.decrypt(infile.read(),
+    #                                      padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA1()),
+    #                                                   algorithm=hashes.SHA1(),
+    #                                                   label=None))
+    #         outfile.write(data)
 
-        ciphertext = self.public_key.encrypt(
-            text,
-            self._get_padding()
-        )
-        if use_base64 is True:
-            ciphertext = base64.b64encode(ciphertext)
-        return ciphertext
 
-        with open(fpath, "rb") as infile, open(outpath, "wb") as outfile:
-
-            cipherdata = self.pub_key.encrypt(infile.read(),
-                                              padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA1()),
-                                                           algorithm=hashes.SHA1(),
-                                                           label=None))
-            outfile.write(cipherdata)
-                
-
-    def decrypt(self, fpath, outpath):
-        with open(fpath, 'rb') as infile, open(outpath, 'wb') as outfile:
-            data = self.priv_key.decrypt(infile.read(),
-                                         padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA1()),
-                                                      algorithm=hashes.SHA1(),
-                                                      label=None))
-            outfile.write(data)
-
-
-class SHA256HashCipher:
+class SHA256Hash:
 
     @staticmethod
     def generate_hash(data):
             digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
             digest.update(data.encode(encoding="utf-8"))
             digest_data = digest.finalize()
-            digest_string = Encoder.byte_to_hex(digest_data)
+            digest_string = Encoder.bytes_to_base64_str(digest_data)
             return digest_string
 
 
 class Encoder:
 
     @staticmethod
-    def byte_to_hex(hex_bytes):
-        return ''.join(["%02X" % x for x in hex_bytes]).strip()
+    def bytes_to_base64_str(b64bytes):
+        return base64.b64encode(b64bytes).decode("utf-8")
 
     @staticmethod
-    def hex_to_byte(hex_string):
-        return bytes.fromhex(hex_string)
+    def str_to_base64_byte(b64string):
+        return base64.b64decode(b64string.encode("utf-8"))
