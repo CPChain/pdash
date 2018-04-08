@@ -117,3 +117,6 @@ if __name__ == '__main__':
     # new_signature = "MEUCIHANJeMdqDOb6y5gSijqxTbgDeHIF2FJMtgGJPHPm6SSAiEAlVBnYKsN9l/ahc6cxTtGTJxdxM0P6lnFt4pjmFgsBLA="
     is_valid_sign = verify_signature(puks, new_signature, data)
     print("is valid new_signature:" + str(is_valid_sign))
+
+    loaded_pub_key = ECCipher.get_public_key_from_private_key(piks);
+    print("loaded_pub_key:"+loaded_pub_key)

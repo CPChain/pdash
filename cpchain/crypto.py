@@ -211,6 +211,29 @@ class ECCipher:
             print (exstr)
             return None
 
+    @staticmethod
+    def get_public_key_from_private_key(pri_key_string,password=None):
+        """
+        get public key from private key
+        :param pri_key_string:
+        :param password:read default value from config file
+        :return:base64(public key)
+        """
+        password = examine_password(password)
+        pri_key_string_bytes = Encoder.str_to_base64_byte(pri_key_string)
+        loaded_private_key = serialization.load_der_private_key(
+            pri_key_string_bytes,
+            password=password,
+            backend=default_backend()
+        )
+        puk = loaded_private_key.public_key()
+        serialized_public = puk.public_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        pub_key_string = Encoder.bytes_to_base64_str(serialized_public)
+        return pub_key_string
+
 
 class RSACipher:
     def __init__(self, priv_bytes, pub_bytes):
