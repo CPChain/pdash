@@ -1,10 +1,14 @@
+import base64
 import os
 import functools
+import traceback
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
+
+PASSWORD = b'^-_-^cpchain@2018^-_-^'
 
 
 class BaseCipher:
@@ -67,32 +71,148 @@ class AESCipher(BaseCipher):
             outfile.write(data)
 
 
-
 class ECCipher:
     # NB we shall use ec for signature only.  using ecies is too contrived.
+
     def __init__(self, key:'ec secp256k1'):
-        self.backend = default_backend()
-        self.key = key
+        # self.backend = default_backend()
+        # self.key = key
+        pass
+
+    @staticmethod
+    def generate_keys(password=PASSWORD):
+        private_key = ec.generate_private_key(
+            ec.SECP256K1(), default_backend()
+        )
+
+        serialized_private = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.BestAvailableEncryption(password)
+        )
+
+        private_key_list = []
+        pis = serialized_private.splitlines()
+        for p in pis:
+            private_key_list.append(p.decode("utf-8"))
+            private_key_list.append('\n')
+        pri_key_string = ''.join(private_key_list)
+
+        public_key_list = []
+        puk = private_key.public_key()
+        serialized_public = puk.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        pus = serialized_public.splitlines()
+        for p in pus:
+            public_key_list.append(p.decode("utf-8"))
+            public_key_list.append('\n')
+
+        pub_key_string = ''.join(public_key_list)
+        return pri_key_string, pub_key_string
+
+    @staticmethod
+    def generate_der_keys(password=PASSWORD):
+        private_key = ec.generate_private_key(
+            ec.SECP256K1(), default_backend()
+        )
+
+        serialized_private = private_key.private_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.BestAvailableEncryption(password)
+        )
+
+        pri_key_string = Encoder.byte_to_hex(serialized_private)
+        print("pri_key_string:"+pri_key_string)
+        puk = private_key.public_key()
+        serialized_public = puk.public_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        pub_key_string = Encoder.byte_to_hex(serialized_public)
+        print("pub_key_string:" + pub_key_string)
+        return pri_key_string, pub_key_string
+
+    @staticmethod
+    def verify_der_signature(pub_key_string, signature, raw_data_string):
+        try:
+            pub_key_string_bytes = Encoder.hex_to_byte(pub_key_string)
+            loaded_public_key = serialization.load_der_public_key(
+                pub_key_string_bytes,
+                backend=default_backend()
+            )
+            loaded_public_key.verify(Encoder.hex_to_byte(signature), raw_data_string.encode(encoding="utf-8"), ec.ECDSA(hashes.SHA256()))
+            return True
+        except Exception:
+            exstr = traceback.format_exc()
+            print(exstr)
+            return False
+
+    @staticmethod
+    def verify_signature(pub_key_string, signature, raw_data):
+        try:
+            loaded_public_key = serialization.load_pem_public_key(
+                pub_key_string,
+                backend=default_backend()
+            )
+            loaded_public_key.verify(Encoder.hex_to_byte(signature), raw_data, ec.ECDSA(hashes.SHA256()))
+            return True
+        except Exception:
+            return False
+
+    @staticmethod
+    def sign(pri_key_string, raw_data,password=PASSWORD):
+        try:
+            loaded_private_key = serialization.load_pem_private_key(
+                pri_key_string,
+                password=password,
+                backend=default_backend()
+            )
+            signature_string = loaded_private_key.sign(
+                raw_data,
+                ec.ECDSA(hashes.SHA256()))
+            to_hex = Encoder.byte_to_hex(signature_string)
+            return to_hex
+        except Exception:
+            exstr = traceback.format_exc()
+            print (exstr)
+            return None
 
 
     @staticmethod
-    def generate_key():
-        return ec.generate_private_key(ec.SECP256K1(), default_backend())
-
+    def sign_der(pri_key_string, raw_data,password=PASSWORD):
+        try:
+            pri_key_string_bytes = Encoder.hex_to_byte(pri_key_string)
+            loaded_private_key = serialization.load_der_private_key(
+                pri_key_string_bytes,
+                password=password,
+                backend=default_backend()
+            )
+            signature_string = loaded_private_key.sign(
+                raw_data.encode(encoding="utf-8"),
+                ec.ECDSA(hashes.SHA256()))
+            to_hex = Encoder.byte_to_hex(signature_string)
+            return to_hex
+        except Exception:
+            exstr = traceback.format_exc()
+            print (exstr)
+            return None
 
 
 class RSACipher:
     def __init__(self, priv_bytes, pub_bytes):
         self.backend = default_backend()
         self.priv_key = serialization.load_pem_private_key(priv_bytes,
-                                                         password=None,
-                                                         backend=self.backend)
+                                                           password=None,
+                                                           backend=self.backend)
         self.pub_key = serialization.load_pem_public_key(pub_bytes,
                                                          backend=self.backend)
 
 
     @staticmethod
-    def generate_key() -> "returns key bytes":
+    def generate_private_key() -> "returns key bytes":
         priv_key = rsa.generate_private_key(public_exponent=65537,
                                             key_size=4096,
                                             backend=default_backend())
@@ -135,3 +255,25 @@ class RSACipher:
                                                       algorithm=hashes.SHA1(),
                                                       label=None))
             outfile.write(data)
+
+
+class SHA256HashCipher:
+
+    @staticmethod
+    def generate_hash(data):
+            digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
+            digest.update(data.encode(encoding="utf-8"))
+            digest_data = digest.finalize()
+            digest_string = Encoder.byte_to_hex(digest_data)
+            return digest_string
+
+
+class Encoder:
+
+    @staticmethod
+    def byte_to_hex(hex_bytes):
+        return ''.join(["%02X" % x for x in hex_bytes]).strip()
+
+    @staticmethod
+    def hex_to_byte(hex_string):
+        return bytes.fromhex(hex_string)

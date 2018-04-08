@@ -1,0 +1,6 @@
+# pip3 install -r requirements-dev.txt
+
+djangorestframework==3.7.3
+django==2.0.3
+psycopg2
+toml==0.9.4

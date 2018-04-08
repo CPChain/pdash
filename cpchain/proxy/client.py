@@ -6,123 +6,55 @@
 
 import sys, os
 
-from file_ops import *
-
 from twisted.internet import reactor, protocol, ssl, defer
+from twisted.protocols.basic import NetstringReceiver
 from twisted.python import log
 
-class SSLClientProtocol(protocol.Protocol):
+from cpchain import config
+from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
+from cpchain.proxy.message import message_sanity_check
+from cpchain.proxy.crypto import ECCipher
+
+import requests
+
+class SSLClientProtocol(NetstringReceiver):
     def __init__(self, factory):
         self.factory = factory
-        self.request = self.factory.request
+        self.sign_message = self.factory.sign_message
 
     def connectionMade(self):
-        self.request['tran_state'] = 'connect_to_server'
-        self.request['fd'] = None
-        self.request['file_list'] = []
-        self.request['tran_size'] = 0
-
-        if self.request['cmd'] == 'put':
-            self.request['file_hash'] = \
-                get_file_md5_hash(self.request['local_file_path'])
-            file_name = os.path.basename(\
-                            self.request['local_file_path'])
-            self.request['tran_state'] = 'client_put_file_hash'
-            self.request['file_size'] = os.path.getsize(\
-                                    self.request['local_file_path'])
-            self.str_write(self.request['tran_state'] + \
-                ":" + self.request['file_hash'] + ":" + file_name \
-                + ":" + str(self.request['file_size']))
-        elif self.request['cmd'] == 'list':
-            self.request['tran_state'] = 'client_get_file_list_size'
-            self.str_write(self.request['tran_state'])
-        elif self.request['cmd'] == 'get':
-            self.request['tran_state'] = 'client_get_file_hash'
-            self.str_write(self.request['tran_state'] + \
-                ":" + self.request['remote_file_path'])
-
         self.peer = str(self.transport.getPeer())
         print("connect to server " + self.peer)
 
-    def dataReceived(self, data):
-        if self.request['tran_state'] == 'client_put_file_hash':
-            data = clean_and_split_input(data)
-            if data[0] == 'server_get_file_hash' \
-                and self.request['file_hash'] == data[1]:
-                self.request['tran_state'] = 'client_put_file'
-                for byte in read_bytes_from_file(\
-                                self.request['local_file_path']):
-                    self.transport.write(byte)
-                self.request['tran_state'] = 'wait_for_server_ack_finish'
+        string = self.sign_message.SerializeToString()
+        self.sendString(string)
 
+    def stringReceived(self, string):
+        message = Message()
+        message.ParseFromString(string)
+        valid = message_sanity_check(message)
+        if valid and message.type == Message.PROXY_REPLY:
+            proxy_reply = message.proxy_reply
+            self.sign_message.data = message.SerializeToString()
+
+            if proxy_reply.error:
+                print('error: ' + proxy_reply.error)
             else:
-                print("failed at client_put_file_hash")
-                self.transport.loseConnection()
-
-        elif self.request['tran_state'] == 'client_get_file_list_size':
-            data = clean_and_split_input(data)
-            if data[0] == 'server_put_file_list_size':
-                self.request['file_size'] = int(data[1])
-                self.request['tran_state'] = 'client_list_file'
-                self.str_write(self.request['tran_state'])
-            else:
-                print(self.peer + " sent wrong data: " + str(data))
-                self.transport.loseConnection()
-        elif self.request['tran_state'] == 'client_list_file':
-            self.request['file_list'].append(data.decode())
-            self.request['tran_size'] += len(data)
-            if self.request['file_size']  == self.request['tran_size']:
-                self.str_write('client_ack_finish')
-                self.request['tran_state'] = 'file_transaction_finished'
-
-        elif self.request['tran_state'] == 'client_get_file_hash':
-            data = clean_and_split_input(data)
-            if data[0] == 'remote_file_does_not_exist':
-                print("remote file does not exist")
-                self.transport.loseConnection()
-            elif data[0] == 'server_put_file_hash':
-                self.request['file_hash'] = data[1]
-                self.request['file_size'] = int(data[2])
-                self.request['tran_state'] = 'client_get_file'
-                self.str_write(self.request['tran_state'])
-                self.request['fd'] = open(\
-                                self.request['local_file_path'], 'wb')
-
-        elif self.request['tran_state'] == 'client_get_file':
-            self.request['fd'].write(data)
-            self.request['tran_size'] += len(data)
-            if self.request['file_size']  == self.request['tran_size']:
-                self.str_write('client_ack_finish')
-                self.request['tran_state'] = 'file_transaction_finished'
-
-        elif self.request['tran_state'] == 'wait_for_server_ack_finish':
-            data = clean_and_split_input(data)
-            if data[0] == 'server_ack_finish':
-                self.request['tran_state'] = 'file_transaction_finished'
-                self.transport.loseConnection()
-
+                print('AES_key: ' + proxy_reply.AES_key.decode())
+                print('file_hash: ' + proxy_reply.file_hash.decode())
+                print('file_size: ' + str(proxy_reply.file_size))
         else:
-            print(self.peer + " sent wrong data: " + data.decode())
-            self.transport.loseConnection()
+            print("wrong server response")
+
+        self.transport.loseConnection()
 
     def connectionLost(self, reason):
-        if self.request['fd']:
-            self.request['fd'].close()
-            if not validate_file_md5_hash(self.request['fd'].name, \
-                self.request['file_hash']):
-                os.unlink(self.request['fd'].name)
-                print("The file is not properly tranmitted.")
-
-        print("lost connection to client %s at %s stage" % (self.peer, \
-                 self.request['tran_state']))
-
-    def str_write(self, data):
-        self.transport.write(data.encode('utf-8'))
-
+        print("lost connection to client %s" % (self.peer))
 
 class SSLClientFactory(protocol.ClientFactory):
-    def __init__(self, request):
-        self.request = request
+
+    def __init__(self, sign_message):
+        self.sign_message = sign_message
 
     def buildProtocol(self, addr):
         return SSLClientProtocol(self)
@@ -134,119 +66,135 @@ class SSLClientFactory(protocol.ClientFactory):
         reactor.stop()
 
 
-
-def file_transaction(request):
-    """
-    file transaction request format:
-    {
-        'host' : 'cpctest.com',
-        'port' : 8000,
-        'cmd' : 'put/get/list',
-        'remote_file_path' :'remote file path on server',
-        'local_file_path' : 'local file path on client'
-    }
-    """
-
-    host = None
-    port = None
-    cmd = None
-    local_file_path = None
-    remote_file_path = None
-    error = []
-
-    if type(request) != dict:
-        error.append("wrong request format")
-        print(error)
-        print(file_transaction.__doc__)
-        return
-
-    if 'host' in request:
-        host = request['host']
-    if 'port' in request:
-        port = request['port']
-    if 'cmd' in request:
-        cmd = request['cmd']
-    if 'local_file_path' in request:
-        local_file_path = request['local_file_path']
-    if 'remote_file_path' in request:
-        remote_file_path = request['remote_file_path']
-
-    if not host:
-        error.append("missing host")
-    elif not port:
-        error.append("missing port")
-    elif not cmd:
-        error.append("missing command")
-    elif cmd == 'put':
-        if not local_file_path:
-            error.append("missing local file path")
-        else:
-            if not os.path.isfile(local_file_path):
-                error.append(local_file_path + " file does not exist")
-
-    elif cmd == 'get':
-        if not remote_file_path:
-            error.append("missing remote file path")
-
-        if not local_file_path:
-            error.append("missing local file path")
-        else:
-            if os.path.isfile(local_file_path):
-                error.append(local_file_path + " file already exists")
-
-            local_file_dir = os.path.dirname(local_file_path)
-            if not os.path.isdir(local_file_dir):
-                error.append("local file dir doesn't exist")
-
-    elif cmd != 'list':
-        error.append("wrong command")
-
-    if len(error):
-        print(error)
-        print(file_transaction.__doc__)
-        return error
-
-    print("start request:")
-    for key in request:
-        print("\t%s : %s" % (key, request[key]))
-    start_client(request)
-
-
-def start_client(request):
-
-    host = request['host']
-    port = request['port']
-
-    factory = SSLClientFactory(request)
-    reactor.connectSSL(host, port, factory,
-            ssl.ClientContextFactory())
-    reactor.run()
+def start_client(sign_message):
 
     log.startLogging(sys.stdout)
 
+    host = config.proxy.server_host
+    ctrl_port = config.proxy.server_ctrl_port
+
+    message = Message()
+    message.ParseFromString(sign_message.data)
+    valid = message_sanity_check(message)
+    if not valid:
+        print("wrong message format")
+        return
+
+    factory = SSLClientFactory(sign_message)
+    reactor.connectSSL(host, ctrl_port, factory,
+            ssl.ClientContextFactory())
+
+    reactor.run()
+
+
+def download_file(file_hash, dir=os.getcwd()):
+    host = config.proxy.server_host
+    data_port = config.proxy.server_data_port
+
+    url = 'https://' + host + ':' + str(data_port)\
+             + '/' + file_hash.decode()
+
+    r = requests.get(url, stream=True, verify=False)
+
+    with open(dir + '/' + file_hash.decode(), 'wb') as fd:
+        for chunk in r.iter_content(8192):
+            fd.write(chunk)
+
+        fd.close()
+
+
 if __name__ == '__main__':
-    request = {
-        'host' : 'cpctest.com',
-        'port' : 8000,
-        'cmd' : 'put',
-        'local_file_path' : '/tmp/cpc_test/client/client_send'
-    }
-    file_transaction(request)
 
-    # request = {
-    #     'host' : 'cpctest.com',
-    #     'port' : 8000,
-    #     'cmd' : 'get',
-    #     'remote_file_path' : 'server_send',
-    #     'local_file_path' : '/tmp/cpc_test/client/client_received'
-    # }
-    # file_transaction(request)
+    test_type = 'buyer_data'
 
-    # request = {
-    #     'host' : 'cpctest.com',
-    #     'port' : 8000,
-    #     'cmd' : 'list'
-    #     }
-    # file_transaction(request)
-    # if 'file_list' in request:
-    #     print(request['file_list'])
+    buyer_ec = ECCipher()
+    buyer_ec.generate_key_pair()
+    # buyer_ec.load_private_key(b'-----BEGIN ENCRYPTED PRIVATE KEY-----\nMIIBHDBXBgkqhkiG9w0BBQ0wSjApBgkqhkiG9w0BBQwwHAQIbzYaJ4JPS6wCAggA\nMAwGCCqGSIb3DQIJBQAwHQYJYIZIAWUDBAEqBBAX+qu82h57tKzx1Umoir82BIHA\napI6llFcSIH9xm+y7rGVX8IoTKVXhS+8QE7JzGgqOidMgx00NQRk+da3BrgD206o\n1pkuzEBDF+7xMl8YheADlgG5ER19kQzGdMge+2WrKY5j0/R7bgtXNMNtc/WCPV+h\ngvUm/UG1YTErqTaMRyiQdqUJm9OnY6+lcgSN4haHwJlJbEBQprGAC1GXfB3d8c57\nWC+j81tm03sG6k1eMVM0juDLfqGeztjT9jb6hzo3Whd3uXhyUtiNLSfmw8OcOQPa\n-----END ENCRYPTED PRIVATE KEY-----\n')
+    buyer_private_key = buyer_ec.get_private_key()
+    buyer_public_key = buyer_ec.get_public_key()
+
+
+    seller_ec = ECCipher()
+    seller_ec.generate_key_pair()
+    # seller_ec.load_private_key(b'-----BEGIN ENCRYPTED PRIVATE KEY-----\nMIIBHDBXBgkqhkiG9w0BBQ0wSjApBgkqhkiG9w0BBQwwHAQIj8Rr8Z6IA0gCAggA\nMAwGCCqGSIb3DQIJBQAwHQYJYIZIAWUDBAEqBBDK/EY6d5mOIhuPbVDstdIgBIHA\nuhvOq3d24avHR3AvuF6BDVQd/Y+esghw/ImH5EYDZQkQJwABt/92IpPQgDA+0s76\n4+WYR3oTd/NfexqInfBvLrow1PQwDLTY+Em5nogW+eWYN+IsWjI4xv/S0/O07cpD\ndQw9gbTgyVf0FPBBpEQDDW8Ido0p8cjzV0/DUmty4ObExyzmkmbd597KfDVn02sx\nL4huvVM2/u+Tzww8VpwuuyQQtzMh393ZE6LRATLAQv1ihVj98GdzWNTUWtNA7Vk9\n-----END ENCRYPTED PRIVATE KEY-----\n')
+    seller_public_key = seller_ec.get_public_key()
+    seller_private_key = seller_ec.get_private_key()
+
+    if test_type == 'seller_data':
+        message = Message()
+        seller_data = message.seller_data
+        message.type = Message.SELLER_DATA
+        seller_data.seller_addr = seller_public_key
+        seller_data.buyer_addr = buyer_public_key
+        seller_data.market_hash = b'MARKET_HASH'
+        seller_data.AES_key = b'AES_key'
+        storage = seller_data.storage
+        storage.type = Message.Storage.IPFS
+        ipfs = storage.ipfs
+        ipfs.file_hash = b'QmT4kFS5gxzQZJwiDJQ66JLVGPpyTCF912bywYkpgyaPsD'
+        ipfs.gateway = "192.168.0.132:5001"
+
+        sign_message = SignMessage()
+        sign_message.public_key = seller_data.seller_addr
+        sign_message.data = message.SerializeToString()
+        seller_ec.generate_signature(sign_message.data)
+        sign_message.signature = seller_ec.decode_signature()
+
+        start_client(sign_message)
+
+        message = Message()
+        message.ParseFromString(sign_message.data)
+        proxy_reply = message.proxy_reply
+        if not proxy_reply.error:
+            print('succeed to upload trade data')
+            print(proxy_reply.file_hash)
+        else:
+            print(proxy_reply.error)
+
+    elif test_type == 'buyer_data':
+        message = Message()
+        buyer_data = message.buyer_data
+        message.type = Message.BUYER_DATA
+        buyer_data.seller_addr = seller_public_key
+        buyer_data.buyer_addr = buyer_public_key
+        buyer_data.market_hash = b'MARKET_HASH'
+
+        sign_message = SignMessage()
+        sign_message.public_key = buyer_data.buyer_addr
+        sign_message.data = message.SerializeToString()
+        buyer_ec.generate_signature(sign_message.data)
+        sign_message.signature = buyer_ec.decode_signature()
+
+        start_client(sign_message)
+        message = Message()
+        message.ParseFromString(sign_message.data)
+
+        proxy_reply = message.proxy_reply
+        if proxy_reply.error:
+            print(proxy_reply.error)
+        else:
+            print('AES_key: %s' % (proxy_reply.AES_key.decode()))
+            print('file_hash: %s' % (proxy_reply.file_hash.decode()))
+            file_hash = proxy_reply.file_hash
+            download_file(file_hash)
+
+    elif test_type == 'proxy_reply':
+        message = Message()
+        message.type = Message.PROXY_REPLY
+        proxy_reply = message.proxy_reply
+        proxy_reply.error = "error"
+        sign_message = SignMessage()
+        sign_message.public_key = seller_public_key
+        sign_message.data = message.SerializeToString()
+        seller_ec.generate_signature(sign_message.data)
+        sign_message.signature = seller_ec.decode_signature()
+
+        start_client(sign_message)
+        message = Message()
+        message.ParseFromString(sign_message.data)
+
+        proxy_reply = message.proxy_reply
+        if proxy_reply.error:
+            print(proxy_reply.error)
+
+

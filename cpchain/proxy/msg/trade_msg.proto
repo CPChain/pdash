@@ -46,7 +46,7 @@ message Message {
 	}
 
 	message ProxyReply {
-		bool valid = 1;
+		string error = 1;
 		bytes AES_key = 2;
 		bytes file_hash = 3;
 		int64 file_size = 4;
@@ -56,4 +56,10 @@ message Message {
 	SellerData seller_data = 2;
 	BuyerData buyer_data = 3;
 	ProxyReply proxy_reply = 4;
+}
+
+message SignMessage {
+	bytes public_key = 1;
+	bytes data = 2;
+	string signature = 3;
 }
