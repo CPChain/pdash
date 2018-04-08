@@ -1,15 +1,15 @@
 import os
 import binascii
-from django.contrib.auth.models import (
-    AbstractBaseUser
-)
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
-import datetime
+import datetime, time
 
 
 class WalletUser(models.Model):
+    """
+    The wallet user model.
+    """
     public_key = models.CharField(max_length=200, unique=True)
     created = models.DateTimeField('created', auto_now_add=True)
     active_date = models.DateTimeField('active date', auto_now_add=True)
@@ -26,14 +26,37 @@ class WalletUser(models.Model):
 
 
 class Product(models.Model):
+    """
+    The product model.
+    """
     owner = models.ForeignKey(WalletUser, on_delete=models.CASCADE)
     owner_address = models.CharField(max_length=200)
     title = models.CharField(max_length=100)
     description = models.TextField()
+    tags = models.CharField(max_length=200, null=True)
     price = models.FloatField()
     created = models.DateTimeField('Created', auto_now_add=True)
-    expired_date = models.DateTimeField('date expired', null=True)
-    verify_code = models.CharField(max_length=200, null=True)
+    start_date = models.DateTimeField('Start time', null=True)
+    end_date = models.DateTimeField('End time', null=True)
+    status = models.IntegerField('0:normal,1:frozen', default=0)
+    seq = models.IntegerField('Sequence increase')
+    file_md5 = models.CharField(max_length=32, null=True)
+    # verify wallet hash(title,description,expired_date,price,tags)
+    signature = models.CharField('Signature created by client', max_length=200, null=True)
+    msg_hash = models.CharField('Msg hash(owner_address,title,description,price,created,expired)'
+                                , max_length=256, null=True)
+
+    def get_signature_source(self):
+        ss = self.owner_address + self.title + str(self.description[0]) + str(self.price[0]) \
+             + Product.str_to_timestamp(self.start_date) + Product.str_to_timestamp(self.end_date) + str(self.file_md5)
+        return ss
+
+    def get_msg_hash(self):
+        return self.get_signature_source() + self.signature
+
+    @staticmethod
+    def str_to_timestamp(s):
+        return str(int(time.mktime(datetime.datetime.strptime(s, "%Y-%m-%d %H:%M:%S").timetuple())))
 
 
 class Token(models.Model):
@@ -66,3 +89,26 @@ class Token(models.Model):
 
     def __str__(self):
         return self.key
+
+
+class WalletMsgSequence(models.Model):
+    """
+    The wallet message sequence model.
+    """
+    public_key = models.CharField(_("PublicKey"), max_length=200, primary_key=True)
+    # key = models.CharField(_("Key"), max_length=40, primary_key=True)
+    user = models.OneToOneField(
+        WalletUser, related_name='wallet_msg_sequence',
+        on_delete=models.CASCADE, verbose_name=_("WalletUser")
+    )
+    seq = models.IntegerField(_("seq"), default=0)
+
+    class Meta:
+        verbose_name = _("WalletUserSequence")
+        verbose_name_plural = _("WalletUserSequences")
+
+    def save(self, *args, **kwargs):
+        return super(WalletMsgSequence, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return self.public_key

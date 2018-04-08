@@ -1,7 +1,3 @@
-# accept public key from client(wallet),
-# response string with encrypted(random string)
-# if client decrypt correctly ,login success
-# else response with HTTP_400_BAD_REQUEST
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
 from rest_framework import viewsets
@@ -14,7 +10,7 @@ from django.core.cache import cache
 
 from .permissions import IsOwnerOrReadOnly
 from .serializers import *
-from .models import Product,Token
+from .models import Product, Token, WalletMsgSequence
 from .utils import *
 
 import logging
@@ -52,12 +48,11 @@ class UserLoginAPIView(APIView):
         return Response(serializer.errors, status= HTTP_400_BAD_REQUEST)
 
     def generate_verify_code(self, public_key):
-        code = generate_random_str(6)
-        logger.info("put cache public_key:" + public_key + ", code:" + code)
-        cache.set(public_key, code, TIMEOUT)
-        # response with encrypted verify code
-        encrypted_code = encrypte_verify_code(public_key, code)
-        return JsonResponse({"success": True, "message": encrypted_code})
+        # nonce = generate_random_str(6)
+        nonce = "qZaQ6S"
+        logger.info("put cache public_key:" + public_key + ", nonce:" + nonce)
+        cache.set(public_key, nonce, TIMEOUT)
+        return JsonResponse({"success": True, "message": nonce})
 
 
 class UserLoginConfirmAPIView(APIView):
@@ -71,9 +66,9 @@ class UserLoginConfirmAPIView(APIView):
     def post(self, request):
         data = request.data
         public_key = data.get(PUBLIC_KEY)
-        code = data.get(VERIFY_CODE)
-        logger.info("public_key:" + str(public_key) + ",code:" + str(code))
-        if public_key is None or code is None:
+        signature = data.get(VERIFY_CODE)
+        logger.info("public_key:" + str(public_key) + ",signature:" + str(signature))
+        if public_key is None or signature is None:
             logger.info("public_key is None or code is None. public_key:" + str(public_key))
             return create_invalid_response()
 
@@ -82,7 +77,7 @@ class UserLoginConfirmAPIView(APIView):
             logger.info("verify_code not found for public_key:" + public_key)
             return create_invalid_response()
 
-        if not is_valid_verify_code(public_key, verify_code):
+        if not is_valid_signature(public_key, verify_code, signature):
             return create_invalid_response()
 
         try:
@@ -101,27 +96,6 @@ class UserLoginConfirmAPIView(APIView):
 
 def create_invalid_response():
     return JsonResponse({"success": False, "message": "invalid request."})
-
-
-class UserRegisterAPIView(APIView):
-    """
-    API endpoint that used to register user account.
-    """
-    queryset = WalletUser.objects.all()
-    serializer_class = UserRegisterSerializer
-    permission_classes = (AllowAny,)
-
-    def post(self, request):
-        data = request.data
-        public_key = data.get(PUBLIC_KEY)
-        if WalletUser.objects.filter(public_key__exact=public_key):
-            return Response("public_key already exists!", HTTP_400_BAD_REQUEST)
-        serializer = UserRegisterSerializer(data=data)
-
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return create_success_response()
-        return Response(serializer.errors, status= HTTP_400_BAD_REQUEST)
 
 
 class LogoutAPIView(APIView):
@@ -154,7 +128,7 @@ def create_success_response():
     return JsonResponse({'status': 1, 'message': 'success'})
 
 
-class ProductAPIViewSet(APIView):
+class ProductPublishAPIViewSet(APIView):
     """
     API endpoint that allows query products.
     """
@@ -171,10 +145,56 @@ class ProductAPIViewSet(APIView):
             return create_invalid_response()
 
         data = request.data
+        try:
+            msg_seq = WalletMsgSequence.objects.get(public_key=public_key)
+            msg_seq.seq = msg_seq.seq+1
+        except WalletMsgSequence.DoesNotExist:
+            msg_seq = WalletMsgSequence(seq=0,public_key=public_key,user=WalletUser.objects.get(public_key=public_key))
+            print("msg_seq:" + str(msg_seq.seq))
+
+        print("seq:" + str(msg_seq.seq))
+        now = timezone.now()
+        product = Product(data)
+        product.seq = msg_seq.seq
+        product.owner_address = data['owner_address']
+        product.title = data['title']
+        product.description = data['description'],
+        product.price = data['price'],
+        product.created = now,
+        product.start_date = data['start_date']
+        product.end_date = data['end_date']
+        product.signature = data['signature']
+        product.file_md5 = data['file_md5']
+        product.owner_address = data['owner_address']
+
+        signature_source = product.get_signature_source()
+        print(signature_source)
+        is_valid_signature = verify_signature(product.owner_address, product.signature, signature_source)
+        print("is_valid_signature:" + str(is_valid_signature) + ",signature_source:" + str(signature_source))
+
+        if not is_valid_signature:
+            logger.error("invalid_signature")
+            return create_invalid_response()
+
+        # generate msg hash
+        msg_hash_source = product.get_msg_hash()
+        print("msg_hash_source:" + msg_hash_source)
+        product.msg_hash = generate_msg_hash(msg_hash_source)
+        print("msg_hash:" + product.msg_hash)
+        data['msg_hash'] = product.msg_hash
+        data['seq']=msg_seq.seq
+
         serializer = ProductSerializer(data=data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save(owner=WalletUser.objects.get(public_key=public_key))
-            return create_success_response()
+
+        try:
+            if serializer.is_valid(raise_exception=True):
+                msg_seq.save()
+                serializer.save(owner=WalletUser.objects.get(public_key=public_key))
+                return create_success_response()
+        except Exception:
+            exstr = traceback.format_exc()
+            print(exstr)
+            pass
 
         return create_invalid_response()
 
@@ -191,6 +211,37 @@ class ProductAPIViewSet(APIView):
         serializer = ProductSerializer(queryset, many=True)
         return Response(data=serializer.data)
 
+
+class ProductStatusChangeAPIViewSet(APIView):
+    """
+    update product status
+    """
+    queryset = Product.objects.all()
+    serializer_class = ProductUpdateSerializer
+    # permission_classes = (AllowAny,)
+    permission_classes = (IsOwnerOrReadOnly,)
+
+    def post(self, request):
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        logger.info("public_key:" + str(public_key))
+
+        if public_key is None:
+            return create_invalid_response()
+
+        try:
+            product = Product.objects.get(owner_address=public_key,msg_hash=request.data['msg_hash'])
+        except Product.DoesNotExist:
+            return HttpResponse(status=404)
+
+        data = request.data
+        data['owner_address'] = public_key
+        serializer = ProductUpdateSerializer(product,data=data)
+        if serializer.is_valid(raise_exception=True):
+            logger.info("update product status")
+            serializer.update(product,data)
+            return create_success_response()
+
+        return create_invalid_response()
 
 
 class ProductViewSet(viewsets.ModelViewSet):

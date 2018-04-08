@@ -57,3 +57,9 @@ message Message {
 	BuyerData buyer_data = 3;
 	ProxyReply proxy_reply = 4;
 }
+
+message SignMessage {
+	bytes public_key = 1;
+	bytes data = 2;
+	string signature = 3;
+}
