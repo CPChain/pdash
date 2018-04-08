@@ -15,6 +15,7 @@ Base = declarative_base()
 Session = sessionmaker(bind=engine)
 session = Session()
 
+
 class FileInfo(Base):
     __tablename__ = 'fileinfo'
     hashcode = Column(Integer, primary_key=True)
@@ -23,6 +24,7 @@ class FileInfo(Base):
     size = Column(Integer)
     remote_type = Column(String)
     remote_uri = Column(String)
+    aes_key = Column(String)
 
     def __repr__(self):
         return "<FileInfo(path='%s', remote_uri='%s')>" % (self.path, self.remote_uri)
