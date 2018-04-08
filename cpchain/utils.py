@@ -23,3 +23,7 @@ config = Config(toml.load(osp.join(root_dir, 'cpchain/cpchain.toml')))
 
 # logging
 logging.basicConfig(format="%(levelname)s:%(module)s:%(funcName)s:L%(lineno)d:%(message)s", level=logging.DEBUG)
+
+
+def join_with_root(path):
+    return osp.join(root_dir, path)
