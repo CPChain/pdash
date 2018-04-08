@@ -1,8 +1,7 @@
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import Product, WalletUser,Token
-from .utils import generate_msg_hash,verify_signature
+from .models import Product, WalletUser, Token
 
 
 class ProductSerializer(serializers.ModelSerializer):

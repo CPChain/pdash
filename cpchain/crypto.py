@@ -9,6 +9,13 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 from cpchain import config
 
+
+def examine_password(password):
+    password = password or config.market.default_password
+    password_bytes = password.encode(encoding="utf-8")
+    return password_bytes
+
+
 class BaseCipher:
     def get_digest(self, fpath):
         digest = hashes.Hash(hashes.SHA256(), backend=self.backend)
@@ -69,13 +76,6 @@ class AESCipher(BaseCipher):
             outfile.write(data)
 
 
-def read_password_from_config(password):
-    password = password or config.market.default_password
-    password_bytes = password.encode(encoding="utf-8")
-    return password_bytes
-
-
-
 class ECCipher:
     # NB we shall use ec for signature only.  using ecies is too contrived.
 
@@ -86,7 +86,7 @@ class ECCipher:
 
     @staticmethod
     def generate_keys(password=None):
-        password = read_password_from_config(password)
+        password = examine_password(password)
 
         private_key = ec.generate_private_key(
             ec.SECP256K1(), default_backend()
@@ -121,7 +121,7 @@ class ECCipher:
 
     @staticmethod
     def generate_der_keys(password=None):
-        password = read_password_from_config(password)
+        password = examine_password(password)
         private_key = ec.generate_private_key(
             ec.SECP256K1(), default_backend()
         )
@@ -174,7 +174,7 @@ class ECCipher:
     @staticmethod
     def sign(pri_key_string, raw_data,password=None):
         try:
-            password = read_password_from_config(password)
+            password = examine_password(password)
             loaded_private_key = serialization.load_pem_private_key(
                 pri_key_string,
                 password=password,
@@ -194,7 +194,7 @@ class ECCipher:
     @staticmethod
     def sign_der(pri_key_string, raw_data,password=None):
         try:
-            password = read_password_from_config(password)
+            password = examine_password(password)
             pri_key_string_bytes = Encoder.str_to_base64_byte(pri_key_string)
             loaded_private_key = serialization.load_der_private_key(
                 pri_key_string_bytes,
@@ -210,6 +210,29 @@ class ECCipher:
             exstr = traceback.format_exc()
             print (exstr)
             return None
+
+    @staticmethod
+    def get_public_key_from_private_key(pri_key_string,password=None):
+        """
+        get public key from private key
+        :param pri_key_string:
+        :param password:read default value from config file
+        :return:base64(public key)
+        """
+        password = examine_password(password)
+        pri_key_string_bytes = Encoder.str_to_base64_byte(pri_key_string)
+        loaded_private_key = serialization.load_der_private_key(
+            pri_key_string_bytes,
+            password=password,
+            backend=default_backend()
+        )
+        puk = loaded_private_key.public_key()
+        serialized_public = puk.public_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        pub_key_string = Encoder.bytes_to_base64_str(serialized_public)
+        return pub_key_string
 
 
 class RSACipher:
