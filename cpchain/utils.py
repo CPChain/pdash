@@ -27,3 +27,11 @@ logging.basicConfig(format="%(levelname)s:%(module)s:%(funcName)s:L%(lineno)d:%(
 
 def join_with_root(path):
     return osp.join(root_dir, path)
+
+
+def sizeof_fmt(num, suffix='B'):
+    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f%s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f%s%s" % (num, 'Yi', suffix)

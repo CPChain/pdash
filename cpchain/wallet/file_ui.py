@@ -1,4 +1,5 @@
 import tempfile, os
+from cpchain.utils import sizeof_fmt
 
 from PyQt5.QtWidgets import QScrollArea, QVBoxLayout, QTableWidget, \
     QAbstractItemView, QTableWidgetItem, QPushButton, QFileDialog
@@ -20,7 +21,7 @@ class FileTab(QScrollArea):
             file_table.setMinimumWidth(self.width())
             file_table.setColumnCount(4)
             file_table.setRowCount(self.row_number)
-            file_table.setHorizontalHeaderLabels(['File Name', 'File Size', 'File Path', 'Etc.'])
+            file_table.setHorizontalHeaderLabels(['File Name', 'File Size', 'Remote Type', 'Published'])
 
             file_table.horizontalHeader().setStretchLastSection(True)
             file_table.verticalHeader().setVisible(False)
@@ -35,8 +36,9 @@ class FileTab(QScrollArea):
                 if cur_row == file_list.__len__():
                     break
                 file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
-                file_table.setItem(cur_row, 1, QTableWidgetItem(str(file_list[cur_row].size)))
-                file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].path))
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].remote_type))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_published)))
 
         create_file_table()
 
@@ -46,8 +48,10 @@ class FileTab(QScrollArea):
                 if cur_row == file_list.__len__():
                     break
                 self.file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
-                self.file_table.setItem(cur_row, 1, QTableWidgetItem(str(file_list[cur_row].size)))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].path))
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].remote_type))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_published)))
+
 
         def handle_upload_button():
             # Maybe useful for buyer.
@@ -61,7 +65,7 @@ class FileTab(QScrollArea):
                 file_name = list(os.path.split(local_file))[-1]
                 file_size = os.path.getsize(local_file)
                 new_file_info = FileInfo(hashcode=hash_code, name=file_name, path=local_file, size=file_size,
-                                         remote_type="ipfs", remote_uri="/ipfs/" + file_name)
+                                         remote_type="ipfs", remote_uri="/ipfs/" + file_name, is_published=False)
                 add_file(new_file_info)
                 update_table()
 

@@ -2,7 +2,7 @@ import os.path as osp
 
 # https://qiita.com/zakuro9715/items/7e393ef1c80da8811027
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine, Column, Integer, String, Boolean
 from sqlalchemy.orm import sessionmaker
 
 from cpchain import root_dir, config
@@ -23,6 +23,7 @@ class FileInfo(Base):
     size = Column(Integer)
     remote_type = Column(String)
     remote_uri = Column(String)
+    is_published = Column(Boolean)
     aes_key = Column(String)
 
     def __repr__(self):
