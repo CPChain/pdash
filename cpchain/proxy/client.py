@@ -15,7 +15,8 @@ from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.message import message_sanity_check
 from cpchain.crypto import ECCipher
 
-import requests
+from twisted.internet import _sslverify
+import treq
 
 class SSLClientProtocol(NetstringReceiver):
     def __init__(self, factory):
@@ -42,6 +43,9 @@ class SSLClientProtocol(NetstringReceiver):
             else:
                 print('AES_key: %s' % proxy_reply.AES_key.decode())
                 print('file_uuid: %s' % proxy_reply.file_uuid)
+                if self.factory.need_download_file:
+                    d = download_file(proxy_reply.file_uuid)
+                    d.addBoth(lambda _: reactor.stop())
         else:
             print("wrong server response")
 
@@ -50,10 +54,12 @@ class SSLClientProtocol(NetstringReceiver):
     def connectionLost(self, reason):
         print("lost connection to client %s" % (self.peer))
 
+
 class SSLClientFactory(protocol.ClientFactory):
 
     def __init__(self, sign_message):
         self.sign_message = sign_message
+        self.need_download_file = False
 
     def buildProtocol(self, addr):
         return SSLClientProtocol(self)
@@ -62,7 +68,8 @@ class SSLClientFactory(protocol.ClientFactory):
         reactor.stop()
 
     def clientConnectionLost(self, connector, reason):
-        reactor.stop()
+        if not self.need_download_file:
+            reactor.stop()
 
 
 def start_client(sign_message):
@@ -80,6 +87,10 @@ def start_client(sign_message):
         return
 
     factory = SSLClientFactory(sign_message)
+
+    if message.type == Message.BUYER_DATA:
+        factory.need_download_file = True
+
     reactor.connectSSL(host, ctrl_port, factory,
             ssl.ClientContextFactory())
 
@@ -92,15 +103,15 @@ def download_file(file_uuid, file_dir=None):
 
     url = "https://%s:%d/%s" % (host, data_port, file_uuid)
 
-    r = requests.get(url, stream=True, verify=False)
-
     file_dir = file_dir or os.getcwd()
-
     file_path = os.path.join(file_dir, file_uuid)
 
-    with open(file_path, 'wb') as f:
-        for chunk in r.iter_content(8192):
-            f.write(chunk)
+    _sslverify.platformTrust = lambda : None
+    f = open(file_path, 'wb')
+    d = treq.get(url)
+    d.addCallback(treq.collect, f.write)
+    d.addBoth(lambda _: f.close())
+    return d
 
 
 if __name__ == '__main__':
@@ -176,8 +187,6 @@ if __name__ == '__main__':
         else:
             print('AES_key: %s' % proxy_reply.AES_key.decode())
             print('file_uuid: %s' % proxy_reply.file_uuid)
-            file_uuid = proxy_reply.file_uuid
-            download_file(file_uuid)
 
     elif test_type == 'proxy_reply':
         message = Message()
