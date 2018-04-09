@@ -5,11 +5,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker
 
-
 from cpchain import root_dir, config
 
 dbpath = osp.join(root_dir, config.wallet.dbpath)
-engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
+engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath))
 
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
