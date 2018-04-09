@@ -1,4 +1,4 @@
-QWidget#MainWindow {
+QWidget#main_window {
     background: #282828;
 }
 

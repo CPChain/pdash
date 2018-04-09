@@ -43,7 +43,7 @@ class ProductSerializer(serializers.ModelSerializer):
 class ProductUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ('owner_address', 'signature', 'status')
+        fields = ('status',)
 
     def update(self, instance, validated_data):
         """

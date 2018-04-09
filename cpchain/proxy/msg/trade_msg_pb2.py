@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='trade_msg.proto',
   package='cpchain',
   syntax='proto3',
-  serialized_pb=_b('\n\x0ftrade_msg.proto\x12\x07\x63pchain\"\xe4\x06\n\x07Message\x12*\n\x04type\x18\x01 \x01(\x0e\x32\x1c.cpchain.Message.MessageType\x12\x30\n\x0bseller_data\x18\x02 \x01(\x0b\x32\x1b.cpchain.Message.SellerData\x12.\n\nbuyer_data\x18\x03 \x01(\x0b\x32\x1a.cpchain.Message.BuyerData\x12\x30\n\x0bproxy_reply\x18\x04 \x01(\x0b\x32\x1b.cpchain.Message.ProxyReply\x1a\xa1\x02\n\x07Storage\x12\x32\n\x04type\x18\x01 \x01(\x0e\x32$.cpchain.Message.Storage.StorageType\x12\x33\n\x04ipfs\x18\x02 \x01(\x0b\x32%.cpchain.Message.Storage.IPFS_Storage\x12/\n\x02s3\x18\x03 \x01(\x0b\x32#.cpchain.Message.Storage.S3_Storage\x1a\x32\n\x0cIPFS_Storage\x12\x11\n\tfile_hash\x18\x01 \x01(\x0c\x12\x0f\n\x07gateway\x18\x02 \x01(\t\x1a\x19\n\nS3_Storage\x12\x0b\n\x03uri\x18\x01 \x01(\t\"-\n\x0bStorageType\x12\x0c\n\x08RESERVED\x10\x00\x12\x08\n\x04IPFS\x10\x01\x12\x06\n\x02S3\x10\x02\x1a\x86\x01\n\nSellerData\x12\x13\n\x0bseller_addr\x18\x01 \x01(\x0c\x12\x12\n\nbuyer_addr\x18\x02 \x01(\x0c\x12\x13\n\x0bmarket_hash\x18\x03 \x01(\x0c\x12\x0f\n\x07\x41\x45S_key\x18\x04 \x01(\x0c\x12)\n\x07storage\x18\x05 \x01(\x0b\x32\x18.cpchain.Message.Storage\x1aI\n\tBuyerData\x12\x13\n\x0bseller_addr\x18\x01 \x01(\x0c\x12\x12\n\nbuyer_addr\x18\x02 \x01(\x0c\x12\x13\n\x0bmarket_hash\x18\x03 \x01(\x0c\x1aR\n\nProxyReply\x12\r\n\x05\x65rror\x18\x01 \x01(\t\x12\x0f\n\x07\x41\x45S_key\x18\x02 \x01(\x0c\x12\x11\n\tfile_hash\x18\x03 \x01(\x0c\x12\x11\n\tfile_size\x18\x04 \x01(\x03\"M\n\x0bMessageType\x12\x0c\n\x08RESERVED\x10\x00\x12\x0f\n\x0bSELLER_DATA\x10\x01\x12\x0e\n\nBUYER_DATA\x10\x02\x12\x0f\n\x0bPROXY_REPLY\x10\x03\"B\n\x0bSignMessage\x12\x12\n\npublic_key\x18\x01 \x01(\x0c\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c\x12\x11\n\tsignature\x18\x03 \x01(\tb\x06proto3')
+  serialized_pb=_b('\n\x0ftrade_msg.proto\x12\x07\x63pchain\"\xd1\x06\n\x07Message\x12*\n\x04type\x18\x01 \x01(\x0e\x32\x1c.cpchain.Message.MessageType\x12\x30\n\x0bseller_data\x18\x02 \x01(\x0b\x32\x1b.cpchain.Message.SellerData\x12.\n\nbuyer_data\x18\x03 \x01(\x0b\x32\x1a.cpchain.Message.BuyerData\x12\x30\n\x0bproxy_reply\x18\x04 \x01(\x0b\x32\x1b.cpchain.Message.ProxyReply\x1a\xa1\x02\n\x07Storage\x12\x32\n\x04type\x18\x01 \x01(\x0e\x32$.cpchain.Message.Storage.StorageType\x12\x33\n\x04ipfs\x18\x02 \x01(\x0b\x32%.cpchain.Message.Storage.IPFS_Storage\x12/\n\x02s3\x18\x03 \x01(\x0b\x32#.cpchain.Message.Storage.S3_Storage\x1a\x32\n\x0cIPFS_Storage\x12\x11\n\tfile_hash\x18\x01 \x01(\x0c\x12\x0f\n\x07gateway\x18\x02 \x01(\t\x1a\x19\n\nS3_Storage\x12\x0b\n\x03uri\x18\x01 \x01(\t\"-\n\x0bStorageType\x12\x0c\n\x08RESERVED\x10\x00\x12\x08\n\x04IPFS\x10\x01\x12\x06\n\x02S3\x10\x02\x1a\x86\x01\n\nSellerData\x12\x13\n\x0bseller_addr\x18\x01 \x01(\x0c\x12\x12\n\nbuyer_addr\x18\x02 \x01(\x0c\x12\x13\n\x0bmarket_hash\x18\x03 \x01(\x0c\x12\x0f\n\x07\x41\x45S_key\x18\x04 \x01(\x0c\x12)\n\x07storage\x18\x05 \x01(\x0b\x32\x18.cpchain.Message.Storage\x1aI\n\tBuyerData\x12\x13\n\x0bseller_addr\x18\x01 \x01(\x0c\x12\x12\n\nbuyer_addr\x18\x02 \x01(\x0c\x12\x13\n\x0bmarket_hash\x18\x03 \x01(\x0c\x1a?\n\nProxyReply\x12\r\n\x05\x65rror\x18\x01 \x01(\t\x12\x0f\n\x07\x41\x45S_key\x18\x02 \x01(\x0c\x12\x11\n\tfile_uuid\x18\x03 \x01(\t\"M\n\x0bMessageType\x12\x0c\n\x08RESERVED\x10\x00\x12\x0f\n\x0bSELLER_DATA\x10\x01\x12\x0e\n\nBUYER_DATA\x10\x02\x12\x0f\n\x0bPROXY_REPLY\x10\x03\"B\n\x0bSignMessage\x12\x12\n\npublic_key\x18\x01 \x01(\x0c\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c\x12\x11\n\tsignature\x18\x03 \x01(\x0c\x62\x06proto3')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -76,8 +76,8 @@ _MESSAGE_MESSAGETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=820,
-  serialized_end=897,
+  serialized_start=801,
+  serialized_end=878,
 )
 _sym_db.RegisterEnumDescriptor(_MESSAGE_MESSAGETYPE)
 
@@ -318,16 +318,9 @@ _MESSAGE_PROXYREPLY = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='file_hash', full_name='cpchain.Message.ProxyReply.file_hash', index=2,
-      number=3, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b(""),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='file_size', full_name='cpchain.Message.ProxyReply.file_size', index=3,
-      number=4, type=3, cpp_type=2, label=1,
-      has_default_value=False, default_value=0,
+      name='file_uuid', full_name='cpchain.Message.ProxyReply.file_uuid', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -344,7 +337,7 @@ _MESSAGE_PROXYREPLY = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=736,
-  serialized_end=818,
+  serialized_end=799,
 )
 
 _MESSAGE = _descriptor.Descriptor(
@@ -396,7 +389,7 @@ _MESSAGE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=29,
-  serialized_end=897,
+  serialized_end=878,
 )
 
 
@@ -423,8 +416,8 @@ _SIGNMESSAGE = _descriptor.Descriptor(
       options=None),
     _descriptor.FieldDescriptor(
       name='signature', full_name='cpchain.SignMessage.signature', index=2,
-      number=3, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
+      number=3, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b(""),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -440,8 +433,8 @@ _SIGNMESSAGE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=899,
-  serialized_end=965,
+  serialized_start=880,
+  serialized_end=946,
 )
 
 _MESSAGE_STORAGE_IPFS_STORAGE.containing_type = _MESSAGE_STORAGE
