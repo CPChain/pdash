@@ -24,7 +24,7 @@ class SSLClientProtocol(NetstringReceiver):
 
     def connectionMade(self):
         self.peer = str(self.transport.getPeer())
-        print("connect to server " + self.peer)
+        print("connect to server %s" % self.peer)
 
         string = self.sign_message.SerializeToString()
         self.sendString(string)
@@ -38,10 +38,10 @@ class SSLClientProtocol(NetstringReceiver):
             self.sign_message.data = message.SerializeToString()
 
             if proxy_reply.error:
-                print('error: ' + proxy_reply.error)
+                print('error: %s' % proxy_reply.error)
             else:
-                print('AES_key: ' + proxy_reply.AES_key.decode())
-                print('file_uuid: ' + proxy_reply.file_uuid)
+                print('AES_key: %s' % proxy_reply.AES_key.decode())
+                print('file_uuid: %s' % proxy_reply.file_uuid)
         else:
             print("wrong server response")
 
@@ -86,7 +86,7 @@ def start_client(sign_message):
     reactor.run()
 
 
-def download_file(file_uuid, dir=os.getcwd()):
+def download_file(file_uuid, file_dir=None):
     host = config.proxy.server_host
     data_port = config.proxy.server_data_port
 
@@ -94,11 +94,13 @@ def download_file(file_uuid, dir=os.getcwd()):
 
     r = requests.get(url, stream=True, verify=False)
 
-    file_path = os.path.join(dir, file_uuid)
+    file_dir = file_dir or os.getcwd()
 
-    with open(file_path, 'wb') as fd:
+    file_path = os.path.join(file_dir, file_uuid)
+
+    with open(file_path, 'wb') as f:
         for chunk in r.iter_content(8192):
-            fd.write(chunk)
+            f.write(chunk)
 
 
 if __name__ == '__main__':
@@ -145,7 +147,7 @@ if __name__ == '__main__':
         proxy_reply = message.proxy_reply
         if not proxy_reply.error:
             print('succeed to upload trade data')
-            print('file_uuid: %s' % (proxy_reply.file_uuid))
+            print('file_uuid: %s' % proxy_reply.file_uuid)
         else:
             print(proxy_reply.error)
 
@@ -171,8 +173,8 @@ if __name__ == '__main__':
         if proxy_reply.error:
             print(proxy_reply.error)
         else:
-            print('AES_key: %s' % (proxy_reply.AES_key.decode()))
-            print('file_uuid: %s' % (proxy_reply.file_uuid))
+            print('AES_key: %s' % proxy_reply.AES_key.decode())
+            print('file_uuid: %s' % proxy_reply.file_uuid)
             file_uuid = proxy_reply.file_uuid
             download_file(file_uuid)
 

@@ -33,7 +33,7 @@ class SSLServerProtocol(NetstringReceiver):
     def connectionMade(self):
         self.factory.numConnections += 1
         self.peer = str(self.transport.getPeer())
-        print("connect to client " + self.peer)
+        print("connect to client %s" % self.peer)
 
     def stringReceived(self, string):
         sign_message = SignMessage()
@@ -131,7 +131,7 @@ class SSLServerProtocol(NetstringReceiver):
 
     def connectionLost(self, reason):
         self.factory.numConnections -= 1
-        print("lost connection to client %s" % (self.peer))
+        print("lost connection to client %s" % self.peer)
 
     def proxy_reply_error(self, error):
         message = Message()

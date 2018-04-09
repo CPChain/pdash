@@ -26,8 +26,8 @@ class Trade(Base):
     def __repr__(self):
         return "<Trade(buyer_addr='%s', seller_addr='%s', \
             market_hash='%s', AES_key='%s', file_hash='%s' \
-            file_uuid='%s' time_stamp='%s')>" % (self.buyer_addr, \
-            self.seller_addr, self.market_hash, self.AES_key, \
+            file_uuid='%s' time_stamp='%s')>" % (self.buyer_addr,
+            self.seller_addr, self.market_hash, self.AES_key,
             self.file_hash, self.file_uuid, self.time_stamp)
 
 class ProxyDB(object):
