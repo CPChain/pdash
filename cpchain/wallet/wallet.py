@@ -1,19 +1,75 @@
 #!/usr/bin/python3
 import sys
+# from functools import partial
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout,
                              QVBoxLayout, QGridLayout, QWidget, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel,
-                             QWidget)
+                             QWidget, QLineEdit, QSpacerItem, QSizePolicy)
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QCursor
+
+# do it before any other twisted code.
+def install_reactor():
+    app = QApplication(sys.argv)
+    import qt5reactor; qt5reactor.install()
+install_reactor()
 
 from cpchain import config
 from cpchain.utils import join_with_root
-from cpchain.wallet.tabs import PublishTab
+from cpchain.wallet.tabs import PublishTab, BrowseTab
+from cpchain.wallet.net import foobar
 
 
 class Header(QFrame):
+
+    class SearchBar(QLineEdit):
+        def __init__(self, parent=None):
+            super().__init__()
+            self.setObjectName("searchbar")
+            self.parent = parent
+            self.init_ui()
+
+        def init_ui(self):
+            self.setMinimumSize(200, 20)
+
+            self.search_btn = search_btn = QPushButton(self)
+
+            search_btn.setMaximumSize(12, 12)
+            # search_btn.setCursor(QCursor(Qt.PointingHandCursor))
+
+            def bind_slot():
+
+                def query():
+                    # TOOD refactor this.
+
+                    # switch to the browser pane
+                    content_tabs = self.parent.parent.content_tabs
+                    wid = content_tabs.findChild(QWidget, "browse_tab")
+                    content_tabs.setCurrentWidget(wid)
+
+                    # also update sidebar
+                    sidebar = self.parent.parent.sidebar
+                    item = sidebar.feature_list.findItems("Browse", Qt.MatchExactly)[0]
+                    sidebar.feature_list.setCurrentItem(item)
+
+                    return foobar(self.text())
+
+                search_btn.clicked.connect(query)
+
+            bind_slot()
+
+            def set_layout():
+                main_layout = QHBoxLayout()
+                main_layout.addSpacerItem(QSpacerItem(150, 10, QSizePolicy.Expanding))
+
+                main_layout.addWidget(search_btn)
+                main_layout.addSpacing(10)
+                main_layout.setContentsMargins(0, 0, 0, 0)
+                self.setLayout(main_layout)
+            set_layout()
+
+
     def __init__(self, parent):
         super().__init__()
         self.parent = parent
@@ -21,11 +77,18 @@ class Header(QFrame):
 
 
     def init_ui(self):
+        def create_search_bar():
+            self.search_bar = search_bar = type(self).SearchBar(self)
+            search_bar.setPlaceholderText("Search")
+
+        create_search_bar()
+
 
         def set_layout():
             self.main_layout = main_layout = QHBoxLayout(self)
-            stub_label = QLabel("Stub")
-            main_layout.addWidget(stub_label)
+
+            main_layout.addWidget(self.search_bar)
+
         set_layout()
 
 
@@ -107,8 +170,11 @@ class SideBar(QScrollArea):
 
         def add_lists():
             self.feature_list = QListWidget()            
+
             self.feature_list.addItem("My Data")
             self.feature_list.addItem("Publish Data")
+            self.feature_list.addItem("Browse")
+
             self.feature_list.setCurrentRow(0)
         add_lists()
 
@@ -118,14 +184,12 @@ class SideBar(QScrollArea):
                 item_to_tab_name = {
                     "My Data": "data_tab",
                     "Publish Data": "publish_tab",
+                    "Browse": "browse_tab",
                 }
-
                 wid = self.content_tabs.findChild(QWidget, item_to_tab_name[item.text()])
                 self.content_tabs.setCurrentWidget(wid)
-
-
             self.feature_list.itemPressed.connect(feature_list_clicked)
-
+            
         bind_slots()
 
 
@@ -157,7 +221,7 @@ class MainWindow(QMainWindow):
     def init_ui(self):               
         # overall window settings
         self.setWindowTitle('CPChain Wallet')    
-        self.setObjectName('MainWindow')
+        self.setObjectName("main_window")
         # no borders.  we make our own header panel.
         self.setWindowFlags(Qt.FramelessWindowHint)
 
@@ -183,6 +247,7 @@ class MainWindow(QMainWindow):
             content_tabs.addTab(create_file_tab(), "")
 
             content_tabs.addTab(PublishTab(self), "")
+            content_tabs.addTab(BrowseTab(self), "")
 
 
         add_content_tabs()
@@ -250,14 +315,9 @@ def _handle_keyboard_interrupt():
 
 
 def main():
-    app = QApplication(sys.argv)
 
-    import qt5reactor
-    qt5reactor.install()
     from twisted.internet import reactor
-
     main_wnd = MainWindow(reactor)
-
     _handle_keyboard_interrupt()
     sys.exit(reactor.run())
 

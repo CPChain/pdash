@@ -50,6 +50,8 @@ class MarketClient:
         self.client = HTTPClient(reactor)
 
 
+def foobar(msg):
+    print(msg)
 
 
 
