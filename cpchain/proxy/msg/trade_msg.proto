@@ -48,8 +48,7 @@ message Message {
 	message ProxyReply {
 		string error = 1;
 		bytes AES_key = 2;
-		bytes file_hash = 3;
-		int64 file_size = 4;
+		string file_uuid = 3;
 	}
 
 	MessageType type = 1;

@@ -37,8 +37,7 @@ def message_sanity_check(message):
             if proxy_reply.error:
                 return True
             elif proxy_reply.AES_key and \
-                proxy_reply.file_hash and \
-                proxy_reply.file_size:
+                proxy_reply.file_uuid:
                 return True
 
     return False
