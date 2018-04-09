@@ -1,0 +1,13 @@
+QWidget#MainWindow {
+    background: #282828;
+}
+
+
+/* * { */
+/*    font-family: 'DejaVu Sans' */
+/* } */
+
+QTabBar#content_tabs::tab {
+    width: 0px;
+    height: 0px;
+}
