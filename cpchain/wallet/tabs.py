@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QScrollArea, QFormLayout, QVBoxLayout, QComboBox, Q
 
 from PyQt5.QtCore import Qt, QPoint
 
-from PyQt5.QtWidgets import QMenu, QAction
+from PyQt5.QtWidgets import QMenu, QAction, QHeaderView
 
 from PyQt5.QtGui import QCursor
 
@@ -62,6 +62,10 @@ class BrowseTab(QScrollArea):
             item_table.setColumnCount(len(headers))
             item_table.setHorizontalHeaderLabels(headers)
             item_table.horizontalHeader().setStretchLastSection(True)
+            # pending
+            # https://stackoverflow.com/a/38129829/855160
+            # header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+
             item_table.setMinimumWidth(self.width())
 
             # item_table.setColumnWidth(0, self.width()/3*1.25)
@@ -71,6 +75,8 @@ class BrowseTab(QScrollArea):
             # some tweaks
             item_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
             item_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+            # select only one row
+            item_table.setSelectionMode(QAbstractItemView.SingleSelection)
             item_table.setShowGrid(False)
 
             # do not show row counts
