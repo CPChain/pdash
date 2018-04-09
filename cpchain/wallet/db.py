@@ -36,4 +36,5 @@ def create_table():
     Base.metadata.create_all(engine)
 
 
-fileinfo = FileInfo(hashcode=0x3234241, name="asdf", path="iasdf", size=3234, remote_type="asdf", remote_uri="asdfadsf")
+if not osp.isfile(dbpath):
+    create_table()

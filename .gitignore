@@ -4,7 +4,6 @@
 _local*
 # sqlite3
 *.db
-!cpchain/assets/wallet/wallet.db
 
 # python
 .pytest_cache
