@@ -1,12 +1,16 @@
 #!/usr/bin/python3
 import sys
 
-from PyQt5.QtWidgets import QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QVBoxLayout, QGridLayout, QWidget, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel
+from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout,
+                             QVBoxLayout, QGridLayout, QWidget, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel,
+                             QWidget)
+
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 
 from cpchain import config
 from cpchain.utils import join_with_root
+from cpchain.wallet.tabs import PublishTab
 
 
 class Header(QFrame):
@@ -102,20 +106,25 @@ class SideBar(QScrollArea):
 
 
         def add_lists():
-            self.seller_mode_list = QListWidget()            
-            self.seller_mode_list.addItem("My Data")
-            self.seller_mode_list.addItem("Publish Data")
-            self.seller_mode_list.addItem(QListWidgetItem(QIcon(), "Test"))
-            self.seller_mode_list.setCurrentRow(0)
+            self.feature_list = QListWidget()            
+            self.feature_list.addItem("My Data")
+            self.feature_list.addItem("Publish Data")
+            self.feature_list.setCurrentRow(0)
         add_lists()
 
 
         def bind_slots():
-            def seller_mode_list_clicked(item):
-                if item.text() == "My Data":
-                    self.content_tabs.setCurrentIndex(0)
+            def feature_list_clicked(item):
+                item_to_tab_name = {
+                    "My Data": "data_tab",
+                    "Publish Data": "publish_tab",
+                }
 
-            self.seller_mode_list.itemPressed.connect(seller_mode_list_clicked)
+                wid = self.content_tabs.findChild(QWidget, item_to_tab_name[item.text()])
+                self.content_tabs.setCurrentWidget(wid)
+
+
+            self.feature_list.itemPressed.connect(feature_list_clicked)
 
         bind_slots()
 
@@ -123,7 +132,7 @@ class SideBar(QScrollArea):
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self.frame)
             main_layout.addLayout(btn_layout)
-            main_layout.addWidget(self.seller_mode_list)
+            main_layout.addWidget(self.feature_list)
 
             main_layout.setContentsMargins(0, 8, 0, 0)
 
@@ -167,10 +176,14 @@ class MainWindow(QMainWindow):
 
             def create_file_tab():
                 from cpchain.wallet.file_ui import FileTab
-                return FileTab(self)
+                t = FileTab(self)
+                t.setObjectName("data_tab")
+                return t
 
-            file_tab = create_file_tab()
-            content_tabs.addTab(file_tab, "")
+            content_tabs.addTab(create_file_tab(), "")
+
+            content_tabs.addTab(PublishTab(self), "")
+
 
         add_content_tabs()
 
@@ -221,10 +234,6 @@ class MainWindow(QMainWindow):
 
 def _handle_keyboard_interrupt():
     def sigint_handler(*args):
-        # if QMessageBox.question(None, '', "Are you sure you want to quit?",
-        #                         QMessageBox.Yes | QMessageBox.No,
-        #                         QMessageBox.No) == QMessageBox.Yes:
-        #     QApplication.quit()
         QApplication.quit()
 
     import signal
