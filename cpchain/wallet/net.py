@@ -89,7 +89,7 @@ class MarketClient:
         confirm_info = treq.json_content(resp)
         if confirm_info['success'] == False:
             print('logout failed')
-        
+
 
 # if __name__ == '__main__':
 #     mc = MarketClient()
