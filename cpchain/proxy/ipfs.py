@@ -3,12 +3,14 @@ import ipfsapi
 
 from cpchain import config, root_dir
 
-class IPFS(object):
+class IPFS:
     def __init__(self):
         self.client = None
 
-    def connect(self, host=config.storage.ipfs.addr,
-                port=config.storage.ipfs.port):
+    def connect(self, host=None, port=None):
+
+        host = host or config.storage.ipfs.addr
+        port = port or config.storage.ipfs.port
 
         try:
             self.client = ipfsapi.connect(host, port)

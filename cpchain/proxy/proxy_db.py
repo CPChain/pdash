@@ -1,12 +1,13 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer
+from sqlalchemy import Column, Integer, String
 from sqlalchemy.dialects.mysql import BINARY, TIMESTAMP
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta
 from cpchain import config, root_dir
 
 import os
+from uuid import uuid1 as uuid
 
 Base = declarative_base()
 
@@ -19,14 +20,15 @@ class Trade(Base):
     market_hash = Column(BINARY, nullable=False)
     AES_key = Column(BINARY, nullable=False)
     file_hash = Column(BINARY, nullable=False)
+    file_uuid = Column(String, nullable=False)
     time_stamp = Column(TIMESTAMP, nullable=False)
 
     def __repr__(self):
         return "<Trade(buyer_addr='%s', seller_addr='%s', \
             market_hash='%s', AES_key='%s', file_hash='%s' \
-            time_stamp='%s')>" % (self.buyer_addr, \
-            self.seller_addr, self.market_hash, self.AES_key, \
-            self.file_hash, self.time_stamp)
+            file_uuid='%s' time_stamp='%s')>" % (self.buyer_addr,
+            self.seller_addr, self.market_hash, self.AES_key,
+            self.file_hash, self.file_uuid, self.time_stamp)
 
 class ProxyDB(object):
     default_db = 'sqlite:///' + \
@@ -48,14 +50,18 @@ class ProxyDB(object):
         return count
 
     def query(self, trade):
-        instances = self.session.query(Trade).filter(
+        return self.session.query(Trade).filter(
                     Trade.buyer_addr ==  trade.buyer_addr,
                     Trade.seller_addr == trade.seller_addr,
-                    Trade.market_hash == trade.market_hash).all()
-        return instances
+                    Trade.market_hash == trade.market_hash).first()
+
+    def query_file_uuid(self, uuid):
+        return self.session.query(Trade).filter(
+                    Trade.file_uuid == uuid).first()
 
     def insert(self, trade):
         trade.time_stamp = trade.time_stamp or datetime.now()
+        trade.file_uuid = str(uuid())
         self.session.add(trade)
         self.session.commit()
 
