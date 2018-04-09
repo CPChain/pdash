@@ -1,5 +1,5 @@
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
-from cpchain.proxy.crypto import ECCipher
+from cpchain.crypto import ECCipher
 
 def message_sanity_check(message):
 
@@ -44,13 +44,8 @@ def message_sanity_check(message):
 
 def sign_message_verify(sign_message):
 
-    ec = ECCipher()
+    return ECCipher.verify_signature(
+                    sign_message.public_key,
+                    sign_message.signature,
+                    sign_message.data)
 
-    ec.load_public_key(sign_message.public_key)
-    ec.encode_signature(sign_message.signature)
-    ec.load_sign_data(sign_message.data)
-
-    if not ec.verify_signature():
-        return False
-    else:
-        return True
