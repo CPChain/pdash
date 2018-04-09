@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QScrollArea, QFormLayout, QComboBox, QLineEdit, QLabel, QTextEdit, QPushButton
-
+from cpchain.wallet import net
 
 class PublishTab(QScrollArea):
     def __init__(self, parent):
@@ -33,4 +33,6 @@ class PublishTab(QScrollArea):
 
 
     def publish_data(self):
+        mc = net.MarketClient()
+        mc.login()
         print(self.data_title.text())

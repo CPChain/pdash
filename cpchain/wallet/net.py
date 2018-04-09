@@ -1,11 +1,5 @@
-from twisted.internet.defer import inlineCallbacks, returnValue
-from twisted.internet import defer, reactor
-import treq
-# from cpchain.proxy.msg.trade_msg_pb2 import Message
-#
-# from cpchain.utils import logging
-# from cpchain.proxy import client
-import json
+from twisted.internet.defer import inlineCallbacks
+# import treq
 from cpchain import crypto
 import datetime, time
 
@@ -24,6 +18,7 @@ class MarketClient:
     def login(self):
         header = {'Content-Type': 'application/json'}
         data = {'public_key': self.pub_key}
+        import treq
         resp = yield treq.post(url=self.url+'login/', headers=header, json=data)
         confirm_info = yield treq.json_content(resp)
         print(confirm_info)
@@ -34,11 +29,12 @@ class MarketClient:
 
     @inlineCallbacks
     def login_confirm(self):
-        nonce = 'qZaQ6S'  #self.login()
+        nonce = yield self.login()
         signature = crypto.ECCipher.sign_der(self.priv_key, nonce)
         print(signature)
         header = {'Content-Type': 'application/json'}
         data = {'public_key': self.pub_key, 'code': signature}
+        import treq
         resp = yield treq.post(self.url+'confirm/', headers=header, json=data)
         confirm_info = yield treq.json_content(resp)
         if confirm_info['success'] == False:
@@ -57,6 +53,7 @@ class MarketClient:
              + self.str_to_timestamp(start_date) + self.str_to_timestamp(end_date) + str(file_md5)
         signature = crypto.ECCipher.sign(self.priv_key, signature_source)
         data['signature'] = signature
+        import treq
         resp = yield treq.post(self.url+'product/', headers=header, json=data)
         confirm_info = yield treq.json_content(resp)
         if confirm_info['success'] == False:
@@ -68,6 +65,7 @@ class MarketClient:
     def change_product_status(self, status):
         header = {'Content-Type': 'application/json', 'MARKET-KEY': self.pub_key, 'MARKET-TOKEN': self.token}
         data = {'status': status}
+        import treq
         resp = yield treq.post(url=self.url+'product_change', headers=header, json=data)
         confirm_info = yield treq.json_content(resp)
         if confirm_info['success'] == False:
@@ -76,6 +74,7 @@ class MarketClient:
     @inlineCallbacks
     def query_product(self, keyword):
         header = {'Content-Type': 'application/json'}
+        import treq
         resp = yield treq.get(url=self.url+'procuct', headers=header, params=keyword)
         confirm_info = treq.json_content(resp)
         if confirm_info['success'] == False:
@@ -85,14 +84,16 @@ class MarketClient:
     def logout(self):
         header = {'Content-Type': 'application/json', 'MARKET-KEY': self.pub_key, 'MARKET-TOKEN': self.token}
         data = {'public_key': self.pub_key, 'token': self.token}
+        import treq
         resp = yield treq.post(url=self.url+'logout', headers=header, json=data)
         confirm_info = treq.json_content(resp)
         if confirm_info['success'] == False:
             print('logout failed')
 
 
-# if __name__ == '__main__':
-#     mc = MarketClient()
-#     nonce = mc.login()
-#     token = mc.login_confirm()
-#     reactor.run()
+if __name__ == '__main__':
+    mc = MarketClient()
+    nonce = mc.login()
+    token = mc.login_confirm()
+    from twisted.internet import reactor
+    reactor.run()
