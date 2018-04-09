@@ -25,6 +25,7 @@ class FileTab(QScrollArea):
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         create_file_table()
 
+
         def set_layout():
             self.main_layout = QVBoxLayout(self)
             self.main_layout.addWidget(self.file_table)

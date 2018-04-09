@@ -53,6 +53,9 @@ class MarketClient:
 def foobar(msg):
     print(msg)
 
+def hoge(msg):
+    print(msg)
+
 
 
 

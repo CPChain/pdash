@@ -170,14 +170,12 @@ class SideBar(QScrollArea):
 
         def add_lists():
             self.feature_list = QListWidget()            
-
             self.feature_list.addItem("My Data")
             self.feature_list.addItem("Publish Data")
             self.feature_list.addItem("Browse")
 
             self.feature_list.setCurrentRow(0)
         add_lists()
-
 
         def bind_slots():
             def feature_list_clicked(item):
