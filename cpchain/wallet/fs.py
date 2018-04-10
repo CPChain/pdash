@@ -1,6 +1,7 @@
-from cpchain.wallet.db import *
+import tempfile
+
+from cpchain.wallet.db import session, FileInfo, osp, create_engine, sessionmaker
 from cpchain.crypto import AESCipher
-from cpchain.storage import IPFSStorage, S3Storage
 from cpchain.proxy.ipfs import *
 
 
@@ -16,6 +17,10 @@ def get_file_names():
 
 
 def add_file(new_file_info):
+    dbpath = osp.join(root_dir, config.wallet.dbpath)
+    engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
+    Session = sessionmaker(bind=engine)
+    session = Session()
     session.add(new_file_info)
     session.commit()
 
@@ -31,9 +36,7 @@ def encrypt_file(file_in_path, file_out_path):
     new_key = AESCipher.generate_key()
     encrypter = AESCipher(new_key)
     encrypter.encrypt(file_in_path, file_out_path)
-    session.query(FileInfo).filter(FileInfo.path == file_out_path).\
-        update({FileInfo.aes_key: new_key}, synchronize_session=False)
-    session.commit()
+    return new_key
 
 
 # Decrypt a file with key stored in database
@@ -44,9 +47,17 @@ def decrypt_file(file_in_path, file_out_path):
 
 
 def upload_file_ipfs(file_path):
-    ipfs_client = IPFS()
-    ipfs_client.connect()
-    file_hash = ipfs_client.add_file(file_path)
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        encrypted_path = os.path.join(tmpdirname, 'encrypted.txt')
+        this_key = encrypt_file(file_path, encrypted_path)
+        ipfs_client = IPFS()
+        ipfs_client.connect()
+        file_hash = ipfs_client.add_file(encrypted_path)
+    file_name = list(os.path.split(file_path))[-1]
+    file_size = os.path.getsize(file_path)
+    new_file_info = FileInfo(hashcode=str(file_hash), name=file_name, path=file_path, size=file_size,
+                             remote_type="ipfs", remote_uri="/ipfs/" + file_name, is_published=False, aes_key=this_key)
+    add_file(new_file_info)
     return file_hash
 
 

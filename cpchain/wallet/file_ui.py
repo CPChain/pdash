@@ -1,5 +1,6 @@
 import tempfile, os
 from cpchain.utils import sizeof_fmt
+from twisted.internet import reactor, threads
 
 from PyQt5.QtWidgets import QScrollArea, QVBoxLayout, QTableWidget, \
     QAbstractItemView, QTableWidgetItem, QPushButton, QFileDialog
@@ -11,6 +12,8 @@ class FileTab(QScrollArea):
         super().__init__()
         self.parent = parent
         self.row_number = 20
+        self.hashcode = 'DEADBEEF'
+        self.local_file = 'local'
         self.init_ui()
 
     def init_ui(self):
@@ -44,6 +47,7 @@ class FileTab(QScrollArea):
 
         def update_table():
             file_list = get_file_list()
+            print(file_list.__len__())
             for cur_row in range(self.row_number):
                 if cur_row == file_list.__len__():
                     break
@@ -52,22 +56,17 @@ class FileTab(QScrollArea):
                 self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].remote_type))
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_published)))
 
-
         def handle_upload_button():
             # Maybe useful for buyer.
             # row_selected = self.file_table.selectionModel().selectedRows()[0].row()
             # selected_fpath = self.file_table.item(row_selected, 2).text()
-            local_file = QFileDialog.getOpenFileName()[0]
-            with tempfile.TemporaryDirectory() as tmpdirname:
-                encrypted_path = os.path.join(tmpdirname, 'encrypted.txt')
-                encrypt_file(local_file, encrypted_path)
-                hash_code = upload_file_ipfs(encrypted_path)
-                file_name = list(os.path.split(local_file))[-1]
-                file_size = os.path.getsize(local_file)
-                new_file_info = FileInfo(hashcode=hash_code, name=file_name, path=local_file, size=file_size,
-                                         remote_type="ipfs", remote_uri="/ipfs/" + file_name, is_published=False)
-                add_file(new_file_info)
-                update_table()
+            self.local_file = QFileDialog.getOpenFileName()[0]
+            defered = threads.deferToThread(upload_file_ipfs, self.local_file)
+            defered.addCallback(handle_callback_upload)
+
+        def handle_callback_upload(x):
+            print("in handle_callback_upload" + x)
+            update_table()
 
         def create_buttons():
             self.upload_button = upload_button = QPushButton('Encrypt and Upload')
@@ -81,6 +80,7 @@ class FileTab(QScrollArea):
             self.main_layout.addWidget(self.upload_button)
 
         set_layout()
+
 
 
 

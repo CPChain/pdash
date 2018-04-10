@@ -1,4 +1,5 @@
 from cpchain.wallet.fs import *
+from cpchain.wallet.db import *
 from cpchain.proxy.ipfs import *
 
 
@@ -32,9 +33,9 @@ def test_upload_ipfs():
 
 
 def main():
-    test_file_db()
+    # test_file_db()
     # test_encryption_decryption()
-    # test_upload_ipfs()
+    test_upload_ipfs()
 
 
 if __name__ == '__main__':
