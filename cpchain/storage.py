@@ -1,7 +1,9 @@
 import boto3
 import ipfsapi
 
-from cpchain import config
+import sys, os
+from cpchain import config, root_dir
+
 
 class Storage:
     def __init__(self):
@@ -62,17 +64,77 @@ class S3Storage(Storage):
 
 
 class IPFSStorage(Storage):
-    def __init__(self, addr=None, port=None):
-        addr = addr or config.storage.ipfs.addr
+    def __init__(self):
+        self.client = None
+
+    def connect(self, host=None, port=None):
+        host = host or config.storage.ipfs.addr
         port = port or config.storage.ipfs.port
-        # TODO make this non-blocking
-        self.backend = ipfsapi.connect(addr, port)
+
+        try:
+            self.client = ipfsapi.connect(host, port)
+        except:
+            sys.stderr.write(str(sys.exc_info()))
+            return False
+        else:
+            return True
+
+    def file_in_ipfs(self, file_hash):
+        if not self.client:
+            sys.stderr.write("invalid ipfs client")
+            return False
+
+        try:
+            self.client.ls(file_hash)
+        except:
+            sys.stderr.write(str(sys.exc_info()))
+            return False
+        else:
+            return True
+
+    def upload_file(self, file_path):
+        if not self.client:
+            sys.stderr.write("invalid ipfs client")
+            return
+
+        if os.path.isdir(file_path):
+            try:
+                file_nodes = self.client.add(file_path, recursive=True)
+            except:
+                sys.stderr.write(str(sys.exc_info()))
+            else:
+                return file_nodes[-1]['Hash']
+        elif os.path.isfile(file_path):
+            try:
+                file_node = self.client.add(file_path)
+            except:
+                sys.stderr.write(str(sys.exc_info()))
+            else:
+                return file_node['Hash']
+        else:
+            sys.stderr.write('invalid file path')
 
 
-    # cf. https://github.com/ipfs/py-ipfs-api
-    def upload_file(self, fpath):
-        return self.backend.add(fpath)
-        
+    def download_file(self, file_hash, file_dir=None):
+        if not self.file_in_ipfs(file_hash):
+            return False
 
-    def download_file(self, fhash, fpath):
-        return self.backend.get(fhash, filepath=fpath)
+        file_dir = file_dir or os.getcwd()
+
+        if os.path.isdir(file_dir):
+            cwd = os.getcwd()
+            os.chdir(file_dir)
+            try:
+                self.client.get(file_hash)
+            except:
+                sys.stderr.write(str(sys.exc_info()))
+                os.chdir(cwd)
+                return False
+            else:
+                os.chdir(cwd)
+                return True
+
+        else:
+            sys.stderr.write('invalid file directory')
+
+        return False

@@ -26,7 +26,7 @@ class TableWidget(QTableWidget):
         self.customContextMenuRequested[QPoint].connect(func)
 
 
-
+from cpchain.wallet import net
 class BrowseTab(QScrollArea):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -134,4 +134,7 @@ class PublishTab(QScrollArea):
 
 
     def publish_data(self):
-        print(self.data_title.text())
+        mc = net.MarketClient()
+        # mc.login_confirm()
+        mc.publish_product('data_title.text()', 'testdata', 13, 'temp', '2018-04-01 10:10:10', '2018-04-01 10:10:10', '123456')
+        #print(type(self.data_title.text()))

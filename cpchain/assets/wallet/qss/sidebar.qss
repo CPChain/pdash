@@ -6,51 +6,26 @@ QFrame {
     background: #121212;
 }
 
-QPushButton {
-    font: bold;
-    /* font-size: 30px;  */
-}
-
 QPushButton#close_wnd_btn, QPushButton#minimize_wnd_btn, QPushButton#maximize_wnd_btn {
-    color: #6d6e70;
     border: none;
     icon-size: 18px;
 }
 
 
-QPushButton#close_wnd_btn {
-    image: url(${asset_dir}/icons/close_wnd_btn.png);
-}
-QPushButton#close_wnd_btn:hover {
-    image: url(${asset_dir}/icons/close_wnd_btn_active.png);
-}
+QPushButton#close_wnd_btn {image: url(${asset_dir}/icons/close_wnd_btn.png);}
+QPushButton#close_wnd_btn:hover {image: url(${asset_dir}/icons/close_wnd_btn_active.png);}
 
-QPushButton#minimize_wnd_btn {
-    image: url(${asset_dir}/icons/minimize_wnd_btn.png);
-}
-QPushButton#minimize_wnd_btn:hover {
-    image: url(${asset_dir}/icons/minimize_wnd_btn_active.png);
-}
+QPushButton#minimize_wnd_btn {image: url(${asset_dir}/icons/minimize_wnd_btn.png);}
+QPushButton#minimize_wnd_btn:hover {image: url(${asset_dir}/icons/minimize_wnd_btn_active.png);}
 
 /* #489E62 */
-QPushButton#maximize_wnd_btn {
-    image: url(${asset_dir}/icons/maximize_wnd_btn.png);
-}
+QPushButton#maximize_wnd_btn {image: url(${asset_dir}/icons/maximize_wnd_btn.png);}
 /* #e67e22 */
-QPushButton#maximize_wnd_btn:hover {
-    image: url(${asset_dir}/icons/maximize_wnd_btn_active.png);
-}
+QPushButton#maximize_wnd_btn:hover {image: url(${asset_dir}/icons/maximize_wnd_btn_active.png);}
 
 QPushButton#close_wnd_btn::hover, QPushButton#minimize_wnd_btn::hover, QPushButton#maximize_wnd_btn::hover {
     color: #ff4c4c;
 }
-
-/* QListWidget::item { */
-/*     height: 30px; */
-/*     border-left: 3px solid #537b35; */
-/*     color: #e3A0A8; */
-/*     text-align: center; */
-/* } */
 
 
 QListWidget::item {
@@ -58,13 +33,24 @@ QListWidget::item {
     background: none;
     height: 30px;
     color: #b4a996;
-    border-left: 3px solid #191B1F;
-    /* text-align: center; */
-    /* font: bold; */
+    border-left: 3px solid #121212;
+    text-align: center; 
+
 }
 
-QListWidget::item::selected {
-    border-left: 3px solid #537b35;
-    background: #121212;
+QListWidget {
+    font-family: "DejaVu Sans Mono";
+    font-size: 11pt;
+    font-weight: bold;  
+}
+
+QListWidget::item::hover  {
     color: #fefefe; 
+}
+
+QListWidget::item::selected  {
+    border-left: 3px solid #537b35;
+    /* background: #26282C; */
+    background: #00334e;
+    color: #bcafaf; 
 }
