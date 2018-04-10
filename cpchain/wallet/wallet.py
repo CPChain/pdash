@@ -140,11 +140,11 @@ class CloudTab(TabContentArea):
             self.main_layout = QVBoxLayout(self)
             self.main_layout.addWidget(self.file_table)
 
-            layout = QHBoxLayout(self)
+            layout = QHBoxLayout()
             layout.addStretch(1)
             layout.addWidget(self.upload_btn)
-
             self.main_layout.addLayout(layout)
+
         set_layout()
 
         load_stylesheet(self, "cloud_tab.qss")
@@ -229,38 +229,54 @@ class BrowseTab(TabContentArea):
             
 class PublishTab(TabContentArea):
     def __init__(self, parent):
-        super().__init__()
+        super().__init__(parent)
         self.parent = parent
         self.setObjectName("publish_tab")
-
         self.init_ui()
 
     def init_ui(self):
-
         def set_layout():
             main_layout = QFormLayout(self)
             self.data_item = QComboBox()
+            self.data_item.addItem("X")
+            self.data_item.addItem("Y")
+
             self.data_title = QLineEdit()
             self.data_desc = QTextEdit()
+
+            self.data_price = QLineEdit()
+            self.data_price.setObjectName("data_price")
+            self.data_price.setFixedWidth(100)
+
             self.data_tags = QLineEdit()
+            self.data_tags.setFixedWidth(100)
 
             main_layout.addRow(QLabel("Data"), self.data_item)
             main_layout.addRow(QLabel("Title"), self.data_title)
             main_layout.addRow(QLabel("Description"), self.data_desc)
+            main_layout.addRow(QLabel("Price"), self.data_price)
             main_layout.addRow(QLabel("Tag"), self.data_tags)
 
-
             publish_btn = QPushButton('Publish')
+            publish_btn.setObjectName("publish_btn")
             publish_btn.clicked.connect(self.publish_data)
-
-            main_layout.addWidget(publish_btn)
+            layout = QHBoxLayout()
+            layout.addStretch(1)
+            layout.addWidget(publish_btn)
+            main_layout.addRow(layout)
 
         set_layout()
 
+        load_stylesheet(self, "publish_tab.qss")
+
 
     def publish_data(self):
+        # def publish_product(self, title, description, price, tags, start_date, end_date, file_md5):
+        # title = self.data_title.text()
+        # description = self.data_desc.text()
+
         mc.publish_product('test', 'testdata', 13, 'temp', '2018-04-01 10:10:10', '2018-04-01 10:10:10', '123456')
-        #print(type(self.data_title.text()))
+
 
 class Header(QFrame):
     class SearchBar(QLineEdit):

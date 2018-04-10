@@ -1,7 +1,6 @@
 QLineEdit#searchbar{
     margin-left: 5px;
-    /* border: 1px solid #3a2f2f;  */
-    border: 1px solid #724f61;   
+    /* border: 1px solid #724f61;    */
     border-radius: 3px;
     /* color: #0f0000; */
     color: #ddc9c9;
