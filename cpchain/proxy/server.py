@@ -19,7 +19,7 @@ from cpchain import config, root_dir
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.message import message_sanity_check, sign_message_verify
 
-from cpchain.proxy.ipfs import IPFS
+from cpchain.storage import IPFSStorage
 from cpchain.proxy.proxy_db import Trade, ProxyDB
 
 server_root = os.path.join(root_dir, config.proxy.server_root)
@@ -140,8 +140,9 @@ class SSLServerProtocol(NetstringReceiver):
 
     def get_ipfs_file(self, ipfs_gateway, file_hash):
         host, port = ipfs_gateway.strip().split(':')
-        ipfs = IPFS()
-        return ipfs.connect(host, port) and ipfs.get_file(file_hash)
+        ipfs = IPFSStorage()
+        return ipfs.connect(host, port) and \
+                ipfs.download_file(file_hash, server_root)
 
     def ipfs_callback(self, success):
         if success:
