@@ -133,6 +133,7 @@ class Header(QFrame):
             self.m_drag = False
 
 
+
 class SideBar(QScrollArea):
     def __init__(self, parent):
         super().__init__(parent)
@@ -144,28 +145,26 @@ class SideBar(QScrollArea):
 
 
     def init_ui(self):
-        self.setMaximumWidth(200)
+        self.setObjectName("sidebar")
+        self.setMaximumWidth(180)
 
         self.frame = QFrame()
         self.setWidget(self.frame)
         self.setWidgetResizable(True)
-        self.frame.setMinimumWidth(200)
+        self.frame.setMinimumWidth(150)
 
-        def add_btns():
+        def add_wnd_btns():
             close_wnd_btn = QPushButton('', self)
             close_wnd_btn.setObjectName("close_wnd_btn")
-            close_wnd_btn.setMaximumSize(16, 16)
+            close_wnd_btn.setMaximumSize(18, 18)
+
             minimize_wnd_btn = QPushButton('', self)
             minimize_wnd_btn.setObjectName("minimize_wnd_btn")
-            minimize_wnd_btn.setMaximumSize(16, 16)
+            minimize_wnd_btn.setMaximumSize(18, 18)
 
             maximize_wnd_btn = QPushButton('', self)
             maximize_wnd_btn.setObjectName("maximize_wnd_btn")
-
-            # maximize_wnd_btn.setIconSize(maximize_wnd_btn.size())
-            # maximize_wnd_btn.setIconSize(QSize(18, 18))
-
-            maximize_wnd_btn.setMaximumSize(16, 16)
+            maximize_wnd_btn.setMaximumSize(18, 18)
 
             # actions
             close_wnd_btn.clicked.connect(self.parent.close)
@@ -181,21 +180,23 @@ class SideBar(QScrollArea):
 
             # layout
             btn_layout = QHBoxLayout()
-            btn_layout.setSpacing(5)
+            btn_layout.addSpacing(5)
+            btn_layout.setSpacing(0)
             btn_layout.addWidget(close_wnd_btn)
             btn_layout.addWidget(minimize_wnd_btn)
             btn_layout.addWidget(maximize_wnd_btn)
             btn_layout.addStretch(10)
             return btn_layout
 
-        btn_layout = add_btns()
+        btn_layout = add_wnd_btns()
 
 
         def add_lists():
             self.feature_list = QListWidget()            
-            self.feature_list.addItem("My Data")
-            self.feature_list.addItem("Publish Data")
-            self.feature_list.addItem("Browse")
+            # TODO adjust icon and text spacing.
+            self.feature_list.addItem(QListWidgetItem(get_icon("cloud_store.png"), "Cloud Store"))
+            self.feature_list.addItem(QListWidgetItem(get_icon("publish_data.png"), "Publish Data"))
+            self.feature_list.addItem(QListWidgetItem(get_icon("browse_market.png"), "Browse"))
 
             self.feature_list.setCurrentRow(0)
         add_lists()
@@ -203,28 +204,23 @@ class SideBar(QScrollArea):
         def bind_slots():
             def feature_list_clicked(item):
                 item_to_tab_name = {
-                    "My Data": "data_tab",
+                    "Cloud Store": "cloud_tab",
                     "Publish Data": "publish_tab",
                     "Browse": "browse_tab",
                 }
                 wid = self.content_tabs.findChild(QWidget, item_to_tab_name[item.text()])
                 self.content_tabs.setCurrentWidget(wid)
             self.feature_list.itemPressed.connect(feature_list_clicked)
-            
         bind_slots()
-
 
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self.frame)
             main_layout.addLayout(btn_layout)
+            main_layout.addSpacing(10)
             main_layout.addWidget(self.feature_list)
-
-            main_layout.setContentsMargins(0, 8, 0, 0)
-
+            main_layout.setContentsMargins(0, 10, 0, 0)
             self.setLayout(self.main_layout)
-
         set_layout()
-
 
         load_stylesheet(self, "sidebar.qss")
 
@@ -259,7 +255,7 @@ class MainWindow(QMainWindow):
             def create_file_tab():
                 from cpchain.wallet.file_ui import FileTab
                 t = FileTab(self)
-                t.setObjectName("data_tab")
+                t.setObjectName("cloud_tab")
                 return t
 
             content_tabs.addTab(create_file_tab(), "")

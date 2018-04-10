@@ -3,11 +3,8 @@ QWidget#main_window {
 }
 
 
-/* * { */
-/*    font-family: 'DejaVu Sans' */
-/* } */
-
 QTabBar#content_tabs::tab {
     width: 0px;
     height: 0px;
 }
+
