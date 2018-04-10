@@ -122,3 +122,6 @@ def foobar(msg):
 
 def hoge(msg):
     print(msg)
+
+def login():
+    print("in")
