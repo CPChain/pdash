@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 from django.core.cache import cache
 
-from .permissions import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly, IsOwner
 from .serializers import *
 from .models import Product, Token, WalletMsgSequence
 from .utils import *
@@ -201,6 +201,30 @@ class ProductPublishAPIViewSet(APIView):
         return create_invalid_response()
 
 
+class MyProductSearchAPIViewSet(APIView):
+    """
+    API endpoint that allows query products by owner.
+    """
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = (IsOwner,)
+
+    def get(self, request):
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        logger.info("public_key:%s" % public_key)
+        params = request.query_params
+        keyword = params.get('keyword')
+        if keyword is not None and len(keyword)!=0:
+            logger.debug("keyword is %s" % keyword)
+            queryset = Product.objects.filter(owner_address=public_key).filter(
+                Q(title__contains=keyword) | Q(description__contains=keyword) | Q(tags__contains=keyword))
+        else:
+            queryset = Product.objects.filter(owner_address=public_key)
+
+        serializer = ProductSerializer(queryset, many=True)
+        return Response(data=serializer.data)
+
+
 class ProductSearchAPIViewSet(APIView):
     """
     API endpoint that allows query products.
@@ -214,10 +238,10 @@ class ProductSearchAPIViewSet(APIView):
         keyword = params.get('keyword')
         if keyword is not None:
             logger.debug("keyword is %s" % keyword)
-            queryset = Product.objects.filter(
+            queryset = Product.objects.filter(status=0).filter(
                 Q(title__contains=keyword) | Q(description__contains=keyword) | Q(tags__contains=keyword))
         else:
-            queryset = Product.objects.all()
+            queryset = Product.objects.filter(status=0)
 
         serializer = ProductSerializer(queryset, many=True)
         return Response(data=serializer.data)
