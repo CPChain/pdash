@@ -19,9 +19,12 @@ def install_reactor():
 install_reactor()
 
 from cpchain import config, root_dir
-from cpchain.utils import join_with_root
+from cpchain.utils import join_with_root, sizeof_fmt
 from cpchain.wallet.net import mc
 from cpchain.wallet.net import foobar, login, hoge
+from cpchain.wallet.fs import get_file_list, upload_file_ipfs
+
+from twisted.internet import threads
 
 
 # utils
@@ -54,8 +57,88 @@ class TableWidget(QTableWidget):
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
 
+        
+class TabContentArea(QFrame):
+    pass
 
-class BrowseTab(QScrollArea):
+
+class FileTab(QScrollArea):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+        self.row_number = 20
+        self.hashcode = 'DEADBEEF'
+        self.local_file = 'local'
+        self.init_ui()
+
+    def init_ui(self):
+
+        def create_file_table():
+            self.file_table = file_table = QTableWidget()
+
+            file_table.setMinimumWidth(self.width())
+            file_table.setColumnCount(5)
+            file_table.setRowCount(self.row_number)
+            file_table.setHorizontalHeaderLabels(['File Name', 'File Size', 'Remote Type', 'Published', 'Hash Code'])
+
+            file_table.horizontalHeader().setStretchLastSection(True)
+            file_table.verticalHeader().setVisible(False)
+            file_table.setShowGrid(False)
+            file_table.setAlternatingRowColors(True)
+
+            file_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+
+            file_list = get_file_list()
+            for cur_row in range(self.row_number):
+                if cur_row == file_list.__len__():
+                    break
+                file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].remote_type))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_published)))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
+
+        create_file_table()
+
+        def update_table():
+            file_list = get_file_list()
+            print(file_list.__len__())
+            for cur_row in range(self.row_number):
+                if cur_row == file_list.__len__():
+                    break
+                self.file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].remote_type))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_published)))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
+
+        def handle_upload_button():
+            # Maybe useful for buyer.
+            # row_selected = self.file_table.selectionModel().selectedRows()[0].row()
+            # selected_fpath = self.file_table.item(row_selected, 2).text()
+            self.local_file = QFileDialog.getOpenFileName()[0]
+            defered = threads.deferToThread(upload_file_ipfs, self.local_file)
+            defered.addCallback(handle_callback_upload)
+
+        def handle_callback_upload(x):
+            print("in handle_callback_upload" + x)
+            update_table()
+
+        def create_buttons():
+            self.upload_button = upload_button = QPushButton('Encrypt and Upload')
+            upload_button.clicked.connect(handle_upload_button)
+
+        create_buttons()
+
+        def set_layout():
+            self.main_layout = QVBoxLayout(self)
+            self.main_layout.addWidget(self.file_table)
+            self.main_layout.addWidget(self.upload_button)
+
+        set_layout()
+
+class BrowseTab(TabContentArea):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("browse_tab")
@@ -131,7 +214,7 @@ class BrowseTab(QScrollArea):
 
 
             
-class PublishTab(QScrollArea):
+class PublishTab(TabContentArea):
     def __init__(self, parent):
         super().__init__()
         self.parent = parent
@@ -364,6 +447,7 @@ class SideBar(QScrollArea):
         load_stylesheet(self, "sidebar.qss")
 
 
+
 class MainWindow(QMainWindow):
     def __init__(self, reactor):
         super().__init__()
@@ -378,7 +462,6 @@ class MainWindow(QMainWindow):
         # no borders.  we make our own header panel.
         self.setWindowFlags(Qt.FramelessWindowHint)
 
-
         def set_geometry():
             self.resize(1000, 600)  # resize before centering.
             center_pt = QDesktopWidget().availableGeometry().center()
@@ -388,20 +471,13 @@ class MainWindow(QMainWindow):
         set_geometry()
 
         def add_content_tabs():
-            self.content_tabs = content_tabs = QTabWidget()
-            content_tabs.tabBar().setObjectName("content_tabs")
+            self.content_tabs = content_tabs = QTabWidget(self)
+            content_tabs.setObjectName("content_tabs")
             content_tabs.tabBar().hide()
 
-            def create_file_tab():
-                from cpchain.wallet.file_ui import FileTab
-                t = FileTab(self)
-                t.setObjectName("cloud_tab")
-                return t
-
-            content_tabs.addTab(create_file_tab(), "")
+            content_tabs.addTab(FileTab(self), "")
             content_tabs.addTab(PublishTab(self), "")
             content_tabs.addTab(BrowseTab(self), "")
-
 
         add_content_tabs()
 
@@ -435,11 +511,7 @@ class MainWindow(QMainWindow):
             self.setCentralWidget(wid)
         set_layout()
 
-
-        # stylesheets
-        with open(join_with_root(config.wallet.qss.main_window)) as f:
-            self.setStyleSheet(f.read())
-
+        load_stylesheet(self, "main_window.qss")
 
         self.show()
         

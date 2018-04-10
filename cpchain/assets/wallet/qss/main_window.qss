@@ -2,8 +2,19 @@ QWidget#main_window {
     background: #282828;
 }
 
-
-QTabBar#content_tabs::tab {
-    width: 0px;
-    height: 0px;
+QTabWidget#content_tabs {
+    border: none;
 }
+
+QTabWidget#content_tabs::pane {
+    border-top: 1px solid #4c4f0f;
+    padding-top: 5px;
+}
+
+/* QScrollArea { */
+/*     background: #29303a;  */
+/*     /\* margin: 0; *\/ */
+/*     /\* padding: 0; *\/ */
+/*     /\* border: none; *\/ */
+/* } */
+
