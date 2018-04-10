@@ -1,8 +1,9 @@
-import tempfile
+import tempfile, os
 
 from cpchain.wallet.db import session, FileInfo, osp, create_engine, sessionmaker
 from cpchain.crypto import AESCipher
-from cpchain.proxy.ipfs import *
+from cpchain.storage import IPFSStorage
+from cpchain import root_dir, config
 
 
 def get_file_list():
@@ -50,9 +51,9 @@ def upload_file_ipfs(file_path):
     with tempfile.TemporaryDirectory() as tmpdirname:
         encrypted_path = os.path.join(tmpdirname, 'encrypted.txt')
         this_key = encrypt_file(file_path, encrypted_path)
-        ipfs_client = IPFS()
+        ipfs_client = IPFSStorage()
         ipfs_client.connect()
-        file_hash = ipfs_client.add_file(encrypted_path)
+        file_hash = ipfs_client.upload_file(encrypted_path)
     file_name = list(os.path.split(file_path))[-1]
     file_size = os.path.getsize(file_path)
     new_file_info = FileInfo(hashcode=str(file_hash), name=file_name, path=file_path, size=file_size,
@@ -62,10 +63,10 @@ def upload_file_ipfs(file_path):
 
 
 def download_file_ipfs(fhash, file_path):
-    ipfs_client = IPFS()
+    ipfs_client = IPFSStorage()
     ipfs_client.connect()
     if ipfs_client.file_in_ipfs(fhash):
-        return ipfs_client.get_file(fhash, file_path)
+        return ipfs_client.download_file(fhash, file_path)
     else:
         return False
 
