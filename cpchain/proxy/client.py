@@ -10,7 +10,7 @@ from twisted.internet import reactor, protocol, ssl, defer
 from twisted.protocols.basic import NetstringReceiver
 from twisted.python import log
 
-from cpchain import config
+from cpchain import config, root_dir
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.message import message_sanity_check
 from cpchain.crypto import ECCipher
@@ -97,13 +97,13 @@ def start_client(sign_message):
     reactor.run()
 
 
-def download_file(file_uuid, file_dir=None):
+def download_file(file_uuid):
     host = config.proxy.server_host
     data_port = config.proxy.server_data_port
+    file_dir = os.path.join(root_dir, config.wallet.download_dir)
 
     url = "https://%s:%d/%s" % (host, data_port, file_uuid)
 
-    file_dir = file_dir or os.getcwd()
     file_path = os.path.join(file_dir, file_uuid)
 
     _sslverify.platformTrust = lambda : None
