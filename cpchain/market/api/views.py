@@ -170,6 +170,7 @@ class ProductPublishAPIViewSet(APIView):
         # print("product.signature:"+product.signature)
         # print("signature_source:"+signature_source)
         is_valid_signature = verify_signature(product.owner_address, product.signature, signature_source)
+        print("product.signature:"+str(product.signature))
         print("is_valid_signature:" + str(is_valid_signature) + ",signature_source:" + str(signature_source))
 
         if not is_valid_signature:
