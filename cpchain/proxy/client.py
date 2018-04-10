@@ -46,6 +46,7 @@ class SSLClientProtocol(NetstringReceiver):
                 if self.factory.need_download_file:
                     d = download_file(proxy_reply.file_uuid)
                     d.addBoth(lambda _: reactor.stop())
+                    self.factory.downloading_file = True
         else:
             print("wrong server response")
 
@@ -60,6 +61,7 @@ class SSLClientFactory(protocol.ClientFactory):
     def __init__(self, sign_message):
         self.sign_message = sign_message
         self.need_download_file = False
+        self.downloading_file = False
 
     def buildProtocol(self, addr):
         return SSLClientProtocol(self)
@@ -68,7 +70,7 @@ class SSLClientFactory(protocol.ClientFactory):
         reactor.stop()
 
     def clientConnectionLost(self, connector, reason):
-        if not self.need_download_file:
+        if not self.downloading_file:
             reactor.stop()
 
 
