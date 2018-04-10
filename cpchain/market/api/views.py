@@ -21,6 +21,13 @@ PUBLIC_KEY = "public_key"
 VERIFY_CODE = "code"
 TIMEOUT = 1000
 
+def create_invalid_response():
+    return JsonResponse({"success": False, "message": "invalid request."})
+
+
+def create_success_response():
+    return JsonResponse({'status': 1, 'message': 'success'})
+
 
 class UserLoginAPIView(APIView):
     """
@@ -94,10 +101,6 @@ class UserLoginConfirmAPIView(APIView):
         return JsonResponse({"success": True, "message": serializer.data['key']})
 
 
-def create_invalid_response():
-    return JsonResponse({"success": False, "message": "invalid request."})
-
-
 class LogoutAPIView(APIView):
     """
     API endpoint that logout.
@@ -124,17 +127,12 @@ class LogoutAPIView(APIView):
             return create_invalid_response()
 
 
-def create_success_response():
-    return JsonResponse({'status': 1, 'message': 'success'})
-
-
 class ProductPublishAPIViewSet(APIView):
     """
-    API endpoint that allows query products.
+    API endpoint that allows publish products.
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    # permission_classes = (AllowAny,)
     permission_classes = (IsOwnerOrReadOnly,)
 
     def post(self, request):
@@ -172,6 +170,7 @@ class ProductPublishAPIViewSet(APIView):
         # print("product.signature:"+product.signature)
         # print("signature_source:"+signature_source)
         is_valid_signature = verify_signature(product.owner_address, product.signature, signature_source)
+        print("product.signature:"+str(product.signature))
         print("is_valid_signature:" + str(is_valid_signature) + ",signature_source:" + str(signature_source))
 
         if not is_valid_signature:
@@ -179,7 +178,7 @@ class ProductPublishAPIViewSet(APIView):
             return create_invalid_response()
 
         # generate msg hash
-        msg_hash_source = product.get_msg_hash()
+        msg_hash_source = product.get_msg_hash_source()
         print("msg_hash_source:" + msg_hash_source)
         product.msg_hash = generate_msg_hash(msg_hash_source)
         print("msg_hash:" + product.msg_hash)
@@ -196,9 +195,17 @@ class ProductPublishAPIViewSet(APIView):
         except Exception:
             exstr = traceback.format_exc()
             print(exstr)
-            pass
 
         return create_invalid_response()
+
+
+class ProductSearchAPIViewSet(APIView):
+    """
+    API endpoint that allows query products.
+    """
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = (AllowAny,)
 
     def get(self, request):
         logger.info('this is product get')
@@ -206,7 +213,8 @@ class ProductPublishAPIViewSet(APIView):
         keyword = params.get('keyword')
         if keyword is not None:
             logger.info("keyword is ", keyword)
-            queryset = Product.objects.filter(Q(title__contains=keyword) | Q(description__contains=keyword))
+            queryset = Product.objects.filter(
+                Q(title__contains=keyword) | Q(description__contains=keyword) | Q(tags__contains=keyword))
         else:
             queryset = Product.objects.all()
 
@@ -214,36 +222,60 @@ class ProductPublishAPIViewSet(APIView):
         return Response(data=serializer.data)
 
 
-class ProductStatusChangeAPIViewSet(APIView):
+class BaseProductStatusAPIViewSet(APIView):
     """
-    update product status
+    update product status to normal
     """
     queryset = Product.objects.all()
     serializer_class = ProductUpdateSerializer
-    # permission_classes = (AllowAny,)
     permission_classes = (IsOwnerOrReadOnly,)
 
     def post(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
-        logger.info("public_key:" + str(public_key))
+        raise BaseException("not implemented")
+        pass
 
+    def update_product_status(self, request, status):
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        logger.info("public_key:" + str(public_key) + " status:" + status)
         if public_key is None:
             return create_invalid_response()
-
         try:
-            product = Product.objects.get(owner_address=public_key,msg_hash=request.data['msg_hash'])
+            product = Product.objects.get(owner_address=public_key, msg_hash=request.data['msg_hash'])
         except Product.DoesNotExist:
-            return HttpResponse(status=404)
-
+            return create_invalid_response()
         data = request.data
-        data['owner_address'] = public_key
-        serializer = ProductUpdateSerializer(product,data=data)
-        if serializer.is_valid(raise_exception=True):
-            logger.info("update product status")
-            serializer.update(product,data)
-            return create_success_response()
+        data['status'] = status
+        serializer = ProductUpdateSerializer(product, data=data)
+        if not serializer.is_valid(raise_exception=True):
+            return create_invalid_response()
+        logger.info("update product status")
+        serializer.update(product, data)
+        response = create_success_response()
+        return response
 
-        return create_invalid_response()
+
+class ProductShowAPIViewSet(BaseProductStatusAPIViewSet):
+    """
+    update product status to normal
+    """
+    queryset = Product.objects.all()
+    serializer_class = ProductUpdateSerializer
+    permission_classes = (IsOwnerOrReadOnly,)
+
+    def post(self, request):
+        return self.update_product_status(request, "0")
+
+
+class ProductHideAPIViewSet(BaseProductStatusAPIViewSet):
+    """
+    update product status to hide
+    """
+    queryset = Product.objects.all()
+    serializer_class = ProductUpdateSerializer
+    permission_classes = (IsOwnerOrReadOnly,)
+
+    def post(self, request):
+        return self.update_product_status(request, "1")
 
 
 class ProductViewSet(viewsets.ModelViewSet):

@@ -51,8 +51,8 @@ class Product(models.Model):
              + Product.str_to_timestamp(self.start_date) + Product.str_to_timestamp(self.end_date) + str(self.file_md5)
         return ss
 
-    def get_msg_hash(self):
-        return self.get_signature_source() + self.signature
+    def get_msg_hash_source(self):
+        return self.get_signature_source() + str(self.seq) + self.signature
 
     @staticmethod
     def str_to_timestamp(s):

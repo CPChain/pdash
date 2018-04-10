@@ -58,7 +58,7 @@ class AESCipher(BaseCipher):
             for buffer in iter(functools.partial(infile.read, 4096), b''):
                 cipherdata = encryptor.update(buffer)
                 outfile.write(cipherdata)
-            
+
             cipherdata = encryptor.finalize()
             outfile.write(cipherdata)
 
@@ -79,45 +79,116 @@ class AESCipher(BaseCipher):
 class ECCipher:
     # NB we shall use ec for signature only.  using ecies is too contrived.
 
-    def __init__(self, key:'ec secp256k1'):
-        # self.backend = default_backend()
-        # self.key = key
-        pass
+    # def __init__(self, key:'ec secp256k1'):
+    #     # self.backend = default_backend()
+    #     # self.key = key
+    #     pass
+
+    # @staticmethod
+    # def generate_keys(password=None):
+    #     password = examine_password(password)
+
+    #     private_key = ec.generate_private_key(
+    #         ec.SECP256K1(), default_backend()
+    #     )
+
+    #     serialized_private = private_key.private_bytes(
+    #         encoding=serialization.Encoding.PEM,
+    #         format=serialization.PrivateFormat.PKCS8,
+    #         encryption_algorithm=serialization.BestAvailableEncryption(password)
+    #     )
+
+    #     private_key_list = []
+    #     pis = serialized_private.splitlines()
+    #     for p in pis:
+    #         private_key_list.append(p.decode("utf-8"))
+    #         private_key_list.append('\n')
+    #     pri_key_string = ''.join(private_key_list)
+
+    #     public_key_list = []
+    #     puk = private_key.public_key()
+    #     serialized_public = puk.public_bytes(
+    #         encoding=serialization.Encoding.PEM,
+    #         format=serialization.PublicFormat.SubjectPublicKeyInfo
+    #     )
+    #     pus = serialized_public.splitlines()
+    #     for p in pus:
+    #         public_key_list.append(p.decode("utf-8"))
+    #         public_key_list.append('\n')
+
+    #     pub_key_string = ''.join(public_key_list)
+    #     return pri_key_string, pub_key_string
 
     @staticmethod
-    def generate_keys(password=None):
+    def generate_key_pair(private_key=None, password=None):
         password = examine_password(password)
 
-        private_key = ec.generate_private_key(
-            ec.SECP256K1(), default_backend()
-        )
+        if private_key:
+            serialized_private = private_key
+            private_key = serialization.load_der_private_key(
+                                serialized_private,
+                                password=password,
+                                backend=default_backend()
+                            )
+        else:
+            private_key = ec.generate_private_key(
+                                    ec.SECP256K1(),
+                                    default_backend()
+                                )
 
-        serialized_private = private_key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.BestAvailableEncryption(password)
-        )
+            serialized_private = private_key.private_bytes(
+                        encoding=serialization.Encoding.DER,
+                        format=serialization.PrivateFormat.PKCS8,
+                        # encryption_algorithm= serialization.NoEncryption
+                        encryption_algorithm=serialization.BestAvailableEncryption(password)
+                    )
 
-        private_key_list = []
-        pis = serialized_private.splitlines()
-        for p in pis:
-            private_key_list.append(p.decode("utf-8"))
-            private_key_list.append('\n')
-        pri_key_string = ''.join(private_key_list)
-
-        public_key_list = []
-        puk = private_key.public_key()
-        serialized_public = puk.public_bytes(
-            encoding=serialization.Encoding.PEM,
+        public_key = private_key.public_key()
+        serialized_public = public_key.public_bytes(
+            encoding=serialization.Encoding.DER,
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
-        pus = serialized_public.splitlines()
-        for p in pus:
-            public_key_list.append(p.decode("utf-8"))
-            public_key_list.append('\n')
 
-        pub_key_string = ''.join(public_key_list)
-        return pri_key_string, pub_key_string
+        return serialized_private, serialized_public
+
+    @staticmethod
+    def generate_signature(private_key, raw_data, password=None):
+        try:
+            password = examine_password(password)
+            loaded_private_key = serialization.load_der_private_key(
+                private_key,
+                password=password,
+                backend=default_backend()
+            )
+            signature = loaded_private_key.sign(
+                raw_data,
+                ec.ECDSA(hashes.SHA256()))
+
+        except Exception:
+            exstr = traceback.format_exc()
+            print (exstr)
+            return None
+        else:
+            return signature
+
+    @staticmethod
+    def verify_signature(public_key, signature, raw_data):
+        try:
+            loaded_public_key = serialization.load_der_public_key(
+                public_key,
+                backend=default_backend()
+            )
+            loaded_public_key.verify(
+                    signature,
+                    raw_data,
+                    ec.ECDSA(hashes.SHA256()))
+
+        except Exception:
+            exstr = traceback.format_exc()
+            print(exstr)
+            return False
+        else:
+            return True
 
     @staticmethod
     def generate_der_keys(password=None):
@@ -159,36 +230,37 @@ class ECCipher:
             print(exstr)
             return False
 
-    @staticmethod
-    def verify_signature(pub_key_string, signature, raw_data):
-        try:
-            loaded_public_key = serialization.load_pem_public_key(
-                pub_key_string,
-                backend=default_backend()
-            )
-            loaded_public_key.verify(Encoder.str_to_base64_byte(signature), raw_data, ec.ECDSA(hashes.SHA256()))
-            return True
-        except Exception:
-            return False
+    # @staticmethod
+    # def verify_signature(pub_key_string, signature, raw_data):
+    #     try:
+    #         loaded_public_key = serialization.load_pem_public_key(
+    #             pub_key_string,
+    #             backend=default_backend()
+    #         )
+    #         loaded_public_key.verify(Encoder.str_to_base64_byte(signature), raw_data, ec.ECDSA(hashes.SHA256()))
+    #         return True
+    #     except Exception:
+    #         return False
 
-    @staticmethod
-    def sign(pri_key_string, raw_data,password=None):
-        try:
-            password = examine_password(password)
-            loaded_private_key = serialization.load_pem_private_key(
-                pri_key_string,
-                password=password,
-                backend=default_backend()
-            )
-            signature_string = loaded_private_key.sign(
-                raw_data,
-                ec.ECDSA(hashes.SHA256()))
-            to_hex = Encoder.bytes_to_base64_str(signature_string)
-            return to_hex
-        except Exception:
-            exstr = traceback.format_exc()
-            print (exstr)
-            return None
+    # @staticmethod
+    # def sign(pri_key_string, raw_data,password=None):
+    #     try:
+    #         password = examine_password(password)
+    #         loaded_private_key = serialization.load_pem_private_key(
+    #             pri_key_string,
+    #             password=password,
+    #             backend=default_backend()
+    #         )
+    #         signature_string = loaded_private_key.sign(
+    #             raw_data,
+    #             ec.ECDSA(hashes.SHA256()))
+    #         to_hex = Encoder.bytes_to_base64_str(signature_string)
+    #         return to_hex
+    #     except Exception:
+    #         exstr = traceback.format_exc()
+    #         print (exstr)
+    #         return None
+
 
 
     @staticmethod

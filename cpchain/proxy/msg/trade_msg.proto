@@ -60,5 +60,5 @@ message Message {
 message SignMessage {
 	bytes public_key = 1;
 	bytes data = 2;
-	string signature = 3;
+	bytes signature = 3;
 }

@@ -155,8 +155,6 @@ class SSLServerFactory(protocol.Factory):
 
     def stopFactory(self):
         self.proxy_db.session_close()
-        reactor.stop()
-
 
 
 class FileServer(Resource):
