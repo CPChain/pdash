@@ -1,16 +1,17 @@
 from twisted.internet.defer import inlineCallbacks
 # import treq
+import json
 from cpchain import crypto
 import datetime, time
 
 class MarketClient:
     def __init__(self):
         # self.client = HTTPClient(reactor)
-        self.url = 'http://192.168.0.132:8000/api/v1/'
+        self.url = 'http://192.168.0.161:8000/api/v1/'
         self.priv_key = 'MIHsMFcGCSqGSIb3DQEFDTBKMCkGCSqGSIb3DQEFDDAcBAijHDc56pWCBQICCAAwDAYIKoZIhvcNAgkFADAdBglghkgBZQMEASoEEAFP6mba6NQbUCmI2SSJdw0EgZDgxdLy3ToxSgS3PDKrcUvB0Ti6KO1OuYfsHetgUX3r4m1kacI73ooKJ9UvuPuOG7czcuxr6Zk/SOuicpxU0pticj0ZRZh4wRdbP+3qScZ8h7MapoZq0Q/sO7pYJoFg+MQPD5fMA5B7u9gLzxlF697rbWtuT17e7RmKPhE+hIEBHu6Z/blzrfT+o+QDPpPo1oE='
         self.pub_key = 'MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEddc0bkalTTqEiUu6g884be4ghnMGYWfyJHTSjEMrE+zCRq6T1VHF21vJCPXs+YBvtyPJ7mJiRyHw/2FH3b8unQ=='
-        self.token = '2ddb2f6a97628cf356c76a8b790f3992860a8a1b'
-        self.nonce = 'qZaQ6S'
+        self.token = '15242682e8064a03abae513f078b5193ed6a9dd7'
+        self.nonce = 'E7Ngr7'
 
     @staticmethod
     def str_to_timestamp(s):
@@ -54,7 +55,11 @@ class MarketClient:
         header['MARKET-TOKEN'] = self.token
         data = {'owner_address': self.pub_key, 'title': title, 'description': description, 'price': price,
                 'tags': tags, 'start_date': start_date, 'end_date': end_date, 'file_md5': file_md5}
+        print(json.dumps(data))
+        print(self.token)
         signature_source = str(self.pub_key) + str(title) + str(description) + str(price) + MarketClient.str_to_timestamp(start_date) + MarketClient.str_to_timestamp(end_date) + str(file_md5)
+        print(self.priv_key)
+        print(self.pub_key)
         print(signature_source)
         signature = crypto.ECCipher.sign_der(self.priv_key, signature_source)
         data['signature'] = signature
@@ -83,10 +88,13 @@ class MarketClient:
     def query_product(self, keyword):
         header = {'Content-Type': 'application/json'}
         import treq
-        resp = yield treq.get(url=self.url+'procuct', headers=header, params=keyword)
-        confirm_info = treq.json_content(resp)
-        if confirm_info['success'] == False:
-            print('query failed')
+        url = self.url + 'product/search/?keyword=' + str(keyword)
+        print("url:%s",url)
+        resp = yield treq.get(url=url, headers=header)
+        print(resp)
+        confirm_info = yield treq.json_content(resp)
+        print(confirm_info)
+        return confirm_info
 
     @inlineCallbacks
     def logout(self):
@@ -94,17 +102,20 @@ class MarketClient:
         data = {'public_key': self.pub_key, 'token': self.token}
         import treq
         resp = yield treq.post(url=self.url+'logout', headers=header, json=data)
-        confirm_info = treq.json_content(resp)
-        if confirm_info['success'] == False:
-            print('logout failed')
+        confirm_info = yield treq.json_content(resp)
+        print(confirm_info)
+        # if confirm_info['success'] == False:
+        #     print('logout failed')
 
 if __name__ == '__main__':
-    # mc = MarketClient()
+    mc = MarketClient()
     # mc.login()
     # mc.login_confirm()
     # mc.publish_product(title='test', description='testdata', price=13, tags='temp', start_date='2018-04-01 10:10:10', end_date='2018-04-01 10:10:10', file_md5='123456')
-    # from twisted.internet import reactor
-    # reactor.run()
+    # mc.query_product('test')
+    mc.logout()
+    from twisted.internet import reactor
+    reactor.run()
     # pri_key = 'MIHsMFcGCSqGSIb3DQEFDTBKMCkGCSqGSIb3DQEFDDAcBAijHDc56pWCBQICCAAwDAYIKoZIhvcNAgkFADAdBglghkgBZQMEASoEEAFP6mba6NQbUCmI2SSJdw0EgZDgxdLy3ToxSgS3PDKrcUvB0Ti6KO1OuYfsHetgUX3r4m1kacI73ooKJ9UvuPuOG7czcuxr6Zk/SOuicpxU0pticj0ZRZh4wRdbP+3qScZ8h7MapoZq0Q/sO7pYJoFg+MQPD5fMA5B7u9gLzxlF697rbWtuT17e7RmKPhE+hIEBHu6Z/blzrfT+o+QDPpPo1oE='
     # pub_key = 'MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEddc0bkalTTqEiUu6g884be4ghnMGYWfyJHTSjEMrE+zCRq6T1VHF21vJCPXs+YBvtyPJ7mJiRyHw/2FH3b8unQ=='
     # sig = 'MEYCIQD/bAkaxXqn3nk6nDVdR1Jf4dUrmk7nYbNEwMYRiHLCJQIhAOtYxJmcqVTFznPf98cHUHaGIIYk3XLUAV0MomJl05iG'
@@ -114,9 +125,8 @@ if __name__ == '__main__':
     #pub_key = crypto.ECCipher.get_public_key_from_private_key('MIHsMFcGCSqGSIb3DQEFDTBKMCkGCSqGSIb3DQEFDDAcBAijHDc56pWCBQICCAAwDAYIKoZIhvcNAgkFADAdBglghkgBZQMEASoEEAFP6mba6NQbUCmI2SSJdw0EgZDgxdLy3ToxSgS3PDKrcUvB0Ti6KO1OuYfsHetgUX3r4m1kacI73ooKJ9UvuPuOG7czcuxr6Zk/SOuicpxU0pticj0ZRZh4wRdbP+3qScZ8h7MapoZq0Q/sO7pYJoFg+MQPD5fMA5B7u9gLzxlF697rbWtuT17e7RmKPhE+hIEBHu6Z/blzrfT+o+QDPpPo1oE=')
     # print(pub_key)
     # print('MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEddc0bkalTTqEiUu6g884be4ghnMGYWfyJHTSjEMrE+zCRq6T1VHF21vJCPXs+YBvtyPJ7mJiRyHw/2FH3b8unQ==')
-        self.client = HTTPClient(reactor)
 
-
+# mc = MarketClient()
 def foobar(msg):
     print(msg)
 
