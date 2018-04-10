@@ -6,9 +6,9 @@ import string
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout,
                              QVBoxLayout, QGridLayout, QWidget, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel,
-                             QWidget, QLineEdit, QSpacerItem, QSizePolicy)
-
-from PyQt5.QtCore import Qt, QSize
+                             QWidget, QLineEdit, QSpacerItem, QSizePolicy, QTableWidget, QFormLayout, QComboBox, QTextEdit,
+                             QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog)
+from PyQt5.QtCore import Qt, QSize, QPoint 
 from PyQt5.QtGui import QIcon, QCursor, QPixmap
 
 # do it before any other twisted code.
@@ -19,15 +19,19 @@ def install_reactor():
 install_reactor()
 
 from cpchain import config, root_dir
-from cpchain.utils import join_with_root
-from cpchain.wallet.tabs import PublishTab, BrowseTab
-from cpchain.wallet.net import foobar, login
+from cpchain.utils import join_with_root, sizeof_fmt
+from cpchain.wallet.net import mc
+from cpchain.wallet.net import foobar, login, hoge
+from cpchain.wallet.fs import get_file_list, upload_file_ipfs
+
+from twisted.internet import threads
 
 
 # utils
 def get_icon(name):
     path = osp.join(root_dir, "cpchain/assets/wallet/icons", name)
     return QIcon(path)
+
 
 
 def load_stylesheet(wid, name):
@@ -39,6 +43,224 @@ def load_stylesheet(wid, name):
         s = string.Template(f.read())
         wid.setStyleSheet(s.substitute(subs))
 
+
+
+class TableWidget(QTableWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+        self.init_ui()
+
+    def init_ui(self):
+        # size
+        self.setMinimumWidth(self.parent.width())
+        # context menu
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.horizontalHeader().setStretchLastSection(True)
+        self.verticalHeader().setVisible(False)
+        self.setShowGrid(False)
+        self.setAlternatingRowColors(True)
+        # do not highlight (bold-ize) the header
+        self.horizontalHeader().setHighlightSections(False)
+
+
+    def set_right_menu(self, func):
+        self.customContextMenuRequested[QPoint].connect(func)
+
+        
+
+class TabContentArea(QFrame): pass
+
+
+class CloudTab(TabContentArea):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+        self.setObjectName("cloud_tab")
+
+        self.hashcode = 'DEADBEEF'
+        self.local_file = 'local'
+        self.init_ui()
+
+    def init_ui(self):
+        self.row_number = 20
+
+        def create_file_table():
+            self.file_table = file_table = TableWidget(self)
+
+            file_table.setColumnCount(5)
+            file_table.setRowCount(self.row_number)
+            file_table.setHorizontalHeaderLabels(['File Name', 'File Size', 'Remote Type', 'Published', 'Hash Code'])
+
+            file_list = get_file_list()
+            for cur_row in range(self.row_number):
+                if cur_row == len(file_list):
+                    break
+                file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].remote_type))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_published)))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
+
+        create_file_table()
+
+        def update_table():
+            file_list = get_file_list()
+            print(file_list.__len__())
+            for cur_row in range(self.row_number):
+                if cur_row == file_list.__len__():
+                    break
+                self.file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].remote_type))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_published)))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
+
+        def handle_upload():
+            # Maybe useful for buyer.
+            # row_selected = self.file_table.selectionModel().selectedRows()[0].row()
+            # selected_fpath = self.file_table.item(row_selected, 2).text()
+            self.local_file = QFileDialog.getOpenFileName()[0]
+            defered = threads.deferToThread(upload_file_ipfs, self.local_file)
+            defered.addCallback(handle_callback_upload)
+
+        def handle_callback_upload(x):
+            print("in handle_callback_upload" + x)
+            update_table()
+
+        def create_btns():
+            self.upload_btn = upload_btn = QPushButton('Encrypt and Upload')
+            upload_btn.setObjectName("upload_btn")
+            upload_btn.clicked.connect(handle_upload)
+        create_btns()
+
+        def set_layout():
+            self.main_layout = QVBoxLayout(self)
+            self.main_layout.addWidget(self.file_table)
+
+            layout = QHBoxLayout(self)
+            layout.addStretch(1)
+            layout.addWidget(self.upload_btn)
+
+            self.main_layout.addLayout(layout)
+        set_layout()
+
+        load_stylesheet(self, "cloud_tab.qss")
+
+
+
+class BrowseTab(TabContentArea):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setObjectName("browse_tab")
+        self.init_ui()
+
+    def init_ui(self):
+
+        def create_item_table():
+            self.item_table = item_table = TableWidget(self)
+            item_table.setObjectName("item_table")
+
+
+            # cf. https://stackoverflow.com/a/6840656/855160
+            def right_menu():
+                sel = item_table.selectionModel()
+                if not sel.hasSelection():
+                    return
+
+                def buy_action():
+                    hoge("hi")
+
+                menu = QMenu(item_table)
+                action = QAction("Buy", item_table, triggered=buy_action) 
+
+                menu.addAction(action)
+                menu.exec_(QCursor.pos())
+
+            item_table.set_right_menu(right_menu)
+
+
+            headers = ["Title", "Size", "Price"]
+            item_table.setColumnCount(len(headers))
+            item_table.setHorizontalHeaderLabels(headers)
+            item_table.horizontalHeader().setStretchLastSection(True)
+            # pending
+            # https://stackoverflow.com/a/38129829/855160
+            # header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+
+            item_table.setMinimumWidth(self.width())
+
+            # item_table.setColumnWidth(0, self.width()/3*1.25)
+
+            item_table.setAlternatingRowColors(True)
+
+            # some tweaks
+            item_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            item_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+            # select only one row
+            item_table.setSelectionMode(QAbstractItemView.SingleSelection)
+            item_table.setShowGrid(False)
+
+            # do not show row counts
+            item_table.verticalHeader().setVisible(False)
+
+        create_item_table()
+        # oh. the heck.
+        self.update_item_table()
+
+
+        def set_layout():
+            main_layout = QVBoxLayout(self)
+            main_layout.addWidget(self.item_table)
+
+        set_layout()
+
+
+    def update_item_table(self):
+        item_table = self.item_table
+        item_table.insertRow(item_table.rowCount())
+        item_table.setItem(0, 0, QTableWidgetItem("asdf"))
+        item_table.setItem(0, 1, QTableWidgetItem("as"))
+        item_table.setItem(0, 2, QTableWidgetItem("xx"))
+
+
+            
+class PublishTab(TabContentArea):
+    def __init__(self, parent):
+        super().__init__()
+        self.parent = parent
+        self.setObjectName("publish_tab")
+
+        self.init_ui()
+
+    def init_ui(self):
+
+        def set_layout():
+            main_layout = QFormLayout(self)
+            self.data_item = QComboBox()
+            self.data_title = QLineEdit()
+            self.data_desc = QTextEdit()
+            self.data_tags = QLineEdit()
+
+            main_layout.addRow(QLabel("Data"), self.data_item)
+            main_layout.addRow(QLabel("Title"), self.data_title)
+            main_layout.addRow(QLabel("Description"), self.data_desc)
+            main_layout.addRow(QLabel("Tag"), self.data_tags)
+
+
+            publish_btn = QPushButton('Publish')
+            publish_btn.clicked.connect(self.publish_data)
+
+            main_layout.addWidget(publish_btn)
+
+        set_layout()
+
+
+    def publish_data(self):
+        mc.publish_product('test', 'testdata', 13, 'temp', '2018-04-01 10:10:10', '2018-04-01 10:10:10', '123456')
+        #print(type(self.data_title.text()))
 
 class Header(QFrame):
     class SearchBar(QLineEdit):
@@ -238,6 +460,7 @@ class SideBar(QScrollArea):
         load_stylesheet(self, "sidebar.qss")
 
 
+
 class MainWindow(QMainWindow):
     def __init__(self, reactor):
         super().__init__()
@@ -252,7 +475,6 @@ class MainWindow(QMainWindow):
         # no borders.  we make our own header panel.
         self.setWindowFlags(Qt.FramelessWindowHint)
 
-
         def set_geometry():
             self.resize(1000, 600)  # resize before centering.
             center_pt = QDesktopWidget().availableGeometry().center()
@@ -262,20 +484,13 @@ class MainWindow(QMainWindow):
         set_geometry()
 
         def add_content_tabs():
-            self.content_tabs = content_tabs = QTabWidget()
-            content_tabs.tabBar().setObjectName("content_tabs")
+            self.content_tabs = content_tabs = QTabWidget(self)
+            content_tabs.setObjectName("content_tabs")
             content_tabs.tabBar().hide()
 
-            def create_file_tab():
-                from cpchain.wallet.file_ui import FileTab
-                t = FileTab(self)
-                t.setObjectName("cloud_tab")
-                return t
-
-            content_tabs.addTab(create_file_tab(), "")
+            content_tabs.addTab(CloudTab(self), "")
             content_tabs.addTab(PublishTab(self), "")
             content_tabs.addTab(BrowseTab(self), "")
-
 
         add_content_tabs()
 
@@ -309,17 +524,14 @@ class MainWindow(QMainWindow):
             self.setCentralWidget(wid)
         set_layout()
 
-
-        # stylesheets
-        with open(join_with_root(config.wallet.qss.main_window)) as f:
-            self.setStyleSheet(f.read())
-
+        load_stylesheet(self, "main_window.qss")
 
         self.show()
         
 
     def closeEvent(self, event):
         self.reactor.stop()
+
 
 
 def _handle_keyboard_interrupt():
@@ -339,11 +551,13 @@ def _handle_keyboard_interrupt():
     timer.timeout.connect(lambda: None)
 
 
+
 def main():
     from twisted.internet import reactor
     main_wnd = MainWindow(reactor)
     _handle_keyboard_interrupt()
     sys.exit(reactor.run())
+
 
 
 if __name__ == '__main__':
