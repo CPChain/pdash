@@ -133,7 +133,6 @@ class PublishTab(QScrollArea):
 
 
     def publish_data(self):
-        mc = net.MarketClient()
-        # mc.login_confirm()
-        mc.publish_product('data_title.text()', 'testdata', 13, 'temp', '2018-04-01 10:10:10', '2018-04-01 10:10:10', '123456')
+        # mc = net.MarketClient()
+        net.mc.publish_product('test', 'testdata', 13, 'temp', '2018-04-01 10:10:10', '2018-04-01 10:10:10', '123456')
         #print(type(self.data_title.text()))
