@@ -21,7 +21,7 @@ install_reactor()
 from cpchain import config, root_dir
 from cpchain.utils import join_with_root
 from cpchain.wallet.tabs import PublishTab, BrowseTab
-from cpchain.wallet.net import foobar
+from cpchain.wallet.net import foobar, login
 
 
 # utils
@@ -43,24 +43,24 @@ def load_stylesheet(wid, name):
 class Header(QFrame):
     class SearchBar(QLineEdit):
         def __init__(self, parent=None):
-            super().__init__()
-            self.setObjectName("searchbar")
+            super().__init__(parent)
             self.parent = parent
             self.init_ui()
 
         def init_ui(self):
-            self.setMinimumSize(200, 20)
+            self.setObjectName("searchbar")
+            self.setFixedSize(150, 25)
+            self.setTextMargins(3, 0, 20, 0)
 
             self.search_btn = search_btn = QPushButton(self)
+            search_btn.setObjectName("search_btn")
+            search_btn.setFixedSize(18, 18)
+            search_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
-            search_btn.setMaximumSize(12, 12)
-            # search_btn.setCursor(QCursor(Qt.PointingHandCursor))
-
-            def bind_slot():
+            def bind_slots():
 
                 def query():
                     # TOOD refactor this.
-
                     # switch to the browser pane
                     content_tabs = self.parent.parent.content_tabs
                     wid = content_tabs.findChild(QWidget, "browse_tab")
@@ -74,15 +74,16 @@ class Header(QFrame):
                     return foobar(self.text())
 
                 search_btn.clicked.connect(query)
+                self.returnPressed.connect(query)
+                
 
-            bind_slot()
+            bind_slots()
 
             def set_layout():
                 main_layout = QHBoxLayout()
-                main_layout.addSpacerItem(QSpacerItem(150, 10, QSizePolicy.Expanding))
-
+                main_layout.addStretch(1)
                 main_layout.addWidget(search_btn)
-                main_layout.addSpacing(10)
+                # main_layout.addStretch(10)
                 main_layout.setContentsMargins(0, 0, 0, 0)
                 self.setLayout(main_layout)
             set_layout()
@@ -96,18 +97,30 @@ class Header(QFrame):
 
     def init_ui(self):
         def create_search_bar():
-            self.search_bar = search_bar = type(self).SearchBar(self)
+            self.search_bar = search_bar = Header.SearchBar(self)
             search_bar.setPlaceholderText("Search")
-
         create_search_bar()
 
+        def create_btns():
+            self.login_btn = QPushButton("▼ Login", self)
+            self.login_btn.setObjectName("login_btn")
+        create_btns()
+
+        def bind_slots():
+            self.login_btn.clicked.connect(login)
+        bind_slots()
 
         def set_layout():
             self.main_layout = main_layout = QHBoxLayout(self)
-
+            main_layout.setSpacing(0)
             main_layout.addWidget(self.search_bar)
+            main_layout.addStretch(20)
+            main_layout.addWidget(self.login_btn)
 
         set_layout()
+
+        # stylesheet
+        load_stylesheet(self, "header.qss")
 
 
     # drag support
@@ -289,13 +302,11 @@ class MainWindow(QMainWindow):
             main_layout.addWidget(self.content_tabs, 1, 1)
 
             main_layout.setRowStretch(0, 1)
-            main_layout.setRowStretch(1, 7)
-
+            main_layout.setRowStretch(1, 9)
             
             wid = QWidget(self)
             wid.setLayout(self.main_layout)
             self.setCentralWidget(wid)
-            
         set_layout()
 
 
