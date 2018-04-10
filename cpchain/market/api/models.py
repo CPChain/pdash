@@ -96,7 +96,6 @@ class WalletMsgSequence(models.Model):
     The wallet message sequence model.
     """
     public_key = models.CharField(_("PublicKey"), max_length=200, primary_key=True)
-    # key = models.CharField(_("Key"), max_length=40, primary_key=True)
     user = models.OneToOneField(
         WalletUser, related_name='wallet_msg_sequence',
         on_delete=models.CASCADE, verbose_name=_("WalletUser")

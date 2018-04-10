@@ -21,7 +21,7 @@ install_reactor()
 from cpchain import config, root_dir
 from cpchain.utils import join_with_root
 from cpchain.wallet.tabs import PublishTab, BrowseTab
-from cpchain.wallet.net import foobar
+from cpchain.wallet.net import foobar, login
 
 
 # utils
@@ -43,24 +43,24 @@ def load_stylesheet(wid, name):
 class Header(QFrame):
     class SearchBar(QLineEdit):
         def __init__(self, parent=None):
-            super().__init__()
-            self.setObjectName("searchbar")
+            super().__init__(parent)
             self.parent = parent
             self.init_ui()
 
         def init_ui(self):
-            self.setMinimumSize(200, 20)
+            self.setObjectName("searchbar")
+            self.setFixedSize(150, 25)
+            self.setTextMargins(3, 0, 20, 0)
 
             self.search_btn = search_btn = QPushButton(self)
+            search_btn.setObjectName("search_btn")
+            search_btn.setFixedSize(18, 18)
+            search_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
-            search_btn.setMaximumSize(12, 12)
-            # search_btn.setCursor(QCursor(Qt.PointingHandCursor))
-
-            def bind_slot():
+            def bind_slots():
 
                 def query():
                     # TOOD refactor this.
-
                     # switch to the browser pane
                     content_tabs = self.parent.parent.content_tabs
                     wid = content_tabs.findChild(QWidget, "browse_tab")
@@ -74,15 +74,16 @@ class Header(QFrame):
                     return foobar(self.text())
 
                 search_btn.clicked.connect(query)
+                self.returnPressed.connect(query)
+                
 
-            bind_slot()
+            bind_slots()
 
             def set_layout():
                 main_layout = QHBoxLayout()
-                main_layout.addSpacerItem(QSpacerItem(150, 10, QSizePolicy.Expanding))
-
+                main_layout.addStretch(1)
                 main_layout.addWidget(search_btn)
-                main_layout.addSpacing(10)
+                # main_layout.addStretch(10)
                 main_layout.setContentsMargins(0, 0, 0, 0)
                 self.setLayout(main_layout)
             set_layout()
@@ -96,18 +97,30 @@ class Header(QFrame):
 
     def init_ui(self):
         def create_search_bar():
-            self.search_bar = search_bar = type(self).SearchBar(self)
+            self.search_bar = search_bar = Header.SearchBar(self)
             search_bar.setPlaceholderText("Search")
-
         create_search_bar()
 
+        def create_btns():
+            self.login_btn = QPushButton("▼ Login", self)
+            self.login_btn.setObjectName("login_btn")
+        create_btns()
+
+        def bind_slots():
+            self.login_btn.clicked.connect(login)
+        bind_slots()
 
         def set_layout():
             self.main_layout = main_layout = QHBoxLayout(self)
-
+            main_layout.setSpacing(0)
             main_layout.addWidget(self.search_bar)
+            main_layout.addStretch(20)
+            main_layout.addWidget(self.login_btn)
 
         set_layout()
+
+        # stylesheet
+        load_stylesheet(self, "header.qss")
 
 
     # drag support
@@ -133,6 +146,7 @@ class Header(QFrame):
             self.m_drag = False
 
 
+
 class SideBar(QScrollArea):
     def __init__(self, parent):
         super().__init__(parent)
@@ -144,28 +158,26 @@ class SideBar(QScrollArea):
 
 
     def init_ui(self):
-        self.setMaximumWidth(200)
+        self.setObjectName("sidebar")
+        self.setMaximumWidth(180)
 
         self.frame = QFrame()
         self.setWidget(self.frame)
         self.setWidgetResizable(True)
-        self.frame.setMinimumWidth(200)
+        self.frame.setMinimumWidth(150)
 
-        def add_btns():
+        def add_wnd_btns():
             close_wnd_btn = QPushButton('', self)
             close_wnd_btn.setObjectName("close_wnd_btn")
-            close_wnd_btn.setMaximumSize(16, 16)
+            close_wnd_btn.setMaximumSize(18, 18)
+
             minimize_wnd_btn = QPushButton('', self)
             minimize_wnd_btn.setObjectName("minimize_wnd_btn")
-            minimize_wnd_btn.setMaximumSize(16, 16)
+            minimize_wnd_btn.setMaximumSize(18, 18)
 
             maximize_wnd_btn = QPushButton('', self)
             maximize_wnd_btn.setObjectName("maximize_wnd_btn")
-
-            # maximize_wnd_btn.setIconSize(maximize_wnd_btn.size())
-            # maximize_wnd_btn.setIconSize(QSize(18, 18))
-
-            maximize_wnd_btn.setMaximumSize(16, 16)
+            maximize_wnd_btn.setMaximumSize(18, 18)
 
             # actions
             close_wnd_btn.clicked.connect(self.parent.close)
@@ -181,21 +193,23 @@ class SideBar(QScrollArea):
 
             # layout
             btn_layout = QHBoxLayout()
-            btn_layout.setSpacing(5)
+            btn_layout.addSpacing(5)
+            btn_layout.setSpacing(0)
             btn_layout.addWidget(close_wnd_btn)
             btn_layout.addWidget(minimize_wnd_btn)
             btn_layout.addWidget(maximize_wnd_btn)
             btn_layout.addStretch(10)
             return btn_layout
 
-        btn_layout = add_btns()
+        btn_layout = add_wnd_btns()
 
 
         def add_lists():
             self.feature_list = QListWidget()            
-            self.feature_list.addItem("My Data")
-            self.feature_list.addItem("Publish Data")
-            self.feature_list.addItem("Browse")
+            # TODO adjust icon and text spacing.
+            self.feature_list.addItem(QListWidgetItem(get_icon("cloud_store.png"), "Cloud Store"))
+            self.feature_list.addItem(QListWidgetItem(get_icon("publish_data.png"), "Publish Data"))
+            self.feature_list.addItem(QListWidgetItem(get_icon("browse_market.png"), "Browse"))
 
             self.feature_list.setCurrentRow(0)
         add_lists()
@@ -203,28 +217,23 @@ class SideBar(QScrollArea):
         def bind_slots():
             def feature_list_clicked(item):
                 item_to_tab_name = {
-                    "My Data": "data_tab",
+                    "Cloud Store": "cloud_tab",
                     "Publish Data": "publish_tab",
                     "Browse": "browse_tab",
                 }
                 wid = self.content_tabs.findChild(QWidget, item_to_tab_name[item.text()])
                 self.content_tabs.setCurrentWidget(wid)
             self.feature_list.itemPressed.connect(feature_list_clicked)
-            
         bind_slots()
-
 
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self.frame)
             main_layout.addLayout(btn_layout)
+            main_layout.addSpacing(10)
             main_layout.addWidget(self.feature_list)
-
-            main_layout.setContentsMargins(0, 8, 0, 0)
-
+            main_layout.setContentsMargins(0, 10, 0, 0)
             self.setLayout(self.main_layout)
-
         set_layout()
-
 
         load_stylesheet(self, "sidebar.qss")
 
@@ -259,7 +268,7 @@ class MainWindow(QMainWindow):
             def create_file_tab():
                 from cpchain.wallet.file_ui import FileTab
                 t = FileTab(self)
-                t.setObjectName("data_tab")
+                t.setObjectName("cloud_tab")
                 return t
 
             content_tabs.addTab(create_file_tab(), "")
@@ -293,13 +302,11 @@ class MainWindow(QMainWindow):
             main_layout.addWidget(self.content_tabs, 1, 1)
 
             main_layout.setRowStretch(0, 1)
-            main_layout.setRowStretch(1, 7)
-
+            main_layout.setRowStretch(1, 9)
             
             wid = QWidget(self)
             wid.setLayout(self.main_layout)
             self.setCentralWidget(wid)
-            
         set_layout()
 
 
