@@ -20,6 +20,7 @@ port = 5001
 
 [wallet]
 dbpath = "cpchain/assets/wallet/wallet.db"
+download_dir = "cpchain/assets/wallet/downloads"
 
 [wallet.qss]
 main_window = "cpchain/assets/wallet/qss/main_window.qss"
