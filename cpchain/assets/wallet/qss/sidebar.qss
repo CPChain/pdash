@@ -8,13 +8,37 @@ QFrame {
 
 QPushButton {
     font: bold;
-    font-size: 18px;
+    /* font-size: 30px;  */
 }
 
 QPushButton#close_wnd_btn, QPushButton#minimize_wnd_btn, QPushButton#maximize_wnd_btn {
     color: #6d6e70;
     border: none;
-    background-color: #121212;
+    icon-size: 18px;
+}
+
+
+QPushButton#close_wnd_btn {
+    image: url(${asset_dir}/icons/close_wnd_btn.png);
+}
+QPushButton#close_wnd_btn:hover {
+    image: url(${asset_dir}/icons/close_wnd_btn_active.png);
+}
+
+QPushButton#minimize_wnd_btn {
+    image: url(${asset_dir}/icons/minimize_wnd_btn.png);
+}
+QPushButton#minimize_wnd_btn:hover {
+    image: url(${asset_dir}/icons/minimize_wnd_btn_active.png);
+}
+
+/* #489E62 */
+QPushButton#maximize_wnd_btn {
+    image: url(${asset_dir}/icons/maximize_wnd_btn.png);
+}
+/* #e67e22 */
+QPushButton#maximize_wnd_btn:hover {
+    image: url(${asset_dir}/icons/maximize_wnd_btn_active.png);
 }
 
 QPushButton#close_wnd_btn::hover, QPushButton#minimize_wnd_btn::hover, QPushButton#maximize_wnd_btn::hover {
@@ -44,4 +68,3 @@ QListWidget::item::selected {
     background: #121212;
     color: #fefefe; 
 }
-

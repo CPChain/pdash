@@ -1,5 +1,30 @@
+
+
 from PyQt5.QtWidgets import (QScrollArea, QFormLayout, QVBoxLayout, QComboBox, QLineEdit, QLabel,
-                             QTextEdit, QTableWidget, QPushButton)
+                             QTextEdit, QTableWidget, QPushButton, QTableWidgetItem, QAbstractItemView)
+
+from PyQt5.QtCore import Qt, QPoint
+
+from PyQt5.QtWidgets import QMenu, QAction, QHeaderView
+
+from PyQt5.QtGui import QCursor
+
+from cpchain.wallet.net import hoge
+
+
+class TableWidget(QTableWidget):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.init_ui()
+
+    def init_ui(self):
+        # context menu
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+
+    def set_right_menu(self, func):
+        self.customContextMenuRequested[QPoint].connect(func)
+
 
 from cpchain.wallet import net
 class BrowseTab(QScrollArea):
@@ -11,26 +36,55 @@ class BrowseTab(QScrollArea):
     def init_ui(self):
 
         def create_item_table():
-            self.item_table = item_table = QTableWidget(self)
+            self.item_table = item_table = TableWidget(self)
             item_table.setObjectName("item_table")
+
+
+            # cf. https://stackoverflow.com/a/6840656/855160
+            def right_menu():
+                sel = item_table.selectionModel()
+                if not sel.hasSelection():
+                    return
+
+                def buy_action():
+                    hoge("hi")
+
+                menu = QMenu(item_table)
+                action = QAction("Buy", item_table, triggered=buy_action) 
+
+                menu.addAction(action)
+                menu.exec_(QCursor.pos())
+
+            item_table.set_right_menu(right_menu)
+
 
             headers = ["Title", "Size", "Price"]
             item_table.setColumnCount(len(headers))
             item_table.setHorizontalHeaderLabels(headers)
-            item_table.setMinimumWidth(self.width())
-
-            item_table.setAlternatingRowColors(True)
-
             item_table.horizontalHeader().setStretchLastSection(True)
+            # pending
+            # https://stackoverflow.com/a/38129829/855160
+            # header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+
+            item_table.setMinimumWidth(self.width())
 
             # item_table.setColumnWidth(0, self.width()/3*1.25)
 
-            # item_table.verticalHeader().setVisible(False)
-            # item_table.setShowGrid(False)
-            # item_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-            # item_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+            item_table.setAlternatingRowColors(True)
+
+            # some tweaks
+            item_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            item_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+            # select only one row
+            item_table.setSelectionMode(QAbstractItemView.SingleSelection)
+            item_table.setShowGrid(False)
+
+            # do not show row counts
+            item_table.verticalHeader().setVisible(False)
 
         create_item_table()
+        # oh. the heck.
+        self.update_item_table()
 
 
         def set_layout():
@@ -39,6 +93,13 @@ class BrowseTab(QScrollArea):
 
         set_layout()
 
+
+    def update_item_table(self):
+        item_table = self.item_table
+        item_table.insertRow(item_table.rowCount())
+        item_table.setItem(0, 0, QTableWidgetItem("asdf"))
+        item_table.setItem(0, 1, QTableWidgetItem("as"))
+        item_table.setItem(0, 2, QTableWidgetItem("xx"))
 
             
 class PublishTab(QScrollArea):

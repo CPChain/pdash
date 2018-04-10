@@ -1,28 +1,46 @@
 #!/usr/bin/python3
 import sys
+import os.path as osp
+import string
 # from functools import partial
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout,
                              QVBoxLayout, QGridLayout, QWidget, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel,
                              QWidget, QLineEdit, QSpacerItem, QSizePolicy)
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QCursor
+from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtGui import QIcon, QCursor, QPixmap
 
 # do it before any other twisted code.
 def install_reactor():
+    global app
     app = QApplication(sys.argv)
     import qt5reactor; qt5reactor.install()
 install_reactor()
 
-from cpchain import config
+from cpchain import config, root_dir
 from cpchain.utils import join_with_root
 from cpchain.wallet.tabs import PublishTab, BrowseTab
 from cpchain.wallet.net import foobar
 
 
-class Header(QFrame):
+# utils
+def get_icon(name):
+    path = osp.join(root_dir, "cpchain/assets/wallet/icons", name)
+    return QIcon(path)
 
+
+def load_stylesheet(wid, name):
+    path = osp.join(root_dir, "cpchain/assets/wallet/qss", name)
+    
+    subs = dict(asset_dir=osp.join(root_dir, "cpchain/assets/wallet"))
+
+    with open(path) as f:
+        s = string.Template(f.read())
+        wid.setStyleSheet(s.substitute(subs))
+
+
+class Header(QFrame):
     class SearchBar(QLineEdit):
         def __init__(self, parent=None):
             super().__init__()
@@ -134,15 +152,20 @@ class SideBar(QScrollArea):
         self.frame.setMinimumWidth(200)
 
         def add_btns():
-            close_wnd_btn = QPushButton('✕', self)
+            close_wnd_btn = QPushButton('', self)
             close_wnd_btn.setObjectName("close_wnd_btn")
-            close_wnd_btn.setMaximumSize(18, 18)
-            minimize_wnd_btn = QPushButton('_', self)
+            close_wnd_btn.setMaximumSize(16, 16)
+            minimize_wnd_btn = QPushButton('', self)
             minimize_wnd_btn.setObjectName("minimize_wnd_btn")
-            minimize_wnd_btn.setMaximumSize(18, 18)
-            maximize_wnd_btn = QPushButton('☐', self)
+            minimize_wnd_btn.setMaximumSize(16, 16)
+
+            maximize_wnd_btn = QPushButton('', self)
             maximize_wnd_btn.setObjectName("maximize_wnd_btn")
-            maximize_wnd_btn.setMaximumSize(18, 18)
+
+            # maximize_wnd_btn.setIconSize(maximize_wnd_btn.size())
+            # maximize_wnd_btn.setIconSize(QSize(18, 18))
+
+            maximize_wnd_btn.setMaximumSize(16, 16)
 
             # actions
             close_wnd_btn.clicked.connect(self.parent.close)
@@ -170,14 +193,12 @@ class SideBar(QScrollArea):
 
         def add_lists():
             self.feature_list = QListWidget()            
-
             self.feature_list.addItem("My Data")
             self.feature_list.addItem("Publish Data")
             self.feature_list.addItem("Browse")
 
             self.feature_list.setCurrentRow(0)
         add_lists()
-
 
         def bind_slots():
             def feature_list_clicked(item):
@@ -205,10 +226,7 @@ class SideBar(QScrollArea):
         set_layout()
 
 
-        with open(join_with_root(config.wallet.qss.sidebar)) as f:
-            style = f.read()
-            self.setStyleSheet(style)
-            # self.frame.setStyleSheet(style)
+        load_stylesheet(self, "sidebar.qss")
 
 
 class MainWindow(QMainWindow):
@@ -315,7 +333,6 @@ def _handle_keyboard_interrupt():
 
 
 def main():
-
     from twisted.internet import reactor
     main_wnd = MainWindow(reactor)
     _handle_keyboard_interrupt()
