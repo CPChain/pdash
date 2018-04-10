@@ -264,6 +264,7 @@ class MainWindow(QMainWindow):
         def add_content_tabs():
             self.content_tabs = content_tabs = QTabWidget()
             content_tabs.tabBar().setObjectName("content_tabs")
+            content_tabs.tabBar().hide()
 
             def create_file_tab():
                 from cpchain.wallet.file_ui import FileTab
@@ -272,7 +273,6 @@ class MainWindow(QMainWindow):
                 return t
 
             content_tabs.addTab(create_file_tab(), "")
-
             content_tabs.addTab(PublishTab(self), "")
             content_tabs.addTab(BrowseTab(self), "")
 
