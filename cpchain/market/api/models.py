@@ -48,15 +48,11 @@ class Product(models.Model):
 
     def get_signature_source(self):
         ss = self.owner_address + self.title + str(self.description[0]) + str(self.price[0]) \
-             + Product.str_to_timestamp(self.start_date) + Product.str_to_timestamp(self.end_date) + str(self.file_md5)
+             + self.start_date + self.end_date + str(self.file_md5)
         return ss
 
     def get_msg_hash_source(self):
         return self.get_signature_source() + str(self.seq) + self.signature
-
-    @staticmethod
-    def str_to_timestamp(s):
-        return str(int(time.mktime(datetime.datetime.strptime(s, "%Y-%m-%d %H:%M:%S").timetuple())))
 
 
 class Token(models.Model):
