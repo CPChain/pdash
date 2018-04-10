@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import sys
+import sys, os
 import os.path as osp
 import string
 # from functools import partial
@@ -23,6 +23,7 @@ from cpchain.utils import join_with_root
 from cpchain.wallet.tabs import PublishTab, BrowseTab
 from cpchain.wallet.net import foobar, login
 
+from cpchain.wallet.proxy_request import send_request_to_proxy
 
 # utils
 def get_icon(name):
@@ -32,7 +33,7 @@ def get_icon(name):
 
 def load_stylesheet(wid, name):
     path = osp.join(root_dir, "cpchain/assets/wallet/qss", name)
-    
+
     subs = dict(asset_dir=osp.join(root_dir, "cpchain/assets/wallet"))
 
     with open(path) as f:
@@ -75,7 +76,7 @@ class Header(QFrame):
 
                 search_btn.clicked.connect(query)
                 self.returnPressed.connect(query)
-                
+
 
             bind_slots()
 
@@ -125,7 +126,7 @@ class Header(QFrame):
 
     # drag support
     def mousePressEvent(self, event):
-        if event.buttons() == Qt.LeftButton:                
+        if event.buttons() == Qt.LeftButton:
             self.parent.m_DragPosition = event.globalPos() - self.parent.pos()
             self.parent.m_drag = True
             event.accept()
@@ -205,7 +206,7 @@ class SideBar(QScrollArea):
 
 
         def add_lists():
-            self.feature_list = QListWidget()            
+            self.feature_list = QListWidget()
             # TODO adjust icon and text spacing.
             self.feature_list.addItem(QListWidgetItem(get_icon("cloud_store.png"), "Cloud Store"))
             self.feature_list.addItem(QListWidgetItem(get_icon("publish_data.png"), "Publish Data"))
@@ -244,10 +245,10 @@ class MainWindow(QMainWindow):
         self.reactor = reactor
         self.init_ui()
 
-        
-    def init_ui(self):               
+
+    def init_ui(self):
         # overall window settings
-        self.setWindowTitle('CPChain Wallet')    
+        self.setWindowTitle('CPChain Wallet')
         self.setObjectName("main_window")
         # no borders.  we make our own header panel.
         self.setWindowFlags(Qt.FramelessWindowHint)
@@ -303,7 +304,7 @@ class MainWindow(QMainWindow):
 
             main_layout.setRowStretch(0, 1)
             main_layout.setRowStretch(1, 9)
-            
+
             wid = QWidget(self)
             wid.setLayout(self.main_layout)
             self.setCentralWidget(wid)
@@ -316,7 +317,7 @@ class MainWindow(QMainWindow):
 
 
         self.show()
-        
+
 
     def closeEvent(self, event):
         self.reactor.stop()
@@ -343,6 +344,10 @@ def main():
     from twisted.internet import reactor
     main_wnd = MainWindow(reactor)
     _handle_keyboard_interrupt()
+    if os.getenv('PROXY_LOCAL_RUN'):
+        send_request_to_proxy(b'MARKET_HASH', 'seller_data')
+        reactor.callLater(5, send_request_to_proxy, b'MARKET_HASH', 'buyer_data')
+
     sys.exit(reactor.run())
 
 

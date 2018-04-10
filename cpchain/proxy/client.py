@@ -45,7 +45,7 @@ class SSLClientProtocol(NetstringReceiver):
                 print('file_uuid: %s' % proxy_reply.file_uuid)
                 if self.factory.need_download_file:
                     d = download_file(proxy_reply.file_uuid)
-                    d.addBoth(lambda _: reactor.stop())
+                    d.addBoth(lambda _: stop_reactor())
                     self.factory.downloading_file = True
         else:
             print("wrong server response")
@@ -54,6 +54,14 @@ class SSLClientProtocol(NetstringReceiver):
 
     def connectionLost(self, reason):
         print("lost connection to client %s" % (self.peer))
+
+def start_reactor():
+    if not os.getenv('PROXY_LOCAL_RUN'):
+        reactor.run()
+
+def stop_reactor():
+    if not os.getenv('PROXY_LOCAL_RUN'):
+        reactor.stop()
 
 
 class SSLClientFactory(protocol.ClientFactory):
@@ -67,11 +75,11 @@ class SSLClientFactory(protocol.ClientFactory):
         return SSLClientProtocol(self)
 
     def clientConnectionFailed(self, connector, reason):
-        reactor.stop()
+        stop_reactor()
 
     def clientConnectionLost(self, connector, reason):
         if not self.downloading_file:
-            reactor.stop()
+            stop_reactor()
 
 
 def start_client(sign_message):
@@ -96,7 +104,7 @@ def start_client(sign_message):
     reactor.connectSSL(host, ctrl_port, factory,
             ssl.ClientContextFactory())
 
-    reactor.run()
+    start_reactor()
 
 
 def download_file(file_uuid):
@@ -208,5 +216,3 @@ if __name__ == '__main__':
         proxy_reply = message.proxy_reply
         if proxy_reply.error:
             print(proxy_reply.error)
-
-
