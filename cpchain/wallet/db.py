@@ -17,7 +17,8 @@ session = Session()
 
 class FileInfo(Base):
     __tablename__ = 'fileinfo'
-    hashcode = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True)
+    hashcode = Column(String)
     name = Column(String)
     path = Column(String)
     size = Column(Integer)

@@ -22,9 +22,9 @@ class FileTab(QScrollArea):
             self.file_table = file_table = QTableWidget()
 
             file_table.setMinimumWidth(self.width())
-            file_table.setColumnCount(4)
+            file_table.setColumnCount(5)
             file_table.setRowCount(self.row_number)
-            file_table.setHorizontalHeaderLabels(['File Name', 'File Size', 'Remote Type', 'Published'])
+            file_table.setHorizontalHeaderLabels(['File Name', 'File Size', 'Remote Type', 'Published', 'Hash Code'])
 
             file_table.horizontalHeader().setStretchLastSection(True)
             file_table.verticalHeader().setVisible(False)
@@ -42,6 +42,7 @@ class FileTab(QScrollArea):
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
                 self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].remote_type))
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_published)))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
 
         create_file_table()
 
@@ -55,6 +56,7 @@ class FileTab(QScrollArea):
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
                 self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].remote_type))
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_published)))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
 
         def handle_upload_button():
             # Maybe useful for buyer.
