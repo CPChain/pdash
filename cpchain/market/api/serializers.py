@@ -1,6 +1,5 @@
 from django.utils import timezone
 from rest_framework import serializers
-
 from .models import Product, WalletUser, Token
 
 
@@ -29,15 +28,8 @@ class ProductSerializer(serializers.ModelSerializer):
             msg_hash=validated_data['msg_hash'],
             tags=validated_data['tags'],
         )
-        # TODO change to other algorithm.verify signature
         product.save()
         return product
-
-    def update(self, instance, validated_data):
-        print("update product status")
-        status = validated_data['status']
-        print("status:" + status)
-        pass
 
 
 class ProductUpdateSerializer(serializers.ModelSerializer):
