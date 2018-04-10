@@ -7,7 +7,7 @@ import string
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout,
                              QVBoxLayout, QGridLayout, QWidget, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel,
                              QWidget, QLineEdit, QSpacerItem, QSizePolicy, QTableWidget, QFormLayout, QComboBox, QTextEdit,
-                             QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction)
+                             QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog)
 from PyQt5.QtCore import Qt, QSize, QPoint 
 from PyQt5.QtGui import QIcon, QCursor, QPixmap
 
@@ -33,6 +33,7 @@ def get_icon(name):
     return QIcon(path)
 
 
+
 def load_stylesheet(wid, name):
     path = osp.join(root_dir, "cpchain/assets/wallet/qss", name)
     
@@ -45,53 +46,57 @@ def load_stylesheet(wid, name):
 
 
 class TableWidget(QTableWidget):
-
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.parent = parent
         self.init_ui()
 
     def init_ui(self):
+        # size
+        self.setMinimumWidth(self.parent.width())
         # context menu
         self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.horizontalHeader().setStretchLastSection(True)
+        self.verticalHeader().setVisible(False)
+        self.setShowGrid(False)
+        self.setAlternatingRowColors(True)
+        # do not highlight (bold-ize) the header
+        self.horizontalHeader().setHighlightSections(False)
+
 
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
 
         
-class TabContentArea(QFrame):
-    pass
+
+class TabContentArea(QFrame): pass
 
 
-class FileTab(QScrollArea):
+class CloudTab(TabContentArea):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
-        self.row_number = 20
+        self.setObjectName("cloud_tab")
+
         self.hashcode = 'DEADBEEF'
         self.local_file = 'local'
         self.init_ui()
 
     def init_ui(self):
+        self.row_number = 20
 
         def create_file_table():
-            self.file_table = file_table = QTableWidget()
+            self.file_table = file_table = TableWidget(self)
 
-            file_table.setMinimumWidth(self.width())
             file_table.setColumnCount(5)
             file_table.setRowCount(self.row_number)
             file_table.setHorizontalHeaderLabels(['File Name', 'File Size', 'Remote Type', 'Published', 'Hash Code'])
 
-            file_table.horizontalHeader().setStretchLastSection(True)
-            file_table.verticalHeader().setVisible(False)
-            file_table.setShowGrid(False)
-            file_table.setAlternatingRowColors(True)
-
-            file_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-            file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
-
             file_list = get_file_list()
             for cur_row in range(self.row_number):
-                if cur_row == file_list.__len__():
+                if cur_row == len(file_list):
                     break
                 file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
@@ -113,7 +118,7 @@ class FileTab(QScrollArea):
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_published)))
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
 
-        def handle_upload_button():
+        def handle_upload():
             # Maybe useful for buyer.
             # row_selected = self.file_table.selectionModel().selectedRows()[0].row()
             # selected_fpath = self.file_table.item(row_selected, 2).text()
@@ -125,18 +130,26 @@ class FileTab(QScrollArea):
             print("in handle_callback_upload" + x)
             update_table()
 
-        def create_buttons():
-            self.upload_button = upload_button = QPushButton('Encrypt and Upload')
-            upload_button.clicked.connect(handle_upload_button)
-
-        create_buttons()
+        def create_btns():
+            self.upload_btn = upload_btn = QPushButton('Encrypt and Upload')
+            upload_btn.setObjectName("upload_btn")
+            upload_btn.clicked.connect(handle_upload)
+        create_btns()
 
         def set_layout():
             self.main_layout = QVBoxLayout(self)
             self.main_layout.addWidget(self.file_table)
-            self.main_layout.addWidget(self.upload_button)
 
+            layout = QHBoxLayout(self)
+            layout.addStretch(1)
+            layout.addWidget(self.upload_btn)
+
+            self.main_layout.addLayout(layout)
         set_layout()
+
+        load_stylesheet(self, "cloud_tab.qss")
+
+
 
 class BrowseTab(TabContentArea):
     def __init__(self, parent=None):
@@ -475,7 +488,7 @@ class MainWindow(QMainWindow):
             content_tabs.setObjectName("content_tabs")
             content_tabs.tabBar().hide()
 
-            content_tabs.addTab(FileTab(self), "")
+            content_tabs.addTab(CloudTab(self), "")
             content_tabs.addTab(PublishTab(self), "")
             content_tabs.addTab(BrowseTab(self), "")
 
@@ -520,6 +533,7 @@ class MainWindow(QMainWindow):
         self.reactor.stop()
 
 
+
 def _handle_keyboard_interrupt():
     def sigint_handler(*args):
         QApplication.quit()
@@ -537,11 +551,13 @@ def _handle_keyboard_interrupt():
     timer.timeout.connect(lambda: None)
 
 
+
 def main():
     from twisted.internet import reactor
     main_wnd = MainWindow(reactor)
     _handle_keyboard_interrupt()
     sys.exit(reactor.run())
+
 
 
 if __name__ == '__main__':
