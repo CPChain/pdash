@@ -11,6 +11,7 @@ urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^login', UserLoginAPIView.as_view(),name='login'),
     url(r'^confirm', UserLoginConfirmAPIView.as_view(),name='confirm'),
+    url(r'^my_product/search/$', MyProductSearchAPIViewSet.as_view(), name='my_product_search'),
     url(r'^product/show/$', ProductShowAPIViewSet.as_view(), name='product_show'),
     url(r'^product/hide/$', ProductHideAPIViewSet.as_view(), name='product_hide'),
     url(r'^product/publish/$', ProductPublishAPIViewSet.as_view(), name='product_publish'),

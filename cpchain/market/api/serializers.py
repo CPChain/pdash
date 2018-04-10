@@ -9,7 +9,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = (
         'id', 'owner_address', 'title', 'description', 'tags', 'price',
         'created', 'start_date', 'end_date', 'seq','file_md5',
-        'signature','msg_hash')
+        'signature','msg_hash','status')
 
     def create(self, validated_data):
         now = timezone.now()
