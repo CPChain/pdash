@@ -4,21 +4,22 @@
 # Copyright (c) 2018 Wurong intelligence technology co., Ltd.
 # See LICENSE for details.
 
-import sys, os
+import sys, os, time
 
-from twisted.internet import reactor, protocol, ssl, defer
+
+from twisted.internet import reactor, threads, protocol, ssl
 from twisted.protocols.basic import NetstringReceiver
 from twisted.python import log
 
 from twisted.web.resource import Resource, NoResource, ForbiddenResource
 from twisted.web.server import Site
-from twisted .web.static import File
+from twisted.web.static import File
 
 from cpchain import config, root_dir
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.message import message_sanity_check, sign_message_verify
 
-from cpchain.proxy.ipfs import IPFS
+from cpchain.storage import IPFSStorage
 from cpchain.proxy.proxy_db import Trade, ProxyDB
 
 server_root = os.path.join(root_dir, config.proxy.server_root)
@@ -32,7 +33,7 @@ class SSLServerProtocol(NetstringReceiver):
     def connectionMade(self):
         self.factory.numConnections += 1
         self.peer = str(self.transport.getPeer())
-        print("connect to client " + self.peer)
+        print("connect to client %s" % self.peer)
 
     def stringReceived(self, string):
         sign_message = SignMessage()
@@ -53,9 +54,11 @@ class SSLServerProtocol(NetstringReceiver):
             self.proxy_reply_error(error)
             return
 
+        public_key = sign_message.public_key
+
         proxy_db = self.proxy_db
-        trade = Trade()
-        file_size = 0
+        self.trade = Trade()
+        trade = self.trade
         error = None
 
         if message.type == Message.SELLER_DATA:
@@ -65,56 +68,93 @@ class SSLServerProtocol(NetstringReceiver):
             trade.market_hash = data.market_hash
             trade.AES_key = data.AES_key
 
+            if public_key != data.seller_addr:
+                error = "not seller's signature"
+                self.proxy_reply_error(error)
+                return
+
             storage = data.storage
             if storage.type == Message.Storage.IPFS:
                 ipfs = storage.ipfs
                 trade.file_hash = ipfs.file_hash
                 if(proxy_db.count(trade)):
                     error = "trade record already in database"
+                    self.proxy_reply_error(error)
+                    return
                 else:
-                    host, port = ipfs.gateway.strip().split(':')
-                    ipfs = IPFS()
-                    if ipfs.connect(host, port) and \
-                        ipfs.get_file(trade.file_hash):
-                        file_path = server_root + '/' + trade.file_hash.decode()
-                        file_size = os.path.getsize(file_path)
+                    file_path = os.path.join(server_root,
+                                    trade.file_hash.decode())
+
+                    # seller sold the same file to another buyer
+                    if os.path.isfile(file_path):
+                        mtime = time.time()
+                        os.utime(file_path, (mtime, mtime))
                         proxy_db.insert(trade)
+                        self.proxy_reply_success()
+                        return
                     else:
-                        error = "failed to get file from ipfs"
+                        d = threads.deferToThread(
+                                        self.get_ipfs_file,
+                                        ipfs.gateway,
+                                        trade.file_hash)
+
+                        d.addBoth(self.ipfs_callback)
 
             elif storage.type == Message.Storage.S3:
                 error = "not support S3 storage yet"
+                self.proxy_reply_error(error)
+                return
 
         elif message.type == Message.BUYER_DATA:
             data = message.buyer_data
             trade.seller_addr = data.seller_addr
             trade.buyer_addr = data.buyer_addr
             trade.market_hash = data.market_hash
+
+            if public_key != data.buyer_addr:
+                error = "not buyer's signature"
+                self.proxy_reply_error(error)
+                return
+
             if proxy_db.count(trade):
-                trade = proxy_db.query(trade)[0]
-                file_path = server_root + '/' + trade.file_hash.decode()
-                file_size = os.path.getsize(file_path)
+                self.trade = proxy_db.query(trade)
+                self.proxy_reply_success()
+                return
             else:
                 error = "trade record not found in database"
-
-        if error:
-            self.proxy_reply_error(error)
-            return
+                self.proxy_reply_error(error)
+                return
 
 
+    def proxy_reply_success(self):
+        trade = self.trade
+        message = Message()
         message.type = Message.PROXY_REPLY
         proxy_reply = message.proxy_reply
         proxy_reply.AES_key = trade.AES_key
-        proxy_reply.file_hash = trade.file_hash
-        proxy_reply.file_size = file_size
+        proxy_reply.file_uuid = trade.file_uuid
 
         string = message.SerializeToString()
         self.sendString(string)
         self.transport.loseConnection()
 
+    def get_ipfs_file(self, ipfs_gateway, file_hash):
+        host, port = ipfs_gateway.strip().split(':')
+        ipfs = IPFSStorage()
+        return ipfs.connect(host, port) and \
+                ipfs.download_file(file_hash, server_root)
+
+    def ipfs_callback(self, success):
+        if success:
+            self.proxy_db.insert(self.trade)
+            self.proxy_reply_success()
+        else:
+            error = "failed to get file from ipfs"
+            self.proxy_reply_error(error)
+
     def connectionLost(self, reason):
         self.factory.numConnections -= 1
-        print("lost connection to client %s" % (self.peer))
+        print("lost connection to client %s" % self.peer)
 
     def proxy_reply_error(self, error):
         message = Message()
@@ -138,27 +178,31 @@ class SSLServerFactory(protocol.Factory):
 
     def stopFactory(self):
         self.proxy_db.session_close()
-        reactor.stop()
 
 
+class FileServer(Resource):
 
-class FileServer(File):
+    def __init__(self):
+        Resource.__init__(self)
+        self.proxy_db = ProxyDB()
+        self.proxy_db.session_create()
 
     def getChild(self, path, request):
-        if not self.request_auth(request):
-            return ForbiddenResource()
 
         # don't expose the file list under root dir
         # for security consideration
         if path == b'':
             return ForbiddenResource()
 
-        file_path = server_root + '/' + path.decode()
-        return File(file_path)
-
-    # TODO: user request authentication
-    def request_auth(self, request):
-        return True
+        uuid = path.decode()
+        trade = Trade()
+        trade = self.proxy_db.query_file_uuid(uuid)
+        if trade:
+            file_hash = trade.file_hash
+            file_path = os.path.join(server_root, file_hash.decode())
+            return File(file_path)
+        else:
+            return ForbiddenResource()
 
 
 def start_ssl_server():
@@ -176,9 +220,8 @@ def start_ssl_server():
             server_key, server_crt))
 
     # data channel
-    root = FileServer(server_root)
     data_port = config.proxy.server_data_port
-    file_factory = Site(root)
+    file_factory = Site(FileServer())
     reactor.listenSSL(data_port, file_factory,
             ssl.DefaultOpenSSLContextFactory(
             server_key, server_crt))
