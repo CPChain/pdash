@@ -7,7 +7,7 @@
 import sys, os, time
 
 
-from twisted.internet import reactor, protocol, ssl, defer
+from twisted.internet import reactor, threads, protocol, ssl
 from twisted.protocols.basic import NetstringReceiver
 from twisted.python import log
 
@@ -57,7 +57,8 @@ class SSLServerProtocol(NetstringReceiver):
         public_key = sign_message.public_key
 
         proxy_db = self.proxy_db
-        trade = Trade()
+        self.trade = Trade()
+        trade = self.trade
         error = None
 
         if message.type == Message.SELLER_DATA:
@@ -78,6 +79,8 @@ class SSLServerProtocol(NetstringReceiver):
                 trade.file_hash = ipfs.file_hash
                 if(proxy_db.count(trade)):
                     error = "trade record already in database"
+                    self.proxy_reply_error(error)
+                    return
                 else:
                     file_path = os.path.join(server_root,
                                     trade.file_hash.decode())
@@ -87,17 +90,20 @@ class SSLServerProtocol(NetstringReceiver):
                         mtime = time.time()
                         os.utime(file_path, (mtime, mtime))
                         proxy_db.insert(trade)
+                        self.proxy_reply_success()
+                        return
                     else:
-                        host, port = ipfs.gateway.strip().split(':')
-                        ipfs = IPFS()
-                        if ipfs.connect(host, port) and \
-                            ipfs.get_file(trade.file_hash):
-                            proxy_db.insert(trade)
-                        else:
-                            error = "failed to get file from ipfs"
+                        d = threads.deferToThread(
+                                        self.get_ipfs_file,
+                                        ipfs.gateway,
+                                        trade.file_hash)
+
+                        d.addBoth(self.ipfs_callback)
 
             elif storage.type == Message.Storage.S3:
                 error = "not support S3 storage yet"
+                self.proxy_reply_error(error)
+                return
 
         elif message.type == Message.BUYER_DATA:
             data = message.buyer_data
@@ -111,15 +117,18 @@ class SSLServerProtocol(NetstringReceiver):
                 return
 
             if proxy_db.count(trade):
-                trade = proxy_db.query(trade)
+                self.trade = proxy_db.query(trade)
+                self.proxy_reply_success()
+                return
             else:
                 error = "trade record not found in database"
-
-        if error:
-            self.proxy_reply_error(error)
-            return
+                self.proxy_reply_error(error)
+                return
 
 
+    def proxy_reply_success(self):
+        trade = self.trade
+        message = Message()
         message.type = Message.PROXY_REPLY
         proxy_reply = message.proxy_reply
         proxy_reply.AES_key = trade.AES_key
@@ -128,6 +137,19 @@ class SSLServerProtocol(NetstringReceiver):
         string = message.SerializeToString()
         self.sendString(string)
         self.transport.loseConnection()
+
+    def get_ipfs_file(self, ipfs_gateway, file_hash):
+        host, port = ipfs_gateway.strip().split(':')
+        ipfs = IPFS()
+        return ipfs.connect(host, port) and ipfs.get_file(file_hash)
+
+    def ipfs_callback(self, success):
+        if success:
+            self.proxy_db.insert(self.trade)
+            self.proxy_reply_success()
+        else:
+            error = "failed to get file from ipfs"
+            self.proxy_reply_error(error)
 
     def connectionLost(self, reason):
         self.factory.numConnections -= 1

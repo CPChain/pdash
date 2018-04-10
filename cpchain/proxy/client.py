@@ -6,7 +6,7 @@
 
 import sys, os
 
-from twisted.internet import reactor, protocol, ssl, defer
+from twisted.internet import reactor, protocol, ssl
 from twisted.protocols.basic import NetstringReceiver
 from twisted.python import log
 
