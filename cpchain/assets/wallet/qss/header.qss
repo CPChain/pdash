@@ -1,0 +1,28 @@
+QLineEdit#searchbar{
+    margin-left: 5px;
+    border: 1px solid #3a2f2f; 
+    border-radius: 3px;
+    color: #70b29c;
+    background: #473333;
+}
+
+QLineEdit#searchbar:pressed {
+    color: #f3f4f7;
+}
+
+QPushButton#search_btn {
+    border-image: url(${asset_dir}/icons/search_btn.png); 
+}
+
+QPushButton#login_btn {
+    margin-right: 11px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #8c6a6a;
+    border: 1px solid #3a2f2f; 
+    background: #443b3b;
+}
+
+QPushButton#login_btn:hover {
+    color: #efacac;
+}
