@@ -1,5 +1,3 @@
-
-
 from PyQt5.QtWidgets import (QScrollArea, QFormLayout, QVBoxLayout, QComboBox, QLineEdit, QLabel,
                              QTextEdit, QTableWidget, QPushButton, QTableWidgetItem, QAbstractItemView)
 
@@ -100,6 +98,7 @@ class BrowseTab(QScrollArea):
         item_table.setItem(0, 0, QTableWidgetItem("asdf"))
         item_table.setItem(0, 1, QTableWidgetItem("as"))
         item_table.setItem(0, 2, QTableWidgetItem("xx"))
+
 
             
 class PublishTab(QScrollArea):
