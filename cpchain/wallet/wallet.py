@@ -18,15 +18,16 @@ def install_reactor():
     import qt5reactor; qt5reactor.install()
 install_reactor()
 
+from twisted.internet import threads, defer
+
 from cpchain import config, root_dir
 from cpchain.utils import join_with_root, sizeof_fmt
 from cpchain.wallet.net import market_client
 from cpchain.wallet.net import hoge
 from cpchain.wallet.fs import get_file_list, upload_file_ipfs, get_buyer_file_list
-
-from twisted.internet import threads
-
 from cpchain.wallet.proxy_request import send_request_to_proxy
+
+
 
 # utils
 def get_icon(name):
@@ -198,10 +199,8 @@ class TreasureTab(TabContentArea):
         def set_layout():
             self.main_layout = QVBoxLayout(self)
             self.main_layout.addWidget(self.file_table)
-
-            layout = QHBoxLayout(self)
+            layout = QHBoxLayout()
             layout.addStretch(1)
-
             self.main_layout.addLayout(layout)
         set_layout()
 
@@ -236,11 +235,13 @@ class BrowseTab(TabContentArea):
 
             item_table.set_right_menu(right_menu)
 
-
-            headers = ["Title", "Size", "Price"]
+            headers = ["Title", "Size", "Price", "INDEX"]
             item_table.setColumnCount(len(headers))
             item_table.setHorizontalHeaderLabels(headers)
             item_table.horizontalHeader().setStretchLastSection(True)
+            # use it as the reference.
+            item_table.setColumnHidden(item_table.columnCount()-1, True)
+            
             # pending
             # https://stackoverflow.com/a/38129829/855160
             # header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
@@ -260,11 +261,7 @@ class BrowseTab(TabContentArea):
 
             # do not show row counts
             item_table.verticalHeader().setVisible(False)
-
         create_item_table()
-        # oh. the heck.
-        self.update_item_table()
-
 
         def set_layout():
             main_layout = QVBoxLayout(self)
@@ -273,13 +270,36 @@ class BrowseTab(TabContentArea):
         set_layout()
 
 
-    def update_item_table(self):
+    def update_item_table(self, items):
         item_table = self.item_table
-        item_table.insertRow(item_table.rowCount())
-        item_table.setItem(0, 0, QTableWidgetItem("asdf"))
-        item_table.setItem(0, 1, QTableWidgetItem("as"))
-        item_table.setItem(0, 2, QTableWidgetItem("xx"))
 
+        def add_to_table(item):
+            title = item['title']
+            description = item['description']
+            tags = item['tags']
+            price = item['price']
+            item_hash = item['msg_hash']
+            id = item['id']
+            seller_address = item['owner_address']
+
+            row_cnt = item_table.rowCount()
+            item_table.insertRow(row_cnt)
+
+            j = 0
+            def append_col(value):
+                nonlocal j
+                item_table.setItem(row_cnt, j, QTableWidgetItem(str(value)))
+                j += 1
+            
+            append_col(title)
+            append_col(price)
+            # append_col(tags)
+            append_col(item_hash)
+
+        # clear content first.
+        item_table.setRowCount(0)
+        for item in items:
+            add_to_table(item)
 
             
 class PublishTab(TabContentArea):
@@ -377,23 +397,30 @@ class Header(QFrame):
 
             def bind_slots():
 
-                def query():
+                def switch_to_browser_pane():
                     # TOOD refactor this.
                     # switch to the browser pane
                     content_tabs = self.parent.parent.content_tabs
                     wid = content_tabs.findChild(QWidget, "browse_tab")
                     content_tabs.setCurrentWidget(wid)
-
                     # also update sidebar
                     sidebar = self.parent.parent.sidebar
                     item = sidebar.feature_list.findItems("Browse", Qt.MatchExactly)[0]
                     sidebar.feature_list.setCurrentItem(item)
 
-                    return market_client.query_product(self.text())
+                @defer.inlineCallbacks
+                def query():
+                    switch_to_browser_pane()
+                    items = yield market_client.query_product(self.text())
 
-                search_btn.clicked.connect(query)
+                    content_tabs = self.parent.parent.content_tabs
+                    browse_tab = content_tabs.findChild(QWidget, "browse_tab")
+                    browse_tab.update_item_table(items)
+
+                # TODO i don't understand why this doesn't work.
+                # search_btn.clicked.connect(query)
+                search_btn.clicked.connect(lambda : query())
                 self.returnPressed.connect(query)
-
 
             bind_slots()
 
