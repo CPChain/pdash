@@ -55,3 +55,6 @@ GTAGS
 .idea/
 # clion
 cmake-build-*
+
+#log file
+*.log

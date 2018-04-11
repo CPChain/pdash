@@ -1,10 +1,12 @@
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
 from rest_framework import viewsets
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
+from rest_framework.settings import api_settings
 
 from django.core.cache import cache
 
@@ -201,6 +203,7 @@ class ProductPublishAPIViewSet(APIView):
         return create_invalid_response()
 
 
+
 class MyProductSearchAPIViewSet(APIView):
     """
     API endpoint that allows query products by owner.
@@ -225,6 +228,35 @@ class MyProductSearchAPIViewSet(APIView):
         return Response(data=serializer.data)
 
 
+class MyProductPagedSearchAPIViewSet(APIView):
+    """
+    API endpoint that allows query products by owner.
+    sample url:
+    http://localhost:8000/api/v1/my_product_paged/search/?page=1&keyword=777
+    """
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = (IsOwner,)
+
+    def get(self, request):
+
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        logger.info("public_key:%s" % public_key)
+        params = request.query_params
+        keyword = params.get('keyword')
+        if keyword is not None and len(keyword)!=0:
+            logger.debug("keyword is %s" % keyword)
+            queryset = Product.objects.filter(owner_address=public_key).filter(
+                Q(title__contains=keyword) | Q(description__contains=keyword) | Q(tags__contains=keyword))
+        else:
+            queryset = Product.objects.filter(owner_address=public_key)
+
+        pg = PageNumberPagination()
+        page_set = pg.paginate_queryset(queryset=queryset, request=request, view=self)
+        serializer = ProductSerializer(page_set, many=True)
+        return pg.get_paginated_response(serializer.data)
+
+
 class ProductSearchAPIViewSet(APIView):
     """
     API endpoint that allows query products.
@@ -245,6 +277,30 @@ class ProductSearchAPIViewSet(APIView):
 
         serializer = ProductSerializer(queryset, many=True)
         return Response(data=serializer.data)
+
+
+class ProductPagedSearchAPIViewSet(APIView):
+    """
+    API endpoint that allows query products.
+    """
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = (AllowAny,)
+
+    def get(self, request):
+        params = request.query_params
+        keyword = params.get('keyword')
+        if keyword is not None:
+            logger.debug("keyword is %s" % keyword)
+            queryset = Product.objects.filter(status=0).filter(
+                Q(title__contains=keyword) | Q(description__contains=keyword) | Q(tags__contains=keyword))
+        else:
+            queryset = Product.objects.filter(status=0)
+
+        pg = PageNumberPagination()
+        page_set = pg.paginate_queryset(queryset=queryset, request=request, view=self)
+        serializer = ProductSerializer(page_set, many=True)
+        return pg.get_paginated_response(serializer.data)
 
 
 class BaseProductStatusAPIViewSet(APIView):
