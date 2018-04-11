@@ -7,3 +7,5 @@ sqlalchemy
 cryptography
 ipfsapi
 treq
+PyQt5
+qt5reactor
