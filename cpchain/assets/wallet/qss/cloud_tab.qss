@@ -1,10 +1,7 @@
 QPushButton#upload_btn {
     padding: 5px 5px 5px 5px;
     margin: 0 15px 10px 0;
-    /* font-size: 13pt; */
-    /* font-weight: bold; */
     color: #98a080;
-    /* border: 1px solid #3a2f2f;  */
     border-radius: 3px;
     background: #29426b;
 }

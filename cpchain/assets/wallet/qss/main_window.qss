@@ -9,7 +9,7 @@ QTabWidget#content_tabs {
 /* to reduce the left margin, cf. */
 /* https://stackoverflow.com/a/42255608/855160 */
 QTabWidget#content_tabs::pane {
-    border-top: 1px solid #4c4f0f;
+    border-top: 1px solid #930b52;
     padding-top: 5px;
 }
 
