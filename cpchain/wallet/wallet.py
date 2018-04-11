@@ -21,7 +21,7 @@ install_reactor()
 from cpchain import config, root_dir
 from cpchain.utils import join_with_root, sizeof_fmt
 from cpchain.wallet.net import mc
-from cpchain.wallet.net import foobar, login, hoge
+from cpchain.wallet.net import foobar, wallet_login, hoge
 from cpchain.wallet.fs import get_file_list, upload_file_ipfs
 
 from twisted.internet import threads
@@ -330,7 +330,7 @@ class Header(QFrame):
         create_btns()
 
         def bind_slots():
-            self.login_btn.clicked.connect(login)
+            self.login_btn.clicked.connect(wallet_login)
         bind_slots()
 
         def set_layout():

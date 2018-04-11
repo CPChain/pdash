@@ -1,7 +1,9 @@
 from twisted.internet.defer import inlineCallbacks
-# import treq
+from twisted.internet import defer
+import treq
 import json
 from cpchain import crypto
+from cpchain.chain import trans
 import datetime, time
 
 class MarketClient:
@@ -21,7 +23,6 @@ class MarketClient:
     def login(self):
         header = {'Content-Type': 'application/json'}
         data = {'public_key': self.pub_key}
-        import treq
         resp = yield treq.post(url=self.url+'login/', headers=header, json=data)
         confirm_info = yield treq.json_content(resp)
         print(confirm_info)
@@ -33,12 +34,13 @@ class MarketClient:
 
     @inlineCallbacks
     def login_confirm(self):
-        # self.nonce = yield self.login()
+        # nonce = yield self.login()
+        print('confirm')
+        self.nonce = yield self.login()
         signature = crypto.ECCipher.sign_der(self.priv_key, self.nonce)
         # print(signature)
         header = {'Content-Type': 'application/json'}
         data = {'public_key': self.pub_key, 'code': signature}
-        import treq
         resp = yield treq.post(self.url+'confirm/', headers=header, json=data)
         confirm_info = yield treq.json_content(resp)
         print(confirm_info)
@@ -46,7 +48,7 @@ class MarketClient:
             print('login failed')
         # print(confirm_info['message'])
         self.token = confirm_info['message']
-        return confirm_info['message']  #token
+        # return confirm_info['message']  #token
 
     @inlineCallbacks
     def publish_product(self, title, description, price, tags, start_date, end_date, file_md5):
@@ -65,7 +67,6 @@ class MarketClient:
         data['signature'] = signature
         print(signature)
         print(data)
-        import treq
         resp = yield treq.post(self.url + 'product/publish/', headers=header, json=data)
         confirm_info = yield treq.json_content(resp)
         print(confirm_info)
@@ -79,7 +80,6 @@ class MarketClient:
     def change_product_status(self, status):
         header = {'Content-Type': 'application/json', 'MARKET-KEY': self.pub_key, 'MARKET-TOKEN': self.token}
         data = {'status': status}
-        import treq
         resp = yield treq.post(url=self.url+'product_change', headers=header, json=data)
         confirm_info = yield treq.json_content(response=resp)
         if confirm_info['success'] == False:
@@ -88,7 +88,6 @@ class MarketClient:
     @inlineCallbacks
     def query_product(self, keyword):
         header = {'Content-Type': 'application/json'}
-        import treq
         url = self.url + 'product/search/?keyword=' + str(keyword)
         print("url:%s",url)
         resp = yield treq.get(url=url, headers=header)
@@ -101,16 +100,24 @@ class MarketClient:
     def logout(self):
         header = {'Content-Type': 'application/json', 'MARKET-KEY': self.pub_key, 'MARKET-TOKEN': self.token}
         data = {'public_key': self.pub_key, 'token': self.token}
-        import treq
         resp = yield treq.post(url=self.url+'logout', headers=header, json=data)
         confirm_info = yield treq.json_content(resp)
         print(confirm_info)
         # if confirm_info['success'] == False:
         #     print('logout failed')
 
+    # def buy_product(self):
+    #     buyer = trans.BuyerTrans()
+    #     description = 'testdata'
+    #     desc_hash = crypto.SHA256Hash.generate_hash(description)
+    #     seller = 'MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEddc0bkalTTqEiUu6g884be4ghnMGYWfyJHTSjEMrE+zCRq6T1VHF21vJCPXs+YBvtyPJ7mJiRyHw/2FH3b8unQ=='
+    #     proxy = 'http:192.168.0.132:8000'
+
+
+
 # if __name__ == '__main__':
-    # mc = MarketClient()
-    # mc.login()
+#     mc = MarketClient()
+#     mc.login()
     # mc.login_confirm()
     # mc.publish_product(title='test', description='testdata', price=13, tags='temp', start_date='2018-04-01 10:10:10', end_date='2018-04-01 10:10:10', file_md5='123456')
     # mc.query_product('test')
@@ -128,12 +135,26 @@ class MarketClient:
     # print('MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEddc0bkalTTqEiUu6g884be4ghnMGYWfyJHTSjEMrE+zCRq6T1VHF21vJCPXs+YBvtyPJ7mJiRyHw/2FH3b8unQ==')
 
 mc = MarketClient()
-mc.login()
+
 def foobar(msg):
     mc.query_product('test')
 
 def hoge(msg):
     print(msg)
 
-def login():
-    mc.login_confirm()
+
+def wallet_login():
+    d = mc.login()
+    d.addCallback(wallet_login_confirm)
+    d.addErrback(on_failure)
+
+def wallet_login_confirm(x):
+    d = mc.login_confirm()
+    d.addCallback(on_success)
+    d.addErrback(on_failure)
+
+def on_success():
+    print('login succeed')
+
+def on_failure(err):
+    print(err)
