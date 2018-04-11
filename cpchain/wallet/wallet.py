@@ -20,8 +20,8 @@ install_reactor()
 
 from cpchain import config, root_dir
 from cpchain.utils import join_with_root, sizeof_fmt
-from cpchain.wallet.net import mc
-from cpchain.wallet.net import foobar, login, hoge
+from cpchain.wallet.net import market_client
+from cpchain.wallet.net import hoge
 from cpchain.wallet.fs import get_file_list, upload_file_ipfs, get_buyer_file_list
 
 from twisted.internet import threads
@@ -151,11 +151,11 @@ class CloudTab(TabContentArea):
         load_stylesheet(self, "cloud_tab.qss")
 
 
-class BuyerTab(TabContentArea):
+class TreasureTab(TabContentArea):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
-        self.setObjectName("buyer_tab")
+        self.setObjectName("treasure_tab")
 
         self.hashcode = 'DEADBEEF'
         self.local_file = 'local'
@@ -355,7 +355,7 @@ class PublishTab(TabContentArea):
         # title = self.data_title.text()
         # description = self.data_desc.text()
 
-        mc.publish_product('test', 'testdata', 13, 'temp', '2018-04-01 10:10:10', '2018-04-01 10:10:10', '123456')
+        market_client.publish_product('test', 'testdata', 13, 'temp', '2018-04-01 10:10:10', '2018-04-01 10:10:10', '123456')
 
 
 class Header(QFrame):
@@ -389,7 +389,7 @@ class Header(QFrame):
                     item = sidebar.feature_list.findItems("Browse", Qt.MatchExactly)[0]
                     sidebar.feature_list.setCurrentItem(item)
 
-                    return foobar(self.text())
+                    return market_client.query_product(self.text())
 
                 search_btn.clicked.connect(query)
                 self.returnPressed.connect(query)
@@ -425,7 +425,9 @@ class Header(QFrame):
         create_btns()
 
         def bind_slots():
-            self.login_btn.clicked.connect(login)
+            # TODO
+            # self.login_btn.clicked.connect(market_client.login_confirm())
+            pass
         bind_slots()
 
         def set_layout():
@@ -528,7 +530,7 @@ class SideBar(QScrollArea):
             self.feature_list.addItem(QListWidgetItem(get_icon("cloud_store.png"), "Cloud Store"))
             self.feature_list.addItem(QListWidgetItem(get_icon("publish_data.png"), "Publish Data"))
             self.feature_list.addItem(QListWidgetItem(get_icon("browse_market.png"), "Browse"))
-            self.feature_list.addItem(QListWidgetItem(get_icon("cloud_store.png"), "Buyer Files"))
+            self.feature_list.addItem(QListWidgetItem(get_icon("treasure.png"), "Treasure"))
 
             self.feature_list.setCurrentRow(0)
         add_lists()
@@ -539,7 +541,7 @@ class SideBar(QScrollArea):
                     "Cloud Store": "cloud_tab",
                     "Publish Data": "publish_tab",
                     "Browse": "browse_tab",
-                    "Buyer Files": "buyer_tab",
+                    "Treasure": "treasure_tab",
                 }
                 wid = self.content_tabs.findChild(QWidget, item_to_tab_name[item.text()])
                 self.content_tabs.setCurrentWidget(wid)
@@ -589,7 +591,7 @@ class MainWindow(QMainWindow):
             content_tabs.addTab(CloudTab(self), "")
             content_tabs.addTab(PublishTab(self), "")
             content_tabs.addTab(BrowseTab(self), "")
-            content_tabs.addTab(BuyerTab(self), "")
+            content_tabs.addTab(TreasureTab(self), "")
 
         add_content_tabs()
 
