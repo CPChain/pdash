@@ -22,7 +22,7 @@ from cpchain import config, root_dir
 from cpchain.utils import join_with_root, sizeof_fmt
 from cpchain.wallet.net import mc
 from cpchain.wallet.net import foobar, login, hoge
-from cpchain.wallet.fs import get_file_list, upload_file_ipfs
+from cpchain.wallet.fs import get_file_list, upload_file_ipfs, get_buyer_file_list
 
 from twisted.internet import threads
 
@@ -150,6 +150,60 @@ class CloudTab(TabContentArea):
 
         load_stylesheet(self, "cloud_tab.qss")
 
+
+class BuyerTab(TabContentArea):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+        self.setObjectName("buyer_tab")
+
+        self.hashcode = 'DEADBEEF'
+        self.local_file = 'local'
+        self.init_ui()
+
+    def init_ui(self):
+        self.row_number = 20
+
+        def create_file_table():
+            self.file_table = file_table = TableWidget(self)
+
+            file_table.setColumnCount(5)
+            file_table.setRowCount(self.row_number)
+            file_table.setHorizontalHeaderLabels(['File Name', 'File Size', 'Remote Type', 'Downloaded', 'Hash Code'])
+
+            file_list = get_buyer_file_list()
+            for cur_row in range(self.row_number):
+                if cur_row == len(file_list):
+                    break
+                file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].remote_type))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
+
+        create_file_table()
+
+        def update_table():
+            file_list = get_buyer_file_list()
+            print(file_list.__len__())
+            for cur_row in range(self.row_number):
+                if cur_row == file_list.__len__():
+                    break
+                self.file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].remote_type))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
+
+        def set_layout():
+            self.main_layout = QVBoxLayout(self)
+            self.main_layout.addWidget(self.file_table)
+
+            layout = QHBoxLayout(self)
+            layout.addStretch(1)
+
+            self.main_layout.addLayout(layout)
+        set_layout()
 
 
 class BrowseTab(TabContentArea):
@@ -433,6 +487,7 @@ class SideBar(QScrollArea):
             self.feature_list.addItem(QListWidgetItem(get_icon("cloud_store.png"), "Cloud Store"))
             self.feature_list.addItem(QListWidgetItem(get_icon("publish_data.png"), "Publish Data"))
             self.feature_list.addItem(QListWidgetItem(get_icon("browse_market.png"), "Browse"))
+            self.feature_list.addItem(QListWidgetItem(get_icon("cloud_store.png"), "Buyer Files"))
 
             self.feature_list.setCurrentRow(0)
         add_lists()
@@ -443,6 +498,7 @@ class SideBar(QScrollArea):
                     "Cloud Store": "cloud_tab",
                     "Publish Data": "publish_tab",
                     "Browse": "browse_tab",
+                    "Buyer Files": "buyer_tab",
                 }
                 wid = self.content_tabs.findChild(QWidget, item_to_tab_name[item.text()])
                 self.content_tabs.setCurrentWidget(wid)
@@ -492,6 +548,7 @@ class MainWindow(QMainWindow):
             content_tabs.addTab(CloudTab(self), "")
             content_tabs.addTab(PublishTab(self), "")
             content_tabs.addTab(BrowseTab(self), "")
+            content_tabs.addTab(BuyerTab(self), "")
 
         add_content_tabs()
 
