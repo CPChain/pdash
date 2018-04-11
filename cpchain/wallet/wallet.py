@@ -235,11 +235,36 @@ class PublishTab(TabContentArea):
         self.init_ui()
 
     def init_ui(self):
+
+        # TODO
+        # read value from data base
+        def populate_data_item():
+            model = self.data_item.model()
+            model.setColumnCount(2)
+            from PyQt5 import QtGui
+            for row in range(10):
+                item = QtGui.QStandardItem(str(row))
+                item2 = QtGui.QStandardItem("asdf")
+                model.appendRow([item, item2])
+
+        def create_data_item():
+            # data item column
+            self.data_item = QComboBox()
+            model = self.data_item.model()
+            model.setColumnCount(2)
+            self.data_item.setModelColumn(1)
+            # populuate initial data
+            populate_data_item()
+        create_data_item()
+
+
+        def bind_slots():
+            self.data_item.view().pressed.connect(populate_data_item)
+        bind_slots()
+
+
         def set_layout():
             main_layout = QFormLayout(self)
-            self.data_item = QComboBox()
-            self.data_item.addItem("X")
-            self.data_item.addItem("Y")
 
             self.data_title = QLineEdit()
             self.data_desc = QTextEdit()

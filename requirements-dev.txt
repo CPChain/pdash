@@ -7,3 +7,8 @@ sqlalchemy
 cryptography
 ipfsapi
 treq
+
+
+# debian
+# protobuf-compiler
+# python3-protobuf
