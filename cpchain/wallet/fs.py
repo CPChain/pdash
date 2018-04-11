@@ -21,6 +21,11 @@ def get_file_names():
     return list(zip(*session.query(FileInfo.name).all()))[0]
 
 
+# Return the file names in a tuple
+def get_buyer_file_names():
+    return list(zip(*session.query(BuyerFileInfo.name).all()))[0]
+
+
 def add_file(new_file_info):
     dbpath = osp.join(root_dir, config.wallet.dbpath)
     engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
@@ -32,6 +37,12 @@ def add_file(new_file_info):
 
 def delete_file(file_name):
     session.query(FileInfo).filter(FileInfo.name == file_name).\
+        delete(synchronize_session=False)
+    session.commit()
+
+
+def delete_buyer_file(file_name):
+    session.query(FileInfo).filter(BuyerFileInfo.name == file_name). \
         delete(synchronize_session=False)
     session.commit()
 
