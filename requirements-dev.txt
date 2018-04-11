@@ -8,6 +8,9 @@ cryptography
 ipfsapi
 treq
 
+# qt5reactor
+# google-cloud
+# PyQt5
 
 # debian
 # protobuf-compiler
