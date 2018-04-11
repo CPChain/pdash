@@ -9,3 +9,4 @@ ipfsapi
 treq
 PyQt5
 qt5reactor
+google-cloud
