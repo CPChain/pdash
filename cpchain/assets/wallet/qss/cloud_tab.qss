@@ -1,0 +1,11 @@
+QPushButton#upload_btn {
+    padding: 5px 5px 5px 5px;
+    margin: 0 15px 10px 0;
+    color: #98a080;
+    border-radius: 3px;
+    background: #29426b;
+}
+
+QPushButton#upload_btn:hover {
+    color: #d5e0b5;
+}

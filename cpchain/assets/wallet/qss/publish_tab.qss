@@ -1,0 +1,50 @@
+QLabel {
+    color: #ccd2dd;
+    font-size: 12pt; 
+    padding-right: 5px;
+}
+
+QLineEdit, QComboBox, QTextEdit {
+    background: #393f4c;
+    color: #ffffff;
+    border-radius: 3px;
+}
+
+QPushButton#publish_btn {
+    padding: 5px 5px 5px 5px;
+    margin-top: 15px;
+    /* margin: 5px 0 10px 0;  */
+    /* font-size: 13pt; */
+    /* font-weight: bold; */
+    color: #98a080;
+    /* border: 1px solid #3a2f2f;  */
+    border-radius: 3px;
+    background: #29426b;
+}
+
+QPushButton#publish_btn:hover {
+    color: #d5e0b5;
+}
+
+
+QComboBox {
+    /* padding: 1px 18px 1px 3px; */
+    /* min-width: 6em; */
+    border: none;
+    padding-left: 10px;
+}
+
+QComboBox::drop-down {
+    border: none; 
+    margin-right: 10px; 
+}
+
+QComboBox::down-arrow {
+    /* 20px size */
+    image: url(${asset_dir}/icons/combo_down_arrow.png);
+}
+
+QComboBox QAbstractItemView {
+    /* border: 2px solid darkgray; */
+    background-color: #595454;  
+}

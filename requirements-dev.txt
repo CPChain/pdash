@@ -7,6 +7,11 @@ sqlalchemy
 cryptography
 ipfsapi
 treq
-PyQt5
-qt5reactor
-google-cloud
+
+# qt5reactor
+# google-cloud
+# PyQt5
+
+# debian
+# protobuf-compiler
+# python3-protobuf

@@ -68,7 +68,6 @@ class IPFSStorage(Storage):
         self.client = None
 
     def connect(self, host=None, port=None):
-
         host = host or config.storage.ipfs.addr
         port = port or config.storage.ipfs.port
 
