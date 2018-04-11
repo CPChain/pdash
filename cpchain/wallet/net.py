@@ -127,13 +127,8 @@ class MarketClient:
     # print(pub_key)
     # print('MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEddc0bkalTTqEiUu6g884be4ghnMGYWfyJHTSjEMrE+zCRq6T1VHF21vJCPXs+YBvtyPJ7mJiRyHw/2FH3b8unQ==')
 
-mc = MarketClient()
-mc.login()
-def foobar(msg):
-    mc.query_product('test')
+market_client = MarketClient()
+market_client.login()
 
 def hoge(msg):
     print(msg)
-
-def login():
-    mc.login_confirm()
