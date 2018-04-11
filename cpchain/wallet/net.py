@@ -90,11 +90,11 @@ class MarketClient:
         header = {'Content-Type': 'application/json'}
         import treq
         url = self.url + 'product/search/?keyword=' + str(keyword)
-        print("url:%s",url)
+        # print("url:%s",url)
         resp = yield treq.get(url=url, headers=header)
-        print(resp)
+        # print(resp)
         confirm_info = yield treq.json_content(resp)
-        print(confirm_info)
+        # print(confirm_info)
         return confirm_info
 
     @inlineCallbacks
