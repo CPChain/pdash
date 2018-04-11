@@ -110,7 +110,9 @@ def start_client(sign_message):
 def download_file(file_uuid):
     host = config.proxy.server_host
     data_port = config.proxy.server_data_port
-    file_dir = os.path.join(root_dir, config.wallet.download_dir)
+    file_dir = os.path.expanduser(config.wallet.download_dir)
+    # create if not exists
+    os.makedirs(file_dir, exist_ok=True)
 
     url = "https://%s:%d/%s" % (host, data_port, file_uuid)
 
