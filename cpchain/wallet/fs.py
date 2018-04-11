@@ -1,6 +1,6 @@
 import tempfile, os
 
-from cpchain.wallet.db import session, FileInfo, osp, create_engine, sessionmaker
+from cpchain.wallet.db import session, FileInfo, osp, create_engine, sessionmaker, BuyerFileInfo
 from cpchain.crypto import AESCipher
 from cpchain.storage import IPFSStorage
 from cpchain import root_dir, config
@@ -10,6 +10,10 @@ def get_file_list():
     """This returns a list of files.
     """
     return session.query(FileInfo).all()
+
+
+def get_buyer_file_list():
+    return session.query(BuyerFileInfo).all()
 
 
 # Return the file names in a tuple
