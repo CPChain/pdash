@@ -453,7 +453,7 @@ class Header(QFrame):
 
         def bind_slots():
             # TODO
-            # self.login_btn.clicked.connect(market_client.login_confirm())
+            # self.login_btn.clicked.connect(wallet_login)
             pass
         bind_slots()
 

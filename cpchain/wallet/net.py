@@ -134,22 +134,22 @@ class MarketClient:
     # print(pub_key)
     # print('MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEddc0bkalTTqEiUu6g884be4ghnMGYWfyJHTSjEMrE+zCRq6T1VHF21vJCPXs+YBvtyPJ7mJiRyHw/2FH3b8unQ==')
 
-mc = MarketClient()
+market_client = MarketClient()
 
 def foobar(msg):
-    mc.query_product('test')
+    market_client.query_product('test')
 
 def hoge(msg):
     print(msg)
 
 
 def wallet_login():
-    d = mc.login()
+    d = market_client.login()
     d.addCallback(wallet_login_confirm)
     d.addErrback(on_failure)
 
-def wallet_login_confirm(x):
-    d = mc.login_confirm()
+def wallet_login_confirm():
+    d = market_client.login_confirm()
     d.addCallback(on_success)
     d.addErrback(on_failure)
 
