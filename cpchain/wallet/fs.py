@@ -1,6 +1,6 @@
 import tempfile, os
 
-from cpchain.wallet.db import session, FileInfo, osp, create_engine, sessionmaker
+from cpchain.wallet.db import session, FileInfo, osp, create_engine, sessionmaker, BuyerFileInfo
 from cpchain.crypto import AESCipher
 from cpchain.storage import IPFSStorage
 from cpchain import root_dir, config
@@ -12,9 +12,18 @@ def get_file_list():
     return session.query(FileInfo).all()
 
 
+def get_buyer_file_list():
+    return session.query(BuyerFileInfo).all()
+
+
 # Return the file names in a tuple
 def get_file_names():
     return list(zip(*session.query(FileInfo.name).all()))[0]
+
+
+# Return the file names in a tuple
+def get_buyer_file_names():
+    return list(zip(*session.query(BuyerFileInfo.name).all()))[0]
 
 
 def add_file(new_file_info):
@@ -28,6 +37,12 @@ def add_file(new_file_info):
 
 def delete_file(file_name):
     session.query(FileInfo).filter(FileInfo.name == file_name).\
+        delete(synchronize_session=False)
+    session.commit()
+
+
+def delete_buyer_file(file_name):
+    session.query(FileInfo).filter(BuyerFileInfo.name == file_name). \
         delete(synchronize_session=False)
     session.commit()
 
