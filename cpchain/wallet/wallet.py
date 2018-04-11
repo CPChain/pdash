@@ -235,7 +235,7 @@ class BrowseTab(TabContentArea):
 
             item_table.set_right_menu(right_menu)
 
-            headers = ["Title", "Size", "Price", "INDEX"]
+            headers = ["Title", "Price", "Hash", "INDEX"]
             item_table.setColumnCount(len(headers))
             item_table.setHorizontalHeaderLabels(headers)
             item_table.horizontalHeader().setStretchLastSection(True)
@@ -615,10 +615,11 @@ class MainWindow(QMainWindow):
             content_tabs.setObjectName("content_tabs")
             content_tabs.tabBar().hide()
 
-            content_tabs.addTab(CloudTab(self), "")
-            content_tabs.addTab(PublishTab(self), "")
-            content_tabs.addTab(BrowseTab(self), "")
-            content_tabs.addTab(TreasureTab(self), "")
+            content_tabs.addTab(CloudTab(content_tabs), "")
+            content_tabs.addTab(PublishTab(content_tabs), "")
+            content_tabs.addTab(BrowseTab(content_tabs), "")
+            content_tabs.addTab(TreasureTab(content_tabs), "")
+            load_stylesheet(content_tabs, "content_tabs.qss")
 
         add_content_tabs()
 

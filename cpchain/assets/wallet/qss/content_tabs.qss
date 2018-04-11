@@ -1,0 +1,80 @@
+QTabWidget#content_tabs {
+    border: none;
+}
+
+/* to reduce the left margin, cf. */
+/* https://stackoverflow.com/a/42255608/855160 */
+QTabWidget#content_tabs::pane {
+    border-top: 1px solid #930b52;
+    padding-top: 5px;
+}
+
+TabContentArea {
+    /* background: #1d2026;      */
+}
+
+TableWidget {
+    color: #b79d9d;
+    background: #1d2026;
+    alternate-background-color: #272b33;
+    border: none;
+}
+
+/* currently, hover highlights cell;  we want the entire row. */
+TableWidget::item:hover {
+}
+
+TableWidget::item:selected {
+    background: #a51f43;
+    color: #f9c7c7;
+}
+
+
+/* QHeaderView { */
+/* } */
+
+QHeaderView::section {
+    /* color: #dbd7e2; */
+    color: #c3e0bc;
+    background-color: #313332;
+    border: none;
+    padding: 4px;
+    border-right: 1px solid #23262C;
+    
+    font: normal;
+}
+
+/* cf. http://doc.qt.io/qt-5/stylesheet-examples.html#customizing-qscrollbar */
+QScrollBar:vertical {
+    border: none;
+    background: #1d2026;
+    width: 15px;
+    margin: 22px 0 22px 0;
+}
+
+QScrollBar::handle:vertical {
+    background: #333944;
+    /* min-height: 20px; */
+}
+
+/* cf. https://stackoverflow.com/a/25989355/855160 */
+QScrollBar::add-line:vertical {
+    border: none;
+    background: none;
+}
+
+QScrollBar::sub-line:vertical {
+    border: none;
+    background: none;
+}
+
+
+/* context menu */
+QMenu {
+    background: #3d2f2f;
+    color: #efe6e6;
+}
+
+QMenu::item:selected {
+    background: #191313;
+}
