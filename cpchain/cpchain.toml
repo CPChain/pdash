@@ -20,7 +20,7 @@ port = 5001
 
 [wallet]
 dbpath = "cpchain/assets/wallet/wallet.db"
-download_dir = "cpchain/assets/wallet/downloads"
+download_dir = "~/.cpchain/downloads"
 
 [wallet.qss]
 main_window = "cpchain/assets/wallet/qss/main_window.qss"
@@ -35,6 +35,7 @@ server_key = 'cpchain/assets/proxy/key/server.key'
 server_crt = 'cpchain/assets/proxy/key/server.crt'
 dbpath = "cpchain/assets/proxy/proxy.db"
 server_root = 'cpchain/assets/proxy/server_root'
+
 
 [market]
 server_addr = "192.168.0.132"
