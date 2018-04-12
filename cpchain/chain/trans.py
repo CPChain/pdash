@@ -11,7 +11,7 @@ class Trans:
     ONE_ETH_IN_WEI = 10**18  # 1 ETH == 1,000,000,000,000,000,000 Wei
 
     # NB contract object belongs to web3, and so does account.
-    # we shouldn't pass params like this.
+    # we shouldn't pass params like this.)
     def __init__(self, web3, contract_name):
         self.web3 = web3
         contract_interface = utils.read_contract_interface(contract_name)

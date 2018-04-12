@@ -3,7 +3,9 @@ import treq
 import json
 from cpchain import crypto
 import datetime, time
-from cpchain.chain.trans import BuyerTrans
+from cpchain.chain.trans import BuyerTrans, SellerTrans
+from cpchain.chain import models, poll_chain
+from twisted.internet.task import LoopingCall
 
 class MarketClient:
     def __init__(self):
@@ -24,7 +26,7 @@ class MarketClient:
         data = {'public_key': self.pub_key}
         # import treq
         try:
-            resp = yield treq.post(url=self.url+'login/', headers=header, json=data)
+            resp = yield treq.post(url=self.url+'login/', headers=header, json=data, persistent=False)
             confirm_info = yield treq.json_content(resp)
             print(confirm_info)
             # if confirm_info['success'] == False:
@@ -41,8 +43,8 @@ class MarketClient:
             header_confirm = {'Content-Type': 'application/json'}
             data_confirm = {'public_key': self.pub_key, 'code': signature}
             # import treq
-            print('in')
-            resp = yield treq.post(self.url + 'confirm/', headers=header_confirm, json=data_confirm)
+            # print('in')
+            resp = yield treq.post(self.url + 'confirm/', headers=header_confirm, json=data_confirm, persistent=False)
             confirm_info = yield treq.json_content(resp)
             print(confirm_info)
             # if confirm_info['success'] == False:
@@ -89,7 +91,7 @@ class MarketClient:
         data['signature'] = signature
         # print(signature)
         # print(data)
-        import treq
+        # import treq
         resp = yield treq.post(self.url + 'product/publish/', headers=header, json=data)
         confirm_info = yield treq.json_content(resp)
         print(confirm_info)
@@ -113,12 +115,13 @@ class MarketClient:
     @inlineCallbacks
     def query_product(self, keyword):
         header = {'Content-Type': 'application/json'}
-        import treq
+        # import treq
         url = self.url + 'product/search/?keyword=' + str(keyword)
         # print("url:%s",url)
         resp = yield treq.get(url=url, headers=header)
         # print(resp)
         confirm_info = yield treq.json_content(resp)
+        print('product info: ')
         print(confirm_info)
         return confirm_info
 
@@ -133,8 +136,75 @@ class MarketClient:
         # if confirm_info['success'] == False:
         #     print('logout failed')
 
-    def buy_product(self):
-        product = OrderInfo
+
+class BuyerChainClient:
+
+    # def __init__(self):
+    #     self.buyer = BuyerTrans(web3)
+
+    def buy_product(self, msg):
+        print(msg)
+        product = models.OrderInfo(desc_hash='testdata', seller='selleraddress',
+                                   proxy='http://192.168.0.132:8000:api/v1/',
+                                   secondary_proxy='http://192.168.0.132:8000:api/v1/', proxy_value=12, value=30,
+                                   time_allowed=0)
+        print('product:')
+        print(product)
+        # buyer = BuyerTrans(web3)
+        order_id =1
+        # order_id = self.buyer.place_order(product)
+        print('order id: ', order_id)
+        return order_id
+
+    def withdraw_order(self, order_id):
+        tx_hash = '0xand..'
+        # tx_hash = self.withdraw_order(order_id)
+        print('withdraw order: ', tx_hash)
+        return tx_hash
+
+    def confirm_order(self, order_id):
+        tx_hash = '0xand..'
+        # tx_hash = self.confirm_order(order_id)
+        print('confirm order: ', tx_hash)
+        return tx_hash
+
+    def dispute(self, order_id):
+        tx_hash = '0xand..'
+        # tx_hash = self.dispute(order_id)
+        print('start a dispute: ', tx_hash)
+        return tx_hash
+
+
+class SellerChainClient:
+
+    # def __init__(self):
+    #     self.monitor = poll_chain.OrderMonitor()
+    #     self.seller = SellerTrans()
+
+    def query_new_order(self):
+        new_order_list = [1,2,3,4]
+        # new_order_list = self.monitor.get_new_order()
+        print('new orders: ', new_order_list)
+        return new_order_list
+
+    def claim_timeout(self, order_id):
+        tx_hash = '0xand..'
+        # tx_hash = self.seller.claim_timeout(order_id)
+        print('claim timeout: ', tx_hash)
+        return tx_hash
+
+
+
+def test_chain_event():
+    poll_chain = LoopingCall(seller_chain_client.query_new_order)
+    poll_chain.start(3)
+    from twisted.internet import reactor
+    withdraww_order = reactor.callLater(1, buyer_chain_client.withdraw_order, 1)
+    confirm_order = reactor.callLater(2, buyer_chain_client.confirm_order, 1)
+    dispute = reactor.callLater(3, buyer_chain_client.dispute, 1)
+    timeout = reactor.callLater(4, seller_chain_client.claim_timeout, 1)
+
+
 
 # if __name__ == '__main__':
     # mc = MarketClient()
@@ -156,7 +226,12 @@ class MarketClient:
     # print('MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEddc0bkalTTqEiUu6g884be4ghnMGYWfyJHTSjEMrE+zCRq6T1VHF21vJCPXs+YBvtyPJ7mJiRyHw/2FH3b8unQ==')
 
 market_client = MarketClient()
+buyer_chain_client = BuyerChainClient()
+seller_chain_client = SellerChainClient()
 # market_client.login()
 
-def hoge(msg):
-    print(msg)
+# def buy(msg):
+#     print(msg)
+#     order_id = market_client.buy_product()
+#     print('order id: ', order_id)
+#     return order_id
