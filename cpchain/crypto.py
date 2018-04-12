@@ -127,7 +127,10 @@ class ECCipher:
     @staticmethod
     def load_private_key():
         key_bytes = load_from_keystore()
-        priv_key = ec.derive_private_key(key_bytes, ec.SECP256K1, default_backend())
+
+        # big endian 
+        priv_value = int.from_bytes(key_bytes, byteorder='big')
+        priv_key = ec.derive_private_key(priv_value, ec.SECP256K1, default_backend())
         return priv_key
     
 
