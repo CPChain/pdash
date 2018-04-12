@@ -5,6 +5,11 @@ from cpchain import crypto
 import datetime, time
 from cpchain.chain.trans import BuyerTrans
 
+# from twisted.python.log import startLogging
+# import sys
+# startLogging(sys.stdout)
+
+
 class MarketClient:
     def __init__(self):
         # self.client = HTTPClient(reactor)
@@ -18,13 +23,13 @@ class MarketClient:
     def str_to_timestamp(s):
         return s #str(int(time.mktime(datetime.datetime.strptime(s, "%Y-%m-%d %H:%M:%S").timetuple())))
 
+
     @inlineCallbacks
     def login(self):
         header = {'Content-Type': 'application/json'}
         data = {'public_key': self.pub_key}
-        # import treq
         try:
-            resp = yield treq.post(url=self.url+'login/', headers=header, json=data)
+            resp = yield treq.post(url=self.url+'login/', headers=header, json=data, persistent=False)
             confirm_info = yield treq.json_content(resp)
             print(confirm_info)
             # if confirm_info['success'] == False:
@@ -41,8 +46,8 @@ class MarketClient:
             header_confirm = {'Content-Type': 'application/json'}
             data_confirm = {'public_key': self.pub_key, 'code': signature}
             # import treq
-            print('in')
-            resp = yield treq.post(self.url + 'confirm/', headers=header_confirm, json=data_confirm)
+            resp = yield treq.post(self.url + 'confirm/', headers=header_confirm, json=data_confirm, persistent=False)
+
             confirm_info = yield treq.json_content(resp)
             print(confirm_info)
             # if confirm_info['success'] == False:
@@ -53,6 +58,7 @@ class MarketClient:
         except Exception as err:
             print(err)
         return confirm_info['message']
+
 
     # @inlineCallbacks
     # def login_confirm(self):
