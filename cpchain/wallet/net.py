@@ -1,8 +1,9 @@
 from twisted.internet.defer import inlineCallbacks
-# import treq
+import treq
 import json
 from cpchain import crypto
 import datetime, time
+from cpchain.chain.trans import BuyerTrans
 
 class MarketClient:
     def __init__(self):
@@ -21,32 +22,55 @@ class MarketClient:
     def login(self):
         header = {'Content-Type': 'application/json'}
         data = {'public_key': self.pub_key}
-        import treq
-        resp = yield treq.post(url=self.url+'login/', headers=header, json=data)
-        confirm_info = yield treq.json_content(resp)
-        print(confirm_info)
-        if confirm_info['success'] == False:
-            print('login failed!')
-        print(confirm_info['message'])  # nonce
-        self.nonce = confirm_info['message']
+        # import treq
+        try:
+            resp = yield treq.post(url=self.url+'login/', headers=header, json=data)
+            confirm_info = yield treq.json_content(resp)
+            print(confirm_info)
+            # if confirm_info['success'] == False:
+            #     print('login failed!')
+            # print(confirm_info['message'])  # nonce
+            self.nonce = confirm_info['message']
+            print('login succeed')
+        except Exception as err:
+            print(err)
+
+        try:
+            signature = crypto.ECCipher.sign_der(self.priv_key, self.nonce)
+            # print(signature)
+            header_confirm = {'Content-Type': 'application/json'}
+            data_confirm = {'public_key': self.pub_key, 'code': signature}
+            # import treq
+            print('in')
+            resp = yield treq.post(self.url + 'confirm/', headers=header_confirm, json=data_confirm)
+            confirm_info = yield treq.json_content(resp)
+            print(confirm_info)
+            # if confirm_info['success'] == False:
+            #     print('login failed')
+            # print(confirm_info['message'])
+            self.token = confirm_info['message']
+            print('login confirmed')
+        except Exception as err:
+            print(err)
         return confirm_info['message']
 
-    @inlineCallbacks
-    def login_confirm(self):
-        # self.nonce = yield self.login()
-        signature = crypto.ECCipher.sign_der(self.priv_key, self.nonce)
-        # print(signature)
-        header = {'Content-Type': 'application/json'}
-        data = {'public_key': self.pub_key, 'code': signature}
-        import treq
-        resp = yield treq.post(self.url+'confirm/', headers=header, json=data)
-        confirm_info = yield treq.json_content(resp)
-        print(confirm_info)
-        if confirm_info['success'] == False:
-            print('login failed')
-        # print(confirm_info['message'])
-        self.token = confirm_info['message']
-        return confirm_info['message']  #token
+    # @inlineCallbacks
+    # def login_confirm(self):
+    #     # self.nonce = yield self.login()
+    #     signature = crypto.ECCipher.sign_der(self.priv_key, self.nonce)
+    #     # print(signature)
+    #     header = {'Content-Type': 'application/json'}
+    #     data = {'public_key': self.pub_key, 'code': signature}
+    #     import treq
+    #     resp = yield treq.post(self.url+'confirm/', headers=header, json=data)
+    #     confirm_info = yield treq.json_content(resp)
+    #     print(confirm_info)
+    #     # if confirm_info['success'] == False:
+    #     #     print('login failed')
+    #     # print(confirm_info['message'])
+    #     self.token = confirm_info['message']
+    #     print('login confirmed')
+    #     return confirm_info['message']  #token
 
     @inlineCallbacks
     def publish_product(self, title, description, price, tags, start_date, end_date, file_md5):
@@ -55,16 +79,16 @@ class MarketClient:
         header['MARKET-TOKEN'] = self.token
         data = {'owner_address': self.pub_key, 'title': title, 'description': description, 'price': price,
                 'tags': tags, 'start_date': start_date, 'end_date': end_date, 'file_md5': file_md5}
-        print(json.dumps(data))
-        print(self.token)
+        # print(json.dumps(data))
+        # print(self.token)
         signature_source = str(self.pub_key) + str(title) + str(description) + str(price) + MarketClient.str_to_timestamp(start_date) + MarketClient.str_to_timestamp(end_date) + str(file_md5)
-        print(self.priv_key)
-        print(self.pub_key)
-        print(signature_source)
+        # print(self.priv_key)
+        # print(self.pub_key)
+        # print(signature_source)
         signature = crypto.ECCipher.sign_der(self.priv_key, signature_source)
         data['signature'] = signature
-        print(signature)
-        print(data)
+        # print(signature)
+        # print(data)
         import treq
         resp = yield treq.post(self.url + 'product/publish/', headers=header, json=data)
         confirm_info = yield treq.json_content(resp)
@@ -73,6 +97,7 @@ class MarketClient:
         #     print('publish ')
         # if confirm_info['success']:
         #     print('success')
+        print('publish succeed')
         return confirm_info['status']
 
     @inlineCallbacks
@@ -94,7 +119,7 @@ class MarketClient:
         resp = yield treq.get(url=url, headers=header)
         # print(resp)
         confirm_info = yield treq.json_content(resp)
-        # print(confirm_info)
+        print(confirm_info)
         return confirm_info
 
     @inlineCallbacks
@@ -107,6 +132,9 @@ class MarketClient:
         print(confirm_info)
         # if confirm_info['success'] == False:
         #     print('logout failed')
+
+    def buy_product(self):
+        product = OrderInfo
 
 # if __name__ == '__main__':
     # mc = MarketClient()
@@ -128,7 +156,7 @@ class MarketClient:
     # print('MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEddc0bkalTTqEiUu6g884be4ghnMGYWfyJHTSjEMrE+zCRq6T1VHF21vJCPXs+YBvtyPJ7mJiRyHw/2FH3b8unQ==')
 
 market_client = MarketClient()
-market_client.login()
+# market_client.login()
 
 def hoge(msg):
     print(msg)
