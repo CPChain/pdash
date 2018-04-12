@@ -1,6 +1,7 @@
 import json
 
 from web3 import Web3, RPCProvider, TestRPCProvider
+from eth_keyfile import extract_key_from_keyfile
 
 from cpchain import config
 
@@ -51,3 +52,11 @@ def deploy_contract(contract_name, web3=default_web3):
         f.write(json.dumps(dict({contract_name: contract_address})))
     new_contract.address = contract_address
     return new_contract
+
+
+def load_from_keystore():
+    # extract_key_from_keyfile(key_path, 'password')
+
+    # stub
+    key_bytes = b'\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01'
+    return key_bytes
