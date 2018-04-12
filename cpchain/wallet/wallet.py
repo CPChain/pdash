@@ -685,6 +685,8 @@ def main():
     from twisted.internet import reactor
     main_wnd = MainWindow(reactor)
     _handle_keyboard_interrupt()
+
+
     if os.getenv('PROXY_LOCAL_RUN'):
         send_request_to_proxy(b'MARKET_HASH', 'seller_data')
         reactor.callLater(5, send_request_to_proxy, b'MARKET_HASH', 'buyer_data')
