@@ -311,15 +311,16 @@ class PublishTab(TabContentArea):
 
     def init_ui(self):
 
-        # TODO
-        # read value from data base
         def populate_data_item():
             model = self.data_item.model()
             model.setColumnCount(2)
             from PyQt5 import QtGui
-            for row in range(10):
-                item = QtGui.QStandardItem(str(row))
-                item2 = QtGui.QStandardItem("asdf")
+            uploaded_file_list = get_file_list()
+            for cur_row in range(10):
+                if cur_row == len(uploaded_file_list):
+                    break
+                item = QtGui.QStandardItem(str(cur_row))
+                item2 = QtGui.QStandardItem(uploaded_file_list[cur_row].name)
                 model.appendRow([item, item2])
 
         def create_data_item():
