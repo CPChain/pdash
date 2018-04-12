@@ -38,7 +38,8 @@ def read_contract_interface(contract_name):
 def read_contract_address(contract_name):
     with open(config.chain.registrar_json) as f:
         contracts = json.load(f)
-    return bytes.fromhex(contracts[contract_name][2:])
+    # return bytes.fromhex(contracts[contract_name][2:])
+    return contracts[contract_name]
 
 
 def deploy_contract(contract_name, web3=default_web3):
