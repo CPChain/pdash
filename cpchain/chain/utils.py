@@ -1,9 +1,10 @@
 import json
 
-from web3 import Web3, RPCProvider, TestRPCProvider
+from web3 import Web3, IPCProvider, TestRPCProvider
 from eth_keyfile import extract_key_from_keyfile
 
 from cpchain import config
+from cpchain.utils import join_with_root
 
 
 class DefaultWeb3:
@@ -15,7 +16,7 @@ class DefaultWeb3:
             if config.chain.is_test:
                 provider = TestRPCProvider()
             else:
-                provider = RPCProvider(config.chain.rpc_provider_addr)
+                provider = IPCProvider(join_with_root(config.chain.ipc_provider_addr))
             self.web3 = Web3(provider)
             self.web3.eth.defaultAccount = self.web3.eth.accounts[0]
 
@@ -37,7 +38,8 @@ def read_contract_interface(contract_name):
 def read_contract_address(contract_name):
     with open(config.chain.registrar_json) as f:
         contracts = json.load(f)
-    return bytes.fromhex(contracts[contract_name][2:])
+    # return bytes.fromhex(contracts[contract_name][2:])
+    return contracts[contract_name]
 
 
 def deploy_contract(contract_name, web3=default_web3):
