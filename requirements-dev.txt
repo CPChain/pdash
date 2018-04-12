@@ -7,6 +7,7 @@ sqlalchemy
 cryptography
 ipfsapi
 treq
+eth-keyfile
 
 # qt5reactor
 # google-cloud
