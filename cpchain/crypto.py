@@ -9,6 +9,8 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 from cpchain import config
 
+from cpchain.chain.utils import load_from_keystore
+
 
 def examine_password(password):
     password = password or config.market.default_password
@@ -118,6 +120,19 @@ class ECCipher:
 
     #     pub_key_string = ''.join(public_key_list)
     #     return pri_key_string, pub_key_string
+
+
+    # cf. yellow paper
+    # cf. http://tinyurl.com/y8q5g68u
+    @staticmethod
+    def load_private_key():
+        key_bytes = load_from_keystore()
+
+        # XXX big endian 
+        priv_value = int.from_bytes(key_bytes, byteorder='big')
+        priv_key = ec.derive_private_key(priv_value, ec.SECP256K1, default_backend())
+        return priv_key
+    
 
     @staticmethod
     def generate_key_pair(private_key=None, password=None):
@@ -375,7 +390,6 @@ class SHA256Hash:
 
 
 class Encoder:
-
     @staticmethod
     def bytes_to_base64_str(b64bytes):
         return base64.b64encode(b64bytes).decode("utf-8")

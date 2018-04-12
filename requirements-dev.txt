@@ -7,9 +7,13 @@ sqlalchemy
 cryptography
 ipfsapi
 treq
+eth-keyfile
 eth-utils==0.7.4
 web3==3.16.5
 
+# qt5reactor
+# google-cloud
+# PyQt5
 
 # debian
 # protobuf-compiler

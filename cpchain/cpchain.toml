@@ -6,8 +6,9 @@ contract_src_dir = "cpchain/assets/chain/contracts/Trading.sol"
 contract_json = "cpchain/assets/chain/build/Trading.json"
 registrar_json = "cpchain/assets/chain/registrar.json"
 core_contract = "Trading"
-is_test = true
-rpc_provider_addr = ""
+is_test = false
+ipc_provider_addr = "cpchain/assets/chain/sheds/data_dir/geth.ipc"
+
 
 [storage.s3]
 bucket = "cpchain-bucket"
@@ -20,7 +21,7 @@ port = 5001
 
 [wallet]
 dbpath = "cpchain/assets/wallet/wallet.db"
-download_dir = "cpchain/assets/wallet/downloads"
+download_dir = "~/.cpchain/downloads"
 
 [wallet.qss]
 main_window = "cpchain/assets/wallet/qss/main_window.qss"
@@ -35,6 +36,7 @@ server_key = 'cpchain/assets/proxy/key/server.key'
 server_crt = 'cpchain/assets/proxy/key/server.crt'
 dbpath = "cpchain/assets/proxy/proxy.db"
 server_root = 'cpchain/assets/proxy/server_root'
+
 
 [market]
 server_addr = "192.168.0.132"
