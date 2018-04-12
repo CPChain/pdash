@@ -31,8 +31,9 @@ class Trade(Base):
             self.file_hash, self.file_uuid, self.time_stamp)
 
 class ProxyDB(object):
-    default_db = 'sqlite:///' + \
-            os.path.join(root_dir, config.proxy.dbpath)
+    db_path = os.path.join(config.home, config.proxy.dbpath)
+    db_path = os.path.expanduser(db_path)
+    default_db = 'sqlite:///' + db_path
 
     def __init__(self, db=default_db):
         self.engine = create_engine(db, echo=False)
