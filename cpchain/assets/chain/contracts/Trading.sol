@@ -17,7 +17,7 @@ contract Trading {
 
     struct OrderInfo {
         bytes32 descHash;
-        byte[512] buyerRSAPubkey;
+        bytes buyerRSAPubkey;
         address buyerAddress;
         address sellerAddress;
         address proxyAddress;
@@ -72,7 +72,7 @@ contract Trading {
 
     function placeOrder(
         bytes32 descHash,
-        byte[512] buyerRSAPubkey,
+        bytes buyerRSAPubkey,
         address seller,
         address proxy,
         address secondaryProxy,
