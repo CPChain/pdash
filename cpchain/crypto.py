@@ -9,7 +9,7 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 from cpchain import config
 
-from cpchain.chain.utils import load_from_keystore
+from cpchain.chain.utils import load_private_key_from_keystore
 
 logger = logging.getLogger(__name__)
 
@@ -79,25 +79,77 @@ class ECCipher:
     # cf. yellow paper
     # cf. http://tinyurl.com/y8q5g68u
     @staticmethod
-    def load_private_key(fpath,password='password'):
-        key_bytes = load_from_keystore(fpath,password)
+    def geth_load_key_pair_from_private_key(fpath, password='password'):
+        pri_key_bytes = load_private_key_from_keystore(fpath, password)
 
-        # XXX big endian 
-        priv_value = int.from_bytes(key_bytes, byteorder='big')
-        priv_key = ec.derive_private_key(priv_value, ec.SECP256K1, default_backend())
-        return priv_key
+        pri_key_string = Encoder.bytes_to_base64_str(pri_key_bytes)
+
+        pub_key_string = ECCipher._get_public_key_from_private_key_string(pri_key_bytes)
+
+        return pri_key_string, pub_key_string
 
     @staticmethod
-    def generate_key_pair(private_key=None, password=None):
+    def geth_get_public_key_from_private_key(pri_key_string):
+
+        key_bytes = Encoder.str_to_base64_byte(pri_key_string)
+
+        return ECCipher._get_public_key_from_private_key_string(key_bytes)
+
+    @staticmethod
+    def _get_key_pairs_from_private_key_bytes(private_key_bytes):
+        private_key = ECCipher._load_private_key_from_bytes(private_key_bytes)
+        public_key = private_key.public_key()
+        public_key_bytes = public_key.public_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+
+        return private_key_bytes, public_key_bytes
+
+    @staticmethod
+    def _get_public_key_from_private_key_string(private_key_bytes):
+        private_key_bytes, pub_key_bytes = ECCipher._get_key_pairs_from_private_key_bytes(private_key_bytes)
+        pub_key_string = Encoder.bytes_to_base64_str(pub_key_bytes)
+        logger.debug("pub_key_string:%s" % pub_key_string)
+        return pub_key_string
+
+    @staticmethod
+    def geth_sign(pri_key_string, raw_data):
+        try:
+            pri_key_string_bytes = Encoder.str_to_base64_byte(pri_key_string)
+
+            private_key = ECCipher._load_private_key_from_bytes(pri_key_string_bytes)
+
+            signature_string = private_key.sign(
+                raw_data.encode(encoding="utf-8"),
+                ec.ECDSA(hashes.SHA256()))
+            return Encoder.bytes_to_base64_str(signature_string)
+        except Exception:
+            logger.exception("signature error")
+            return None
+
+    @staticmethod
+    def _load_private_key_from_bytes(pri_key_string_bytes):
+        # XXX big endian
+        private_value = int.from_bytes(pri_key_string_bytes, byteorder='big')
+        private_key = ec.derive_private_key(private_value, ec.SECP256K1(), default_backend())
+        return private_key
+
+    @staticmethod
+    def generate_key_pair(private_key_bytes=None, password=None):
         password = examine_password(password)
 
-        if private_key:
-            serialized_private = private_key
-            private_key = serialization.load_der_private_key(
-                serialized_private,
-                password=password,
-                backend=default_backend()
+        if private_key_bytes:
+            serialized_private = private_key_bytes
+            private_key = ECCipher._load_private_key_from_bytes(private_key_bytes)
+            public_key = private_key.public_key()
+            serialized_public = public_key.public_bytes(
+                encoding=serialization.Encoding.DER,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
             )
+            logger.debug("pri key bytes:%s" % private_key_bytes)
+            logger.debug("pub key bytes:%s" % serialized_public)
+
         else:
             private_key = ec.generate_private_key(
                 ec.SECP256K1(),
@@ -119,14 +171,14 @@ class ECCipher:
         return serialized_private, serialized_public
 
     @staticmethod
-    def generate_signature(private_key, raw_data, password=None):
+    def generate_signature(pri_key_string_bytes, raw_data, password=None):
         try:
-            password = examine_password(password)
-            loaded_private_key = serialization.load_der_private_key(
-                private_key,
-                password=password,
-                backend=default_backend()
-            )
+            loaded_private_key = ECCipher._load_private_key_from_bytes(pri_key_string_bytes)
+            # loaded_private_key = serialization.load_der_private_key(
+            #     private_key,
+            #     password=password,
+            #     backend=default_backend()
+            # )
             signature = loaded_private_key.sign(
                 raw_data,
                 ec.ECDSA(hashes.SHA256()))
@@ -222,6 +274,7 @@ class ECCipher:
         """
         password = examine_password(password)
         pri_key_string_bytes = Encoder.str_to_base64_byte(pri_key_string)
+
         loaded_private_key = serialization.load_der_private_key(
             pri_key_string_bytes,
             password=password,
@@ -239,6 +292,7 @@ class ECPEMCipher:
     """
     PEM encoding EC
     """
+
     @staticmethod
     def generate_keys(password=None):
         password = examine_password(password)
@@ -288,7 +342,7 @@ class ECPEMCipher:
             return False
 
     @staticmethod
-    def sign(pri_key_string, raw_data,password=None):
+    def sign(pri_key_string, raw_data, password=None):
         try:
             password = examine_password(password)
             loaded_private_key = serialization.load_pem_private_key(

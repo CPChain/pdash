@@ -22,6 +22,8 @@ port = 5001
 [wallet]
 dbpath = "cpchain/assets/wallet/wallet.db"
 download_dir = "~/.cpchain/downloads"
+private_key_file = 'cpchain/assets/chain/sheds/data_dir/keystore/UTC--2018-01-25T08-04-38.217120006Z--22114f40ed222e83bbd88dc6cbb3b9a136299a23'
+private_key_password_file = 'cpchain/assets/chain/sheds/password'
 
 [wallet.qss]
 main_window = "cpchain/assets/wallet/qss/main_window.qss"

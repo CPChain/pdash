@@ -51,4 +51,8 @@ def verify_signature(pub_key_string, signature, raw_data):
 
 
 def sign(pri_key_string, raw_data):
+    return ECCipher.geth_sign(pri_key_string, raw_data)
+
+
+def sign_der(pri_key_string, raw_data):
     return ECCipher.sign_der(pri_key_string, raw_data)
