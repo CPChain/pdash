@@ -1,5 +1,8 @@
 # -*- mode: conf; -*-
 
+# home directoy
+home = "~/.cpchain"
+
 # for sample configuration, cf. https://github.com/toml-lang/toml/tree/master/examples
 [chain]
 contract_src_dir = "cpchain/assets/chain/contracts/Trading.sol"
@@ -22,6 +25,8 @@ port = 5001
 [wallet]
 dbpath = "cpchain/assets/wallet/wallet.db"
 download_dir = "~/.cpchain/downloads"
+private_key_file = 'cpchain/assets/chain/sheds/data_dir/keystore/UTC--2018-01-25T08-04-38.217120006Z--22114f40ed222e83bbd88dc6cbb3b9a136299a23'
+private_key_password_file = 'cpchain/assets/chain/sheds/password'
 
 [wallet.qss]
 main_window = "cpchain/assets/wallet/qss/main_window.qss"
@@ -34,8 +39,8 @@ server_ctrl_port = 8000
 server_data_port = 8001
 server_key = 'cpchain/assets/proxy/key/server.key'
 server_crt = 'cpchain/assets/proxy/key/server.crt'
-dbpath = "cpchain/assets/proxy/proxy.db"
-server_root = 'cpchain/assets/proxy/server_root'
+dbpath = "cpchain/proxy/proxy.db"
+server_root = 'cpchain/proxy/server_root'
 
 
 [market]

@@ -57,9 +57,6 @@ def deploy_contract(contract_name, web3=default_web3):
     return new_contract
 
 
-def load_from_keystore():
-    # extract_key_from_keyfile(key_path, 'password')
-
-    # stub
-    key_bytes = b'\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01'
+def load_private_key_from_keystore(key_path, password='password'):
+    key_bytes = extract_key_from_keyfile(key_path, password)
     return key_bytes

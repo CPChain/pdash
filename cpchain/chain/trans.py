@@ -44,6 +44,7 @@ class BuyerTrans(Trans):
         }
         tx_hash = self.contract.functions.placeOrder(
             order_info.desc_hash,
+            order_info.buyer_rsa_pubkey,
             order_info.seller,
             order_info.proxy,
             order_info.secondary_proxy,
