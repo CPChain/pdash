@@ -12,6 +12,7 @@ def test_server_chain():
     print(server_web3.eth.defaultAccount)
     order_info = OrderInfo(
         desc_hash=bytes([0, 1, 2, 3] * 8),
+        buyer_rsa_pubkey=bytes([0, 1, 2, 3] * 128),
         seller=buyertrans.web3.eth.defaultAccount,
         proxy=buyertrans.web3.eth.defaultAccount,
         secondary_proxy=buyertrans.web3.eth.defaultAccount,
@@ -21,10 +22,10 @@ def test_server_chain():
     )
     test_server_id = buyertrans.place_order(order_info)
     print(test_server_id)
-    buyertrans.withdraw_order(test_server_id)
-    print(buyertrans.query_order(test_server_id))
-    order_num = buyertrans.get_order_num()
-    print(order_num)
+    # buyertrans.withdraw_order(test_server_id)
+    # print(buyertrans.query_order(test_server_id))
+    # order_num = buyertrans.get_order_num()
+    # print(order_num)
 
 
 def main():
