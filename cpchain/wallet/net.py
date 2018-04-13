@@ -4,8 +4,12 @@ import json
 from cpchain import crypto
 import datetime, time
 from cpchain.chain.trans import BuyerTrans, SellerTrans
-from cpchain.chain import models, poll_chain
+from cpchain.chain import poll_chain
 from twisted.internet.task import LoopingCall
+from cpchain.chain.utils import default_web3
+from cpchain import config
+from cpchain.chain.models import OrderInfo
+
 
 class MarketClient:
     def __init__(self):
@@ -139,51 +143,69 @@ class MarketClient:
 
 class BuyerChainClient:
 
-    # def __init__(self):
-    #     self.buyer = BuyerTrans(web3)
+    def __init__(self):
+        self.buyer = BuyerTrans(default_web3, config.chain.core_contract)
 
     def buy_product(self, msg):
         print(msg)
-        product = models.OrderInfo(desc_hash='testdata', seller='selleraddress',
-                                   proxy='http://192.168.0.132:8000:api/v1/',
-                                   secondary_proxy='http://192.168.0.132:8000:api/v1/', proxy_value=12, value=30,
-                                   time_allowed=0)
+        # product = OrderInfo(desc_hash=b'testdata', seller=b'selleraddress',
+        #                            proxy='http://192.168.0.132:8000:api/v1/',
+        #                            secondary_proxy='http://192.168.0.132:8000:api/v1/', proxy_value=12, value=30,
+        #                            time_allowed=200)
+        product = OrderInfo(
+            desc_hash=bytes([0, 1, 2, 3] * 8),
+            seller=self.buyer.web3.eth.defaultAccount,
+            proxy=self.buyer.web3.eth.defaultAccount,
+            secondary_proxy=self.buyer.web3.eth.defaultAccount,
+            proxy_value=10,
+            value=20,
+            time_allowed=100
+        )
         print('product:')
         print(product)
-        # buyer = BuyerTrans(web3)
-        order_id =1
-        # order_id = self.buyer.place_order(product)
+        # buyer = BuyerTrans(web3
+        # order_id =1
+        order_id = self.buyer.place_order(product)
         print('order id: ', order_id)
         return order_id
 
     def withdraw_order(self, order_id):
-        tx_hash = '0xand..'
-        # tx_hash = self.withdraw_order(order_id)
+        # tx_hash = '0xand..'
+        tx_hash = self.buyer.withdraw_order(order_id)
         print('withdraw order: ', tx_hash)
         return tx_hash
 
     def confirm_order(self, order_id):
-        tx_hash = '0xand..'
-        # tx_hash = self.confirm_order(order_id)
+        # tx_hash = '0xand..'
+        tx_hash = self.buyer.confirm_order(order_id)
         print('confirm order: ', tx_hash)
         return tx_hash
 
     def dispute(self, order_id):
-        tx_hash = '0xand..'
-        # tx_hash = self.dispute(order_id)
+        # tx_hash = '0xand..'
+        tx_hash = self.buyer.dispute(order_id)
         print('start a dispute: ', tx_hash)
         return tx_hash
+
+    def check_confirm(self, order_id):
+        state = self.buyer.query_order(order_id)[9]
+        if state == 3:
+            print('proxy confirmed')
+            return state
+        else:
+            print('proxy not confirmed')
+            return state
 
 
 class SellerChainClient:
 
-    # def __init__(self):
-    #     self.monitor = poll_chain.OrderMonitor()
-    #     self.seller = SellerTrans()
+    def __init__(self):
+        self.seller = SellerTrans(default_web3, config.chain.core_contract)
+        self.monitor = poll_chain.OrderMonitor(1, self.seller)
 
     def query_new_order(self):
-        new_order_list = [1,2,3,4]
-        # new_order_list = self.monitor.get_new_order()
+        # new_order_list = [1,2,3,4]
+        new_order_list = self.monitor.get_new_order()
         print('new orders: ', new_order_list)
         return new_order_list
 
@@ -196,13 +218,24 @@ class SellerChainClient:
 
 
 def test_chain_event():
-    poll_chain = LoopingCall(seller_chain_client.query_new_order)
-    poll_chain.start(3)
-    from twisted.internet import reactor
-    withdraww_order = reactor.callLater(1, buyer_chain_client.withdraw_order, 1)
-    confirm_order = reactor.callLater(2, buyer_chain_client.confirm_order, 1)
-    dispute = reactor.callLater(3, buyer_chain_client.dispute, 1)
-    timeout = reactor.callLater(4, seller_chain_client.claim_timeout, 1)
+    seller_poll_chain = LoopingCall(seller_chain_client.query_new_order)
+    seller_poll_chain.start(10)
+    # print(order_list)
+    # order_info_list = []
+    # for i in order_list:
+    #     order_info_list.append(seller_chain_client.seller.query_order(i))
+    # print(order_info_list)
+
+    buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm, 1)
+    buyer_check_confirm.start(15)
+
+
+    # from twisted.internet import reactor
+    # buy_product = reactor.callLater(1, buyer_chain_client.buy_product, 'hi')
+    # withdraww_order = reactor.callLater(5, buyer_chain_client.withdraw_order, 1)
+    # confirm_order = reactor.callLater(10, buyer_chain_client.confirm_order, 1)
+    # dispute = reactor.callLater(15, buyer_chain_client.dispute, 1)
+    # timeout = reactor.callLater(20, seller_chain_client.claim_timeout, 1)
 
 
 

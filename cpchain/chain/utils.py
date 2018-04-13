@@ -29,14 +29,15 @@ default_web3 = DefaultWeb3()
 
 
 def read_contract_interface(contract_name):
-    with open(config.chain.contract_json) as f:
+
+    with open(join_with_root(config.chain.contract_json)) as f:
         all_contracts = json.load(f)
         contract_interface = all_contracts['<stdin>:' + contract_name]
     return contract_interface
 
 
 def read_contract_address(contract_name):
-    with open(config.chain.registrar_json) as f:
+    with open(join_with_root(config.chain.registrar_json)) as f:
         contracts = json.load(f)
     # return bytes.fromhex(contracts[contract_name][2:])
     return contracts[contract_name]
