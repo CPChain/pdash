@@ -19,11 +19,12 @@ def install_reactor():
 install_reactor()
 
 from twisted.internet import threads, defer
+from twisted.internet.task import LoopingCall
 
 from cpchain import config, root_dir
 from cpchain.utils import join_with_root, sizeof_fmt
-from cpchain.wallet.net import market_client
-from cpchain.wallet.net import hoge
+from cpchain.wallet.net import market_client, buyer_chain_client, seller_chain_client, test_chain_event
+# from cpchain.wallet.net import buy
 from cpchain.wallet.fs import get_file_list, upload_file_ipfs, get_buyer_file_list
 from cpchain.wallet.proxy_request import send_request_to_proxy
 
@@ -225,7 +226,7 @@ class BrowseTab(TabContentArea):
                     return
 
                 def buy_action():
-                    hoge("hi")
+                    buyer_chain_client.buy_product("hi")
 
                 menu = QMenu(item_table)
                 action = QAction("Buy", item_table, triggered=buy_action) 
@@ -311,15 +312,16 @@ class PublishTab(TabContentArea):
 
     def init_ui(self):
 
-        # TODO
-        # read value from data base
         def populate_data_item():
             model = self.data_item.model()
             model.setColumnCount(2)
             from PyQt5 import QtGui
-            for row in range(10):
-                item = QtGui.QStandardItem(str(row))
-                item2 = QtGui.QStandardItem("asdf")
+            uploaded_file_list = get_file_list()
+            for cur_row in range(10):
+                if cur_row == len(uploaded_file_list):
+                    break
+                item = QtGui.QStandardItem(str(cur_row))
+                item2 = QtGui.QStandardItem(uploaded_file_list[cur_row].name)
                 model.appendRow([item, item2])
 
         def create_data_item():
@@ -680,12 +682,12 @@ def _handle_keyboard_interrupt():
     timer.timeout.connect(lambda: None)
 
 
-
 def main():
     from twisted.internet import reactor
     main_wnd = MainWindow(reactor)
     _handle_keyboard_interrupt()
 
+    test_chain_event()
 
     if os.getenv('PROXY_LOCAL_RUN'):
         send_request_to_proxy(b'MARKET_HASH', 'seller_data')

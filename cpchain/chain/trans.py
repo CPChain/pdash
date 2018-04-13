@@ -11,12 +11,13 @@ class Trans:
     ONE_ETH_IN_WEI = 10**18  # 1 ETH == 1,000,000,000,000,000,000 Wei
 
     # NB contract object belongs to web3, and so does account.
-    # we shouldn't pass params like this.
+    # we shouldn't pass params like this.)
     def __init__(self, web3, contract_name):
         self.web3 = web3
         contract_interface = utils.read_contract_interface(contract_name)
-        self.contract = web3.eth.contract(abi=contract_interface['abi'], bytecode=contract_interface['bin'])
-        self.contract.address = utils.read_contract_address(contract_name)
+        self.contract = web3.eth.contract(address=utils.read_contract_address(contract_name),
+                                          abi=contract_interface['abi'],
+                                          bytecode=contract_interface['bin'])
 
     def query_order(self, order_id) -> models.OrderInfo:
         order_record = self.contract.call().orderRecords(order_id)
@@ -34,25 +35,29 @@ class BuyerTrans(Trans):
     # order_info is a dictionary that contains parameters for an order
     def place_order(self, order_info: models.OrderInfo, account=None) -> "order id":
         account = account or self.web3.eth.defaultAccount
-        event_filter = self.contract.on('OrderInitiated', {'filter': {'from': account}})
+        event_filter = self.contract.eventFilter('OrderInitiated', {'filter': {'from': account}})
         # Initiate an order
         offered_price = self.ONE_ETH_IN_WEI * order_info.value
         transaction = {
             'value': offered_price,
             'from': account
         }
-        tx_hash = self.contract.transact(transaction).placeOrder(
+        tx_hash = self.contract.functions.placeOrder(
             order_info.desc_hash,
             order_info.seller,
             order_info.proxy,
             order_info.secondary_proxy,
             order_info.proxy_value,
             order_info.time_allowed
-        )
+        ).transact(transaction)
         logging.debug("Thank you for using CPChain! Initiated Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash)
         # Get order id through emitted event
-        order_id = event_filter.get()[0]['args']['orderId']
+        order_event_list = event_filter.get_new_entries()
+        if len(order_event_list) == 0:
+            order_id = -1
+        else:
+            order_id = order_event_list[0]['args']['orderId']
         logging.debug("TransactionID: {:d}".format(order_id))
         return order_id
 
