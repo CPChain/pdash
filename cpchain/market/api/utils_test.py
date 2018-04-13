@@ -52,6 +52,14 @@ class TestStringMethods(unittest.TestCase):
         print("test_verify_sign:" + str(is_valid_sign))
         self.assertTrue(is_valid_sign)
 
+    def test_load_geth_keystore(self):
+        # path = "aaabbb/bbb.json"/home/mars/workspace/code/cpchain/cpchain/assets/chain/sheds/genesis.json
+        path = "/home/mars/workspace/code/cpchain/cpchain/assets/chain/sheds/data_dir/keystore/UTC--2018-01-25T08-04-38.217120006Z--22114f40ed222e83bbd88dc6cbb3b9a136299a23"
+
+        private_key_string = ECCipher.load_private_key(path)
+        print("private key:")
+        print(private_key_string)
+
 
 if __name__ == '__main__':
     unittest.main()

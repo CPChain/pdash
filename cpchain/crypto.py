@@ -79,8 +79,8 @@ class ECCipher:
     # cf. yellow paper
     # cf. http://tinyurl.com/y8q5g68u
     @staticmethod
-    def load_private_key():
-        key_bytes = load_from_keystore()
+    def load_private_key(fpath,password='password'):
+        key_bytes = load_from_keystore(fpath,password)
 
         # XXX big endian 
         priv_value = int.from_bytes(key_bytes, byteorder='big')
