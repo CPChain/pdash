@@ -374,10 +374,12 @@ class PublishTab(TabContentArea):
 
     def publish_data(self):
         # def publish_product(self, title, description, price, tags, start_date, end_date, file_md5):
-        # title = self.data_title.text()
-        # description = self.data_desc.text()
+        title = self.data_title.text()
+        description = self.data_desc.toPlainText()
+        price = int(self.data_price.text())
+        tags = self.data_tags.text()
 
-        market_client.publish_product('test', 'testdata', 13, 'temp', '2018-04-01 10:10:10', '2018-04-01 10:10:10', '123456')
+        market_client.publish_product(title, description, price, tags, '2018-04-01 10:10:10', '2018-04-01 10:10:10', '123456')
 
 
 class Header(QFrame):

@@ -397,3 +397,4 @@ class Encoder:
     @staticmethod
     def str_to_base64_byte(b64string):
         return base64.b64decode(b64string.encode("utf-8"))
+
