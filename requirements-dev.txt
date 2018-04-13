@@ -1,20 +1,5 @@
-# pip3 install -r requirements-dev.txt
-
 # for usage, cf. https://github.com/toml-lang/toml 
-toml
-boto3
-sqlalchemy
-cryptography
 ipfsapi
-treq
 eth-keyfile
-eth-utils==0.7.4
-web3==3.16.5
-
-# qt5reactor
-# google-cloud
-# PyQt5
-
-# debian
-# protobuf-compiler
-# python3-protobuf
+web3
+qt5reactor
