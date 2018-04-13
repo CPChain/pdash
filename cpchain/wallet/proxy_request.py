@@ -1,6 +1,6 @@
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.crypto import ECCipher
-from cpchain.proxy.client import start_client
+from cpchain.proxy.client import start_client, handle_proxy_response
 
 
 def wallet_get_key_pair(test_type):
@@ -55,7 +55,10 @@ def send_request_to_proxy(market_hash, test_type):
                                 sign_message.data
                             )
 
-        start_client(sign_message)
+        d = start_client(sign_message)
+
+        # TODO: callback to be customized
+        d.addBoth(handle_proxy_response)
 
     elif wallet_public_key == buyer_public_key:
         message = Message()
@@ -73,4 +76,7 @@ def send_request_to_proxy(market_hash, test_type):
                                 sign_message.data
                             )
 
-        start_client(sign_message)
+        d = start_client(sign_message)
+
+        # TODO: callback to be customized
+        d.addBoth(handle_proxy_response)

@@ -1,5 +1,8 @@
 # -*- mode: conf; -*-
 
+# home directoy
+home = "~/.cpchain"
+
 # for sample configuration, cf. https://github.com/toml-lang/toml/tree/master/examples
 [chain]
 contract_src_dir = "cpchain/assets/chain/contracts/Trading.sol"
@@ -34,8 +37,8 @@ server_ctrl_port = 8000
 server_data_port = 8001
 server_key = 'cpchain/assets/proxy/key/server.key'
 server_crt = 'cpchain/assets/proxy/key/server.crt'
-dbpath = "cpchain/assets/proxy/proxy.db"
-server_root = 'cpchain/assets/proxy/server_root'
+dbpath = "cpchain/proxy/proxy.db"
+server_root = 'cpchain/proxy/server_root'
 
 
 [market]
