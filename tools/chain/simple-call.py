@@ -12,7 +12,7 @@ def test_server_chain():
     print(server_web3.eth.defaultAccount)
     order_info = OrderInfo(
         desc_hash=bytes([0, 1, 2, 3] * 8),
-        buyer_rsa_pubkey=bytes([0, 1, 2, 3] * 128),
+        buyer_rsa_pubkey=[b'0', b'1', b'2', b'3'] * 128,
         seller=buyertrans.web3.eth.defaultAccount,
         proxy=buyertrans.web3.eth.defaultAccount,
         secondary_proxy=buyertrans.web3.eth.defaultAccount,
