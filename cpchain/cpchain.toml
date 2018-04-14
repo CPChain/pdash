@@ -9,8 +9,10 @@ contract_src_dir = "cpchain/assets/chain/contracts/Trading.sol"
 contract_json = "cpchain/assets/chain/build/Trading.json"
 registrar_json = "cpchain/assets/chain/registrar.json"
 core_contract = "Trading"
-is_test = false
+# mode can be "test", "falcon", "local"
+mode = "falcon"
 ipc_provider_addr = "cpchain/assets/chain/sheds/data_dir/geth.ipc"
+falcon_provider_addr = "http://192.168.0.132:8545"
 
 
 [storage.s3]
