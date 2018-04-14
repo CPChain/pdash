@@ -9,7 +9,10 @@ def deploy_contract(contract_name, web3=default_web3):
     new_contract = web3.eth.contract(abi=contract_interface['abi'], bytecode=contract_interface['bin'])
     
     # get transaction hash from deployed contract, let web3 estimate gas for this transaction
-    tx_hash = new_contract.deploy(transaction={'from': web3.eth.accounts[0]})
+    # tx_hash = new_contract.constructor(web3.eth.accounts[0], gas=web3.eth.estimateGas()).transact()
+
+    estimated_gas = new_contract.constructor().estimateGas()
+    tx_hash = new_contract.constructor().transact(dict(gas=estimated_gas))
 
     # get tx receipt to get contract address
     # tx_receipt = web3.eth.getTransactionReceipt(tx_hash)
