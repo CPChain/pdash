@@ -22,7 +22,9 @@ from cpchain.proxy.message import message_sanity_check, sign_message_verify
 from cpchain.storage import IPFSStorage
 from cpchain.proxy.proxy_db import Trade, ProxyDB
 
-server_root = os.path.join(root_dir, config.proxy.server_root)
+server_root = os.path.join(config.home, config.proxy.server_root)
+server_root = os.path.expanduser(server_root)
+os.makedirs(server_root, exist_ok=True)
 
 class SSLServerProtocol(NetstringReceiver):
 
@@ -212,8 +214,18 @@ def start_ssl_server():
     # control channel
     factory = SSLServerFactory()
     control_port = config.proxy.server_ctrl_port
-    server_key = os.path.join(root_dir, config.proxy.server_key)
-    server_crt = os.path.join(root_dir, config.proxy.server_crt)
+
+    server_key = os.path.expanduser(
+                    os.path.join(config.home,
+                                config.proxy.server_key))
+    server_crt = os.path.expanduser(
+                    os.path.join(config.home,
+                                config.proxy.server_crt))
+
+    if not os.path.isfile(server_key):
+        print("SSL key/cert file not found, run local self-test by default")
+        server_key = os.path.join(root_dir, config.proxy.server_key)
+        server_crt = os.path.join(root_dir, config.proxy.server_crt)
 
     reactor.listenSSL(control_port, factory,
             ssl.DefaultOpenSSLContextFactory(

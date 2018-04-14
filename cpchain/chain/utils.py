@@ -29,14 +29,15 @@ default_web3 = DefaultWeb3()
 
 
 def read_contract_interface(contract_name):
-    with open(config.chain.contract_json) as f:
+
+    with open(join_with_root(config.chain.contract_json)) as f:
         all_contracts = json.load(f)
         contract_interface = all_contracts['<stdin>:' + contract_name]
     return contract_interface
 
 
 def read_contract_address(contract_name):
-    with open(config.chain.registrar_json) as f:
+    with open(join_with_root(config.chain.registrar_json)) as f:
         contracts = json.load(f)
     # return bytes.fromhex(contracts[contract_name][2:])
     return contracts[contract_name]
@@ -56,9 +57,6 @@ def deploy_contract(contract_name, web3=default_web3):
     return new_contract
 
 
-def load_from_keystore():
-    # extract_key_from_keyfile(key_path, 'password')
-
-    # stub
-    key_bytes = b'\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01'
+def load_private_key_from_keystore(key_path, password='password'):
+    key_bytes = extract_key_from_keyfile(key_path, password)
     return key_bytes
