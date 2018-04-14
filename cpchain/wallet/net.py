@@ -10,6 +10,10 @@ from cpchain.chain.utils import default_web3
 from cpchain import config
 from cpchain.chain.models import OrderInfo
 
+from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
+from cpchain.proxy.client import start_client
+from cpchain.wallet import proxy_request
+
 
 class MarketClient:
     def __init__(self):
@@ -42,7 +46,7 @@ class MarketClient:
             print(err)
 
         try:
-            signature = crypto.ECCipher.sign_der(self.priv_key, self.nonce)
+            signature = crypto.ECCipher.geth_sign(self.priv_key, self.nonce)
             # print(signature)
             header_confirm = {'Content-Type': 'application/json'}
             data_confirm = {'public_key': self.pub_key, 'code': signature}
@@ -91,7 +95,7 @@ class MarketClient:
         # print(self.priv_key)
         # print(self.pub_key)
         # print(signature_source)
-        signature = crypto.ECCipher.sign_der(self.priv_key, signature_source)
+        signature = crypto.ECCipher.geth_sign(self.priv_key, signature_source)
         data['signature'] = signature
         # print(signature)
         # print(data)
@@ -189,8 +193,9 @@ class BuyerChainClient:
 
     def check_confirm(self, order_id):
         state = self.buyer.query_order(order_id)[9]
-        if state == 3:
+        if state == 1:
             print('proxy confirmed')
+            # send request to proxy
             return state
         else:
             print('proxy not confirmed')
@@ -215,11 +220,38 @@ class SellerChainClient:
         print('claim timeout: ', tx_hash)
         return tx_hash
 
+    def send_request(self):
+        new_order = self.query_new_order()
+        if len(new_order) != 0:
+            for i in new_order:
+                new_order_info = self.seller.query_order(i)
+                print('new oder infomation:')
+                print(new_order_info)
+                # send message to proxy
+                proxy_request.send_request_to_proxy(b'0x012929', "seller_data")
+
+
+
+
+# class SellerProxyClient:
+#
+#     def __init__(self):
+#         self.new_order = []
+#         self.new_order_info = ()
+#
+#     def send_request(self):
+#         self.new_order = seller_chain_client.query_new_order()
+#         if len(self.new_order) != 0:
+#             for i in self.new_order:
+#                 self.new_order_info = seller_chain_client.query_order(i)
+#                 print(self.new_order_info)
 
 
 def test_chain_event():
-    seller_poll_chain = LoopingCall(seller_chain_client.query_new_order)
+    seller_poll_chain = LoopingCall(seller_chain_client.send_request)
     seller_poll_chain.start(10)
+    # print(new_orders)
+    # new_orders.addCallbacks()
     # print(order_list)
     # order_info_list = []
     # for i in order_list:
@@ -261,6 +293,7 @@ def test_chain_event():
 market_client = MarketClient()
 buyer_chain_client = BuyerChainClient()
 seller_chain_client = SellerChainClient()
+# seller_proxy_client = SellerProxyClient()
 # market_client.login()
 
 # def buy(msg):
