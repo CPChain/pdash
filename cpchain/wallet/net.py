@@ -157,7 +157,7 @@ class BuyerChainClient:
         #                            secondary_proxy='http://192.168.0.132:8000:api/v1/', proxy_value=12, value=30,
         #                            time_allowed=200)
         product = OrderInfo(
-            desc_hash='5rdXcW+05mSPmgjLFLmLTiBZmCxzTbdQnPTEriTY3/4='.encode("utf-8"),
+            desc_hash=bytes([0, 1, 2, 3] * 8),
             buyer_rsa_pubkey=[b'0', b'1', b'2', b'3'] * 128,
             seller=self.buyer.web3.eth.defaultAccount,
             proxy=self.buyer.web3.eth.defaultAccount,
@@ -235,7 +235,7 @@ class SellerChainClient:
                 message.type = Message.SELLER_DATA
                 seller_data.seller_addr = crypto.Encoder.str_to_base64_byte(market_client.pub_key)
                 seller_data.buyer_addr = crypto.Encoder.str_to_base64_byte(market_client.pub_key)
-                seller_data.market_hash = '5rdXcW+05mSPmgjLFLmLTiBZmCxzTbdQnPTEriTY3/4='.encode("utf-8")
+                seller_data.market_hash = b'5rdXcW+05mSPmgjLFLmLTiBZmCxzTbdQnPTEriTY3/4='
                 seller_data.AES_key = b'AES_key'
                 storage = seller_data.storage
                 storage.type = Message.Storage.IPFS
@@ -255,9 +255,9 @@ class SellerChainClient:
                 d.addBoth(self.callback_func_example)
 
 
-    def callback_func_example(self):
-
-        print('proxy recieved message')
+    # def callback_func_example(self):
+    #
+    #     print('proxy recieved message')
         # assert message.type == Message.PROXY_REPLY
         #
         # proxy_reply = message.proxy_reply
@@ -279,7 +279,7 @@ class ProxyChainClient:
     # this methid should be called by proxy
     def proxy_confirm(self):
         print('proxy claim relay')
-        self.proxy.claim_relay(1, '5rdXcW+05mSPmgjLFLmLTiBZmCxzTbdQnPTEriTY3/4='.encode("utf-8"))
+        self.proxy.claim_relay(5, bytes([0, 1, 2, 3] * 8))
 
 
 
@@ -299,8 +299,10 @@ class ProxyChainClient:
 
 
 def test_chain_event():
-    # seller_poll_chain = LoopingCall(seller_chain_client.send_request)
-    # seller_poll_chain.start(10)
+    seller_poll_chain = LoopingCall(seller_chain_client.send_request)
+    seller_poll_chain.start(10)
+
+
     # print(new_orders)
     # new_orders.addCallbacks()
     # print(order_list)
@@ -308,12 +310,15 @@ def test_chain_event():
     # for i in order_list:
     #     order_info_list.append(seller_chain_client.seller.query_order(i))
     # print(order_info_list)
-    buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm, 1)
+    buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm, 5)
     buyer_check_confirm.start(15)
 
 
-    from twisted.internet import reactor
-    claim_relay = reactor.callLater(3, proxy_chain_client.proxy_confirm)
+    # from twisted.internet import reactor
+    # claim_relay = reactor.callLater(20, proxy_chain_client.proxy_confirm)
+
+
+
     # buy_product = reactor.callLater(1, buyer_chain_client.buy_product, 'hi')
     # withdraww_order = reactor.callLater(5, buyer_chain_client.withdraw_order, 1)
     # confirm_order = reactor.callLater(10, buyer_chain_client.confirm_order, 1)
