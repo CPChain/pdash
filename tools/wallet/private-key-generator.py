@@ -13,9 +13,12 @@ key = rsa.generate_private_key(
     )
 
 # Write our key to disk for safe keeping
-with open(join_with_root(config.wallet.private_key_path), "wb") as f:
+with open(join_with_root(config.wallet.rsa_private_key_file), "wb") as f:
     f.write(key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.TraditionalOpenSSL,
         encryption_algorithm=serialization.BestAvailableEncryption(b"cpchainisawesome"),
         ))
+
+with open(join_with_root(config.wallet.rsa_private_key_password_file), "wb") as f:
+    f.write(b"cpchainisawesome")
