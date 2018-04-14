@@ -1,21 +1,19 @@
+import logging
+
+from django.core.cache import cache
 from django.db.models import Q
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
-from rest_framework.settings import api_settings
 
-from django.core.cache import cache
-
+from .models import Product, Token, WalletMsgSequence
 from .permissions import IsOwnerOrReadOnly, IsOwner
 from .serializers import *
-from .models import Product, Token, WalletMsgSequence
 from .utils import *
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -196,7 +194,7 @@ class ProductPublishAPIViewSet(APIView):
             if serializer.is_valid(raise_exception=True):
                 msg_seq.save()
                 serializer.save(owner=WalletUser.objects.get(public_key=public_key))
-                return create_success_response()
+                return JsonResponse({'status': 1, 'message': 'success', 'data': {'market_hash': product.msg_hash}})
         except Exception:
             logger.exception("save product error")
 

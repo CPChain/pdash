@@ -1,6 +1,6 @@
 import json
 
-from web3 import Web3, IPCProvider, TestRPCProvider
+from web3 import Web3, IPCProvider, TestRPCProvider, HTTPProvider
 from eth_keyfile import extract_key_from_keyfile
 
 from cpchain import config
@@ -13,8 +13,11 @@ class DefaultWeb3:
 
     def _set_web3(self):
         if self.web3 is None:
-            if config.chain.is_test:
+            mode = config.chain.mode
+            if mode == "test":
                 provider = TestRPCProvider()
+            elif mode == "falcon":
+                provider = HTTPProvider(config.chain.falcon_provider_addr)
             else:
                 provider = IPCProvider(join_with_root(config.chain.ipc_provider_addr))
             self.web3 = Web3(provider)
