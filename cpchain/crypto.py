@@ -8,9 +8,11 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
+
+from eth_utils import keccak
+
 from cpchain import config
 from cpchain.utils import join_with_root
-
 from cpchain.chain.utils import load_private_key_from_keystore
 
 logger = logging.getLogger(__name__)
@@ -444,3 +446,14 @@ class Encoder:
     def str_to_base64_byte(b64string):
         return base64.b64decode(b64string.encode("utf-8"))
 
+
+def get_addr_from_public_key(pub_key):
+    # cf. http://tinyurl.com/yaqtjua7
+    # cf. https://kobl.one/blog/create-full-ethereum-keypair-and-address/
+
+    encode_point = pub_key.public_numbers().encode_point()
+
+    # omit the initial '\x04' prepended by openssl.
+    if len(encode_point) == 65:
+        encode_point = encode_point[1:]
+    return keccak(encode_point)
