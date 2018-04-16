@@ -5,13 +5,6 @@ from cpchain.chain.models import OrderInfo
 from cpchain.crypto import Encoder, RSACipher
 
 
-def bytes_to_byte_list(b):
-    blist = []
-    for i in b:
-        blist.append(bytes([i]))
-    return blist
-
-
 def test_server_chain():
     os.chdir(root_dir)
     server_web3 = chain.default_web3
@@ -24,8 +17,7 @@ def test_server_chain():
     print('pubkey ' + str(len(public_key)))
     order_info = OrderInfo(
         desc_hash=desc_hash,
-        buyer_rsa_pubkey=bytes_to_byte_list(public_key),
-        # buyer_rsa_pubkey=[b'1', b'2'],
+        buyer_rsa_pubkey=public_key,
         seller=buyertrans.web3.eth.defaultAccount,
         proxy=buyertrans.web3.eth.defaultAccount,
         secondary_proxy=buyertrans.web3.eth.defaultAccount,
@@ -40,7 +32,6 @@ def test_server_chain():
     # order_num = buyertrans.get_order_num()
     # print(order_num)
     print(buyertrans.query_order(test_server_id))
-    print(buyertrans.get_buyer_rsa_pubkey(test_server_id))
 
 
 def main():

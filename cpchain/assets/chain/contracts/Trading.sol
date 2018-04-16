@@ -17,7 +17,7 @@ contract Trading {
 
     struct OrderInfo {
         bytes32 descHash;
-        byte[] buyerRSAPubkey;
+        bytes buyerRSAPubkey;
         address buyerAddress;
         address sellerAddress;
         address proxyAddress;
@@ -70,14 +70,10 @@ contract Trading {
     event ProxyRated(address from);
     event OrderFinalized(uint id);
 
-    function getBuyerRSAPubkey(uint256 orderId) public returns (byte[]) {
-        return orderRecords[orderId].buyerRSAPubkey;
-    }
-
 
     function placeOrder(
         bytes32 descHash,
-        byte[] buyerRSAPubkey,
+        bytes buyerRSAPubkey,
         address seller,
         address proxy,
         address secondaryProxy,
