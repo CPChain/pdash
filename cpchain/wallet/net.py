@@ -163,15 +163,15 @@ class BuyerChainClient:
         desc_hash = crypto.Encoder.str_to_base64_byte(msg_hash)
         rsa_key = crypto.RSACipher.load_public_key()
         rsa_key_list = []
-        for i in rsa_key:
-            rsa_key_list.append(bytes([i]))
+        # for i in rsa_key:
+        #     rsa_key_list.append(bytes([i]))
         # product = OrderInfo(desc_hash=b'testdata', seller=b'selleraddress',
         #                            proxy='http://192.168.0.132:8000:api/v1/',
         #                            secondary_proxy='http://192.168.0.132:8000:api/v1/', proxy_value=12, value=30,
         #                            time_allowed=200)
         product = OrderInfo(
             desc_hash=desc_hash, #bytes([0, 1, 2, 3] * 8),
-            buyer_rsa_pubkey=rsa_key_list,  #[b'0', b'1', b'2', b'3'] * 128,  #get_rsa_key
+            buyer_rsa_pubkey=[b'0', b'1', b'2', b'3'] * 128,  #get_rsa_key
             seller=self.buyer.web3.eth.defaultAccount,
             proxy=self.buyer.web3.eth.defaultAccount,
             secondary_proxy=self.buyer.web3.eth.defaultAccount,
@@ -268,19 +268,19 @@ class SellerChainClient:
                 d.addBoth(self.callback_func_example)
 
 
-    def callback_func_example(self):
-        print('proxy recieved message')
-        # assert message.type == Message.PROXY_REPLY
-        #
-        # proxy_reply = message.proxy_reply
-        #
-        # if not proxy_reply.error:
-        #     print('file_uuid: %s' % proxy_reply.file_uuid)
-        #     print('AES_key: %s' % proxy_reply.AES_key.decode())
-        #     # add other action...
-        # else:
-        #     print(proxy_reply.error)
-        #     # add other action...
+    def callback_func_example(self, message):
+        # print('proxy recieved message')
+        assert message.type == Message.PROXY_REPLY
+
+        proxy_reply = message.proxy_reply
+
+        if not proxy_reply.error:
+            print('file_uuid: %s' % proxy_reply.file_uuid)
+            print('AES_key: %s' % proxy_reply.AES_key.decode())
+            # add other action...
+        else:
+            print(proxy_reply.error)
+            # add other action...
 
 
 class ProxyChainClient:
@@ -322,8 +322,10 @@ def test_chain_event():
     # for i in order_list:
     #     order_info_list.append(seller_chain_client.seller.query_order(i))
     # print(order_info_list)
-    buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm, 5)
-    buyer_check_confirm.start(15)
+
+
+    # buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm, 5)
+    # buyer_check_confirm.start(15)
 
 
     # from twisted.internet import reactor

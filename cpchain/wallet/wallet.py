@@ -694,7 +694,7 @@ def main():
     main_wnd = MainWindow(reactor)
     _handle_keyboard_interrupt()
 
-    # test_chain_event()
+    test_chain_event()
 
     if os.getenv('PROXY_LOCAL_RUN'):
         send_request_to_proxy(b'MARKET_HASH', 'seller_data')
