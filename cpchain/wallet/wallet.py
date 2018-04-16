@@ -226,8 +226,12 @@ class BrowseTab(TabContentArea):
                     return
 
                 def buy_action():
-                    # print(self.item_table.columnCount())
-                    buyer_chain_client.buy_product(self.item_table.item(self.item_table.currentRow(), self.item_table.columnCount()-1).text())
+                    item_table = self.item_table
+                    row = item_table.currentRow()
+                    # TODO note it's 2 because of the skew of INDEX.
+                    col = item_table.columnCount()-2
+                    cur_item = item_table.item(row, col)
+                    buyer_chain_client.buy_product(cur_item.text())
 
                 menu = QMenu(item_table)
                 action = QAction("Buy", item_table, triggered=buy_action) 
