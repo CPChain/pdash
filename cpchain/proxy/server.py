@@ -94,6 +94,11 @@ class SSLServerProtocol(NetstringReceiver):
                         os.utime(file_path, (mtime, mtime))
                         proxy_db.insert(trade)
                         self.proxy_reply_success()
+
+                        # TODO: Proxy should claim that it has
+                        # received data from seller on contract
+                        # claim_reply(order_id)
+
                         return
                     else:
                         d = threads.deferToThread(
@@ -152,6 +157,10 @@ class SSLServerProtocol(NetstringReceiver):
         if success:
             self.proxy_db.insert(self.trade)
             self.proxy_reply_success()
+
+            # TODO: Proxy should claim that it has
+            # received data from seller on contract
+            # claim_reply(order_id)
         else:
             error = "failed to get file from ipfs"
             self.proxy_reply_error(error)
