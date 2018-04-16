@@ -16,7 +16,7 @@ from cpchain.storage import IPFSStorage
 from cpchain import root_dir, config
 from cpchain.utils import join_with_root
 from cpchain.wallet.db import session, FileInfo, osp, create_engine, sessionmaker, BuyerFileInfo
-from cpchain.crypto import AESCipher
+from cpchain.crypto import AESCipher, RSACipher
 from cpchain.storage import IPFSStorage
 from cpchain import root_dir, config
 
@@ -103,20 +103,7 @@ def download_file_ipfs(fhash, file_path):
 
 # Decrypt aes key with rsa key then decrypt file with aes key.
 def decrypt_file_aes(file_path, aes_key):
-    with open(join_with_root(config.wallet.rsa_private_key_password_file), "rb") as f:
-        buyer_rsa_private_key_password = f.read()
-    with open(join_with_root(config.wallet.rsa_private_key_file), "rb") as key_file:
-        buyer_private_key = serialization.load_pem_private_key(
-            key_file.read(),
-            password=buyer_rsa_private_key_password,
-            backend=default_backend()
-        )
-
-    decrypted_aes_key = buyer_private_key.decrypt(aes_key, padding.OAEP(
-        mgf=padding.MGF1(algorithm=hashes.SHA256()),
-        algorithm=hashes.SHA256(),
-        label=None)
-    )
+    decrypted_aes_key = RSACipher.decrypt(aes_key)
 
     decrypter = AESCipher(decrypted_aes_key)
     decrypted_path = file_path + "_decrypted"
