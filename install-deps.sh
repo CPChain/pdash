@@ -12,5 +12,6 @@ sudo apt install -y python3-protobuf
 
 sudo apt install -y python3-cryptography python3-sqlalchemy python3-toml python3-boto3
 
-pip3 install -Ur requirements-dev.txt
+sudo apt install -y python3-flake8
 
+pip3 install -Ur requirements-dev.txt
