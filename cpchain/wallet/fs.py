@@ -1,7 +1,22 @@
 import tempfile, os
 
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
+
+from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
+from cpchain.proxy.client import start_client, download_file
+from cpchain.chain.trans import ProxyTrans
+from cpchain.chain.utils import default_web3
 from cpchain.wallet.db import session, FileInfo, osp, create_engine, sessionmaker, BuyerFileInfo
-from cpchain.crypto import AESCipher
+from cpchain.crypto import AESCipher, ECCipher
+from cpchain.storage import IPFSStorage
+from cpchain import root_dir, config
+from cpchain.utils import join_with_root
+from cpchain.wallet.db import session, FileInfo, osp, create_engine, sessionmaker, BuyerFileInfo
+from cpchain.crypto import AESCipher, RSACipher
 from cpchain.storage import IPFSStorage
 from cpchain import root_dir, config
 
@@ -84,3 +99,69 @@ def download_file_ipfs(fhash, file_path):
         return ipfs_client.download_file(fhash, file_path)
     else:
         return False
+
+
+# Decrypt aes key with rsa key then decrypt file with aes key.
+def decrypt_file_aes(file_path, aes_key):
+    decrypted_aes_key = RSACipher.decrypt(aes_key)
+
+    decrypter = AESCipher(decrypted_aes_key)
+    decrypted_path = file_path + "_decrypted"
+    decrypter.decrypt(file_path, decrypted_path)
+    return decrypted_path
+
+#
+# # TODO Integrate download later
+# def get_file_from_proxy(order_id, seller_public_key):
+#
+#     with open(join_with_root(config.wallet.private_key_path), "rb") as key_file:
+#         buyer_private_key = serialization.load_pem_private_key(
+#             key_file.read(),
+#             password=b"cpchainisawesome",
+#             backend=default_backend()
+#         )
+#
+#     # buyer_trans = ProxyTrans(default_web3, config.chain.core_contract)
+#     # buyer_public_key = buyer_trans.query_order(order_id)[1]
+#     buyer_public_key = buyer_private_key.public_key()
+#     message = Message()
+#     buyer_data = message.buyer_data
+#     message.type = Message.BUYER_DATA
+#     buyer_data.seller_addr = seller_public_key
+#     buyer_data.buyer_addr = buyer_public_key
+#     buyer_data.market_hash = b'MARKET_HASH0123012345678012345'
+#
+#     sign_message = SignMessage()
+#     sign_message.public_key = buyer_public_key
+#     sign_message.data = message.SerializeToString()
+#     sign_message.signature = ECCipher.generate_signature(
+#         buyer_private_key,
+#         sign_message.data
+#     )
+#
+#     start_client(sign_message)
+#     message = Message()
+#     message.ParseFromString(sign_message.data)
+#
+#     proxy_reply = message.proxy_reply
+#     if proxy_reply.error:
+#         print(proxy_reply.error)
+#     else:
+#         print('AES_key: %s' % proxy_reply.AES_key.decode())
+#         print('file_uuid: %s' % proxy_reply.file_uuid)
+#
+#     download_file(proxy_reply.file_uuid)
+#
+#     file_dir = os.path.expanduser(config.wallet.download_dir)
+#     file_path = os.path.join(file_dir, proxy_reply.file_uuid)
+#
+#     # TODO Update database here
+#
+#     decrypted_aes_key = buyer_private_key.decrypt(proxy_reply.AES_key, padding.OAEP(
+#         mgf=padding.MGF1(algorithm=hashes.SHA256()),
+#         algorithm=hashes.SHA256(),
+#         label=None)
+#     )
+#     decrypter = AESCipher(decrypted_aes_key)
+#     decrypter.decrypt(file_dir, file_path + "decrypted")
+#     return True
