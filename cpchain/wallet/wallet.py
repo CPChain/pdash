@@ -374,15 +374,17 @@ class PublishTab(TabContentArea):
 
         load_stylesheet(self, "publish_tab.qss")
 
-
     def publish_data(self):
         # def publish_product(self, title, description, price, tags, start_date, end_date, file_md5):
         title = self.data_title.text()
         description = self.data_desc.toPlainText()
         price = int(self.data_price.text())
         tags = self.data_tags.text()
+        seller_file_id = self.data_item.currentIndex()
+        print(seller_file_id)
 
-        market_client.publish_product(title, description, price, tags, '2018-04-01 10:10:10', '2018-04-01 10:10:10', '123456')
+        market_client.publish_product(seller_file_id, title, description, price, tags, '2018-04-01 10:10:10', '2018-04-01 10:10:10', '123456')
+
 
 
 class Header(QFrame):

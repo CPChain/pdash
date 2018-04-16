@@ -13,6 +13,7 @@ from cpchain.chain.models import OrderInfo
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.client import start_client
 from cpchain.wallet import proxy_request
+from cpchain.wallet.fs import publish_file_update
 
 
 class MarketClient:
@@ -90,7 +91,7 @@ class MarketClient:
     #     return confirm_info['message']  #token
 
     @inlineCallbacks
-    def publish_product(self, title, description, price, tags, start_date, end_date, file_md5):
+    def publish_product(self, selected_id, title, description, price, tags, start_date, end_date, file_md5):
         header = {'Content-Type': 'application/json'}
         header['MARKET-KEY'] = self.pub_key
         header['MARKET-TOKEN'] = self.token
@@ -116,6 +117,7 @@ class MarketClient:
         #     print('success')
         print('publish succeed')
         self.message_hash = confirm_info['data']['market_hash']
+        publish_file_update(self.message_hash, selected_id)
         print(self.message_hash)
         return confirm_info['status']
 
@@ -179,7 +181,7 @@ class BuyerChainClient:
             value=20,
             time_allowed=1000
         )
-        print('product:')g
+        print('product:')
         print(product)
         # buyer = BuyerTrans(web3
         # order_id =1
@@ -244,6 +246,7 @@ class SellerChainClient:
                 print(new_order_info)
                 # send message to proxy
                 # proxy_request.send_request_to_proxy('5rdXcW+05mSPmgjLFLmLTiBZmCxzTbdQnPTEriTY3/4='.encode(), "seller_data")
+
                 AES_key = b'AES_key'
                 storage_type = Message.Storage.IPFS
                 ipfs_gateway = "192.168.0.132:5001"
