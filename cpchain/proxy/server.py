@@ -22,6 +22,9 @@ from cpchain.proxy.message import message_sanity_check, sign_message_verify
 from cpchain.storage import IPFSStorage
 from cpchain.proxy.proxy_db import Trade, ProxyDB
 
+from cpchain.chain.trans import ProxyTrans
+from cpchain.chain.utils import default_web3
+
 server_root = os.path.join(config.home, config.proxy.server_root)
 server_root = os.path.expanduser(server_root)
 os.makedirs(server_root, exist_ok=True)
@@ -95,9 +98,7 @@ class SSLServerProtocol(NetstringReceiver):
                         proxy_db.insert(trade)
                         self.proxy_reply_success()
 
-                        # TODO: Proxy should claim that it has
-                        # received data from seller on contract
-                        # claim_reply(order_id)
+
 
                         return
                     else:
