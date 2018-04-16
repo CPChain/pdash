@@ -7,7 +7,7 @@ from cpchain.chain.trans import BuyerTrans, SellerTrans, ProxyTrans
 from cpchain.chain import poll_chain
 from twisted.internet.task import LoopingCall
 from cpchain.chain.utils import default_web3
-from cpchain import config
+from cpchain.utils import join_with_root, config
 from cpchain.chain.models import OrderInfo
 
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
@@ -19,10 +19,17 @@ class MarketClient:
     def __init__(self):
         # self.client = HTTPClient(reactor)
         self.url = 'http://192.168.0.132:8083/api/v1/'
-        self.priv_key = 'pvhf7hyFxZWNQJ76gH+24LR1ErbfANo0mI6uUol+9rU='
-        self.pub_key = 'MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEXP33zEQoHs5gfIWtvCosF2guR2pbX06tVGGpKqB4/7Rhc9GUn06j4tFmWPbPjrkrqw8zgRKRvXm97KYNWgU6gA=='
-        self.token = 'eef5293f97a64c26d874507d0ef6dc5ba9bed2bc'
-        self.nonce = 'gZM6Hg'
+        private_key_file_path = join_with_root(config.wallet.private_key_file)
+        password_path = join_with_root(config.wallet.private_key_password_file)
+
+        with open(password_path) as f:
+            password = f.read()
+        self.priv_key, self.pub_key = crypto.ECCipher.geth_load_key_pair_from_private_key(private_key_file_path, password)
+        # self.priv_key = 'pvhf7hyFxZWNQJ76gH+24LR1ErbfANo0mI6uUol+9rU='
+        # self.pub_key = 'MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEXP33zEQoHs5gfIWtvCosF2guR2pbX06tVGGpKqB4/7Rhc9GUn06j4tFmWPbPjrkrqw8zgRKRvXm97KYNWgU6gA=='
+        self.token = ''
+        self.nonce = ''
+        self.message_hash = ''
 
     @staticmethod
     def str_to_timestamp(s):
@@ -108,6 +115,8 @@ class MarketClient:
         # if confirm_info['success']:
         #     print('success')
         print('publish succeed')
+        self.message_hash = confirm_info['data']['market_hash']
+        print(self.message_hash)
         return confirm_info['status']
 
     @inlineCallbacks
@@ -150,15 +159,15 @@ class BuyerChainClient:
     def __init__(self):
         self.buyer = BuyerTrans(default_web3, config.chain.core_contract)
 
-    def buy_product(self, msg):
-        print(msg)
+    def buy_product(self, msg_hash):
+        desc_hash = crypto.Encoder.str_to_base64_byte(msg_hash)
         # product = OrderInfo(desc_hash=b'testdata', seller=b'selleraddress',
         #                            proxy='http://192.168.0.132:8000:api/v1/',
         #                            secondary_proxy='http://192.168.0.132:8000:api/v1/', proxy_value=12, value=30,
         #                            time_allowed=200)
         product = OrderInfo(
-            desc_hash=bytes([0, 1, 2, 3] * 8),
-            buyer_rsa_pubkey=[b'0', b'1', b'2', b'3'] * 128,
+            desc_hash=desc_hash, #bytes([0, 1, 2, 3] * 8),
+            buyer_rsa_pubkey=[b'0', b'1', b'2', b'3'] * 128,  #get_rsa_key
             seller=self.buyer.web3.eth.defaultAccount,
             proxy=self.buyer.web3.eth.defaultAccount,
             secondary_proxy=self.buyer.web3.eth.defaultAccount,
@@ -207,7 +216,7 @@ class SellerChainClient:
 
     def __init__(self):
         self.seller = SellerTrans(default_web3, config.chain.core_contract)
-        self.monitor = poll_chain.OrderMonitor(1, self.seller)
+        self.monitor = poll_chain.OrderMonitor(6, self.seller)
 
     def query_new_order(self):
         # new_order_list = [1,2,3,4]
@@ -255,9 +264,8 @@ class SellerChainClient:
                 d.addBoth(self.callback_func_example)
 
 
-    # def callback_func_example(self):
-    #
-    #     print('proxy recieved message')
+    def callback_func_example(self):
+        print('proxy recieved message')
         # assert message.type == Message.PROXY_REPLY
         #
         # proxy_reply = message.proxy_reply

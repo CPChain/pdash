@@ -226,7 +226,7 @@ class BrowseTab(TabContentArea):
                     return
 
                 def buy_action():
-                    buyer_chain_client.buy_product("hi")
+                    buyer_chain_client.buy_product(self.item_table.item(self.item_table.currentRow(), self.item_table.columnCount()))
 
                 menu = QMenu(item_table)
                 action = QAction("Buy", item_table, triggered=buy_action) 
@@ -689,7 +689,7 @@ def main():
     main_wnd = MainWindow(reactor)
     _handle_keyboard_interrupt()
 
-    test_chain_event()
+    # test_chain_event()
 
     if os.getenv('PROXY_LOCAL_RUN'):
         send_request_to_proxy(b'MARKET_HASH', 'seller_data')
