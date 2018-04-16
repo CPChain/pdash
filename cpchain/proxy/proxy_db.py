@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String
-from sqlalchemy.dialects.mysql import BINARY, TIMESTAMP
+from sqlalchemy.dialects.mysql import BIGINT, BINARY, TIMESTAMP
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta
 from cpchain import config, root_dir
@@ -15,6 +15,7 @@ class Trade(Base):
     __tablename__ = 'Trade'
 
     id = Column(Integer, primary_key=True)
+    order_id = Column(BIGINT, nullable=False)
     buyer_addr = Column(BINARY, nullable=False)
     seller_addr = Column(BINARY, nullable=False)
     market_hash = Column(BINARY, nullable=False)
@@ -24,11 +25,13 @@ class Trade(Base):
     time_stamp = Column(TIMESTAMP, nullable=False)
 
     def __repr__(self):
-        return "<Trade(buyer_addr='%s', seller_addr='%s', \
-            market_hash='%s', AES_key='%s', file_hash='%s' \
-            file_uuid='%s' time_stamp='%s')>" % (self.buyer_addr,
-            self.seller_addr, self.market_hash, self.AES_key,
-            self.file_hash, self.file_uuid, self.time_stamp)
+        return "<Trade(order_id= '%d', buyer_addr='%s', \
+            seller_addr='%s', market_hash='%s', AES_key='%s', \
+            file_hash='%s', file_uuid='%s' time_stamp='%s')>" % (
+                self.order_id, self.buyer_addr,
+                self.seller_addr, self.market_hash,
+                self.AES_key, self.file_hash,
+                self.file_uuid, self.time_stamp)
 
 class ProxyDB(object):
     db_path = os.path.join(config.home, config.proxy.dbpath)
@@ -45,6 +48,7 @@ class ProxyDB(object):
 
     def count(self, trade):
         count = self.session.query(Trade).filter(
+                    Trade.order_id == trade.order_id,
                     Trade.buyer_addr ==  trade.buyer_addr,
                     Trade.seller_addr == trade.seller_addr,
                     Trade.market_hash == trade.market_hash).count()
@@ -52,6 +56,7 @@ class ProxyDB(object):
 
     def query(self, trade):
         return self.session.query(Trade).filter(
+                    Trade.order_id == trade.order_id,
                     Trade.buyer_addr ==  trade.buyer_addr,
                     Trade.seller_addr == trade.seller_addr,
                     Trade.market_hash == trade.market_hash).first()
