@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, 
                              QVBoxLayout, QGridLayout, QWidget, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel,
                              QWidget, QLineEdit, QSpacerItem, QSizePolicy, QTableWidget, QFormLayout, QComboBox, QTextEdit,
                              QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog)
-from PyQt5.QtCore import Qt, QSize, QPoint 
+from PyQt5.QtCore import Qt, QSize, QPoint
 from PyQt5.QtGui import QIcon, QCursor, QPixmap
 
 # do it before any other twisted code.
@@ -72,7 +72,7 @@ class TableWidget(QTableWidget):
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
 
-        
+
 
 class TabContentArea(QFrame): pass
 
@@ -229,7 +229,7 @@ class BrowseTab(TabContentArea):
                     buyer_chain_client.buy_product("hi")
 
                 menu = QMenu(item_table)
-                action = QAction("Buy", item_table, triggered=buy_action) 
+                action = QAction("Buy", item_table, triggered=buy_action)
 
                 menu.addAction(action)
                 menu.exec_(QCursor.pos())
@@ -242,7 +242,7 @@ class BrowseTab(TabContentArea):
             item_table.horizontalHeader().setStretchLastSection(True)
             # use it as the reference.
             item_table.setColumnHidden(item_table.columnCount()-1, True)
-            
+
             # pending
             # https://stackoverflow.com/a/38129829/855160
             # header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
@@ -291,7 +291,7 @@ class BrowseTab(TabContentArea):
                 nonlocal j
                 item_table.setItem(row_cnt, j, QTableWidgetItem(str(value)))
                 j += 1
-            
+
             append_col(title)
             append_col(price)
             # append_col(tags)
@@ -302,7 +302,7 @@ class BrowseTab(TabContentArea):
         for item in items:
             add_to_table(item)
 
-            
+
 class PublishTab(TabContentArea):
     def __init__(self, parent):
         super().__init__(parent)
@@ -692,8 +692,8 @@ def main():
     test_chain_event()
 
     if os.getenv('PROXY_LOCAL_RUN'):
-        send_request_to_proxy(b'MARKET_HASH', 'seller_data')
-        reactor.callLater(5, send_request_to_proxy, b'MARKET_HASH', 'buyer_data')
+        send_request_to_proxy(1, 'seller_data')
+        reactor.callLater(5, send_request_to_proxy, 1, 'buyer_data')
 
     sys.exit(reactor.run())
 
