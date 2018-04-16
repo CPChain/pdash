@@ -456,4 +456,5 @@ def get_addr_from_public_key(pub_key):
     # omit the initial '\x04' prepended by openssl.
     if len(encode_point) == 65:
         encode_point = encode_point[1:]
-    return keccak(encode_point)
+    return keccak(encode_point)[-20:]
+
