@@ -171,7 +171,7 @@ class BuyerChainClient:
         #                            time_allowed=200)
         product = OrderInfo(
             desc_hash=desc_hash, #bytes([0, 1, 2, 3] * 8),
-            buyer_rsa_pubkey=[b'0', b'1', b'2', b'3'] * 128,  #get_rsa_key
+            buyer_rsa_pubkey=rsa_key, #[b'0', b'1', b'2', b'3'] * 128,  #get_rsa_key
             seller=self.buyer.web3.eth.defaultAccount,
             proxy=self.buyer.web3.eth.defaultAccount,
             secondary_proxy=self.buyer.web3.eth.defaultAccount,
@@ -179,7 +179,7 @@ class BuyerChainClient:
             value=20,
             time_allowed=1000
         )
-        print('product:')
+        print('product:')g
         print(product)
         # buyer = BuyerTrans(web3
         # order_id =1
@@ -220,7 +220,8 @@ class SellerChainClient:
 
     def __init__(self):
         self.seller = SellerTrans(default_web3, config.chain.core_contract)
-        self.monitor = poll_chain.OrderMonitor(6, self.seller)
+        start_id = self.seller.get_order_num()
+        self.monitor = poll_chain.OrderMonitor(start_id, self.seller)
 
     def query_new_order(self):
         # new_order_list = [1,2,3,4]
@@ -243,24 +244,31 @@ class SellerChainClient:
                 print(new_order_info)
                 # send message to proxy
                 # proxy_request.send_request_to_proxy('5rdXcW+05mSPmgjLFLmLTiBZmCxzTbdQnPTEriTY3/4='.encode(), "seller_data")
+                AES_key = b'AES_key'
+                storage_type = Message.Storage.IPFS
+                ipfs_gateway = "192.168.0.132:5001"
+                file_hash = b'QmT4kFS5gxzQZJwiDJQ66JLVGPpyTCF912bywYkpgyaPsD'
+                market_hash = b'MARKET_HASH'
+
                 message = Message()
                 seller_data = message.seller_data
                 message.type = Message.SELLER_DATA
-                seller_data.seller_addr = crypto.Encoder.str_to_base64_byte(market_client.pub_key)
-                seller_data.buyer_addr = crypto.Encoder.str_to_base64_byte(market_client.pub_key)
-                seller_data.market_hash = b'5rdXcW+05mSPmgjLFLmLTiBZmCxzTbdQnPTEriTY3/4='
-                seller_data.AES_key = b'AES_key'
+                seller_data.order_id = order_id
+                seller_data.seller_addr = seller_public_key
+                seller_data.buyer_addr = buyer_public_key
+                seller_data.market_hash = market_hash
+                seller_data.AES_key = AES_key
                 storage = seller_data.storage
-                storage.type = Message.Storage.IPFS
+                storage.type = storage_type
                 ipfs = storage.ipfs
-                ipfs.file_hash = b'QmT4kFS5gxzQZJwiDJQ66JLVGPpyTCF912bywYkpgyaPsD'
-                ipfs.gateway = "192.168.0.132:5001"
+                ipfs.file_hash = file_hash
+                ipfs.gateway = ipfs_gateway
 
                 sign_message = SignMessage()
-                sign_message.public_key = crypto.Encoder.str_to_base64_byte(market_client.pub_key)
+                sign_message.public_key = seller_public_key
                 sign_message.data = message.SerializeToString()
                 sign_message.signature = crypto.ECCipher.generate_signature(
-                    crypto.Encoder.str_to_base64_byte(market_client.priv_key),
+                    wallet_private_key,
                     sign_message.data
                 )
 
