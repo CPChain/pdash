@@ -38,8 +38,6 @@ class BuyerFileInfo(Base):
     name = Column(String)
     path = Column(String)
     size = Column(Integer)
-    remote_type = Column(String)
-    remote_uri = Column(String)
     is_downloaded = Column(Boolean)
     aes_key = Column(String)
 

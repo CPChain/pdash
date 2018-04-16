@@ -169,9 +169,9 @@ class TreasureTab(TabContentArea):
         def create_file_table():
             self.file_table = file_table = TableWidget(self)
 
-            file_table.setColumnCount(5)
+            file_table.setColumnCount(4)
             file_table.setRowCount(self.row_number)
-            file_table.setHorizontalHeaderLabels(['File Name', 'File Size', 'Remote Type', 'Downloaded', 'Hash Code'])
+            file_table.setHorizontalHeaderLabels(['File Name', 'File Size', 'Downloaded', 'Hash Code'])
 
             file_list = get_buyer_file_list()
             for cur_row in range(self.row_number):
@@ -179,9 +179,8 @@ class TreasureTab(TabContentArea):
                     break
                 file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].remote_type))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
-                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].hashcode))
 
         create_file_table()
 
@@ -193,9 +192,8 @@ class TreasureTab(TabContentArea):
                     break
                 self.file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].remote_type))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
-                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].hashcode))
 
         def set_layout():
             self.main_layout = QVBoxLayout(self)
