@@ -3,6 +3,12 @@ import treq
 import json
 from cpchain import crypto
 import datetime, time
+
+from cryptography.hazmat.primitives.serialization import load_der_public_key
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+
 from cpchain.chain.trans import BuyerTrans, SellerTrans, ProxyTrans
 from cpchain.chain import poll_chain
 from twisted.internet.task import LoopingCall
@@ -13,7 +19,8 @@ from cpchain.chain.models import OrderInfo
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.client import start_client
 from cpchain.wallet import proxy_request
-from cpchain.wallet.fs import publish_file_update
+from cpchain.wallet.fs import publish_file_update, session, FileInfo
+from cpchain.crypto import Encoder
 
 
 class MarketClient:
@@ -240,27 +247,40 @@ class SellerChainClient:
     def send_request(self):
         new_order = self.query_new_order()
         if len(new_order) != 0:
-            for i in new_order:
-                new_order_info = self.seller.query_order(i)
+            for new_order_id in new_order:
+                new_order_info = self.seller.query_order(new_order_id)
                 print('new oder infomation:')
                 print(new_order_info)
                 # send message to proxy
                 # proxy_request.send_request_to_proxy('5rdXcW+05mSPmgjLFLmLTiBZmCxzTbdQnPTEriTY3/4='.encode(), "seller_data")
 
-                AES_key = b'AES_key'
+                market_hash = new_order_info[0]
+                buyer_rsa_pubkey = new_order_info[1]
+                raw_aes_key = session.query(FileInfo.aes_key)\
+                    .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash))\
+                    .all()[0][0]
+                encrypted_aes_key = load_der_public_key(buyer_rsa_pubkey, backend=default_backend()).encrypt(
+                    raw_aes_key,
+                    padding.OAEP(
+                        mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                        algorithm=hashes.SHA256(),
+                        label=None
+                    )
+                )
                 storage_type = Message.Storage.IPFS
                 ipfs_gateway = "192.168.0.132:5001"
-                file_hash = b'QmT4kFS5gxzQZJwiDJQ66JLVGPpyTCF912bywYkpgyaPsD'
-                market_hash = b'MARKET_HASH'
-
+                # File hash is str type
+                file_hash = session.query(FileInfo.hashcode)\
+                    .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash))\
+                    .all()[0][0]
                 message = Message()
                 seller_data = message.seller_data
                 message.type = Message.SELLER_DATA
-                seller_data.order_id = order_id
-                seller_data.seller_addr = seller_public_key
-                seller_data.buyer_addr = buyer_public_key
+                seller_data.order_id = new_order_id
+                seller_data.seller_addr = new_order_info[3]
+                seller_data.buyer_addr = new_order_info[2]
                 seller_data.market_hash = market_hash
-                seller_data.AES_key = AES_key
+                seller_data.AES_key = encrypted_aes_key
                 storage = seller_data.storage
                 storage.type = storage_type
                 ipfs = storage.ipfs
@@ -268,10 +288,10 @@ class SellerChainClient:
                 ipfs.gateway = ipfs_gateway
 
                 sign_message = SignMessage()
-                sign_message.public_key = seller_public_key
+                sign_message.public_key = market_client.pub_key
                 sign_message.data = message.SerializeToString()
                 sign_message.signature = crypto.ECCipher.generate_signature(
-                    wallet_private_key,
+                    market_client.priv_key,
                     sign_message.data
                 )
 
@@ -281,6 +301,7 @@ class SellerChainClient:
 
     def callback_func_example(self, message):
         # print('proxy recieved message')
+        print("Inside seller request callback.")
         assert message.type == Message.PROXY_REPLY
 
         proxy_reply = message.proxy_reply
