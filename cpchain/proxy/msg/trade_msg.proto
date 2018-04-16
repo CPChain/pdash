@@ -32,17 +32,19 @@ message Message {
 	}
 
 	message SellerData {
-		bytes seller_addr = 1;
-		bytes buyer_addr = 2;
-		bytes market_hash = 3;
-		bytes AES_key = 4;
-		Storage storage = 5;
+		uint64 order_id = 1;
+		bytes seller_addr = 2;
+		bytes buyer_addr = 3;
+		bytes market_hash = 4;
+		bytes AES_key = 5;
+		Storage storage = 6;
 	}
 
 	message BuyerData{
-		bytes seller_addr = 1;
-		bytes buyer_addr = 2;
-		bytes market_hash = 3;
+		uint64 order_id = 1;
+		bytes seller_addr = 2;
+		bytes buyer_addr = 3;
+		bytes market_hash = 4;
 	}
 
 	message ProxyReply {

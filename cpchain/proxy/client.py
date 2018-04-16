@@ -156,6 +156,7 @@ if __name__ == '__main__':
         message = Message()
         seller_data = message.seller_data
         message.type = Message.SELLER_DATA
+        seller_data.order_id = 1
         seller_data.seller_addr = seller_public_key
         seller_data.buyer_addr = buyer_public_key
         seller_data.market_hash = b'MARKET_HASH'
@@ -183,6 +184,7 @@ if __name__ == '__main__':
         message = Message()
         buyer_data = message.buyer_data
         message.type = Message.BUYER_DATA
+        buyer_data.order_id = 1
         buyer_data.seller_addr = seller_public_key
         buyer_data.buyer_addr = buyer_public_key
         buyer_data.market_hash = b'MARKET_HASH'

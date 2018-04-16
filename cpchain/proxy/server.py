@@ -65,6 +65,7 @@ class SSLServerProtocol(NetstringReceiver):
 
         if message.type == Message.SELLER_DATA:
             data = message.seller_data
+            trade.order_id = data.order_id
             trade.seller_addr = data.seller_addr
             trade.buyer_addr = data.buyer_addr
             trade.market_hash = data.market_hash
@@ -109,6 +110,7 @@ class SSLServerProtocol(NetstringReceiver):
 
         elif message.type == Message.BUYER_DATA:
             data = message.buyer_data
+            trade.order_id = data.order_id
             trade.seller_addr = data.seller_addr
             trade.buyer_addr = data.buyer_addr
             trade.market_hash = data.market_hash
