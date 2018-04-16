@@ -70,6 +70,11 @@ contract Trading {
     event ProxyRated(address from);
     event OrderFinalized(uint id);
 
+    function getBuyerRSAPubkey(uint256 orderId) public returns (byte[]) {
+        return orderRecords[orderId].buyerRSAPubkey;
+    }
+
+
     function placeOrder(
         bytes32 descHash,
         byte[] buyerRSAPubkey,

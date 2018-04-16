@@ -86,6 +86,10 @@ class BuyerTrans(Trans):
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
+    def get_buyer_rsa_pubkey(self, order_id):
+        buyer_rsa_pub_key = self.contract.call().getBuyerRSAPubkey(order_id)
+        return buyer_rsa_pub_key
+
 
 class SellerTrans(Trans):
     def claim_timeout(self, order_id, account=None):

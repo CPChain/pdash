@@ -79,7 +79,11 @@ class RSACipher:
 
     @staticmethod
     def load_public_key():
-        return RSACipher.load_private_key().public_key()
+        public_bytes = RSACipher.load_private_key().public_key().public_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        return public_bytes
 
     @staticmethod
     def encrypt(data_bytes):
