@@ -98,7 +98,7 @@ class SSLServerProtocol(NetstringReceiver):
                         proxy_db.insert(trade)
                         self.proxy_reply_success()
 
-
+                        self.proxy_claim_relay()
 
                         return
                     else:
@@ -135,6 +135,12 @@ class SSLServerProtocol(NetstringReceiver):
                 self.proxy_reply_error(error)
                 return
 
+    def proxy_claim_relay(self):
+        proxy_trans = ProxyTrans(default_web3, config.chain.core_contract)
+        # TODO Should sign order id and sha256 here
+        deliver_hash = b'1' * 32
+        tx_hash = proxy_trans.claim_relay(self.trade.order_id, deliver_hash)
+        return tx_hash
 
     def proxy_reply_success(self):
         trade = self.trade
@@ -162,6 +168,7 @@ class SSLServerProtocol(NetstringReceiver):
             # TODO: Proxy should claim that it has
             # received data from seller on contract
             # claim_reply(order_id)
+            self.proxy_claim_relay()
         else:
             error = "failed to get file from ipfs"
             self.proxy_reply_error(error)
