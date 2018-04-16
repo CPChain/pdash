@@ -99,7 +99,7 @@ class SellerTrans(Trans):
     def filter_seller_range(self, start_id, end_id, account=None):
         account = account or self.web3.eth.defaultAccount
         id_list = []
-        for current_id in range(start_id, end_id + 1):
+        for current_id in range(start_id, end_id):
             current_seller = self.query_order(current_id)[2]
             if current_seller == account:
                 id_list.append(current_id)
