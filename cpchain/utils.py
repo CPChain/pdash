@@ -10,6 +10,10 @@ class Config:
         self.conf = conf
 
     def __getattr__(self, name):
+        # twisted trial will query some non-existing attrs.
+        if name not in self.conf:
+            return
+
         if not isinstance(self.conf[name], dict):
             return self.conf[name]
         return Config(self.conf[name])
