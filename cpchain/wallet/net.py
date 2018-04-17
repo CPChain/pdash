@@ -1,28 +1,45 @@
 from twisted.internet.defer import inlineCallbacks
+from twisted.internet.threads import deferToThread
+
 import treq
 import json
 from cpchain import crypto
 import datetime, time
+
+from cryptography.hazmat.primitives.serialization import load_der_public_key
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+
 from cpchain.chain.trans import BuyerTrans, SellerTrans, ProxyTrans
 from cpchain.chain import poll_chain
 from twisted.internet.task import LoopingCall
 from cpchain.chain.utils import default_web3
-from cpchain import config
+from cpchain.utils import join_with_root, config
 from cpchain.chain.models import OrderInfo
 
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.client import start_client
 from cpchain.wallet import proxy_request
+from cpchain.wallet.fs import publish_file_update, session, FileInfo
+from cpchain.crypto import Encoder
 
 
 class MarketClient:
     def __init__(self):
         # self.client = HTTPClient(reactor)
         self.url = 'http://192.168.0.132:8083/api/v1/'
-        self.priv_key = 'pvhf7hyFxZWNQJ76gH+24LR1ErbfANo0mI6uUol+9rU='
-        self.pub_key = 'MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEXP33zEQoHs5gfIWtvCosF2guR2pbX06tVGGpKqB4/7Rhc9GUn06j4tFmWPbPjrkrqw8zgRKRvXm97KYNWgU6gA=='
-        self.token = 'eef5293f97a64c26d874507d0ef6dc5ba9bed2bc'
-        self.nonce = 'gZM6Hg'
+        private_key_file_path = join_with_root(config.wallet.private_key_file)
+        password_path = join_with_root(config.wallet.private_key_password_file)
+
+        with open(password_path) as f:
+            password = f.read()
+        self.priv_key, self.pub_key = crypto.ECCipher.geth_load_key_pair_from_private_key(private_key_file_path, password)
+        # self.priv_key = 'pvhf7hyFxZWNQJ76gH+24LR1ErbfANo0mI6uUol+9rU='
+        # self.pub_key = 'MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEXP33zEQoHs5gfIWtvCosF2guR2pbX06tVGGpKqB4/7Rhc9GUn06j4tFmWPbPjrkrqw8zgRKRvXm97KYNWgU6gA=='
+        self.token = ''
+        self.nonce = ''
+        self.message_hash = ''
 
     @staticmethod
     def str_to_timestamp(s):
@@ -83,7 +100,7 @@ class MarketClient:
     #     return confirm_info['message']  #token
 
     @inlineCallbacks
-    def publish_product(self, title, description, price, tags, start_date, end_date, file_md5):
+    def publish_product(self, selected_id, title, description, price, tags, start_date, end_date, file_md5):
         header = {'Content-Type': 'application/json'}
         header['MARKET-KEY'] = self.pub_key
         header['MARKET-TOKEN'] = self.token
@@ -108,6 +125,9 @@ class MarketClient:
         # if confirm_info['success']:
         #     print('success')
         print('publish succeed')
+        self.message_hash = confirm_info['data']['market_hash']
+        publish_file_update(self.message_hash, selected_id)
+        print(self.message_hash)
         return confirm_info['status']
 
     @inlineCallbacks
@@ -150,15 +170,19 @@ class BuyerChainClient:
     def __init__(self):
         self.buyer = BuyerTrans(default_web3, config.chain.core_contract)
 
-    def buy_product(self, msg):
-        print(msg)
+    def buy_product(self, msg_hash):
+        desc_hash = crypto.Encoder.str_to_base64_byte(msg_hash)
+        rsa_key = crypto.RSACipher.load_public_key()
+        rsa_key_list = []
+        # for i in rsa_key:
+        #     rsa_key_list.append(bytes([i]))
         # product = OrderInfo(desc_hash=b'testdata', seller=b'selleraddress',
         #                            proxy='http://192.168.0.132:8000:api/v1/',
         #                            secondary_proxy='http://192.168.0.132:8000:api/v1/', proxy_value=12, value=30,
         #                            time_allowed=200)
         product = OrderInfo(
-            desc_hash=bytes([0, 1, 2, 3] * 8),
-            buyer_rsa_pubkey=[b'0', b'1', b'2', b'3'] * 128,
+            desc_hash=desc_hash, #bytes([0, 1, 2, 3] * 8),
+            buyer_rsa_pubkey=rsa_key, #[b'0', b'1', b'2', b'3'] * 128,  #get_rsa_key
             seller=self.buyer.web3.eth.defaultAccount,
             proxy=self.buyer.web3.eth.defaultAccount,
             secondary_proxy=self.buyer.web3.eth.defaultAccount,
@@ -170,9 +194,17 @@ class BuyerChainClient:
         print(product)
         # buyer = BuyerTrans(web3
         # order_id =1
-        order_id = self.buyer.place_order(product)
-        print('order id: ', order_id)
-        return order_id
+
+        # XXX we call it in another thread
+        # order_id = self.buyer.place_order(product)
+        # print('order id: ', order_id)
+        # return order_id
+
+        d = deferToThread(self.buyer.place_order, product)
+        def cb(order_id):
+            print('order id: ', order_id)
+        d.addCallback(cb)
+
 
     def withdraw_order(self, order_id):
         # tx_hash = '0xand..'
@@ -207,7 +239,8 @@ class SellerChainClient:
 
     def __init__(self):
         self.seller = SellerTrans(default_web3, config.chain.core_contract)
-        self.monitor = poll_chain.OrderMonitor(1, self.seller)
+        start_id = self.seller.get_order_num()
+        self.monitor = poll_chain.OrderMonitor(start_id, self.seller)
 
     def query_new_order(self):
         # new_order_list = [1,2,3,4]
@@ -224,30 +257,51 @@ class SellerChainClient:
     def send_request(self):
         new_order = self.query_new_order()
         if len(new_order) != 0:
-            for i in new_order:
-                new_order_info = self.seller.query_order(i)
+            for new_order_id in new_order:
+                new_order_info = self.seller.query_order(new_order_id)
                 print('new oder infomation:')
                 print(new_order_info)
                 # send message to proxy
                 # proxy_request.send_request_to_proxy('5rdXcW+05mSPmgjLFLmLTiBZmCxzTbdQnPTEriTY3/4='.encode(), "seller_data")
+
+                market_hash = new_order_info[0]
+                buyer_rsa_pubkey = new_order_info[1]
+                raw_aes_key = session.query(FileInfo.aes_key)\
+                    .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash))\
+                    .all()[0][0]
+                encrypted_aes_key = load_der_public_key(buyer_rsa_pubkey, backend=default_backend()).encrypt(
+                    raw_aes_key,
+                    padding.OAEP(
+                        mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                        algorithm=hashes.SHA256(),
+                        label=None
+                    )
+                )
+                storage_type = Message.Storage.IPFS
+                ipfs_gateway = "192.168.0.132:5001"
+                # File hash is str type
+                file_hash = session.query(FileInfo.hashcode)\
+                    .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash))\
+                    .all()[0][0]
                 message = Message()
                 seller_data = message.seller_data
                 message.type = Message.SELLER_DATA
-                seller_data.seller_addr = crypto.Encoder.str_to_base64_byte(market_client.pub_key)
-                seller_data.buyer_addr = crypto.Encoder.str_to_base64_byte(market_client.pub_key)
-                seller_data.market_hash = b'5rdXcW+05mSPmgjLFLmLTiBZmCxzTbdQnPTEriTY3/4='
-                seller_data.AES_key = b'AES_key'
+                seller_data.order_id = new_order_id
+                seller_data.seller_addr = new_order_info[3]
+                seller_data.buyer_addr = new_order_info[2]
+                seller_data.market_hash = market_hash
+                seller_data.AES_key = encrypted_aes_key
                 storage = seller_data.storage
-                storage.type = Message.Storage.IPFS
+                storage.type = storage_type
                 ipfs = storage.ipfs
-                ipfs.file_hash = b'QmT4kFS5gxzQZJwiDJQ66JLVGPpyTCF912bywYkpgyaPsD'
-                ipfs.gateway = "192.168.0.132:5001"
+                ipfs.file_hash = file_hash
+                ipfs.gateway = ipfs_gateway
 
                 sign_message = SignMessage()
-                sign_message.public_key = crypto.Encoder.str_to_base64_byte(market_client.pub_key)
+                sign_message.public_key = market_client.pub_key
                 sign_message.data = message.SerializeToString()
                 sign_message.signature = crypto.ECCipher.generate_signature(
-                    crypto.Encoder.str_to_base64_byte(market_client.priv_key),
+                    market_client.priv_key,
                     sign_message.data
                 )
 
@@ -255,20 +309,20 @@ class SellerChainClient:
                 d.addBoth(self.callback_func_example)
 
 
-    # def callback_func_example(self):
-    #
-    #     print('proxy recieved message')
-        # assert message.type == Message.PROXY_REPLY
-        #
-        # proxy_reply = message.proxy_reply
-        #
-        # if not proxy_reply.error:
-        #     print('file_uuid: %s' % proxy_reply.file_uuid)
-        #     print('AES_key: %s' % proxy_reply.AES_key.decode())
-        #     # add other action...
-        # else:
-        #     print(proxy_reply.error)
-        #     # add other action...
+    def callback_func_example(self, message):
+        # print('proxy recieved message')
+        print("Inside seller request callback.")
+        assert message.type == Message.PROXY_REPLY
+
+        proxy_reply = message.proxy_reply
+
+        if not proxy_reply.error:
+            print('file_uuid: %s' % proxy_reply.file_uuid)
+            print('AES_key: %s' % proxy_reply.AES_key.decode())
+            # add other action...
+        else:
+            print(proxy_reply.error)
+            # add other action...
 
 
 class ProxyChainClient:
@@ -310,8 +364,10 @@ def test_chain_event():
     # for i in order_list:
     #     order_info_list.append(seller_chain_client.seller.query_order(i))
     # print(order_info_list)
-    buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm, 5)
-    buyer_check_confirm.start(15)
+
+
+    # buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm, 5)
+    # buyer_check_confirm.start(15)
 
 
     # from twisted.internet import reactor

@@ -12,7 +12,7 @@ def wallet_get_key_pair():
     return private_key, public_key
 
 
-def send_request_to_proxy(market_hash, test_type):
+def send_request_to_proxy(order_id, test_type):
     # TODO test_type param to be removed
 
     # TODO: need to get following data from market database
@@ -23,15 +23,17 @@ def send_request_to_proxy(market_hash, test_type):
 
     if test_type == 'seller_data':
 
-        # TODO: need to get following data from market database
+        # TODO: need to get following data from database
         AES_key = b'AES_key'
         storage_type = Message.Storage.IPFS
         ipfs_gateway = "192.168.0.132:5001"
         file_hash = b'QmT4kFS5gxzQZJwiDJQ66JLVGPpyTCF912bywYkpgyaPsD'
+        market_hash = b'MARKET_HASH'
 
         message = Message()
         seller_data = message.seller_data
         message.type = Message.SELLER_DATA
+        seller_data.order_id = order_id
         seller_data.seller_addr = seller_public_key
         seller_data.buyer_addr = buyer_public_key
         seller_data.market_hash = market_hash
@@ -56,9 +58,14 @@ def send_request_to_proxy(market_hash, test_type):
         d.addBoth(handle_proxy_response)
 
     elif test_type == 'buyer_data':
+
+        # TODO: need to get following data from database
+        market_hash = b'MARKET_HASH'
+
         message = Message()
         buyer_data = message.buyer_data
         message.type = Message.BUYER_DATA
+        buyer_data.order_id = order_id
         buyer_data.seller_addr = seller_public_key
         buyer_data.buyer_addr = buyer_public_key
         buyer_data.market_hash = market_hash

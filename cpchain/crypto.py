@@ -5,10 +5,14 @@ import logging
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
-from cpchain import config
 
+from eth_utils import keccak
+
+from cpchain import config
+from cpchain.utils import join_with_root
 from cpchain.chain.utils import load_private_key_from_keystore
 
 logger = logging.getLogger(__name__)
@@ -36,6 +40,73 @@ class BaseCipher:
                 digest.update(buffer)
 
             return d == digest.finalize()
+
+
+class RSACipher:
+    def __init__(self):
+        self.backend = default_backend()
+
+    @staticmethod
+    def generate_private_key(password=b'cpchainisawesome') -> "returns key bytes":
+        # Generate our key
+        key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=4096,
+            backend=default_backend()
+        )
+
+        # Write our key to disk for safe keeping
+        with open(join_with_root(config.wallet.rsa_private_key_file), "wb") as f:
+            f.write(key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.TraditionalOpenSSL,
+                encryption_algorithm=serialization.BestAvailableEncryption(password),
+            ))
+
+        with open(join_with_root(config.wallet.rsa_private_key_password_file), "wb") as f:
+            f.write(password)
+        return key
+
+    @staticmethod
+    def load_private_key():
+        with open(join_with_root(config.wallet.rsa_private_key_password_file), "rb") as f:
+            buyer_rsa_private_key_password = f.read()
+        with open(join_with_root(config.wallet.rsa_private_key_file), "rb") as key_file:
+            buyer_private_key = serialization.load_pem_private_key(
+                key_file.read(),
+                password=buyer_rsa_private_key_password,
+                backend=default_backend()
+            )
+        return buyer_private_key
+
+    @staticmethod
+    def load_public_key():
+        public_bytes = RSACipher.load_private_key().public_key().public_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        return public_bytes
+
+    # @staticmethod
+    # def encrypt(data_bytes):
+    #     return RSACipher.load_private_key().public_key().encrypt(
+    #         data_bytes,
+    #         padding.OAEP(
+    #             mgf=padding.MGF1(algorithm=hashes.SHA256()),
+    #             algorithm=hashes.SHA256(),
+    #             label=None
+    #         )
+    #     )
+
+    @staticmethod
+    def decrypt(data_bytes):
+        return RSACipher.load_private_key().decrypt(
+            data_bytes,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None)
+        )
 
 
 class AESCipher(BaseCipher):
@@ -359,33 +430,6 @@ class ECPEMCipher:
             return None
 
 
-class RSACipher:
-    def __init__(self, priv_bytes, pub_bytes):
-        self.backend = default_backend()
-        self.priv_key = serialization.load_pem_private_key(priv_bytes,
-                                                           password=None,
-                                                           backend=self.backend)
-        self.pub_key = serialization.load_pem_public_key(pub_bytes,
-                                                         backend=self.backend)
-
-    @staticmethod
-    def generate_private_key() -> "returns key bytes":
-        priv_key = rsa.generate_private_key(public_exponent=65537,
-                                            key_size=4096,
-                                            backend=default_backend())
-
-        pub_key = priv_key.public_key()
-
-        priv_bytes = priv_key.private_bytes(encoding=serialization.Encoding.PEM,
-                                            format=serialization.PrivateFormat.TraditionalOpenSSL,
-                                            encryption_algorithm=serialization.NoEncryption())
-
-        pub_bytes = pub_key.public_bytes(encoding=serialization.Encoding.PEM,
-                                         format=serialization.PublicFormat.SubjectPublicKeyInfo)
-
-        return priv_bytes, pub_bytes
-
-
 class SHA256Hash:
 
     @staticmethod
@@ -405,4 +449,16 @@ class Encoder:
     @staticmethod
     def str_to_base64_byte(b64string):
         return base64.b64decode(b64string.encode("utf-8"))
+
+
+def get_addr_from_public_key(pub_key):
+    # cf. http://tinyurl.com/yaqtjua7
+    # cf. https://kobl.one/blog/create-full-ethereum-keypair-and-address/
+
+    encode_point = pub_key.public_numbers().encode_point()
+
+    # omit the initial '\x04' prepended by openssl.
+    if len(encode_point) == 65:
+        encode_point = encode_point[1:]
+    return keccak(encode_point)[-20:]
 

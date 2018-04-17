@@ -8,8 +8,8 @@ from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, 
                              QVBoxLayout, QGridLayout, QWidget, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel,
                              QWidget, QLineEdit, QSpacerItem, QSizePolicy, QTableWidget, QFormLayout, QComboBox, QTextEdit,
                              QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog)
-from PyQt5.QtCore import Qt, QSize, QPoint 
-from PyQt5.QtGui import QIcon, QCursor, QPixmap
+from PyQt5.QtCore import Qt, QSize, QPoint, pyqtSignal
+from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem
 
 # do it before any other twisted code.
 def install_reactor():
@@ -22,12 +22,11 @@ from twisted.internet import threads, defer
 from twisted.internet.task import LoopingCall
 
 from cpchain import config, root_dir
-from cpchain.utils import join_with_root, sizeof_fmt
 from cpchain.wallet.net import market_client, buyer_chain_client, seller_chain_client, test_chain_event
 # from cpchain.wallet.net import buy
 from cpchain.wallet.fs import get_file_list, upload_file_ipfs, get_buyer_file_list
 from cpchain.wallet.proxy_request import send_request_to_proxy
-
+from cpchain.utils import join_with_root, sizeof_fmt, open_file
 
 
 # utils
@@ -45,6 +44,15 @@ def load_stylesheet(wid, name):
     with open(path) as f:
         s = string.Template(f.read())
         wid.setStyleSheet(s.substitute(subs))
+
+
+
+class ComboBox(QComboBox):
+    pop_up = pyqtSignal()
+
+    def showPopup(self):
+        self.pop_up.emit()
+        super().showPopup()
 
 
 
@@ -72,7 +80,7 @@ class TableWidget(QTableWidget):
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
 
-        
+
 
 class TabContentArea(QFrame): pass
 
@@ -86,6 +94,18 @@ class CloudTab(TabContentArea):
         self.hashcode = 'DEADBEEF'
         self.local_file = 'local'
         self.init_ui()
+
+    def update_table(self):
+        file_list = get_file_list()
+        print(file_list.__len__())
+        for cur_row in range(self.row_number):
+            if cur_row == file_list.__len__():
+                break
+            self.file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
+            self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
+            self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].remote_type))
+            self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_published)))
+            self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
 
     def init_ui(self):
         self.row_number = 20
@@ -109,18 +129,6 @@ class CloudTab(TabContentArea):
 
         create_file_table()
 
-        def update_table():
-            file_list = get_file_list()
-            print(file_list.__len__())
-            for cur_row in range(self.row_number):
-                if cur_row == file_list.__len__():
-                    break
-                self.file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
-                self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].remote_type))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_published)))
-                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
-
         def handle_upload():
             # Maybe useful for buyer.
             # row_selected = self.file_table.selectionModel().selectedRows()[0].row()
@@ -131,7 +139,7 @@ class CloudTab(TabContentArea):
 
         def handle_callback_upload(x):
             print("in handle_callback_upload" + x)
-            update_table()
+            self.update_table()
 
         def create_btns():
             self.upload_btn = upload_btn = QPushButton('Encrypt and Upload')
@@ -153,6 +161,7 @@ class CloudTab(TabContentArea):
         load_stylesheet(self, "cloud_tab.qss")
 
 
+
 class TreasureTab(TabContentArea):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -169,9 +178,32 @@ class TreasureTab(TabContentArea):
         def create_file_table():
             self.file_table = file_table = TableWidget(self)
 
-            file_table.setColumnCount(5)
+            def right_menu():
+                sel = file_table.selectionModel()
+                if not sel.hasSelection():
+                    return
+
+                def open_file_action():
+                    open_file('/home/introom/downloads/xx.txt')
+
+                    row = file_table.currentRow()
+                    # TODO note it's 2 because of the skew of INDEX.
+                    col = file_table.columnCount()-2
+                    cur_item = file_table.item(row, col)
+                    # buyer_chain_client.buy_product(cur_item.text())
+
+                menu = QMenu(file_table)
+                action = QAction("Open File", file_table, triggered=open_file_action)
+
+                menu.addAction(action)
+                menu.exec_(QCursor.pos())
+            file_table.set_right_menu(right_menu)
+
+
+
+            file_table.setColumnCount(4)
             file_table.setRowCount(self.row_number)
-            file_table.setHorizontalHeaderLabels(['File Name', 'File Size', 'Remote Type', 'Downloaded', 'Hash Code'])
+            file_table.setHorizontalHeaderLabels(['File Name', 'File Size', 'Downloaded', 'Hash Code'])
 
             file_list = get_buyer_file_list()
             for cur_row in range(self.row_number):
@@ -179,9 +211,8 @@ class TreasureTab(TabContentArea):
                     break
                 file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].remote_type))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
-                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].hashcode))
 
         create_file_table()
 
@@ -193,9 +224,8 @@ class TreasureTab(TabContentArea):
                     break
                 self.file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].remote_type))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
-                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].hashcode))
 
         def set_layout():
             self.main_layout = QVBoxLayout(self)
@@ -204,6 +234,7 @@ class TreasureTab(TabContentArea):
             layout.addStretch(1)
             self.main_layout.addLayout(layout)
         set_layout()
+
 
 
 class BrowseTab(TabContentArea):
@@ -226,10 +257,15 @@ class BrowseTab(TabContentArea):
                     return
 
                 def buy_action():
-                    buyer_chain_client.buy_product("hi")
+                    item_table = self.item_table
+                    row = item_table.currentRow()
+                    # TODO note it's 2 because of the skew of INDEX.
+                    col = item_table.columnCount()-2
+                    cur_item = item_table.item(row, col)
+                    buyer_chain_client.buy_product(cur_item.text())
 
                 menu = QMenu(item_table)
-                action = QAction("Buy", item_table, triggered=buy_action) 
+                action = QAction("Buy", item_table, triggered=buy_action)
 
                 menu.addAction(action)
                 menu.exec_(QCursor.pos())
@@ -242,7 +278,7 @@ class BrowseTab(TabContentArea):
             item_table.horizontalHeader().setStretchLastSection(True)
             # use it as the reference.
             item_table.setColumnHidden(item_table.columnCount()-1, True)
-            
+
             # pending
             # https://stackoverflow.com/a/38129829/855160
             # header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
@@ -291,7 +327,7 @@ class BrowseTab(TabContentArea):
                 nonlocal j
                 item_table.setItem(row_cnt, j, QTableWidgetItem(str(value)))
                 j += 1
-            
+
             append_col(title)
             append_col(price)
             # append_col(tags)
@@ -302,7 +338,8 @@ class BrowseTab(TabContentArea):
         for item in items:
             add_to_table(item)
 
-            
+
+
 class PublishTab(TabContentArea):
     def __init__(self, parent):
         super().__init__(parent)
@@ -313,20 +350,22 @@ class PublishTab(TabContentArea):
     def init_ui(self):
 
         def populate_data_item():
+            # clear
+            self.data_item.clear()
+
             model = self.data_item.model()
-            model.setColumnCount(2)
-            from PyQt5 import QtGui
             uploaded_file_list = get_file_list()
             for cur_row in range(10):
                 if cur_row == len(uploaded_file_list):
                     break
-                item = QtGui.QStandardItem(str(cur_row))
-                item2 = QtGui.QStandardItem(uploaded_file_list[cur_row].name)
+                item = QStandardItem(str(cur_row))
+                item2 = QStandardItem(uploaded_file_list[cur_row].name)
                 model.appendRow([item, item2])
+                
 
         def create_data_item():
             # data item column
-            self.data_item = QComboBox()
+            self.data_item = ComboBox()
             model = self.data_item.model()
             model.setColumnCount(2)
             self.data_item.setModelColumn(1)
@@ -336,7 +375,7 @@ class PublishTab(TabContentArea):
 
 
         def bind_slots():
-            self.data_item.view().pressed.connect(populate_data_item)
+            self.data_item.pop_up.connect(populate_data_item)
         bind_slots()
 
 
@@ -371,15 +410,22 @@ class PublishTab(TabContentArea):
 
         load_stylesheet(self, "publish_tab.qss")
 
-
     def publish_data(self):
         # def publish_product(self, title, description, price, tags, start_date, end_date, file_md5):
         title = self.data_title.text()
         description = self.data_desc.toPlainText()
         price = int(self.data_price.text())
         tags = self.data_tags.text()
+        seller_file_id = self.data_item.currentIndex()
+        print(seller_file_id)
 
-        market_client.publish_product(title, description, price, tags, '2018-04-01 10:10:10', '2018-04-01 10:10:10', '123456')
+        d = market_client.publish_product(seller_file_id, title, description, price, tags, '2018-04-01 10:10:10', '2018-04-01 10:10:10', '123456')
+
+        def update_cloud_table(*args):
+            wid = self.parent.findChild(QWidget, "cloud_tab")
+            wid.update_table()
+        d.addCallback(update_cloud_table)
+
 
 
 class Header(QFrame):
@@ -684,6 +730,7 @@ def _handle_keyboard_interrupt():
     timer.timeout.connect(lambda: None)
 
 
+
 def main():
     from twisted.internet import reactor
     main_wnd = MainWindow(reactor)
@@ -692,8 +739,8 @@ def main():
     test_chain_event()
 
     if os.getenv('PROXY_LOCAL_RUN'):
-        send_request_to_proxy(b'MARKET_HASH', 'seller_data')
-        reactor.callLater(5, send_request_to_proxy, b'MARKET_HASH', 'buyer_data')
+        send_request_to_proxy(1, 'seller_data')
+        reactor.callLater(5, send_request_to_proxy, 1, 'buyer_data')
 
     sys.exit(reactor.run())
 
