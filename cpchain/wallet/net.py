@@ -1,4 +1,6 @@
 from twisted.internet.defer import inlineCallbacks
+from twisted.internet.threads import deferToThread
+
 import treq
 import json
 from cpchain import crypto
@@ -192,9 +194,17 @@ class BuyerChainClient:
         print(product)
         # buyer = BuyerTrans(web3
         # order_id =1
-        order_id = self.buyer.place_order(product)
-        print('order id: ', order_id)
-        return order_id
+
+        # XXX we call it in another thread
+        # order_id = self.buyer.place_order(product)
+        # print('order id: ', order_id)
+        # return order_id
+
+        d = deferToThread(self.buyer.place_order, product)
+        def cb(order_id):
+            print('order id: ', order_id)
+        d.addCallback(cb)
+
 
     def withdraw_order(self, order_id):
         # tx_hash = '0xand..'

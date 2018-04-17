@@ -1,4 +1,7 @@
 import os.path as osp
+import sys
+import subprocess
+
 import logging
 import toml
 
@@ -39,3 +42,10 @@ def sizeof_fmt(num, suffix='B'):
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
+
+
+def open_file(path):
+    executable = dict(linux='xdg-open',
+                      darwin='open')
+
+    subprocess.call((executable[sys.platform], path))
