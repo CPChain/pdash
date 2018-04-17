@@ -30,7 +30,9 @@ from cpchain.crypto import Encoder
 
 
 class MarketClient:
-    def __init__(self):
+    def __init__(self, main_wnd):
+        self.main_wnd = main_wnd
+
         # self.client = HTTPClient(reactor)
         self.url = 'http://192.168.0.132:8083/api/v1/'
         private_key_file_path = join_with_root(config.wallet.private_key_file)
@@ -171,7 +173,8 @@ class MarketClient:
 
 class BuyerChainClient:
 
-    def __init__(self):
+    def __init__(self, main_wnd):
+        self.main_wnd = main_wnd
         self.buyer = BuyerTrans(default_web3, config.chain.core_contract)
         self.order_id_list = []
 
@@ -262,6 +265,19 @@ class BuyerChainClient:
         )
         d = start_client(sign_message)
 
+
+        def update_buyer_db(file_uuid, file_path, new_order_id):
+            market_hash = Encoder.bytes_to_base64_str(self.buyer.query_order(new_order_id)[0])
+            new_buyer_file_info = BuyerFileInfo(hashcode=market_hash, name=file_uuid, path=file_path,
+                                                size=os.path.getsize(file_path), is_downloaded=True)
+            add_file(new_buyer_file_info)
+
+        def update_treasure_pane():
+            content_tabs = self.main_wnd.content_tabs
+            wid = content_tabs.findChild(QWidget, "cloud_tab")
+            wid.update_table()
+
+
         def buyer_request_proxy_callback(message):
             print("Inside buyer request callback.")
             assert message.type == Message.PROXY_REPLY
@@ -279,25 +295,22 @@ class BuyerChainClient:
                 print('Decrypted file path ' + str(decrypted_file))
 
                 update_buyer_db(proxy_reply.file_uuid, decrypted_file, order_id)
-
                 self.confirm_order(order_id)
                 self.order_id_list.remove(order_id)
+
+                update_treasure_pane()
             else:
                 print(proxy_reply.error)
 
         d.addBoth(buyer_request_proxy_callback)
 
-        def update_buyer_db(file_uuid, file_path, new_order_id):
-            market_hash = Encoder.bytes_to_base64_str(self.buyer.query_order(new_order_id)[0])
-            new_buyer_file_info = BuyerFileInfo(hashcode=market_hash, name=file_uuid, path=file_path,
-                                                size=os.path.getsize(file_path), is_downloaded=True)
-            add_file(new_buyer_file_info)
-            # TODO Should signal update of table of buyer here.
 
 
 class SellerChainClient:
 
-    def __init__(self):
+    def __init__(self, main_wnd):
+        self.main_wnd = main_wnd
+
         self.seller = SellerTrans(default_web3, config.chain.core_contract)
         start_id = self.seller.get_order_num()
         self.monitor = poll_chain.OrderMonitor(start_id, self.seller)
@@ -461,9 +474,10 @@ def test_chain_event():
     # print(pub_key)
     # print('MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEddc0bkalTTqEiUu6g884be4ghnMGYWfyJHTSjEMrE+zCRq6T1VHF21vJCPXs+YBvtyPJ7mJiRyHw/2FH3b8unQ==')
 
-market_client = MarketClient()
-buyer_chain_client = BuyerChainClient()
-seller_chain_client = SellerChainClient()
+# market_client = MarketClient()
+# buyer_chain_client = BuyerChainClient()
+# seller_chain_client = SellerChainClient()
+
 proxy_chain_client = ProxyChainClient()
 # seller_proxy_client = SellerProxyClient()
 # market_client.login()
