@@ -23,7 +23,7 @@ from twisted.internet.task import LoopingCall
 
 from cpchain import config, root_dir
 # from cpchain.wallet.net import market_client, buyer_chain_client, seller_chain_client, test_chain_event
-from cpchain.wallet.net import MarketClient, BuyerChainClient, SellerChainClient, proxy_chain_client
+from cpchain.wallet.net import MarketClient, BuyerChainClient, SellerChainClient
 from cpchain.wallet.fs import get_file_list, upload_file_ipfs, get_buyer_file_list
 from cpchain.wallet.proxy_request import send_request_to_proxy
 from cpchain.utils import join_with_root, sizeof_fmt, open_file
@@ -742,7 +742,14 @@ def initialize_system():
         buyer_chain_client = BuyerChainClient(main_wnd)
         seller_chain_client = SellerChainClient(main_wnd)
     initialize_net()
+    
+    def monitor_chain_event():
+        seller_poll_chain = LoopingCall(seller_chain_client.send_request)
+        seller_poll_chain.start(10)
+        buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm)
+        buyer_check_confirm.start(10)
 
+    monitor_chain_event()
 
 
 def main():

@@ -16,7 +16,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 
 from cpchain.chain.trans import BuyerTrans, SellerTrans, ProxyTrans
 from cpchain.chain import poll_chain
-from twisted.internet.task import LoopingCall
+# from twisted.internet.task import LoopingCall
 from cpchain.chain.utils import default_web3
 from cpchain.utils import join_with_root, config
 from cpchain.chain.models import OrderInfo
@@ -409,6 +409,8 @@ class ProxyChainClient:
         self.proxy.claim_relay(5, bytes([0, 1, 2, 3] * 8))
 
 
+proxy_chain_client = ProxyChainClient()
+
 
 
 # class SellerProxyClient:
@@ -425,21 +427,21 @@ class ProxyChainClient:
 #                 print(self.new_order_info)
 
 
-def test_chain_event():
-    seller_poll_chain = LoopingCall(seller_chain_client.send_request)
-    seller_poll_chain.start(10)
+# def monitor_chain_event():
+#     seller_poll_chain = LoopingCall(seller_chain_client.send_request)
+#     seller_poll_chain.start(10)
 
 
-    # print(new_orders)
-    # new_orders.addCallbacks()
-    # print(order_list)
-    # order_info_list = []
-    # for i in order_list:
-    #     order_info_list.append(seller_chain_client.seller.query_order(i))
-    # print(order_info_list)
+#     # print(new_orders)
+#     # new_orders.addCallbacks()
+#     # print(order_list)
+#     # order_info_list = []
+#     # for i in order_list:
+#     #     order_info_list.append(seller_chain_client.seller.query_order(i))
+#     # print(order_info_list)
 
-    buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm)
-    buyer_check_confirm.start(15)
+#     buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm)
+#     buyer_check_confirm.start(15)
 
 
     # from twisted.internet import reactor
@@ -478,7 +480,7 @@ def test_chain_event():
 # buyer_chain_client = BuyerChainClient()
 # seller_chain_client = SellerChainClient()
 
-proxy_chain_client = ProxyChainClient()
+
 # seller_proxy_client = SellerProxyClient()
 # market_client.login()
 
