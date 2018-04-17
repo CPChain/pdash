@@ -738,15 +738,15 @@ def initialize_system():
     def initialize_net():
         global market_client, buyer_chain_client, seller_chain_client
         market_client = MarketClient(main_wnd)
-        buyer_chain_client = BuyerChainClient(main_wnd)
-        seller_chain_client = SellerChainClient(main_wnd)
+        buyer_chain_client = BuyerChainClient(main_wnd, market_client)
+        seller_chain_client = SellerChainClient(main_wnd, market_client)
     initialize_net()
     
     def monitor_chain_event():
         seller_poll_chain = LoopingCall(seller_chain_client.send_request)
         seller_poll_chain.start(10)
         buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm)
-        buyer_check_confirm.start(10)
+        buyer_check_confirm.start(15)
     monitor_chain_event()
 
 
@@ -757,6 +757,16 @@ def main():
     _handle_keyboard_interrupt()
 
     initialize_system()
+
+    # import logging
+    # a = logging.Logger.manager.loggerDict.keys()
+    # print(a)
+    # logger = logging.getLogger("web3.providers.rpc")  # adjust logger name
+    # # noisyLogger.getEffectiveLevel()  # indicates the current effective level
+    # logger.setLevel(logging.INFO)
+    import logging
+    logging.disable(2222222222222222)
+
     
     sys.exit(reactor.run())
 
