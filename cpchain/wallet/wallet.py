@@ -172,6 +172,9 @@ class TreasureTab(TabContentArea):
         self.local_file = 'local'
         self.init_ui()
 
+    def update_table(self):
+        print("##Treasure Tab update table.")
+
     def init_ui(self):
         self.row_number = 20
 

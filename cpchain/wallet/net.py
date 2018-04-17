@@ -24,7 +24,8 @@ from cpchain.chain.models import OrderInfo
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.client import start_client, download_file
 from cpchain.wallet import proxy_request
-from cpchain.wallet.fs import publish_file_update, session, FileInfo, decrypt_file_aes
+from cpchain.wallet.db import BuyerFileInfo
+from cpchain.wallet.fs import publish_file_update, session, FileInfo, decrypt_file_aes, add_file
 from cpchain.crypto import Encoder
 
 
@@ -200,11 +201,12 @@ class BuyerChainClient:
         # order_id =1
 
         d = deferToThread(self.buyer.place_order, product)
+
         def cb(order_id):
-            print('order id: ', order_id)
+            self.order_id_list.append(order_id)
+            print('order id: ', self.order_id_list)
         d.addCallback(cb)
-        self.order_id_list.append(self.buyer.place_order(product))
-        print('order id: ', self.order_id_list)
+
         return self.order_id_list
 
     def withdraw_order(self, order_id):
@@ -275,6 +277,9 @@ class BuyerChainClient:
                 print(file_path)
                 decrypted_file = decrypt_file_aes(file_path, proxy_reply.AES_key)
                 print('Decrypted file path ' + str(decrypted_file))
+
+                update_buyer_db(proxy_reply.file_uuid, decrypted_file, order_id)
+
                 self.confirm_order(order_id)
                 self.order_id_list.remove(order_id)
             else:
@@ -282,7 +287,12 @@ class BuyerChainClient:
 
         d.addBoth(buyer_request_proxy_callback)
 
-
+        def update_buyer_db(file_uuid, file_path, new_order_id):
+            market_hash = Encoder.bytes_to_base64_str(self.buyer.query_order(new_order_id)[0])
+            new_buyer_file_info = BuyerFileInfo(hashcode=market_hash, name=file_uuid, path=file_path,
+                                                size=os.path.getsize(file_path), is_downloaded=True)
+            add_file(new_buyer_file_info)
+            # TODO Should signal update of table of buyer here.
 
 
 class SellerChainClient:

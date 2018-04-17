@@ -40,7 +40,6 @@ class BuyerFileInfo(Base):
     path = Column(String)
     size = Column(Integer)
     is_downloaded = Column(Boolean)
-    aes_key = Column(String)
 
     def __repr__(self):
         return "<BuyerFileInfo(path='%s', remote_uri='%s')>" % (self.path, self.remote_uri)
