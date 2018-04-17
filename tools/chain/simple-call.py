@@ -18,6 +18,7 @@ def test_server_chain():
     # chain.utils.deploy_contract(config.chain.core_contract)
     buyertrans = BuyerTrans(server_web3, config.chain.core_contract)
     print(server_web3.eth.defaultAccount)
+    import ipdb; ipdb.set_trace()
     # desc_hash_base64 = 'AQkKqDxtNIRJ+1V82J5lP2/fRj/zbJ+2n0GzUF52Wsc='
     # desc_hash = Encoder.str_to_base64_byte(desc_hash_base64)
     # public_key = RSACipher.load_public_key()
