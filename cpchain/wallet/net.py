@@ -4,6 +4,8 @@ import json
 from cpchain import crypto
 import datetime, time
 
+from eth_utils import to_bytes
+
 from cryptography.hazmat.primitives.serialization import load_der_public_key
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -256,9 +258,11 @@ class SellerChainClient:
 
                 market_hash = new_order_info[0]
                 buyer_rsa_pubkey = new_order_info[1]
+                print("Before raw_aes_key")
                 raw_aes_key = session.query(FileInfo.aes_key)\
                     .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash))\
                     .all()[0][0]
+                print(raw_aes_key)
                 encrypted_aes_key = load_der_public_key(buyer_rsa_pubkey, backend=default_backend()).encrypt(
                     raw_aes_key,
                     padding.OAEP(
@@ -267,34 +271,41 @@ class SellerChainClient:
                         label=None
                     )
                 )
+                print("After raw_aes_key")
                 storage_type = Message.Storage.IPFS
                 ipfs_gateway = "192.168.0.132:5001"
                 # File hash is str type
+                print("Before file_hash")
                 file_hash = session.query(FileInfo.hashcode)\
                     .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash))\
                     .all()[0][0]
+                print(file_hash)
+                print("Before message")
                 message = Message()
+                print("After Message")
                 seller_data = message.seller_data
                 message.type = Message.SELLER_DATA
                 seller_data.order_id = new_order_id
-                seller_data.seller_addr = new_order_info[3]
-                seller_data.buyer_addr = new_order_info[2]
+                seller_data.seller_addr = to_bytes(hexstr=new_order_info[3])
+                seller_data.buyer_addr = to_bytes(hexstr=new_order_info[2])
                 seller_data.market_hash = market_hash
                 seller_data.AES_key = encrypted_aes_key
                 storage = seller_data.storage
                 storage.type = storage_type
                 ipfs = storage.ipfs
-                ipfs.file_hash = file_hash
+                ipfs.file_hash = file_hash.encode('utf-8')
                 ipfs.gateway = ipfs_gateway
-
+                print("Before sign message")
                 sign_message = SignMessage()
-                sign_message.public_key = market_client.pub_key
+                sign_message.public_key = Encoder.str_to_base64_byte(market_client.pub_key)
+                print("Before serialize")
                 sign_message.data = message.SerializeToString()
                 sign_message.signature = crypto.ECCipher.generate_signature(
-                    market_client.priv_key,
+                    Encoder.str_to_base64_byte(market_client.priv_key),
                     sign_message.data
                 )
-
+                # sign_message.signature = b'nonsense'
+                print("Before start_client")
                 d = start_client(sign_message)
                 d.addBoth(self.callback_func_example)
 
@@ -308,7 +319,8 @@ class SellerChainClient:
 
         if not proxy_reply.error:
             print('file_uuid: %s' % proxy_reply.file_uuid)
-            print('AES_key: %s' % proxy_reply.AES_key.decode())
+            print('AES_key: ')
+            print(proxy_reply.AES_key)
             # add other action...
         else:
             print(proxy_reply.error)
