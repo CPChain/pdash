@@ -3,8 +3,11 @@ from twisted.internet.threads import deferToThread
 
 import treq
 import json
+import os
 from cpchain import crypto
 import datetime, time
+
+from eth_utils import to_bytes
 
 from cryptography.hazmat.primitives.serialization import load_der_public_key
 from cryptography.hazmat.backends import default_backend
@@ -19,9 +22,10 @@ from cpchain.utils import join_with_root, config
 from cpchain.chain.models import OrderInfo
 
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
-from cpchain.proxy.client import start_client
+from cpchain.proxy.client import start_client, download_file
 from cpchain.wallet import proxy_request
-from cpchain.wallet.fs import publish_file_update, session, FileInfo
+from cpchain.wallet.db import BuyerFileInfo
+from cpchain.wallet.fs import publish_file_update, session, FileInfo, decrypt_file_aes, add_file
 from cpchain.crypto import Encoder
 
 
@@ -169,11 +173,12 @@ class BuyerChainClient:
 
     def __init__(self):
         self.buyer = BuyerTrans(default_web3, config.chain.core_contract)
+        self.order_id_list = []
 
     def buy_product(self, msg_hash):
         desc_hash = crypto.Encoder.str_to_base64_byte(msg_hash)
         rsa_key = crypto.RSACipher.load_public_key()
-        rsa_key_list = []
+        # rsa_key_list = []
         # for i in rsa_key:
         #     rsa_key_list.append(bytes([i]))
         # product = OrderInfo(desc_hash=b'testdata', seller=b'selleraddress',
@@ -195,16 +200,14 @@ class BuyerChainClient:
         # buyer = BuyerTrans(web3
         # order_id =1
 
-        # XXX we call it in another thread
-        # order_id = self.buyer.place_order(product)
-        # print('order id: ', order_id)
-        # return order_id
-
         d = deferToThread(self.buyer.place_order, product)
+
         def cb(order_id):
-            print('order id: ', order_id)
+            self.order_id_list.append(order_id)
+            print('order id: ', self.order_id_list)
         d.addCallback(cb)
 
+        return self.order_id_list
 
     def withdraw_order(self, order_id):
         # tx_hash = '0xand..'
@@ -224,15 +227,72 @@ class BuyerChainClient:
         print('start a dispute: ', tx_hash)
         return tx_hash
 
-    def check_confirm(self, order_id):
-        state = self.buyer.query_order(order_id)[9]
-        if state == 1:
-            print('proxy confirmed')
-            # send request to proxy
-            return state
+    def check_confirm(self):
+        if len(self.order_id_list) > 0:
+            for current_id in self.order_id_list:
+                state = self.buyer.query_order(current_id)[10]
+                # If state is Delivered, request to proxy
+                if state == 1:
+                    print('proxy confirmed')
+                    # send request to proxy
+                    self.send_request(current_id)
+                    return state
+                else:
+                    print('proxy not confirmed')
+                    return state
         else:
-            print('proxy not confirmed')
-            return state
+            print('no placed order')
+
+    def send_request(self, order_id):
+        new_order_info = self.buyer.query_order(order_id)
+        message = Message()
+        buyer_data = message.buyer_data
+        message.type = Message.BUYER_DATA
+        buyer_data.order_id = order_id
+        buyer_data.seller_addr = to_bytes(hexstr=new_order_info[3])
+        buyer_data.buyer_addr = to_bytes(hexstr=new_order_info[2])
+        buyer_data.market_hash = new_order_info[0]
+
+        sign_message = SignMessage()
+        sign_message.public_key = Encoder.str_to_base64_byte(market_client.pub_key)
+        sign_message.data = message.SerializeToString()
+        sign_message.signature = crypto.ECCipher.generate_signature(
+            Encoder.str_to_base64_byte(market_client.priv_key),
+            sign_message.data
+        )
+        d = start_client(sign_message)
+
+        def buyer_request_proxy_callback(message):
+            print("Inside buyer request callback.")
+            assert message.type == Message.PROXY_REPLY
+            proxy_reply = message.proxy_reply
+
+            if not proxy_reply.error:
+                print('file_uuid: %s' % proxy_reply.file_uuid)
+                print('AES_key: ')
+                print(len(proxy_reply.AES_key))
+                print(proxy_reply.AES_key)
+                file_dir = os.path.expanduser(config.wallet.download_dir)
+                file_path = os.path.join(file_dir, proxy_reply.file_uuid)
+                print(file_path)
+                decrypted_file = decrypt_file_aes(file_path, proxy_reply.AES_key)
+                print('Decrypted file path ' + str(decrypted_file))
+
+                update_buyer_db(proxy_reply.file_uuid, decrypted_file, order_id)
+
+                self.confirm_order(order_id)
+                self.order_id_list.remove(order_id)
+            else:
+                print(proxy_reply.error)
+
+        d.addBoth(buyer_request_proxy_callback)
+
+        def update_buyer_db(file_uuid, file_path, new_order_id):
+            market_hash = Encoder.bytes_to_base64_str(self.buyer.query_order(new_order_id)[0])
+            new_buyer_file_info = BuyerFileInfo(hashcode=market_hash, name=file_uuid, path=file_path,
+                                                size=os.path.getsize(file_path), is_downloaded=True)
+            add_file(new_buyer_file_info)
+            # TODO Should signal update of table of buyer here.
 
 
 class SellerChainClient:
@@ -259,16 +319,15 @@ class SellerChainClient:
         if len(new_order) != 0:
             for new_order_id in new_order:
                 new_order_info = self.seller.query_order(new_order_id)
-                print('new oder infomation:')
+                print('In seller send request: new oder infomation:')
                 print(new_order_info)
                 # send message to proxy
-                # proxy_request.send_request_to_proxy('5rdXcW+05mSPmgjLFLmLTiBZmCxzTbdQnPTEriTY3/4='.encode(), "seller_data")
-
                 market_hash = new_order_info[0]
                 buyer_rsa_pubkey = new_order_info[1]
                 raw_aes_key = session.query(FileInfo.aes_key)\
                     .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash))\
                     .all()[0][0]
+                print(raw_aes_key)
                 encrypted_aes_key = load_der_public_key(buyer_rsa_pubkey, backend=default_backend()).encrypt(
                     raw_aes_key,
                     padding.OAEP(
@@ -277,6 +336,8 @@ class SellerChainClient:
                         label=None
                     )
                 )
+                print(encrypted_aes_key)
+                print("Encrypted_aes_key length" + str(len(encrypted_aes_key)))
                 storage_type = Message.Storage.IPFS
                 ipfs_gateway = "192.168.0.132:5001"
                 # File hash is str type
@@ -287,29 +348,27 @@ class SellerChainClient:
                 seller_data = message.seller_data
                 message.type = Message.SELLER_DATA
                 seller_data.order_id = new_order_id
-                seller_data.seller_addr = new_order_info[3]
-                seller_data.buyer_addr = new_order_info[2]
+                seller_data.seller_addr = to_bytes(hexstr=new_order_info[3])
+                seller_data.buyer_addr = to_bytes(hexstr=new_order_info[2])
                 seller_data.market_hash = market_hash
                 seller_data.AES_key = encrypted_aes_key
                 storage = seller_data.storage
                 storage.type = storage_type
                 ipfs = storage.ipfs
-                ipfs.file_hash = file_hash
+                ipfs.file_hash = file_hash.encode('utf-8')
                 ipfs.gateway = ipfs_gateway
-
                 sign_message = SignMessage()
-                sign_message.public_key = market_client.pub_key
+                sign_message.public_key = Encoder.str_to_base64_byte(market_client.pub_key)
                 sign_message.data = message.SerializeToString()
                 sign_message.signature = crypto.ECCipher.generate_signature(
-                    market_client.priv_key,
+                    Encoder.str_to_base64_byte(market_client.priv_key),
                     sign_message.data
                 )
-
                 d = start_client(sign_message)
-                d.addBoth(self.callback_func_example)
+                d.addBoth(self.seller_deliver_proxy_callback)
 
 
-    def callback_func_example(self, message):
+    def seller_deliver_proxy_callback(self, message):
         # print('proxy recieved message')
         print("Inside seller request callback.")
         assert message.type == Message.PROXY_REPLY
@@ -318,7 +377,8 @@ class SellerChainClient:
 
         if not proxy_reply.error:
             print('file_uuid: %s' % proxy_reply.file_uuid)
-            print('AES_key: %s' % proxy_reply.AES_key.decode())
+            print('AES_key: ')
+            print(proxy_reply.AES_key)
             # add other action...
         else:
             print(proxy_reply.error)
@@ -365,9 +425,8 @@ def test_chain_event():
     #     order_info_list.append(seller_chain_client.seller.query_order(i))
     # print(order_info_list)
 
-
-    # buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm, 5)
-    # buyer_check_confirm.start(15)
+    buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm)
+    buyer_check_confirm.start(15)
 
 
     # from twisted.internet import reactor
