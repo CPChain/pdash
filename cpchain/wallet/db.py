@@ -26,6 +26,7 @@ class FileInfo(Base):
     remote_uri = Column(String)
     is_published = Column(Boolean)
     aes_key = Column(String)
+    market_hash = Column(String)
 
     def __repr__(self):
         return "<FileInfo(path='%s', remote_uri='%s')>" % (self.path, self.remote_uri)
@@ -38,8 +39,6 @@ class BuyerFileInfo(Base):
     name = Column(String)
     path = Column(String)
     size = Column(Integer)
-    remote_type = Column(String)
-    remote_uri = Column(String)
     is_downloaded = Column(Boolean)
     aes_key = Column(String)
 

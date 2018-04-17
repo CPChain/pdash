@@ -22,6 +22,9 @@ from cpchain.proxy.message import message_sanity_check, sign_message_verify
 from cpchain.storage import IPFSStorage
 from cpchain.proxy.proxy_db import Trade, ProxyDB
 
+from cpchain.chain.trans import ProxyTrans
+from cpchain.chain.utils import default_web3
+
 server_root = os.path.join(config.home, config.proxy.server_root)
 server_root = os.path.expanduser(server_root)
 os.makedirs(server_root, exist_ok=True)
@@ -95,9 +98,7 @@ class SSLServerProtocol(NetstringReceiver):
                         proxy_db.insert(trade)
                         self.proxy_reply_success()
 
-                        # TODO: Proxy should claim that it has
-                        # received data from seller on contract
-                        # claim_reply(order_id)
+                        self.proxy_claim_relay()
 
                         return
                     else:
@@ -134,6 +135,12 @@ class SSLServerProtocol(NetstringReceiver):
                 self.proxy_reply_error(error)
                 return
 
+    def proxy_claim_relay(self):
+        proxy_trans = ProxyTrans(default_web3, config.chain.core_contract)
+        # TODO Should sign order id and sha256 here
+        deliver_hash = b'1' * 32
+        tx_hash = proxy_trans.claim_relay(self.trade.order_id, deliver_hash)
+        return tx_hash
 
     def proxy_reply_success(self):
         trade = self.trade
@@ -161,6 +168,7 @@ class SSLServerProtocol(NetstringReceiver):
             # TODO: Proxy should claim that it has
             # received data from seller on contract
             # claim_reply(order_id)
+            self.proxy_claim_relay()
         else:
             error = "failed to get file from ipfs"
             self.proxy_reply_error(error)

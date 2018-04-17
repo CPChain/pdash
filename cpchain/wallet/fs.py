@@ -1,22 +1,8 @@
-import tempfile, os
+import tempfile
+import os
 
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
-
-from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
-from cpchain.proxy.client import start_client, download_file
-from cpchain.chain.trans import ProxyTrans
-from cpchain.chain.utils import default_web3
 from cpchain.wallet.db import session, FileInfo, osp, create_engine, sessionmaker, BuyerFileInfo
-from cpchain.crypto import AESCipher, ECCipher
-from cpchain.storage import IPFSStorage
-from cpchain import root_dir, config
-from cpchain.utils import join_with_root
-from cpchain.wallet.db import session, FileInfo, osp, create_engine, sessionmaker, BuyerFileInfo
-from cpchain.crypto import AESCipher, RSACipher
+from cpchain.crypto import AESCipher, RSACipher, Encoder
 from cpchain.storage import IPFSStorage
 from cpchain import root_dir, config
 
@@ -50,6 +36,16 @@ def add_file(new_file_info):
     session.commit()
 
 
+def publish_file_update(market_hash, selected_id):
+    dbpath = osp.join(root_dir, config.wallet.dbpath)
+    engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    session.query(FileInfo).filter(FileInfo.id == selected_id + 1). \
+        update({FileInfo.market_hash: market_hash, FileInfo.is_published: True}, synchronize_session=False)
+    session.commit()
+
+
 def delete_file(file_name):
     session.query(FileInfo).filter(FileInfo.name == file_name).\
         delete(synchronize_session=False)
@@ -80,14 +76,18 @@ def decrypt_file(file_in_path, file_out_path):
 def upload_file_ipfs(file_path):
     with tempfile.TemporaryDirectory() as tmpdirname:
         encrypted_path = os.path.join(tmpdirname, 'encrypted.txt')
+        print("before encrypt")
         this_key = encrypt_file(file_path, encrypted_path)
+        print("after encrypt")
         ipfs_client = IPFSStorage()
         ipfs_client.connect()
         file_hash = ipfs_client.upload_file(encrypted_path)
     file_name = list(os.path.split(file_path))[-1]
     file_size = os.path.getsize(file_path)
+    print("before database")
     new_file_info = FileInfo(hashcode=str(file_hash), name=file_name, path=file_path, size=file_size,
-                             remote_type="ipfs", remote_uri="/ipfs/" + file_name, is_published=False, aes_key=this_key)
+                             remote_type="ipfs", remote_uri="/ipfs/" + file_name,
+                             is_published=False, aes_key=this_key)
     add_file(new_file_info)
     return file_hash
 
