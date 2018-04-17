@@ -307,7 +307,6 @@ class BuyerChainClient:
 
 
 class SellerChainClient:
-
     def __init__(self, main_wnd):
         self.main_wnd = main_wnd
 

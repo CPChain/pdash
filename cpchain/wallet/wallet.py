@@ -735,7 +735,6 @@ def _handle_keyboard_interrupt():
 
     
 def initialize_system():
-
     def initialize_net():
         global market_client, buyer_chain_client, seller_chain_client
         market_client = MarketClient(main_wnd)
@@ -748,7 +747,6 @@ def initialize_system():
         seller_poll_chain.start(10)
         buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm)
         buyer_check_confirm.start(10)
-
     monitor_chain_event()
 
 
