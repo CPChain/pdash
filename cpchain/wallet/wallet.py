@@ -730,20 +730,22 @@ def _handle_keyboard_interrupt():
     timer.timeout.connect(lambda: None)
 
 
-
-def main():
-    from twisted.internet import reactor
-    main_wnd = MainWindow(reactor)
-    _handle_keyboard_interrupt()
-
+def initialize_system():
     test_chain_event()
 
     if os.getenv('PROXY_LOCAL_RUN'):
         send_request_to_proxy(1, 'seller_data')
         reactor.callLater(5, send_request_to_proxy, 1, 'buyer_data')
 
-    sys.exit(reactor.run())
 
+def main():
+    from twisted.internet import reactor
+    main_wnd = MainWindow(reactor)
+    _handle_keyboard_interrupt()
+
+    initialize_system()
+    
+    sys.exit(reactor.run())
 
 
 if __name__ == '__main__':
