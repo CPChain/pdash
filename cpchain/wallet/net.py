@@ -172,11 +172,12 @@ class BuyerChainClient:
 
     def __init__(self):
         self.buyer = BuyerTrans(default_web3, config.chain.core_contract)
+        self.order_id_list = []
 
     def buy_product(self, msg_hash):
         desc_hash = crypto.Encoder.str_to_base64_byte(msg_hash)
         rsa_key = crypto.RSACipher.load_public_key()
-        rsa_key_list = []
+        # rsa_key_list = []
         # for i in rsa_key:
         #     rsa_key_list.append(bytes([i]))
         # product = OrderInfo(desc_hash=b'testdata', seller=b'selleraddress',
@@ -198,16 +199,13 @@ class BuyerChainClient:
         # buyer = BuyerTrans(web3
         # order_id =1
 
-        # XXX we call it in another thread
-        # order_id = self.buyer.place_order(product)
-        # print('order id: ', order_id)
-        # return order_id
-
         d = deferToThread(self.buyer.place_order, product)
         def cb(order_id):
             print('order id: ', order_id)
         d.addCallback(cb)
-
+        self.order_id_list.append(self.buyer.place_order(product))
+        print('order id: ', self.order_id_list)
+        return self.order_id_list
 
     def withdraw_order(self, order_id):
         # tx_hash = '0xand..'
@@ -227,17 +225,21 @@ class BuyerChainClient:
         print('start a dispute: ', tx_hash)
         return tx_hash
 
-    def check_confirm(self, order_id):
-        state = self.buyer.query_order(order_id)[10]
-        # If state is Delivered, request to proxy
-        if state == 1:
-            print('proxy confirmed')
-            # send request to proxy
-            self.send_request(order_id)
-            return state
+    def check_confirm(self):
+        if len(self.order_id_list) > 0:
+            for current_id in self.order_id_list:
+                state = self.buyer.query_order(current_id)[10]
+                # If state is Delivered, request to proxy
+                if state == 1:
+                    print('proxy confirmed')
+                    # send request to proxy
+                    self.send_request(current_id)
+                    return state
+                else:
+                    print('proxy not confirmed')
+                    return state
         else:
-            print('proxy not confirmed')
-            return state
+            print('no placed order')
 
     def send_request(self, order_id):
         new_order_info = self.buyer.query_order(order_id)
@@ -257,26 +259,30 @@ class BuyerChainClient:
             sign_message.data
         )
         d = start_client(sign_message)
-        d.addBoth(self.buyer_request_proxy_callback)
 
-    def buyer_request_proxy_callback(self, message):
-        print("Inside buyer request callback.")
-        assert message.type == Message.PROXY_REPLY
-        proxy_reply = message.proxy_reply
+        def buyer_request_proxy_callback(message):
+            print("Inside buyer request callback.")
+            assert message.type == Message.PROXY_REPLY
+            proxy_reply = message.proxy_reply
 
-        if not proxy_reply.error:
-            print('file_uuid: %s' % proxy_reply.file_uuid)
-            print('AES_key: ')
-            print(len(proxy_reply.AES_key))
-            print(proxy_reply.AES_key)
-            file_dir = os.path.expanduser(config.wallet.download_dir)
-            file_path = os.path.join(file_dir, proxy_reply.file_uuid)
-            print(file_path)
-            decrypted_file = decrypt_file_aes(file_path, proxy_reply.AES_key)
-            print('Decrypted file path ' + str(decrypted_file))
-            # self.confirm_order(order_id)
-        else:
-            print(proxy_reply.error)
+            if not proxy_reply.error:
+                print('file_uuid: %s' % proxy_reply.file_uuid)
+                print('AES_key: ')
+                print(len(proxy_reply.AES_key))
+                print(proxy_reply.AES_key)
+                file_dir = os.path.expanduser(config.wallet.download_dir)
+                file_path = os.path.join(file_dir, proxy_reply.file_uuid)
+                print(file_path)
+                decrypted_file = decrypt_file_aes(file_path, proxy_reply.AES_key)
+                print('Decrypted file path ' + str(decrypted_file))
+                self.confirm_order(order_id)
+                self.order_id_list.remove(order_id)
+            else:
+                print(proxy_reply.error)
+
+        d.addBoth(buyer_request_proxy_callback)
+
+
 
 
 class SellerChainClient:
@@ -409,7 +415,7 @@ def test_chain_event():
     #     order_info_list.append(seller_chain_client.seller.query_order(i))
     # print(order_info_list)
 
-    buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm, 46)
+    buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm)
     buyer_check_confirm.start(15)
 
 
