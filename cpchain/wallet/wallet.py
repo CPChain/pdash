@@ -22,11 +22,11 @@ from twisted.internet import threads, defer
 from twisted.internet.task import LoopingCall
 
 from cpchain import config, root_dir
-from cpchain.utils import join_with_root, sizeof_fmt
 from cpchain.wallet.net import market_client, buyer_chain_client, seller_chain_client, test_chain_event
 # from cpchain.wallet.net import buy
 from cpchain.wallet.fs import get_file_list, upload_file_ipfs, get_buyer_file_list
 from cpchain.wallet.proxy_request import send_request_to_proxy
+from cpchain.utils import join_with_root, sizeof_fmt, open_file
 
 
 # utils
@@ -184,6 +184,8 @@ class TreasureTab(TabContentArea):
                     return
 
                 def open_file_action():
+                    open_file('/home/introom/downloads/xx.txt')
+
                     row = file_table.currentRow()
                     # TODO note it's 2 because of the skew of INDEX.
                     col = file_table.columnCount()-2
@@ -728,20 +730,22 @@ def _handle_keyboard_interrupt():
     timer.timeout.connect(lambda: None)
 
 
-
-def main():
-    from twisted.internet import reactor
-    main_wnd = MainWindow(reactor)
-    _handle_keyboard_interrupt()
-
+def initialize_system():
     test_chain_event()
 
     if os.getenv('PROXY_LOCAL_RUN'):
         send_request_to_proxy(1, 'seller_data')
         reactor.callLater(5, send_request_to_proxy, 1, 'buyer_data')
 
-    sys.exit(reactor.run())
 
+def main():
+    from twisted.internet import reactor
+    main_wnd = MainWindow(reactor)
+    _handle_keyboard_interrupt()
+
+    initialize_system()
+    
+    sys.exit(reactor.run())
 
 
 if __name__ == '__main__':

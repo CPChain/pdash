@@ -461,4 +461,3 @@ def get_addr_from_public_key(pub_key):
     if len(encode_point) == 65:
         encode_point = encode_point[1:]
     return keccak(encode_point)[-20:]
-
