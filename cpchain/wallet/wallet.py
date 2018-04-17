@@ -178,6 +178,27 @@ class TreasureTab(TabContentArea):
         def create_file_table():
             self.file_table = file_table = TableWidget(self)
 
+            def right_menu():
+                sel = file_table.selectionModel()
+                if not sel.hasSelection():
+                    return
+
+                def open_file_action():
+                    row = file_table.currentRow()
+                    # TODO note it's 2 because of the skew of INDEX.
+                    col = file_table.columnCount()-2
+                    cur_item = file_table.item(row, col)
+                    # buyer_chain_client.buy_product(cur_item.text())
+
+                menu = QMenu(file_table)
+                action = QAction("Open File", file_table, triggered=open_file_action)
+
+                menu.addAction(action)
+                menu.exec_(QCursor.pos())
+            file_table.set_right_menu(right_menu)
+
+
+
             file_table.setColumnCount(4)
             file_table.setRowCount(self.row_number)
             file_table.setHorizontalHeaderLabels(['File Name', 'File Size', 'Downloaded', 'Hash Code'])
