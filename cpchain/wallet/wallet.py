@@ -196,27 +196,34 @@ class TreasureTab(TabContentArea):
                 if not sel.hasSelection():
                     return
 
-                def open_file_action():
-                    open_file('/home/introom/downloads/xx.txt')
-
-                    row = file_table.currentRow()
-                    # TODO note it's 2 because of the skew of INDEX.
-                    col = file_table.columnCount()-2
-                    cur_item = file_table.item(row, col)
-                    # buyer_chain_client.buy_product(cur_item.text())
-
                 menu = QMenu(file_table)
-                action = QAction("Open File", file_table, triggered=open_file_action)
+
+                def get_item():
+                    row = file_table.currentRow()
+                    col = file_table.columnCount()
+                    cur_item = file_table.item(row, col)
+                    return cur_item
+
+                def open_file_action():
+                    item = get_item()
+                    path = item.txt()
+                    open_file(path)
+                action = QAction("Open Plain File", file_table, triggered=open_file_action)
+
+                def open_encrypted_file_action():
+                    item = get_item()
+                    path = osp.join(item.txt(), "-encrypted")
+                    open_file(path)
+                action = QAction("Open Encrypted File", file_table, triggered=open_encrypted_file_action)
 
                 menu.addAction(action)
                 menu.exec_(QCursor.pos())
             file_table.set_right_menu(right_menu)
 
-
-
-            file_table.setColumnCount(4)
             file_table.setRowCount(self.row_number)
-            file_table.setHorizontalHeaderLabels(['File Name', 'File Size', 'Downloaded', 'Hash Code'])
+            headers = ['File Name', 'File Size', 'Downloaded', 'Hash Code', 'INDEX']
+            file_table.setColumnCount(len(headers)-1)
+            file_table.setHorizontalHeaderLabels(headers)
 
             file_list = get_buyer_file_list()
             for cur_row in range(self.row_number):
