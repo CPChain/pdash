@@ -34,7 +34,7 @@ class MarketClient:
         self.main_wnd = main_wnd
 
         # self.client = HTTPClient(reactor)
-        self.url = 'http://192.168.0.132:8083/api/v1/'
+        self.url = config.market.market_url
         private_key_file_path = join_with_root(config.wallet.private_key_file)
         password_path = join_with_root(config.wallet.private_key_password_file)
 
