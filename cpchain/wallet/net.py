@@ -156,6 +156,7 @@ class MarketClient:
         # print(resp)
         confirm_info = yield treq.json_content(resp)
         print('product info: ')
+        # print(type(confirm_info[0]))
         print(confirm_info)
         return confirm_info
 
@@ -297,7 +298,13 @@ class BuyerChainClient:
                 print('Decrypted file path ' + str(decrypted_file))
 
                 market_hash = update_buyer_db(proxy_reply.file_uuid, decrypted_file, order_id)
-                self.market_client.query_product(market_hash)
+                d = self.market_client.query_product(market_hash)
+
+                def get_file_title(response):
+                    return response[0]['title']
+
+                d.addCallback(get_file_title)
+
                 update_treasure_pane()
                 
                 self.confirm_order(order_id)
