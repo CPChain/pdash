@@ -206,18 +206,20 @@ class TreasureTab(TabContentArea):
 
                 def open_file_action():
                     item = get_item()
-                    path = item.txt()
+                    path = item.text()
                     open_file(path)
                 action = QAction("Open Plain File", file_table, triggered=open_file_action)
+                menu.addAction(action)
 
                 def open_encrypted_file_action():
                     item = get_item()
-                    path = osp.join(item.txt(), "-encrypted")
+                    path = osp.join(item.text(), "-encrypted")
                     open_file(path)
                 action = QAction("Open Encrypted File", file_table, triggered=open_encrypted_file_action)
-
                 menu.addAction(action)
+
                 menu.exec_(QCursor.pos())
+                
             file_table.set_right_menu(right_menu)
 
             file_table.setRowCount(self.row_number)
