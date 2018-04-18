@@ -180,9 +180,9 @@ class TreasureTab(TabContentArea):
             if cur_row == file_list.__len__():
                 break
             self.file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
-            self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
-            self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
-            self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].hashcode))
+            self.file_table.setItem(cur_row, 2, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
+            self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
+            self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
 
 
     def init_ui(self):
