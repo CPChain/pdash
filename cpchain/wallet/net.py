@@ -273,6 +273,7 @@ class BuyerChainClient:
             new_buyer_file_info = BuyerFileInfo(hashcode=market_hash, name=file_uuid, path=file_path,
                                                 size=os.path.getsize(file_path), is_downloaded=True)
             add_file(new_buyer_file_info)
+            return market_hash
 
         def update_treasure_pane():
             from PyQt5.QtWidgets import QWidget
@@ -297,8 +298,8 @@ class BuyerChainClient:
                 decrypted_file = decrypt_file_aes(file_path, proxy_reply.AES_key)
                 print('Decrypted file path ' + str(decrypted_file))
 
-                update_buyer_db(proxy_reply.file_uuid, decrypted_file, order_id)
-                # XXX put it above confirmation.
+                market_hash = update_buyer_db(proxy_reply.file_uuid, decrypted_file, order_id)
+                self.market_client.query_product(market_hash)
                 update_treasure_pane()
                 
                 self.confirm_order(order_id)
