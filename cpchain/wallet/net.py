@@ -267,7 +267,6 @@ class BuyerChainClient:
         )
         d = start_client(sign_message)
 
-
         def update_buyer_db(file_uuid, file_path, new_order_id):
             market_hash = Encoder.bytes_to_base64_str(self.buyer.query_order(new_order_id)[0])
             new_buyer_file_info = BuyerFileInfo(hashcode=market_hash, name=file_uuid, path=file_path,
@@ -280,7 +279,6 @@ class BuyerChainClient:
             content_tabs = self.main_wnd.content_tabs
             wid = content_tabs.findChild(QWidget, "treasure_tab")
             wid.update_table()
-
 
         def buyer_request_proxy_callback(message):
             print("Inside buyer request callback.")
