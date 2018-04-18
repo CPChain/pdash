@@ -18,6 +18,7 @@ from twisted.web.static import File
 from cpchain import config, root_dir
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.message import message_sanity_check, sign_message_verify
+from cpchain.crypto import get_addr_from_public_key
 
 from cpchain.storage import IPFSStorage
 from cpchain.proxy.proxy_db import Trade, ProxyDB
@@ -74,10 +75,10 @@ class SSLServerProtocol(NetstringReceiver):
             trade.market_hash = data.market_hash
             trade.AES_key = data.AES_key
 
-            if public_key != data.seller_addr:
-                error = "not seller's signature"
-                self.proxy_reply_error(error)
-                return
+            # if get_addr_from_public_key(public_key) != data.seller_addr:
+            #     error = "not seller's signature"
+            #     self.proxy_reply_error(error)
+            #     return
 
             storage = data.storage
             if storage.type == Message.Storage.IPFS:
@@ -121,10 +122,10 @@ class SSLServerProtocol(NetstringReceiver):
             trade.buyer_addr = data.buyer_addr
             trade.market_hash = data.market_hash
 
-            if public_key != data.buyer_addr:
-                error = "not buyer's signature"
-                self.proxy_reply_error(error)
-                return
+            # if get_addr_from_public_key(public_key) != data.buyer_addr:
+            #     error = "not buyer's signature"
+            #     self.proxy_reply_error(error)
+            #     return
 
             if proxy_db.count(trade):
                 self.trade = proxy_db.query(trade)

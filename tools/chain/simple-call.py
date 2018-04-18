@@ -3,6 +3,8 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
+from eth_utils import to_bytes
+
 from cpchain.wallet.fs import *
 from cpchain.chain.trans import *
 from cpchain import chain, config, root_dir
@@ -16,6 +18,7 @@ def test_server_chain():
     # chain.utils.deploy_contract(config.chain.core_contract)
     buyertrans = BuyerTrans(server_web3, config.chain.core_contract)
     print(server_web3.eth.defaultAccount)
+    import ipdb; ipdb.set_trace()
     # desc_hash_base64 = 'AQkKqDxtNIRJ+1V82J5lP2/fRj/zbJ+2n0GzUF52Wsc='
     # desc_hash = Encoder.str_to_base64_byte(desc_hash_base64)
     # public_key = RSACipher.load_public_key()
@@ -37,23 +40,27 @@ def test_server_chain():
     order_num = buyertrans.get_order_num()
     print(order_num)
     latest_order_info = buyertrans.query_order(order_num - 1)
+    # print(type(latest_order_info[2]))
+    # print(to_bytes(hexstr=latest_order_info[2]))
+    print(len(latest_order_info[0]))
+    print(latest_order_info[10])
     # print(type(latest_order_info[1]))
     # print(len(latest_order_info[1]))
     # print()
-    market_hash = 'qHZP3XChYo3y7ZUWVVdu1LHB2s9AYD8jPILVhgSQ5U4='
-    raw_aes_key = session.query(FileInfo.aes_key).filter(FileInfo.market_hash == market_hash).all()[0][0]
-    print(type(raw_aes_key))
-    print(len(raw_aes_key))
-    buyer_rsa_pubkey = latest_order_info[1]
-    encrypted_aes_key = load_der_public_key(buyer_rsa_pubkey, backend=default_backend()).encrypt(
-        raw_aes_key,
-        padding.OAEP(
-            mgf=padding.MGF1(algorithm=hashes.SHA256()),
-            algorithm=hashes.SHA256(),
-            label=None
-        )
-    )
-    print(str(type(encrypted_aes_key)) + ' $$ ' + str(len(encrypted_aes_key)))
+    # market_hash = 'qHZP3XChYo3y7ZUWVVdu1LHB2s9AYD8jPILVhgSQ5U4='
+    # raw_aes_key = session.query(FileInfo.aes_key).filter(FileInfo.market_hash == market_hash).all()[0][0]
+    # print(type(raw_aes_key))
+    # print(len(raw_aes_key))
+    # buyer_rsa_pubkey = latest_order_info[1]
+    # encrypted_aes_key = load_der_public_key(buyer_rsa_pubkey, backend=default_backend()).encrypt(
+    #     raw_aes_key,
+    #     padding.OAEP(
+    #         mgf=padding.MGF1(algorithm=hashes.SHA256()),
+    #         algorithm=hashes.SHA256(),
+    #         label=None
+    #     )
+    # )
+    # print(str(type(encrypted_aes_key)) + ' $$ ' + str(len(encrypted_aes_key)))
     # file_hash = session.query(FileInfo.hashcode) \
     #     .filter(FileInfo.market_hash == market_hash) \
     #     .all()[0][0]

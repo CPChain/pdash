@@ -1,20 +1,19 @@
 {
     "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-  "coinbase": "0x22114f40ed222e83bbd88dc6cbb3b9a136299a23",
-   "extraData": "0x686f727365",
-   "config": {
-       "daoForkBlock": 0,
-     "daoForSupport": true,
-    "homesteadBlock": 0
+    "coinbase": "0x22114f40ed222e83bbd88dc6cbb3b9a136299a23",
+    "extraData": "0x686f727365",
+    "config": {
+        "daoForkBlock": 0,
+        "daoForSupport": true,
+        "homesteadBlock": 0
     },
-   "timestamp": "0x0",
+    "timestamp": "0x0",
     "mixhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "nonce": "0xdeadbeefdeadbeef",
     "alloc": {
-        "0x22114f40ed222e83bbd88dc6cbb3b9a136299a23":{
-          "balance": "1000000000000000000000000000000"
-      }
-      },
+        "0x22114f40ed222e83bbd88dc6cbb3b9a136299a23":{"balance": "1000000000000000000000000000000"},
+        "0x7975bcf2faefec0dae6ccc82a66f89b12f23c747":{"balance": "1000000000000000000000000000000"},
+    },
     "gasLimit": "0x47d5cc",
     "difficulty": "0x01"
 }

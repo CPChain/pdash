@@ -104,7 +104,7 @@ def download_file_ipfs(fhash, file_path):
 # Decrypt aes key with rsa key then decrypt file with aes key.
 def decrypt_file_aes(file_path, aes_key):
     decrypted_aes_key = RSACipher.decrypt(aes_key)
-
+    print('In Decrypt file aes:' + str(len(decrypted_aes_key)))
     decrypter = AESCipher(decrypted_aes_key)
     decrypted_path = file_path + "_decrypted"
     decrypter.decrypt(file_path, decrypted_path)

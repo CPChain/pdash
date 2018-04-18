@@ -22,8 +22,8 @@ from twisted.internet import threads, defer
 from twisted.internet.task import LoopingCall
 
 from cpchain import config, root_dir
-from cpchain.wallet.net import market_client, buyer_chain_client, seller_chain_client, test_chain_event
-# from cpchain.wallet.net import buy
+# from cpchain.wallet.net import market_client, buyer_chain_client, seller_chain_client, test_chain_event
+from cpchain.wallet.net import MarketClient, BuyerChainClient, SellerChainClient
 from cpchain.wallet.fs import get_file_list, upload_file_ipfs, get_buyer_file_list
 from cpchain.wallet.proxy_request import send_request_to_proxy
 from cpchain.utils import join_with_root, sizeof_fmt, open_file
@@ -126,8 +126,8 @@ class CloudTab(TabContentArea):
                 self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].remote_type))
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_published)))
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
-
         create_file_table()
+
 
         def handle_upload():
             # Maybe useful for buyer.
@@ -172,6 +172,19 @@ class TreasureTab(TabContentArea):
         self.local_file = 'local'
         self.init_ui()
 
+
+    def update_table(self):
+        file_list = get_buyer_file_list()
+        print(file_list.__len__())
+        for cur_row in range(self.row_number):
+            if cur_row == file_list.__len__():
+                break
+            self.file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
+            self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
+            self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
+            self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].hashcode))
+
+
     def init_ui(self):
         self.row_number = 20
 
@@ -183,27 +196,36 @@ class TreasureTab(TabContentArea):
                 if not sel.hasSelection():
                     return
 
-                def open_file_action():
-                    open_file('/home/introom/downloads/xx.txt')
-
-                    row = file_table.currentRow()
-                    # TODO note it's 2 because of the skew of INDEX.
-                    col = file_table.columnCount()-2
-                    cur_item = file_table.item(row, col)
-                    # buyer_chain_client.buy_product(cur_item.text())
-
                 menu = QMenu(file_table)
-                action = QAction("Open File", file_table, triggered=open_file_action)
 
+                def get_item():
+                    row = file_table.currentRow()
+                    col = file_table.columnCount()
+                    cur_item = file_table.item(row, col)
+                    return cur_item
+
+                def open_file_action():
+                    item = get_item()
+                    path = item.text()
+                    open_file(path)
+                action = QAction("Open Plain File", file_table, triggered=open_file_action)
                 menu.addAction(action)
+
+                def open_encrypted_file_action():
+                    item = get_item()
+                    path = osp.join(item.text(), "-encrypted")
+                    open_file(path)
+                action = QAction("Open Encrypted File", file_table, triggered=open_encrypted_file_action)
+                menu.addAction(action)
+
                 menu.exec_(QCursor.pos())
+                
             file_table.set_right_menu(right_menu)
 
-
-
-            file_table.setColumnCount(4)
             file_table.setRowCount(self.row_number)
-            file_table.setHorizontalHeaderLabels(['File Name', 'File Size', 'Downloaded', 'Hash Code'])
+            headers = ['File Name', 'File Size', 'Downloaded', 'Hash Code', 'INDEX']
+            file_table.setColumnCount(len(headers)-1)
+            file_table.setHorizontalHeaderLabels(headers)
 
             file_list = get_buyer_file_list()
             for cur_row in range(self.row_number):
@@ -216,16 +238,6 @@ class TreasureTab(TabContentArea):
 
         create_file_table()
 
-        def update_table():
-            file_list = get_buyer_file_list()
-            print(file_list.__len__())
-            for cur_row in range(self.row_number):
-                if cur_row == file_list.__len__():
-                    break
-                self.file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
-                self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].hashcode))
 
         def set_layout():
             self.main_layout = QVBoxLayout(self)
@@ -730,18 +742,41 @@ def _handle_keyboard_interrupt():
     timer.timeout.connect(lambda: None)
 
 
+    
+def initialize_system():
+    def initialize_net():
+        global market_client, buyer_chain_client, seller_chain_client
+        market_client = MarketClient(main_wnd)
+        buyer_chain_client = BuyerChainClient(main_wnd, market_client)
+        seller_chain_client = SellerChainClient(main_wnd, market_client)
+    initialize_net()
+    
+    def monitor_chain_event():
+        seller_poll_chain = LoopingCall(seller_chain_client.send_request)
+        seller_poll_chain.start(10)
+        buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm)
+        buyer_check_confirm.start(15)
+    monitor_chain_event()
+
 
 def main():
+    global main_wnd
     from twisted.internet import reactor
     main_wnd = MainWindow(reactor)
     _handle_keyboard_interrupt()
 
-    test_chain_event()
+    initialize_system()
 
-    if os.getenv('PROXY_LOCAL_RUN'):
-        send_request_to_proxy(1, 'seller_data')
-        reactor.callLater(5, send_request_to_proxy, 1, 'buyer_data')
+    # import logging
+    # a = logging.Logger.manager.loggerDict.keys()
+    # print(a)
+    # logger = logging.getLogger("web3.providers.rpc")  # adjust logger name
+    # # noisyLogger.getEffectiveLevel()  # indicates the current effective level
+    # logger.setLevel(logging.INFO)
+    import logging
+    logging.disable(2222222222222222)
 
+    
     sys.exit(reactor.run())
 
 

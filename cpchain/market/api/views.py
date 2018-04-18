@@ -269,7 +269,9 @@ class ProductSearchAPIViewSet(APIView):
         if keyword is not None:
             logger.debug("keyword is %s" % keyword)
             queryset = Product.objects.filter(status=0).filter(
-                Q(title__contains=keyword) | Q(description__contains=keyword) | Q(tags__contains=keyword))
+                Q(title__contains=keyword) | Q(description__contains=keyword) |
+                Q(tags__contains=keyword) | Q(msg_hash=keyword)
+            )
         else:
             queryset = Product.objects.filter(status=0)
 
