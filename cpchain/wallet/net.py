@@ -16,7 +16,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 
 from cpchain.chain.trans import BuyerTrans, SellerTrans, ProxyTrans
 from cpchain.chain import poll_chain
-from twisted.internet.task import LoopingCall
+# from twisted.internet.task import LoopingCall
 from cpchain.chain.utils import default_web3
 from cpchain.utils import join_with_root, config
 from cpchain.chain.models import OrderInfo
@@ -30,7 +30,9 @@ from cpchain.crypto import Encoder
 
 
 class MarketClient:
-    def __init__(self):
+    def __init__(self, main_wnd):
+        self.main_wnd = main_wnd
+
         # self.client = HTTPClient(reactor)
         self.url = 'http://192.168.0.132:8083/api/v1/'
         private_key_file_path = join_with_root(config.wallet.private_key_file)
@@ -171,7 +173,10 @@ class MarketClient:
 
 class BuyerChainClient:
 
-    def __init__(self):
+    def __init__(self, main_wnd, market_client):
+        self.main_wnd = main_wnd
+        self.market_client = market_client
+
         self.buyer = BuyerTrans(default_web3, config.chain.core_contract)
         self.order_id_list = []
 
@@ -254,13 +259,27 @@ class BuyerChainClient:
         buyer_data.market_hash = new_order_info[0]
 
         sign_message = SignMessage()
-        sign_message.public_key = Encoder.str_to_base64_byte(market_client.pub_key)
+        sign_message.public_key = Encoder.str_to_base64_byte(self.market_client.pub_key)
         sign_message.data = message.SerializeToString()
         sign_message.signature = crypto.ECCipher.generate_signature(
-            Encoder.str_to_base64_byte(market_client.priv_key),
+            Encoder.str_to_base64_byte(self.market_client.priv_key),
             sign_message.data
         )
         d = start_client(sign_message)
+
+
+        def update_buyer_db(file_uuid, file_path, new_order_id):
+            market_hash = Encoder.bytes_to_base64_str(self.buyer.query_order(new_order_id)[0])
+            new_buyer_file_info = BuyerFileInfo(hashcode=market_hash, name=file_uuid, path=file_path,
+                                                size=os.path.getsize(file_path), is_downloaded=True)
+            add_file(new_buyer_file_info)
+
+        def update_treasure_pane():
+            from PyQt5.QtWidgets import QWidget
+            content_tabs = self.main_wnd.content_tabs
+            wid = content_tabs.findChild(QWidget, "treasure_tab")
+            wid.update_table()
+
 
         def buyer_request_proxy_callback(message):
             print("Inside buyer request callback.")
@@ -279,25 +298,24 @@ class BuyerChainClient:
                 print('Decrypted file path ' + str(decrypted_file))
 
                 update_buyer_db(proxy_reply.file_uuid, decrypted_file, order_id)
-
+                # XXX put it above confirmation.
+                update_treasure_pane()
+                
                 self.confirm_order(order_id)
                 self.order_id_list.remove(order_id)
+
             else:
                 print(proxy_reply.error)
 
         d.addBoth(buyer_request_proxy_callback)
 
-        def update_buyer_db(file_uuid, file_path, new_order_id):
-            market_hash = Encoder.bytes_to_base64_str(self.buyer.query_order(new_order_id)[0])
-            new_buyer_file_info = BuyerFileInfo(hashcode=market_hash, name=file_uuid, path=file_path,
-                                                size=os.path.getsize(file_path), is_downloaded=True)
-            add_file(new_buyer_file_info)
-            # TODO Should signal update of table of buyer here.
 
 
 class SellerChainClient:
+    def __init__(self, main_wnd, market_client):
+        self.main_wnd = main_wnd
+        self.market_client = market_client
 
-    def __init__(self):
         self.seller = SellerTrans(default_web3, config.chain.core_contract)
         start_id = self.seller.get_order_num()
         self.monitor = poll_chain.OrderMonitor(start_id, self.seller)
@@ -320,14 +338,14 @@ class SellerChainClient:
             for new_order_id in new_order:
                 new_order_info = self.seller.query_order(new_order_id)
                 print('In seller send request: new oder infomation:')
-                print(new_order_info)
+                # print(new_order_info)
                 # send message to proxy
                 market_hash = new_order_info[0]
                 buyer_rsa_pubkey = new_order_info[1]
                 raw_aes_key = session.query(FileInfo.aes_key)\
                     .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash))\
                     .all()[0][0]
-                print(raw_aes_key)
+                # print(raw_aes_key)
                 encrypted_aes_key = load_der_public_key(buyer_rsa_pubkey, backend=default_backend()).encrypt(
                     raw_aes_key,
                     padding.OAEP(
@@ -336,7 +354,7 @@ class SellerChainClient:
                         label=None
                     )
                 )
-                print(encrypted_aes_key)
+                # print(encrypted_aes_key)
                 print("Encrypted_aes_key length" + str(len(encrypted_aes_key)))
                 storage_type = Message.Storage.IPFS
                 ipfs_gateway = "192.168.0.132:5001"
@@ -358,10 +376,10 @@ class SellerChainClient:
                 ipfs.file_hash = file_hash.encode('utf-8')
                 ipfs.gateway = ipfs_gateway
                 sign_message = SignMessage()
-                sign_message.public_key = Encoder.str_to_base64_byte(market_client.pub_key)
+                sign_message.public_key = Encoder.str_to_base64_byte(self.market_client.pub_key)
                 sign_message.data = message.SerializeToString()
                 sign_message.signature = crypto.ECCipher.generate_signature(
-                    Encoder.str_to_base64_byte(market_client.priv_key),
+                    Encoder.str_to_base64_byte(self.market_client.priv_key),
                     sign_message.data
                 )
                 d = start_client(sign_message)
@@ -396,6 +414,8 @@ class ProxyChainClient:
         self.proxy.claim_relay(5, bytes([0, 1, 2, 3] * 8))
 
 
+proxy_chain_client = ProxyChainClient()
+
 
 
 # class SellerProxyClient:
@@ -412,21 +432,21 @@ class ProxyChainClient:
 #                 print(self.new_order_info)
 
 
-def test_chain_event():
-    seller_poll_chain = LoopingCall(seller_chain_client.send_request)
-    seller_poll_chain.start(10)
+# def monitor_chain_event():
+#     seller_poll_chain = LoopingCall(seller_chain_client.send_request)
+#     seller_poll_chain.start(10)
 
 
-    # print(new_orders)
-    # new_orders.addCallbacks()
-    # print(order_list)
-    # order_info_list = []
-    # for i in order_list:
-    #     order_info_list.append(seller_chain_client.seller.query_order(i))
-    # print(order_info_list)
+#     # print(new_orders)
+#     # new_orders.addCallbacks()
+#     # print(order_list)
+#     # order_info_list = []
+#     # for i in order_list:
+#     #     order_info_list.append(seller_chain_client.seller.query_order(i))
+#     # print(order_info_list)
 
-    buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm)
-    buyer_check_confirm.start(15)
+#     buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm)
+#     buyer_check_confirm.start(15)
 
 
     # from twisted.internet import reactor
@@ -461,10 +481,11 @@ def test_chain_event():
     # print(pub_key)
     # print('MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEddc0bkalTTqEiUu6g884be4ghnMGYWfyJHTSjEMrE+zCRq6T1VHF21vJCPXs+YBvtyPJ7mJiRyHw/2FH3b8unQ==')
 
-market_client = MarketClient()
-buyer_chain_client = BuyerChainClient()
-seller_chain_client = SellerChainClient()
-proxy_chain_client = ProxyChainClient()
+# market_client = MarketClient()
+# buyer_chain_client = BuyerChainClient()
+# seller_chain_client = SellerChainClient()
+
+
 # seller_proxy_client = SellerProxyClient()
 # market_client.login()
 
