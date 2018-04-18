@@ -115,7 +115,7 @@ class CloudTab(TabContentArea):
 
             file_table.setColumnCount(5)
             file_table.setRowCount(self.row_number)
-            file_table.setHorizontalHeaderLabels(['File Name', 'File Size', 'Remote Type', 'Published', 'Hash Code'])
+            file_table.setHorizontalHeaderLabels(['File Name', 'File Size', 'Remote Type', 'Published', 'File Encryption Hash'])
 
             file_list = get_file_list()
             for cur_row in range(self.row_number):
@@ -293,7 +293,7 @@ class BrowseTab(TabContentArea):
 
             item_table.set_right_menu(right_menu)
 
-            headers = ["Title", "Price", "Hash", "INDEX"]
+            headers = ["Title", "Price", "Market Hash", "INDEX"]
             item_table.setColumnCount(len(headers))
             item_table.setHorizontalHeaderLabels(headers)
             item_table.horizontalHeader().setStretchLastSection(True)
