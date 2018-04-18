@@ -1,3 +1,4 @@
+from django.views.decorators.cache import never_cache
 import logging
 
 from django.core.cache import cache
@@ -201,7 +202,7 @@ class ProductPublishAPIViewSet(APIView):
         return create_invalid_response()
 
 
-
+@never_cache
 class MyProductSearchAPIViewSet(APIView):
     """
     API endpoint that allows query products by owner.
@@ -226,6 +227,7 @@ class MyProductSearchAPIViewSet(APIView):
         return Response(data=serializer.data)
 
 
+@never_cache
 class MyProductPagedSearchAPIViewSet(APIView):
     """
     API endpoint that allows query products by owner.
@@ -255,6 +257,7 @@ class MyProductPagedSearchAPIViewSet(APIView):
         return pg.get_paginated_response(serializer.data)
 
 
+@never_cache
 class ProductSearchAPIViewSet(APIView):
     """
     API endpoint that allows query products.
@@ -279,6 +282,7 @@ class ProductSearchAPIViewSet(APIView):
         return Response(data=serializer.data)
 
 
+@never_cache
 class ProductPagedSearchAPIViewSet(APIView):
     """
     API endpoint that allows query products.
