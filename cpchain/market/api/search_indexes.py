@@ -5,8 +5,6 @@ class ProductIndex(DocType):
     """
     The product model.
     """
-
-    # pk = Integer()
     owner_address = Text()
     title = Text(fields={'raw': Keyword()})
     description = Text()
@@ -20,3 +18,6 @@ class ProductIndex(DocType):
 
     class Meta:
         index = 'market'
+
+    def save(self, ** kwargs):
+        return super().save(**kwargs)

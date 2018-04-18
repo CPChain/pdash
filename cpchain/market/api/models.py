@@ -57,19 +57,24 @@ class Product(models.Model):
         return self.get_signature_source() + str(self.seq) + self.signature
 
     def indexing(self):
+        ProductIndex.init()
         obj = ProductIndex(
-            meta={'id': self.id},
+            meta={'id': self.msg_hash},
             title=self.title,
             description=self.description,
             price=self.price,
             tags=self.tags,
             start_date=self.start_date,
             end_date=self.end_date,
-            msg_hash=self.msg_hash,
+            market_hash=self.msg_hash,
             file_md5=self.file_md5,
             status=self.status,
+            created=self.created,
+            owner_address=self.owner_address,
+            signature=self.signature,
         )
-        obj.save()
+        from cpchain.market.market.es_client import es_client
+        obj.save(using=es_client)
         return obj.to_dict(include_meta=True)
 
 

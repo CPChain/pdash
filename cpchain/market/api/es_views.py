@@ -1,27 +1,10 @@
-# from django.db.models import Q
-# from django.http import JsonResponse
-# from rest_framework import viewsets
-# from rest_framework.pagination import PageNumberPagination
-# from rest_framework.permissions import AllowAny
-# from rest_framework.response import Response
-# from rest_framework.views import APIView
-# from elasticsearch.helpers import bulk
-
 from cpchain.market.market.es_client import es_client
 from rest_framework_elasticsearch import es_views, es_pagination, es_filters
 # from .permissions import IsOwnerOrReadOnly, IsOwner
 from .search_indexes import ProductIndex
 from .utils import *
-# from .models import Product
-
-# error happens here
-# from cpchain.market.api.models import Product, Token, WalletMsgSequence
 
 logger = logging.getLogger(__name__)
-
-PUBLIC_KEY = "public_key"
-VERIFY_CODE = "code"
-TIMEOUT = 1000
 
 
 class ESProductView(es_views.ListElasticAPIView):
@@ -46,6 +29,7 @@ class ESProductView(es_views.ListElasticAPIView):
         'tags',
         'title',
         'description',
+        'market_hash',
     )
 
 
@@ -57,3 +41,5 @@ class ESProductView(es_views.ListElasticAPIView):
 #     print("bulk indexing products")
 #     ProductIndex.init()
 #     bulk(client=es_client, actions=(b.indexing() for b in Product.objects.all().iterator()))
+
+

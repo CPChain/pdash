@@ -4,13 +4,14 @@ from .models import Product, WalletUser, Token
 from rest_framework_elasticsearch.es_serializer import ElasticModelSerializer
 from .search_indexes import ProductIndex
 
+
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = (
-        'id', 'owner_address', 'title', 'description', 'tags', 'price',
-        'created', 'start_date', 'end_date', 'seq','file_md5',
-        'signature','msg_hash','status')
+            'id', 'owner_address', 'title', 'description', 'tags', 'price',
+            'created', 'start_date', 'end_date', 'seq', 'file_md5',
+            'signature', 'msg_hash', 'status')
 
     def create(self, validated_data):
         now = timezone.now()
@@ -30,6 +31,7 @@ class ProductSerializer(serializers.ModelSerializer):
             tags=validated_data['tags'],
         )
         product.save()
+        product.indexing()
         return product
 
 
