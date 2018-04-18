@@ -13,7 +13,7 @@ from cpchain.crypto import ECCipher
 from cpchain.utils import join_with_root,config
 
 
-HOST = "http://localhost:8000"
+HOST = "http://localhost:8083"
 
 
 def generate_nonce_signature(priv_key, nonce):
@@ -35,6 +35,13 @@ class Test1(unittest.TestCase):
 
         # print("pub_key:%s,pri_key:%s,password:%s" % (self.pub_key_string, self.pri_key_string , password))
 
+    def test_query_from_db(self):
+        keyword = "z7JI8DccklHodvexTCDmLxdviNtKhhRJU8bvv4vKoTc="
+        self.query_product(keyword=keyword)
+
+        keyword = "testtile"
+        self.query_product(keyword=keyword)
+
     def test_login_and_confirm(self):
 
         header = {'Content-Type': 'application/json'}
@@ -44,10 +51,11 @@ class Test1(unittest.TestCase):
         token = self.generate_nonce_signature_and_get_token(header, nonce)
 
         # ======= publish product ========
-        # self.publish_product(token)
+        self.publish_product(token)
 
         # ======= query product ========
-        self.query_product()
+        keyword = "testtile"
+        self.query_product(keyword=keyword)
 
         # ======= query product via elasticsearch ========
         self.query_es_product()
@@ -76,8 +84,7 @@ class Test1(unittest.TestCase):
         print("token:%s" % token)
         return token
 
-    def query_product(self):
-        keyword = "testtile"
+    def query_product(self, keyword):
         params = {"keyword": keyword}
         url = '%s/api/v1/product/search/' % HOST
         response = requests.get(url, params)
