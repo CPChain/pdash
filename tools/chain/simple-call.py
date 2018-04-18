@@ -1,4 +1,4 @@
-from cryptography.hazmat.primitives.serialization import load_der_public_key
+from cryptography.hazmat.primitives.serialization import load_der_public_key, load_pem_public_key
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
@@ -8,8 +8,9 @@ from eth_utils import to_bytes
 from cpchain.wallet.fs import *
 from cpchain.chain.trans import *
 from cpchain import chain, config, root_dir
+from cpchain.utils import join_with_root
 from cpchain.chain.models import OrderInfo
-from cpchain.crypto import Encoder, RSACipher
+from cpchain.crypto import Encoder, RSACipher, ECCipher, pub_key_der_to_addr, get_addr_from_public_key
 
 
 def test_server_chain():
@@ -18,7 +19,6 @@ def test_server_chain():
     # chain.utils.deploy_contract(config.chain.core_contract)
     buyertrans = BuyerTrans(server_web3, config.chain.core_contract)
     print(server_web3.eth.defaultAccount)
-    import ipdb; ipdb.set_trace()
     # desc_hash_base64 = 'AQkKqDxtNIRJ+1V82J5lP2/fRj/zbJ+2n0GzUF52Wsc='
     # desc_hash = Encoder.str_to_base64_byte(desc_hash_base64)
     # public_key = RSACipher.load_public_key()
@@ -40,13 +40,22 @@ def test_server_chain():
     order_num = buyertrans.get_order_num()
     print(order_num)
     latest_order_info = buyertrans.query_order(order_num - 1)
-    # print(type(latest_order_info[2]))
-    # print(to_bytes(hexstr=latest_order_info[2]))
-    print(len(latest_order_info[0]))
-    print(latest_order_info[10])
-    # print(type(latest_order_info[1]))
-    # print(len(latest_order_info[1]))
-    # print()
+    private_key_file_path = join_with_root(config.wallet.private_key_file)
+    password_path = join_with_root(config.wallet.private_key_password_file)
+    with open(password_path) as f:
+        password = f.read()
+    priv_key, pub_key = ECCipher.geth_load_key_pair_from_private_key(private_key_file_path, password)
+    pub_key_bytes = Encoder.str_to_base64_byte(pub_key)
+    pub_key_loaded = load_der_public_key(pub_key_bytes, backend=default_backend())
+    # print(Encoder.str_to_base64_byte(pub_key))
+    # print(len(Encoder.str_to_base64_byte(pub_key)))
+    # print(pub_key_bytes_to_addr(Encoder.str_to_base64_byte(pub_key)))
+    # print(len(pub_key_bytes_to_addr(Encoder.str_to_base64_byte(pub_key))))
+    print(get_addr_from_public_key(pub_key_loaded))
+    print(to_bytes(hexstr=latest_order_info[2]))
+    print(len(to_bytes(hexstr=latest_order_info[2])))
+
+
     # market_hash = 'qHZP3XChYo3y7ZUWVVdu1LHB2s9AYD8jPILVhgSQ5U4='
     # raw_aes_key = session.query(FileInfo.aes_key).filter(FileInfo.market_hash == market_hash).all()[0][0]
     # print(type(raw_aes_key))

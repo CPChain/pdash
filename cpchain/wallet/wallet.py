@@ -180,9 +180,9 @@ class TreasureTab(TabContentArea):
             if cur_row == file_list.__len__():
                 break
             self.file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
-            self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
-            self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
-            self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].hashcode))
+            self.file_table.setItem(cur_row, 2, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
+            self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
+            self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
 
 
     def init_ui(self):
@@ -200,21 +200,27 @@ class TreasureTab(TabContentArea):
 
                 def get_item():
                     row = file_table.currentRow()
-                    col = file_table.columnCount()
+                    col = 0  # File uuid column
                     cur_item = file_table.item(row, col)
+                    # print("inside get_item" + str(row) + str(col))
                     return cur_item
 
                 def open_file_action():
                     item = get_item()
                     path = item.text()
-                    open_file(path)
+                    file_dir = os.path.expanduser(config.wallet.download_dir)
+                    file_path = os.path.join(file_dir, path)
+                    open_file(file_path + "_decrypted")
                 action = QAction("Open Plain File", file_table, triggered=open_file_action)
                 menu.addAction(action)
 
+                # Encrypted file is not encoded in string, so can't be opened properly.
                 def open_encrypted_file_action():
                     item = get_item()
-                    path = osp.join(item.text(), "-encrypted")
-                    open_file(path)
+                    path = item.text()
+                    file_dir = os.path.expanduser(config.wallet.download_dir)
+                    file_path = os.path.join(file_dir, path)
+                    open_file(file_path)
                 action = QAction("Open Encrypted File", file_table, triggered=open_encrypted_file_action)
                 menu.addAction(action)
 
@@ -223,7 +229,7 @@ class TreasureTab(TabContentArea):
             file_table.set_right_menu(right_menu)
 
             file_table.setRowCount(self.row_number)
-            headers = ['File Name', 'File Size', 'Downloaded', 'Hash Code', 'INDEX']
+            headers = ['File UUID', 'File Title', 'File Size', 'Downloaded', 'Market Hash', 'INDEX']
             file_table.setColumnCount(len(headers)-1)
             file_table.setHorizontalHeaderLabels(headers)
 
@@ -232,9 +238,9 @@ class TreasureTab(TabContentArea):
                 if cur_row == len(file_list):
                     break
                 file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
-                self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].hashcode))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
 
         create_file_table()
 

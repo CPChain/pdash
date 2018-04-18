@@ -18,7 +18,7 @@ from twisted.web.static import File
 from cpchain import config, root_dir
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.message import message_sanity_check, sign_message_verify
-from cpchain.crypto import get_addr_from_public_key
+from cpchain.crypto import pub_key_der_to_addr
 
 from cpchain.storage import IPFSStorage
 from cpchain.proxy.proxy_db import Trade, ProxyDB
@@ -75,10 +75,13 @@ class SSLServerProtocol(NetstringReceiver):
             trade.market_hash = data.market_hash
             trade.AES_key = data.AES_key
 
-            # if get_addr_from_public_key(public_key) != data.seller_addr:
-            #     error = "not seller's signature"
-            #     self.proxy_reply_error(error)
-            #     return
+            if pub_key_der_to_addr(public_key) != data.seller_addr:
+                print("pubkey seller addr")
+                print(pub_key_der_to_addr(public_key))
+                print(data.seller_addr)
+                error = "not seller's signature"
+                self.proxy_reply_error(error)
+                return
 
             storage = data.storage
             if storage.type == Message.Storage.IPFS:
@@ -122,10 +125,10 @@ class SSLServerProtocol(NetstringReceiver):
             trade.buyer_addr = data.buyer_addr
             trade.market_hash = data.market_hash
 
-            # if get_addr_from_public_key(public_key) != data.buyer_addr:
-            #     error = "not buyer's signature"
-            #     self.proxy_reply_error(error)
-            #     return
+            if pub_key_der_to_addr(public_key) != data.buyer_addr:
+                error = "not buyer's signature"
+                self.proxy_reply_error(error)
+                return
 
             if proxy_db.count(trade):
                 self.trade = proxy_db.query(trade)
@@ -166,9 +169,6 @@ class SSLServerProtocol(NetstringReceiver):
             self.proxy_db.insert(self.trade)
             self.proxy_reply_success()
 
-            # TODO: Proxy should claim that it has
-            # received data from seller on contract
-            # claim_reply(order_id)
             self.proxy_claim_relay()
         else:
             error = "failed to get file from ipfs"
