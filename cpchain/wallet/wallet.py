@@ -183,6 +183,7 @@ class TreasureTab(TabContentArea):
             self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].market_hash))
             if file_list[cur_row].is_downloaded:
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].file_uuid))
 
     def init_ui(self):
         self.row_number = 20
@@ -229,7 +230,8 @@ class TreasureTab(TabContentArea):
 
             file_table.setRowCount(self.row_number)
             headers = ['File Title', 'File Size', 'Downloaded', 'Market Hash', 'File UUID']
-            file_table.setColumnCount(len(headers)-1)
+            file_table.setColumnCount(len(headers))
+            file_table.setColumnHidden(4, True)
             file_table.setHorizontalHeaderLabels(headers)
 
             file_list = get_buyer_file_list()
@@ -241,6 +243,7 @@ class TreasureTab(TabContentArea):
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].market_hash))
                 if file_list[cur_row].is_downloaded:
                     self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
+                    self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].file_uuid))
 
         create_file_table()
 
