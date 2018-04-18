@@ -298,10 +298,12 @@ class BuyerChainClient:
                 print('Decrypted file path ' + str(decrypted_file))
 
                 update_buyer_db(proxy_reply.file_uuid, decrypted_file, order_id)
+                # XXX put it above confirmation.
+                update_treasure_pane()
+                
                 self.confirm_order(order_id)
                 self.order_id_list.remove(order_id)
 
-                update_treasure_pane()
             else:
                 print(proxy_reply.error)
 
