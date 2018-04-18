@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-# ssl_client.py: SSL client skeleton
-# Copyright (c) 2018 Wurong intelligence technology co., Ltd.
-# See LICENSE for details.
-
 import sys, os
 
 from twisted.internet import reactor, protocol, ssl, defer
