@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
-# ssl_server.py: SSL server skeleton
-# Copyright (c) 2018 Wurong intelligence technology co., Ltd.
-# See LICENSE for details.
-
 import sys, os, time
 
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
 
 from twisted.internet import reactor, threads, protocol, ssl
 from twisted.protocols.basic import NetstringReceiver
@@ -18,13 +16,15 @@ from twisted.web.static import File
 from cpchain import config, root_dir
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.message import message_sanity_check, sign_message_verify
-from cpchain.crypto import get_addr_from_public_key
+from cpchain.crypto import pub_key_der_to_addr, ECCipher, Encoder
 
 from cpchain.storage import IPFSStorage
 from cpchain.proxy.proxy_db import Trade, ProxyDB
 
 from cpchain.chain.trans import ProxyTrans
 from cpchain.chain.utils import default_web3
+from cpchain.utils import join_with_root
+from eth_utils import to_bytes
 
 server_root = os.path.join(config.home, config.proxy.server_root)
 server_root = os.path.expanduser(server_root)
@@ -75,10 +75,13 @@ class SSLServerProtocol(NetstringReceiver):
             trade.market_hash = data.market_hash
             trade.AES_key = data.AES_key
 
-            # if get_addr_from_public_key(public_key) != data.seller_addr:
-            #     error = "not seller's signature"
-            #     self.proxy_reply_error(error)
-            #     return
+            if pub_key_der_to_addr(public_key) != data.seller_addr:
+                print("pubkey seller addr")
+                print(pub_key_der_to_addr(public_key))
+                print(data.seller_addr)
+                error = "not seller's signature"
+                self.proxy_reply_error(error)
+                return
 
             storage = data.storage
             if storage.type == Message.Storage.IPFS:
@@ -122,10 +125,10 @@ class SSLServerProtocol(NetstringReceiver):
             trade.buyer_addr = data.buyer_addr
             trade.market_hash = data.market_hash
 
-            # if get_addr_from_public_key(public_key) != data.buyer_addr:
-            #     error = "not buyer's signature"
-            #     self.proxy_reply_error(error)
-            #     return
+            if pub_key_der_to_addr(public_key) != data.buyer_addr:
+                error = "not buyer's signature"
+                self.proxy_reply_error(error)
+                return
 
             if proxy_db.count(trade):
                 self.trade = proxy_db.query(trade)
@@ -138,8 +141,15 @@ class SSLServerProtocol(NetstringReceiver):
 
     def proxy_claim_relay(self):
         proxy_trans = ProxyTrans(default_web3, config.chain.core_contract)
-        # TODO Should sign order id and sha256 here
-        deliver_hash = b'1' * 32
+        private_key_file_path = join_with_root(config.wallet.private_key_file)
+        password_path = join_with_root(config.wallet.private_key_password_file)
+        with open(password_path) as f:
+            password = f.read()
+        priv_key, pub_key = ECCipher.geth_load_key_pair_from_private_key(private_key_file_path, password)
+        priv_key_bytes = Encoder.str_to_base64_byte(priv_key)
+        digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
+        digest.update(ECCipher.generate_signature(priv_key_bytes, to_bytes(self.trade.order_id), password))
+        deliver_hash = digest.finalize()
         tx_hash = proxy_trans.claim_relay(self.trade.order_id, deliver_hash)
         return tx_hash
 
@@ -166,9 +176,6 @@ class SSLServerProtocol(NetstringReceiver):
             self.proxy_db.insert(self.trade)
             self.proxy_reply_success()
 
-            # TODO: Proxy should claim that it has
-            # received data from seller on contract
-            # claim_reply(order_id)
             self.proxy_claim_relay()
         else:
             error = "failed to get file from ipfs"

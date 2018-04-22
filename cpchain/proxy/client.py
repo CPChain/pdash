@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-# ssl_client.py: SSL client skeleton
-# Copyright (c) 2018 Wurong intelligence technology co., Ltd.
-# See LICENSE for details.
-
 import sys, os
 
 from twisted.internet import reactor, protocol, ssl, defer
@@ -146,6 +142,7 @@ if __name__ == '__main__':
     buyer_private_key = b'\xa6\xf8_\xee\x1c\x85\xc5\x95\x8d@\x9e\xfa\x80\x7f\xb6\xe0\xb4u\x12\xb6\xdf\x00\xda4\x98\x8e\xaeR\x89~\xf6\xb5'
     buyer_private_key, buyer_public_key = \
                 ECCipher.generate_key_pair(buyer_private_key)
+
 
     seller_private_key = None
     seller_private_key = b'\xa6\xf8_\xee\x1c\x85\xc5\x95\x8d@\x9e\xfa\x80\x7f\xb6\xe0\xb4u\x12\xb6\xdf\x00\xda4\x98\x8e\xaeR\x89~\xf6\xb5'

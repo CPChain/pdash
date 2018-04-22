@@ -461,3 +461,8 @@ def get_addr_from_public_key(pub_key):
     if len(encode_point) == 65:
         encode_point = encode_point[1:]
     return keccak(encode_point)[-20:]
+
+
+def pub_key_der_to_addr(pub_key):
+    pub_key_loaded = serialization.load_der_public_key(pub_key, backend=default_backend())
+    return get_addr_from_public_key(pub_key_loaded)
