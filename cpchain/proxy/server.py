@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-# ssl_server.py: SSL server skeleton
-# Copyright (c) 2018 Wurong intelligence technology co., Ltd.
-# See LICENSE for details.
-
 import sys, os, time
 
 from cryptography.hazmat.backends import default_backend
