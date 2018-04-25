@@ -34,7 +34,7 @@ class MarketClient:
         self.main_wnd = main_wnd
 
         # self.client = HTTPClient(reactor)
-        self.url = 'http://192.168.0.132:8083/api/v1/'
+        self.url = config.market.market_url
         private_key_file_path = join_with_root(config.wallet.private_key_file)
         password_path = join_with_root(config.wallet.private_key_password_file)
 
@@ -156,6 +156,7 @@ class MarketClient:
         # print(resp)
         confirm_info = yield treq.json_content(resp)
         print('product info: ')
+        # print(type(confirm_info[0]))
         print(confirm_info)
         return confirm_info
 
@@ -180,7 +181,7 @@ class BuyerChainClient:
         self.buyer = BuyerTrans(default_web3, config.chain.core_contract)
         self.order_id_list = []
 
-    def buy_product(self, msg_hash):
+    def buy_product(self, msg_hash, file_title):
         desc_hash = crypto.Encoder.str_to_base64_byte(msg_hash)
         rsa_key = crypto.RSACipher.load_public_key()
         # rsa_key_list = []
@@ -209,7 +210,12 @@ class BuyerChainClient:
 
         def cb(order_id):
             self.order_id_list.append(order_id)
-            print('order id: ', self.order_id_list)
+            print("Before new buyer file info. ")
+            new_buyer_file_info = BuyerFileInfo(order_id=order_id, market_hash=Encoder.bytes_to_base64_str(desc_hash),
+                                                file_title=file_title, is_downloaded=False)
+            add_file(new_buyer_file_info)
+            self.update_treasure_pane()
+            print('In place order callback order id: ', self.order_id_list)
         d.addCallback(cb)
 
         return self.order_id_list
@@ -248,6 +254,12 @@ class BuyerChainClient:
         else:
             print('no placed order')
 
+    def update_treasure_pane(self):
+        from PyQt5.QtWidgets import QWidget
+        content_tabs = self.main_wnd.content_tabs
+        wid = content_tabs.findChild(QWidget, "treasure_tab")
+        wid.update_table()
+
     def send_request(self, order_id):
         new_order_info = self.buyer.query_order(order_id)
         message = Message()
@@ -267,19 +279,17 @@ class BuyerChainClient:
         )
         d = start_client(sign_message)
 
-
         def update_buyer_db(file_uuid, file_path, new_order_id):
             market_hash = Encoder.bytes_to_base64_str(self.buyer.query_order(new_order_id)[0])
-            new_buyer_file_info = BuyerFileInfo(hashcode=market_hash, name=file_uuid, path=file_path,
-                                                size=os.path.getsize(file_path), is_downloaded=True)
-            add_file(new_buyer_file_info)
-
-        def update_treasure_pane():
-            from PyQt5.QtWidgets import QWidget
-            content_tabs = self.main_wnd.content_tabs
-            wid = content_tabs.findChild(QWidget, "treasure_tab")
-            wid.update_table()
-
+            session.query(BuyerFileInfo).filter(BuyerFileInfo.order_id == order_id). \
+                update({BuyerFileInfo.market_hash: market_hash,
+                        BuyerFileInfo.is_downloaded: True,
+                        BuyerFileInfo.file_uuid: file_uuid,
+                        BuyerFileInfo.path: file_path,
+                        BuyerFileInfo.size: os.path.getsize(file_path)
+                        }, synchronize_session=False)
+            session.commit()
+            return market_hash
 
         def buyer_request_proxy_callback(message):
             print("Inside buyer request callback.")
@@ -298,8 +308,7 @@ class BuyerChainClient:
                 print('Decrypted file path ' + str(decrypted_file))
 
                 update_buyer_db(proxy_reply.file_uuid, decrypted_file, order_id)
-                # XXX put it above confirmation.
-                update_treasure_pane()
+                self.update_treasure_pane()
                 
                 self.confirm_order(order_id)
                 self.order_id_list.remove(order_id)
@@ -308,7 +317,6 @@ class BuyerChainClient:
                 print(proxy_reply.error)
 
         d.addBoth(buyer_request_proxy_callback)
-
 
 
 class SellerChainClient:
@@ -384,7 +392,6 @@ class SellerChainClient:
                 )
                 d = start_client(sign_message)
                 d.addBoth(self.seller_deliver_proxy_callback)
-
 
     def seller_deliver_proxy_callback(self, message):
         # print('proxy recieved message')

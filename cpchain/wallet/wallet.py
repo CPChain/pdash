@@ -115,7 +115,7 @@ class CloudTab(TabContentArea):
 
             file_table.setColumnCount(5)
             file_table.setRowCount(self.row_number)
-            file_table.setHorizontalHeaderLabels(['File Name', 'File Size', 'Remote Type', 'Published', 'Hash Code'])
+            file_table.setHorizontalHeaderLabels(['File Name', 'File Size', 'Remote Type', 'Published', 'File Encryption Hash'])
 
             file_list = get_file_list()
             for cur_row in range(self.row_number):
@@ -172,18 +172,18 @@ class TreasureTab(TabContentArea):
         self.local_file = 'local'
         self.init_ui()
 
-
     def update_table(self):
         file_list = get_buyer_file_list()
         print(file_list.__len__())
         for cur_row in range(self.row_number):
             if cur_row == file_list.__len__():
                 break
-            self.file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
-            self.file_table.setItem(cur_row, 2, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
-            self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
-            self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
-
+            self.file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].file_title))
+            self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
+            self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].market_hash))
+            if file_list[cur_row].is_downloaded:
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].file_uuid))
 
     def init_ui(self):
         self.row_number = 20
@@ -200,7 +200,7 @@ class TreasureTab(TabContentArea):
 
                 def get_item():
                     row = file_table.currentRow()
-                    col = 0  # File uuid column
+                    col = 4  # File uuid column
                     cur_item = file_table.item(row, col)
                     # print("inside get_item" + str(row) + str(col))
                     return cur_item
@@ -229,21 +229,23 @@ class TreasureTab(TabContentArea):
             file_table.set_right_menu(right_menu)
 
             file_table.setRowCount(self.row_number)
-            headers = ['File UUID', 'File Title', 'File Size', 'Downloaded', 'Market Hash', 'INDEX']
-            file_table.setColumnCount(len(headers)-1)
+            headers = ['File Title', 'File Size', 'Downloaded', 'Market Hash', 'File UUID']
+            file_table.setColumnCount(len(headers))
+            file_table.setColumnHidden(4, True)
             file_table.setHorizontalHeaderLabels(headers)
 
             file_list = get_buyer_file_list()
             for cur_row in range(self.row_number):
                 if cur_row == len(file_list):
                     break
-                file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].name))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
-                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].hashcode))
+                self.file_table.setItem(cur_row, 0, QTableWidgetItem(file_list[cur_row].file_title))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].is_downloaded)))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].market_hash))
+                if file_list[cur_row].is_downloaded:
+                    self.file_table.setItem(cur_row, 1, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
+                    self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].file_uuid))
 
         create_file_table()
-
 
         def set_layout():
             self.main_layout = QVBoxLayout(self)
@@ -280,7 +282,8 @@ class BrowseTab(TabContentArea):
                     # TODO note it's 2 because of the skew of INDEX.
                     col = item_table.columnCount()-2
                     cur_item = item_table.item(row, col)
-                    buyer_chain_client.buy_product(cur_item.text())
+                    file_title = item_table.item(row, 0).text()
+                    buyer_chain_client.buy_product(cur_item.text(), file_title)
 
                 menu = QMenu(item_table)
                 action = QAction("Buy", item_table, triggered=buy_action)
@@ -290,7 +293,7 @@ class BrowseTab(TabContentArea):
 
             item_table.set_right_menu(right_menu)
 
-            headers = ["Title", "Price", "Hash", "INDEX"]
+            headers = ["Title", "Price", "Market Hash", "INDEX"]
             item_table.setColumnCount(len(headers))
             item_table.setHorizontalHeaderLabels(headers)
             item_table.horizontalHeader().setStretchLastSection(True)

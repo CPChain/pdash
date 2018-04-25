@@ -35,8 +35,10 @@ class FileInfo(Base):
 class BuyerFileInfo(Base):
     __tablename__ = 'buyerfileinfo'
     id = Column(Integer, primary_key=True)
-    hashcode = Column(String)
-    name = Column(String)
+    order_id = Column(Integer)
+    market_hash = Column(String)
+    file_uuid = Column(String)
+    file_title = Column(String)
     path = Column(String)
     size = Column(Integer)
     is_downloaded = Column(Boolean)
