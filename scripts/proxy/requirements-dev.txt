@@ -10,6 +10,7 @@ cryptography
 sqlalchemy
 boto3
 pyopenssl
+web3
 
 #test
 pytest
