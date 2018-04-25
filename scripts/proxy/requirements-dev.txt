@@ -1,0 +1,16 @@
+#proxy
+toml==0.9.4
+ipfsapi
+eth-keyfile
+google-cloud
+twisted
+treq
+protobuf
+cryptography
+sqlalchemy
+boto3
+pyopenssl
+
+#test
+pytest
+pytest-cov
