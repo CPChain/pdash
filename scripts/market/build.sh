@@ -37,4 +37,4 @@ ROOT_PATH=`pwd`
 export PYTHONPATH=$PYTHONPATH:$ROOT_PATH
 
 echo "=== unit test ==="
-py.test -k 'not SSLServerTestCase and not test_dispute and not test_normal_process and not test_timeout and not test_withdraw_order' --junitxml=test_report.xml --cov-report=xml --cov=./
+py.test tests/market -k 'not test_1 and not test_2' --junitxml=test_report.xml --cov-report=xml --cov=./
