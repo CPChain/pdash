@@ -14,4 +14,6 @@ sudo apt install -y python3-cryptography python3-sqlalchemy python3-toml python3
 
 sudo apt install -y python3-flake8
 
+pip3 install pyopenssl
+
 pip3 install -Ur requirements-dev.txt

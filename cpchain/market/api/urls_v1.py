@@ -1,6 +1,8 @@
 from django.conf.urls import url, include
 from django.contrib import admin
 from rest_framework import routers
+
+from cpchain.market.api.es_views import ESProductView
 from .views import *
 
 router = routers.DefaultRouter()
@@ -19,4 +21,7 @@ urlpatterns = [
     url(r'^product/search/$', ProductSearchAPIViewSet.as_view(), name='product_search'),
     url(r'^product_paged/search/$', ProductPagedSearchAPIViewSet.as_view(), name='product_paged_search'),
     url(r'^logout', LogoutAPIView.as_view(), name='logout'),
+    url(r'^es_product/search/$', ESProductView.as_view(), name='es_product_search'),
 ]
+
+

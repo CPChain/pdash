@@ -5,6 +5,8 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 import datetime, time
 
+from cpchain.market.api.search_indexes import ProductIndex
+
 
 class WalletUser(models.Model):
     """
@@ -53,6 +55,27 @@ class Product(models.Model):
 
     def get_msg_hash_source(self):
         return self.get_signature_source() + str(self.seq) + self.signature
+
+    def indexing(self):
+        ProductIndex.init()
+        obj = ProductIndex(
+            meta={'id': self.msg_hash},
+            title=self.title,
+            description=self.description,
+            price=self.price,
+            tags=self.tags,
+            start_date=self.start_date,
+            end_date=self.end_date,
+            market_hash=self.msg_hash,
+            file_md5=self.file_md5,
+            status=self.status,
+            created=self.created,
+            owner_address=self.owner_address,
+            signature=self.signature,
+        )
+        from cpchain.market.market.es_client import es_client
+        obj.save(using=es_client)
+        return obj.to_dict(include_meta=True)
 
 
 class Token(models.Model):
