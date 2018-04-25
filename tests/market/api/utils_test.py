@@ -1,7 +1,7 @@
 import unittest
 
-from cpchain.market.api.utils import *
-from cpchain.utils import join_with_root,config
+from cpchain.market.api.utils import generate_keys, sign_der, verify_signature, ECCipher, sign
+from cpchain.utils import join_with_root, config
 
 private_key_string = "MIHsMFcGCSqGSIb3DQEFDTBKMCkGCSqGSIb3DQEFDDAcBAixihD8Ld8YbQICCAAwDAYIKoZIhvcNAgkFADAdBglghkgBZQMEASoEEG44GNJc06XGWEgbpaGvhB4EgZC/fiBy6TUHehjKFtDI7CE7X26c6yHcLjjDaNDCVYTnSKf12WdzwBbpwbKfM3yOpDessx2Ny6l9UtnDX5rjQjfgNzI61xa+j1SXGIAjd8atlnqULfPnzn2N9TfS9pEY7S6NGrYvhkzbZrejdtM+pl5F/0IJGszP6VSWSZrt+k7NNakfw6uz9VqnBhkIWk+hKJQ="
 public_key_string = "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAE8s5X7ql5VAr6nfGkkvT5t4uMtSKBivQL6rtwmBZ0C+E2WHR8EqU9X+gElHAaY4b0OUyEqZ17omkqvzaDsNo24g=="
@@ -54,7 +54,6 @@ class UtilsTest(unittest.TestCase):
         self.assertTrue(is_valid_sign)
 
     def test_load_key_pair_from_private_key(self):
-
         private_key_file_path = join_with_root(config.wallet.private_key_file)
         password_path = join_with_root(config.wallet.private_key_password_file)
 
@@ -85,7 +84,7 @@ class UtilsTest(unittest.TestCase):
         print("is valid new_signature:" + str(is_valid_sign))
         self.assertTrue(is_valid_sign, "should be success")
 
-        is_valid_sign = verify_signature(pub_key_string, new_signature, data+"error")
+        is_valid_sign = verify_signature(pub_key_string, new_signature, data + "error")
         print("is valid new_signature:" + str(is_valid_sign))
         self.assertFalse(is_valid_sign, "should be failed")
 
