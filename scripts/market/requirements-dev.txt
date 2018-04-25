@@ -6,6 +6,7 @@ psycopg2
 toml==0.9.4
 eth-keyfile
 cryptography
+web3
 
 #test
 pytest
