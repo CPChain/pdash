@@ -5,7 +5,7 @@ from twisted.internet.defer import Deferred
 from twisted.internet import reactor
 from cpchain.proxy.server import SSLServerFactory
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
-from cpchain.crypto import ECCipher
+from cpchain.crypto import ECCipher, pub_key_der_to_addr
 from cpchain.proxy.proxy_db import Trade, ProxyDB
 from cpchain import config
 
@@ -23,8 +23,8 @@ def fake_message(test_type):
         seller_data = message.seller_data
         message.type = Message.SELLER_DATA
         seller_data.order_id = 1
-        seller_data.seller_addr = seller_public_key
-        seller_data.buyer_addr = buyer_public_key
+        seller_data.seller_addr = pub_key_der_to_addr(seller_public_key)
+        seller_data.buyer_addr = pub_key_der_to_addr(buyer_public_key)
         seller_data.market_hash = b'MARKET_HASH'
         seller_data.AES_key = b'AES_key'
         storage = seller_data.storage
@@ -38,8 +38,8 @@ def fake_message(test_type):
         buyer_data = message.buyer_data
         message.type = Message.BUYER_DATA
         buyer_data.order_id = 1
-        buyer_data.seller_addr = seller_public_key
-        buyer_data.buyer_addr = buyer_public_key
+        buyer_data.seller_addr = pub_key_der_to_addr(seller_public_key)
+        buyer_data.buyer_addr = pub_key_der_to_addr(buyer_public_key)
         buyer_data.market_hash = b'MARKET_HASH'
 
     else:
