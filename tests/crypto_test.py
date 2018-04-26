@@ -7,7 +7,7 @@ private_key_string = "MIHsMFcGCSqGSIb3DQEFDTBKMCkGCSqGSIb3DQEFDDAcBAixihD8Ld8YbQ
 public_key_string = "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAE8s5X7ql5VAr6nfGkkvT5t4uMtSKBivQL6rtwmBZ0C+E2WHR8EqU9X+gElHAaY4b0OUyEqZ17omkqvzaDsNo24g=="
 
 
-class CryptosTest(unittest.TestCase):
+class CryptoTest(unittest.TestCase):
 
     def test_generate_key_pair_signature_and_verify(self):
         sample = b"qZaQ6S"

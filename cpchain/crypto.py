@@ -1,19 +1,18 @@
-import base64
-import os
 import functools
 import logging
+import os
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec, rsa
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.primitives.asymmetric import ec, rsa
-
 from eth_utils import keccak
 
 from cpchain import config
-from cpchain.utils import join_with_root
 from cpchain.chain.utils import load_private_key_from_keystore
+from cpchain.encoder import Encoder
+from cpchain.utils import join_with_root
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +25,11 @@ def examine_password(password):
 
 class BaseCipher:
     def get_digest(self, fpath):
+        """
+
+        :param fpath:
+        :return:
+        """
         digest = hashes.Hash(hashes.SHA256(), backend=self.backend)
         with open(fpath, 'rb') as f:
             for buffer in iter(functools.partial(f.read, 4096), b''):
@@ -34,6 +38,15 @@ class BaseCipher:
         return d
 
     def is_valid(self, fpath, d):
+        """
+
+        Args:
+            fpath:
+            d:
+
+        Returns:
+
+        """
         digest = hashes.Hash(hashes.SHA256(), backend=self.backend)
         with open(fpath, 'rb') as f:
             for buffer in iter(functools.partial(f.read, 4096), b''):
@@ -428,27 +441,6 @@ class ECPEMCipher:
         except Exception:
             logger.exception("pem sign error")
             return None
-
-
-class SHA256Hash:
-
-    @staticmethod
-    def generate_hash(data):
-        digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
-        digest.update(data.encode(encoding="utf-8"))
-        digest_data = digest.finalize()
-        digest_string = Encoder.bytes_to_base64_str(digest_data)
-        return digest_string
-
-
-class Encoder:
-    @staticmethod
-    def bytes_to_base64_str(b64bytes):
-        return base64.b64encode(b64bytes).decode("utf-8")
-
-    @staticmethod
-    def str_to_base64_byte(b64string):
-        return base64.b64decode(b64string.encode("utf-8"))
 
 
 def get_addr_from_public_key(pub_key):

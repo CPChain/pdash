@@ -22,11 +22,10 @@ from cpchain.utils import join_with_root, config
 from cpchain.chain.models import OrderInfo
 
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
-from cpchain.proxy.client import start_client, download_file
-from cpchain.wallet import proxy_request
+from cpchain.proxy.client import start_client
 from cpchain.wallet.db import BuyerFileInfo
 from cpchain.wallet.fs import publish_file_update, session, FileInfo, decrypt_file_aes, add_file
-from cpchain.crypto import Encoder
+from cpchain.encoder import Encoder
 
 
 class MarketClient:
