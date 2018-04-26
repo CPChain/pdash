@@ -61,7 +61,28 @@ class RSACipher:
 
     @staticmethod
     def generate_private_key(password=b'cpchainisawesome') -> "returns key bytes":
-        # Generate our key
+        """
+        generate private key with RSA.
+
+        we can use it like this :
+
+        priv_key =  RSACipher.generate_private_key(password=b'cpchainisawesome')
+
+        pub_key = priv_key.public_key()
+
+        pub_bytes = pub_key.public_bytes(encoding=serialization.Encoding.DER,
+                                         format=serialization.PublicFormat.SubjectPublicKeyInfo)
+
+        print(len(pub_bytes))
+
+        Args:
+            password:password bytes
+
+        Returns:
+            private key object
+
+        """
+
         key = rsa.generate_private_key(
             public_exponent=65537,
             key_size=4096,
@@ -82,6 +103,14 @@ class RSACipher:
 
     @staticmethod
     def load_private_key():
+        """
+        load private key with key file and password file in cpchain.toml,
+        key file path item: config.wallet.rsa_private_key_password_file
+        password file path item: config.wallet.rsa_private_key_password_file
+
+        Returns:
+            private key object
+        """
         with open(join_with_root(config.wallet.rsa_private_key_password_file), "rb") as f:
             buyer_rsa_private_key_password = f.read()
         with open(join_with_root(config.wallet.rsa_private_key_file), "rb") as key_file:
@@ -94,6 +123,12 @@ class RSACipher:
 
     @staticmethod
     def load_public_key():
+        """
+        load RSA public key bytes from private key
+        Returns:
+            public key bytes
+
+        """
         public_bytes = RSACipher.load_private_key().public_key().public_bytes(
             encoding=serialization.Encoding.DER,
             format=serialization.PublicFormat.SubjectPublicKeyInfo
@@ -113,6 +148,14 @@ class RSACipher:
 
     @staticmethod
     def decrypt(data_bytes):
+        """
+        decrypt bytes with private key
+        Args:
+            data_bytes:
+
+        Returns:
+            decrypted string
+        """
         return RSACipher.load_private_key().decrypt(
             data_bytes,
             padding.OAEP(
@@ -132,6 +175,15 @@ class AESCipher(BaseCipher):
         return os.urandom(16)
 
     def encrypt(self, fpath, outpath):
+        """
+        encrypt data file
+        Args:
+            fpath: raw file path
+            outpath: encrpyted file path
+
+        Returns:
+            None
+        """
         with open(fpath, "rb") as infile, open(outpath, "wb") as outfile:
             # NB the same length as aes
             iv = os.urandom(16)
@@ -147,6 +199,17 @@ class AESCipher(BaseCipher):
             outfile.write(cipherdata)
 
     def decrypt(self, fpath, outpath):
+        """
+
+        decrypt data file
+        Args:
+            fpath: raw file path
+            outpath: encrpyted file path
+
+        Returns:
+            None
+
+        """
         with open(fpath, 'rb') as infile, open(outpath, 'wb') as outfile:
             iv = infile.read(16)
             decryptor = Cipher(algorithms.AES(self.key), modes.CFB(iv), self.backend).decryptor()
@@ -164,23 +227,52 @@ class ECCipher:
     # cf. http://tinyurl.com/y8q5g68u
     @staticmethod
     def geth_load_key_pair_from_private_key(fpath, password='password'):
+        """
+        load geth key pair from file
+
+        Args:
+            fpath: file path
+            password: password,default is 'password'
+
+        Returns:
+
+        """
         pri_key_bytes = load_private_key_from_keystore(fpath, password)
 
         pri_key_string = Encoder.bytes_to_base64_str(pri_key_bytes)
 
-        pub_key_string = ECCipher._get_public_key_from_private_key_string(pri_key_bytes)
+        pub_key_string = ECCipher._get_public_key_from_private_key_bytes(pri_key_bytes)
 
         return pri_key_string, pub_key_string
 
     @staticmethod
     def geth_get_public_key_from_private_key(pri_key_string):
+        """
+        load geth public key string from private key string
+        Args:
+            pri_key_string: private key string
+
+        Returns:
+            public key string
+
+        """
 
         key_bytes = Encoder.str_to_base64_byte(pri_key_string)
 
-        return ECCipher._get_public_key_from_private_key_string(key_bytes)
+        return ECCipher._get_public_key_from_private_key_bytes(key_bytes)
 
     @staticmethod
     def _get_key_pairs_from_private_key_bytes(private_key_bytes):
+        """
+        get private key bytes and public key bytes pairs from private key bytes
+
+        Args:
+            private_key_bytes: private key bytes
+
+        Returns:
+            private key bytes and public key bytes pairs
+
+        """
         private_key = ECCipher._load_private_key_from_bytes(private_key_bytes)
         public_key = private_key.public_key()
         public_key_bytes = public_key.public_bytes(
@@ -191,7 +283,16 @@ class ECCipher:
         return private_key_bytes, public_key_bytes
 
     @staticmethod
-    def _get_public_key_from_private_key_string(private_key_bytes):
+    def _get_public_key_from_private_key_bytes(private_key_bytes):
+        """
+        get public key string from private key bytes
+        Args:
+            private_key_bytes:
+
+        Returns:
+            public key string
+
+        """
         private_key_bytes, pub_key_bytes = ECCipher._get_key_pairs_from_private_key_bytes(private_key_bytes)
         pub_key_string = Encoder.bytes_to_base64_str(pub_key_bytes)
         logger.debug("pub_key_string:%s" % pub_key_string)
@@ -199,28 +300,57 @@ class ECCipher:
 
     @staticmethod
     def geth_sign(pri_key_string, raw_data):
+        """
+        sign string data with geth private key string
+        Args:
+            pri_key_string:base64 encoded geth private key string
+            raw_data: string data
+
+        Returns:
+            base64 string encoded with signature bytes
+
+        """
         try:
-            pri_key_string_bytes = Encoder.str_to_base64_byte(pri_key_string)
+            pri_key_bytes = Encoder.str_to_base64_byte(pri_key_string)
 
-            private_key = ECCipher._load_private_key_from_bytes(pri_key_string_bytes)
+            private_key = ECCipher._load_private_key_from_bytes(pri_key_bytes)
 
-            signature_string = private_key.sign(
+            signature_bytes = private_key.sign(
                 raw_data.encode(encoding="utf-8"),
                 ec.ECDSA(hashes.SHA256()))
-            return Encoder.bytes_to_base64_str(signature_string)
+            return Encoder.bytes_to_base64_str(signature_bytes)
         except Exception:
             logger.exception("signature error")
             return None
 
     @staticmethod
-    def _load_private_key_from_bytes(pri_key_string_bytes):
+    def _load_private_key_from_bytes(pri_key_bytes):
+        """
+        load private key object from private key bytes
+        Args:
+            pri_key_bytes:
+
+        Returns:
+            private key object
+
+        """
         # XXX big endian
-        private_value = int.from_bytes(pri_key_string_bytes, byteorder='big')
+        private_value = int.from_bytes(pri_key_bytes, byteorder='big')
         private_key = ec.derive_private_key(private_value, ec.SECP256K1(), default_backend())
         return private_key
 
     @staticmethod
     def generate_key_pair(private_key_bytes=None, password=None):
+        """
+        generate private and public key pair
+
+        Args:
+            private_key_bytes:
+            password:
+
+        Returns:tuple(private key bytes,public key bytes)
+
+        """
         password = examine_password(password)
 
         if private_key_bytes:
@@ -351,11 +481,16 @@ class ECCipher:
     @staticmethod
     def get_public_key_from_private_key(pri_key_string, password=None):
         """
-        get public key from private key
-        :param pri_key_string:
-        :param password:read default value from config file
-        :return:base64(public key)
+        get public key from private key string
+
+        Args:
+            pri_key_string: private key string
+            password: read default value from config file
+
+        Returns:
+            base64(public key)
         """
+
         password = examine_password(password)
         pri_key_string_bytes = Encoder.str_to_base64_byte(pri_key_string)
 
