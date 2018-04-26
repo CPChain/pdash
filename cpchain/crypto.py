@@ -223,8 +223,12 @@ class AESCipher(BaseCipher):
 
 
 class ECCipher:
+
+    """
     # cf. yellow paper
     # cf. http://tinyurl.com/y8q5g68u
+    """
+
     @staticmethod
     def geth_load_key_pair_from_private_key(fpath, password='password'):
         """
@@ -342,7 +346,7 @@ class ECCipher:
     @staticmethod
     def generate_key_pair(private_key_bytes=None, password=None):
         """
-        generate private and public key pair
+        generate private and public key tuple
 
         Args:
             private_key_bytes:
@@ -386,6 +390,17 @@ class ECCipher:
 
     @staticmethod
     def generate_signature(pri_key_string_bytes, raw_data, password=None):
+        """
+        generate signature
+        Args:
+            pri_key_string_bytes: private key string bytes
+            raw_data: data bytes
+            password: password
+
+        Returns:
+            signature string
+
+        """
         try:
             loaded_private_key = ECCipher._load_private_key_from_bytes(pri_key_string_bytes)
             # loaded_private_key = serialization.load_der_private_key(
@@ -405,6 +420,17 @@ class ECCipher:
 
     @staticmethod
     def verify_signature(public_key, signature, raw_data):
+        """
+        verify signature
+        Args:
+            public_key:base64 encoded public key string
+            signature:signature string
+            raw_data:data string
+
+        Returns:
+            True: is valid signature;False: is invalid signature
+
+        """
         try:
             loaded_public_key = serialization.load_der_public_key(
                 public_key,
@@ -423,6 +449,15 @@ class ECCipher:
 
     @staticmethod
     def generate_der_keys(password=None):
+        """
+        generate private ,public key string tuple
+        Args:
+            password:
+
+        Returns:
+            private ,public key string tuple
+
+        """
         password = examine_password(password)
         private_key = ec.generate_private_key(
             ec.SECP256K1(), default_backend()
@@ -447,6 +482,16 @@ class ECCipher:
 
     @staticmethod
     def verify_der_signature(pub_key_string, signature, raw_data_string):
+        """
+        verify signature
+        Args:
+            pub_key_string: base64 encoded public key string
+            signature: signature string
+            raw_data_string:data string
+
+        Returns: True: is valid signature;False: is invalid signature
+
+        """
         try:
             pub_key_string_bytes = Encoder.str_to_base64_byte(pub_key_string)
             loaded_public_key = serialization.load_der_public_key(
@@ -462,6 +507,18 @@ class ECCipher:
 
     @staticmethod
     def sign_der(pri_key_string, raw_data, password=None):
+        """
+
+        signature data with private key string
+
+        Args:
+            pri_key_string:base64 private key string
+            raw_data: string data
+            password:
+
+        Returns:base64 encoded signature string
+
+        """
         try:
             password = examine_password(password)
             pri_key_string_bytes = Encoder.str_to_base64_byte(pri_key_string)
