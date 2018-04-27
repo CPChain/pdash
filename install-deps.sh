@@ -50,9 +50,6 @@ pytest
 pytest-cov
 "
 
-echo $1
-echo $2
-
 while test $# -gt 0
 do
     case "$1" in
@@ -71,10 +68,8 @@ do
 done
 
 
-if [ -n "$pkgs" -a "$2" = "jenkins" ]; then
+if [ -n "$pkgs" ]; then
     pip3 install -r <(printf "%s\n" $pkgs)
-elif [ -n "$pkgs" ]; then
-    pip3 install --user -r <(printf "%s\n" $pkgs)
 fi
 
 
