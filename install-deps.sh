@@ -2,18 +2,92 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
-sudo apt install -y python3-pyqt5
+######### PIP PACKAGES
 
-sudo apt install -y python3-twisted python3-treq
+market_pkgs="
+djangorestframework==3.7.3
+django-rest-elasticsearch==0.4
+django==2.0.3
+psycopg2
+toml==0.9.4
+eth-keyfile
+cryptography
+web3
+"
 
-sudo apt install -y python3-protobuf
-# compiler is only needed for dev.
-# sudo apt install -y protobuf-compiler python3-protobuf
+chain_pkgs="
+eth-keyfile
+web3
+toml==0.9.4
+"
 
-sudo apt install -y python3-cryptography python3-sqlalchemy python3-toml python3-boto3
+proxy_pkgs="
+toml==0.9.4
+ipfsapi
+eth-keyfile
+google-cloud
+twisted
+treq
+protobuf
+cryptography
+sqlalchemy
+boto3
+pyopenssl
+web3
+"
 
-sudo apt install -y python3-flake8
+wallet_pkgs="
+#wallet(chain)
+eth-keyfile
+web3
+qt5reactor
+toml==0.9.4
+"
 
-pip3 install pyopenssl
 
-pip3 install -Ur requirements-dev.txt
+pkgs="
+pytest
+pytest-cov
+"
+
+
+while test $# -gt 0
+do
+    case "$1" in
+        market) pkgs="${pkgs}${market_pkgs}"
+                ;;
+        chain) pkgs="${pkgs}${chain_pkgs}"
+               ;;
+        proxy) pkgs="${pkgs}${proxy_pkgs}"
+               ;;
+        wallet) pkgs="${pkgs}${wallet_pkgs}"
+                ;;
+        all) set -- market chain proxy wallet
+             ;;
+    esac
+    shift
+done
+
+
+if [ -n "$pkgs" ]; then
+    pip3 install --user -r <(printf "%s\n" $pkgs)
+fi
+
+
+
+# DEBIAN PACKAGES
+# sudo apt install -y python3-pyqt5
+
+# sudo apt install -y python3-twisted python3-treq
+
+# sudo apt install -y python3-protobuf
+# # compiler is only needed for dev.
+# # sudo apt install -y protobuf-compiler python3-protobuf
+
+# sudo apt install -y python3-cryptography python3-sqlalchemy python3-toml python3-boto3
+
+# sudo apt install -y python3-flake8
+
+# pip3 install pyopenssl
+
+# pip3 install -r requirements-dev.txt
