@@ -1,5 +1,5 @@
 #!/bin/sh
-
+echo "module name:$1"
 curdir=`pwd`
 module_name = "$1"
 echo "start build $module_name"
