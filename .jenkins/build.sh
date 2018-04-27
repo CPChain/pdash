@@ -1,8 +1,7 @@
 #!/bin/sh
 echo "module name:$1"
 curdir=`pwd`
-module_name = "$1"
-echo "start build $module_name"
+echo "start build $1"
 cd ../
 PATH=$WORKSSPACE/venv/bin:/usr/local/bin:$PATH
 
@@ -33,8 +32,8 @@ fi
 echo "activate"
 . venv/bin/activate
 
-echo "install dependency for $module_name"
-./install-deps.sh $module_name
+echo "install dependency for $1"
+./install-deps.sh $*
 
 ROOT_PATH=`pwd`
 export PYTHONPATH=$PYTHONPATH:$ROOT_PATH
