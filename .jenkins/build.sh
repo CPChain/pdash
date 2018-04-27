@@ -1,7 +1,7 @@
 #!/bin/sh
 
 curdir=`pwd`
-module_name = $1
+module_name = $0
 echo "start build $module_name"
 cd ../
 PATH=$WORKSSPACE/venv/bin:/usr/local/bin:$PATH
