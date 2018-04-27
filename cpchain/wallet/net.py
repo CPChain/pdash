@@ -68,7 +68,7 @@ class MarketClient:
             print(err)
 
         try:
-            signature = crypto.ECCipher.geth_sign(self.priv_key, self.nonce)
+            signature = crypto.ECCipher.generate_string_signature(self.priv_key, self.nonce)
             # print(signature)
             header_confirm = {'Content-Type': 'application/json'}
             data_confirm = {'public_key': self.pub_key, 'code': signature}
@@ -117,7 +117,7 @@ class MarketClient:
         # print(self.priv_key)
         # print(self.pub_key)
         # print(signature_source)
-        signature = crypto.ECCipher.geth_sign(self.priv_key, signature_source)
+        signature = crypto.ECCipher.generate_string_signature(self.priv_key, signature_source)
         data['signature'] = signature
         # print(signature)
         # print(data)
@@ -273,9 +273,7 @@ class BuyerChainClient:
         sign_message.public_key = Encoder.str_to_base64_byte(self.market_client.pub_key)
         sign_message.data = message.SerializeToString()
         sign_message.signature = crypto.ECCipher.generate_signature(
-            Encoder.str_to_base64_byte(self.market_client.priv_key),
-            sign_message.data
-        )
+            Encoder.str_to_base64_byte(self.market_client.priv_key), sign_message.data)
         d = start_client(sign_message)
 
         def update_buyer_db(file_uuid, file_path, new_order_id):
@@ -386,9 +384,7 @@ class SellerChainClient:
                 sign_message.public_key = Encoder.str_to_base64_byte(self.market_client.pub_key)
                 sign_message.data = message.SerializeToString()
                 sign_message.signature = crypto.ECCipher.generate_signature(
-                    Encoder.str_to_base64_byte(self.market_client.priv_key),
-                    sign_message.data
-                )
+                    Encoder.str_to_base64_byte(self.market_client.priv_key), sign_message.data)
                 d = start_client(sign_message)
                 d.addBoth(self.seller_deliver_proxy_callback)
 

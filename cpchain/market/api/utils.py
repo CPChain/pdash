@@ -2,7 +2,8 @@ import hashlib
 import logging
 import random
 
-from cpchain.crypto import ECCipher
+from cpchain.crypto import ECCipher, ECDERCipher
+from cpchain.encoder import Encoder
 from cpchain.hash import SHA256Hash
 
 logger = logging.getLogger(__name__)
@@ -43,17 +44,12 @@ def generate_msg_hash(msg_hash_source):
     return SHA256Hash.generate_hash(msg_hash_source)
 
 
-def generate_keys():
-    return ECCipher.generate_der_keys()
-
-
-def verify_signature(pub_key_string, signature, raw_data):
-    return ECCipher.verify_der_signature(pub_key_string=pub_key_string, signature=signature, raw_data_string=raw_data)
+def verify_signature(pub_key_string, signature, raw_data_string):
+    pub_key_string_bytes = Encoder.str_to_base64_byte(pub_key_string)
+    signature_bytes = Encoder.str_to_base64_byte(signature)
+    raw_data = raw_data_string.encode(encoding="utf-8")
+    return ECCipher.verify_signature(pub_key_string_bytes, signature_bytes, raw_data)
 
 
 def sign(pri_key_string, raw_data):
-    return ECCipher.geth_sign(pri_key_string, raw_data)
-
-
-def sign_der(pri_key_string, raw_data):
-    return ECCipher.sign_der(pri_key_string, raw_data)
+    return ECCipher.generate_string_signature(pri_key_string, raw_data)

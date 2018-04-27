@@ -17,9 +17,9 @@ from cpchain.utils import join_with_root
 logger = logging.getLogger(__name__)
 
 
-def examine_password(password):
-    password = password or config.market.default_password
-    password_bytes = password.encode(encoding="utf-8")
+def examine_password(password_str):
+    password_str = password_str or config.market.default_password
+    password_bytes = password_str.encode(encoding="utf-8")
     return password_bytes
 
 
@@ -27,8 +27,11 @@ class BaseCipher:
     def get_digest(self, fpath):
         """
 
-        :param fpath:
-        :return:
+        Args:
+            fpath:
+
+        Returns:
+
         """
         digest = hashes.Hash(hashes.SHA256(), backend=self.backend)
         with open(fpath, 'rb') as f:
@@ -249,22 +252,7 @@ class ECCipher:
 
         return pri_key_string, pub_key_string
 
-    @staticmethod
-    def geth_get_public_key_from_private_key(pri_key_string):
-        """
-        load geth public key string from private key string
-        Args:
-            pri_key_string: private key string
-
-        Returns:
-            public key string
-
-        """
-
-        key_bytes = Encoder.str_to_base64_byte(pri_key_string)
-
-        return ECCipher._get_public_key_from_private_key_bytes(key_bytes)
-
+    # inner call
     @staticmethod
     def _get_key_pairs_from_private_key_bytes(private_key_bytes):
         """
@@ -286,6 +274,7 @@ class ECCipher:
 
         return private_key_bytes, public_key_bytes
 
+    # inner call
     @staticmethod
     def _get_public_key_from_private_key_bytes(private_key_bytes):
         """
@@ -303,31 +292,6 @@ class ECCipher:
         return pub_key_string
 
     @staticmethod
-    def geth_sign(pri_key_string, raw_data):
-        """
-        sign string data with geth private key string
-        Args:
-            pri_key_string:base64 encoded geth private key string
-            raw_data: string data
-
-        Returns:
-            base64 string encoded with signature bytes
-
-        """
-        try:
-            pri_key_bytes = Encoder.str_to_base64_byte(pri_key_string)
-
-            private_key = ECCipher._load_private_key_from_bytes(pri_key_bytes)
-
-            signature_bytes = private_key.sign(
-                raw_data.encode(encoding="utf-8"),
-                ec.ECDSA(hashes.SHA256()))
-            return Encoder.bytes_to_base64_str(signature_bytes)
-        except Exception:
-            logger.exception("signature error")
-            return None
-
-    @staticmethod
     def _load_private_key_from_bytes(pri_key_bytes):
         """
         load private key object from private key bytes
@@ -343,6 +307,7 @@ class ECCipher:
         private_key = ec.derive_private_key(private_value, ec.SECP256K1(), default_backend())
         return private_key
 
+    # proxy
     @staticmethod
     def generate_key_pair(private_key_bytes=None, password=None):
         """
@@ -388,14 +353,15 @@ class ECCipher:
 
         return serialized_private, serialized_public
 
+    # proxy
+    # wallet
     @staticmethod
-    def generate_signature(pri_key_string_bytes, raw_data, password=None):
+    def generate_signature(pri_key_string_bytes, raw_data_bytes):
         """
         generate signature
         Args:
             pri_key_string_bytes: private key string bytes
-            raw_data: data bytes
-            password: password
+            raw_data_bytes: data bytes
 
         Returns:
             signature string
@@ -403,13 +369,8 @@ class ECCipher:
         """
         try:
             loaded_private_key = ECCipher._load_private_key_from_bytes(pri_key_string_bytes)
-            # loaded_private_key = serialization.load_der_private_key(
-            #     private_key,
-            #     password=password,
-            #     backend=default_backend()
-            # )
             signature = loaded_private_key.sign(
-                raw_data,
+                raw_data_bytes,
                 ec.ECDSA(hashes.SHA256()))
 
         except Exception:
@@ -418,6 +379,30 @@ class ECCipher:
         else:
             return signature
 
+    @staticmethod
+    def generate_string_signature(pri_key_string, raw_data_string):
+        """
+        sign string data with geth private key string
+        Args:
+            pri_key_string:base64 encoded geth private key string
+            raw_data_string: string data
+
+        Returns:
+            base64 string encoded with signature bytes
+
+        """
+        try:
+            raw_data_bytes = raw_data_string.encode(encoding="utf-8")
+            pri_key_bytes = Encoder.str_to_base64_byte(pri_key_string)
+
+            signature_bytes = ECCipher.generate_signature(pri_key_bytes,raw_data_bytes)
+
+            return Encoder.bytes_to_base64_str(signature_bytes)
+        except Exception:
+            logger.exception("signature error")
+            return None
+
+    # proxy
     @staticmethod
     def verify_signature(public_key, signature, raw_data):
         """
@@ -446,6 +431,9 @@ class ECCipher:
             return False
         else:
             return True
+
+
+class ECDERCipher:
 
     @staticmethod
     def generate_der_keys(password=None):
@@ -479,31 +467,6 @@ class ECCipher:
         pub_key_string = Encoder.bytes_to_base64_str(serialized_public)
         logger.debug("pub_key_string:%s" % pub_key_string)
         return pri_key_string, pub_key_string
-
-    @staticmethod
-    def verify_der_signature(pub_key_string, signature, raw_data_string):
-        """
-        verify signature
-        Args:
-            pub_key_string: base64 encoded public key string
-            signature: signature string
-            raw_data_string:data string
-
-        Returns: True: is valid signature;False: is invalid signature
-
-        """
-        try:
-            pub_key_string_bytes = Encoder.str_to_base64_byte(pub_key_string)
-            loaded_public_key = serialization.load_der_public_key(
-                pub_key_string_bytes,
-                backend=default_backend()
-            )
-            loaded_public_key.verify(Encoder.str_to_base64_byte(signature), raw_data_string.encode(encoding="utf-8"),
-                                     ec.ECDSA(hashes.SHA256()))
-            return True
-        except Exception:
-            logger.exception("verify signature error")
-            return False
 
     @staticmethod
     def sign_der(pri_key_string, raw_data, password=None):

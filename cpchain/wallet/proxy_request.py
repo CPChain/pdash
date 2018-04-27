@@ -47,10 +47,7 @@ def send_request_to_proxy(order_id, test_type):
         sign_message = SignMessage()
         sign_message.public_key = seller_public_key
         sign_message.data = message.SerializeToString()
-        sign_message.signature = ECCipher.generate_signature(
-                                wallet_private_key,
-                                sign_message.data
-                            )
+        sign_message.signature = ECCipher.generate_signature(wallet_private_key, sign_message.data)
 
         d = start_client(sign_message)
 
@@ -73,10 +70,7 @@ def send_request_to_proxy(order_id, test_type):
         sign_message = SignMessage()
         sign_message.public_key = buyer_public_key
         sign_message.data = message.SerializeToString()
-        sign_message.signature = ECCipher.generate_signature(
-                                wallet_private_key,
-                                sign_message.data
-                            )
+        sign_message.signature = ECCipher.generate_signature(wallet_private_key, sign_message.data)
 
         d = start_client(sign_message)
 
