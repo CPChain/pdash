@@ -1,9 +1,0 @@
-* CPChain
-CPChain is a blockchain-based data sharing platform.
-
-Visit us at [[http://cpchain.io/][cpchain.io]].
-
-
-
-* Development
-  Please check this [[https://github.com/CPChain/docs/blob/master/guide.org#version-control][guide]] before working on a branch.
