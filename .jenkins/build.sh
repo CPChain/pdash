@@ -39,6 +39,7 @@ echo "install dependency for $1"
 
 ROOT_PATH=`pwd`
 export PYTHONPATH=$PYTHONPATH:$ROOT_PATH
+tname = $1
 
 while test $# -gt 0
 do
@@ -52,10 +53,9 @@ do
         wallet) testcase="'not test_dispute and test_normal_process and test_timeout and test_withdraw_order'"
                 ;;
     esac
-    shift
 done
 
 if [ -n "$testcase" ]; then
     echo "=== unit test param:$testcase ==="
-    py.test tests/$module_name  --junitxml=test_report.xml --cov-report=xml --cov=./ -k  $testcase
+    py.test tests/$tname  --junitxml=test_report.xml --cov-report=xml --cov=./ -k  $testcase
 fi
