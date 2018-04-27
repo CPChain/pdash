@@ -50,6 +50,8 @@ pytest
 pytest-cov
 "
 
+echo $1
+echo $2
 
 while test $# -gt 0
 do
