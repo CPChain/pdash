@@ -4,6 +4,7 @@ echo "module name:$1"
 echo "jenkins:$2"
 curdir=`pwd`
 echo "start build $1"
+modulename="$1"
 cd ../
 PATH=$WORKSSPACE/venv/bin:/usr/local/bin:$PATH
 
@@ -39,7 +40,7 @@ echo "install dependency for $1"
 
 ROOT_PATH=`pwd`
 export PYTHONPATH=$PYTHONPATH:$ROOT_PATH
-tname = $1
+
 
 while test $# -gt 0
 do
@@ -57,5 +58,5 @@ done
 
 if [ -n "$testcase" ]; then
     echo "=== unit test param:$testcase ==="
-    py.test tests/$tname  --junitxml=test_report.xml --cov-report=xml --cov=./ -k  $testcase
+    py.test tests/$modulename  --junitxml=test_report.xml --cov-report=xml --cov=./ -k  $testcase
 fi
