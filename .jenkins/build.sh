@@ -1,5 +1,6 @@
 #!/bin/sh
 echo "module name:$1"
+echo "jenkins:$2"
 curdir=`pwd`
 echo "start build $1"
 cd ../

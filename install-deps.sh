@@ -69,7 +69,7 @@ do
 done
 
 
-if [ -n "$pkgs" and "$2" = "jenkins" ]; then
+if [ -n "$pkgs" -a "$2" = "jenkins" ]; then
     pip3 install -r <(printf "%s\n" $pkgs)
 elif [ -n "$pkgs" ]; then
     pip3 install --user -r <(printf "%s\n" $pkgs)
