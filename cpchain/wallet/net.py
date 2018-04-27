@@ -39,7 +39,7 @@ class MarketClient:
 
         with open(password_path) as f:
             password = f.read()
-        self.priv_key, self.pub_key = crypto.ECCipher.geth_load_key_pair_from_private_key(private_key_file_path, password)
+        self.priv_key, self.pub_key = crypto.ECCipher.load_key_pair_from_private_key(private_key_file_path, password)
         # self.priv_key = 'pvhf7hyFxZWNQJ76gH+24LR1ErbfANo0mI6uUol+9rU='
         # self.pub_key = 'MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEXP33zEQoHs5gfIWtvCosF2guR2pbX06tVGGpKqB4/7Rhc9GUn06j4tFmWPbPjrkrqw8zgRKRvXm97KYNWgU6gA=='
         self.token = ''

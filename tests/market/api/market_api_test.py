@@ -31,7 +31,7 @@ class MarketApiTest(unittest.TestCase):
         with open(password_path) as f:
             password = f.read()
 
-        self.pri_key_string, self.pub_key_string = ECCipher.geth_load_key_pair_from_private_key(private_key_file_path, password)
+        self.pri_key_string, self.pub_key_string = ECCipher.load_key_pair_from_private_key(private_key_file_path, password)
 
         # print("pub_key:%s,pri_key:%s,password:%s" % (self.pub_key_string, self.pri_key_string , password))
 

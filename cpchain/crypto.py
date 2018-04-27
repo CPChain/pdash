@@ -233,9 +233,9 @@ class ECCipher:
     """
 
     @staticmethod
-    def geth_load_key_pair_from_private_key(fpath, password='password'):
+    def load_key_pair_from_private_key(fpath, password='password'):
         """
-        load geth key pair from file
+        load geth key pair from private key file
 
         Args:
             fpath: file path
@@ -252,7 +252,6 @@ class ECCipher:
 
         return pri_key_string, pub_key_string
 
-    # inner call
     @staticmethod
     def _get_key_pairs_from_private_key_bytes(private_key_bytes):
         """
@@ -271,10 +270,8 @@ class ECCipher:
             encoding=serialization.Encoding.DER,
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
-
         return private_key_bytes, public_key_bytes
 
-    # inner call
     @staticmethod
     def _get_public_key_from_private_key_bytes(private_key_bytes):
         """
@@ -307,7 +304,6 @@ class ECCipher:
         private_key = ec.derive_private_key(private_value, ec.SECP256K1(), default_backend())
         return private_key
 
-    # proxy
     @staticmethod
     def generate_key_pair(private_key_bytes=None, password=None):
         """
@@ -323,22 +319,14 @@ class ECCipher:
         password = examine_password(password)
 
         if private_key_bytes:
-            serialized_private = private_key_bytes
             private_key = ECCipher._load_private_key_from_bytes(private_key_bytes)
-            public_key = private_key.public_key()
-            serialized_public = public_key.public_bytes(
-                encoding=serialization.Encoding.DER,
-                format=serialization.PublicFormat.SubjectPublicKeyInfo
-            )
-            logger.debug("pri key bytes:%s" % private_key_bytes)
-            logger.debug("pub key bytes:%s" % serialized_public)
+            serialized_private = private_key_bytes
 
         else:
             private_key = ec.generate_private_key(
                 ec.SECP256K1(),
                 default_backend()
             )
-
             serialized_private = private_key.private_bytes(
                 encoding=serialization.Encoding.DER,
                 format=serialization.PrivateFormat.PKCS8,
@@ -350,11 +338,11 @@ class ECCipher:
             encoding=serialization.Encoding.DER,
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
+        logger.debug("pri key bytes:%s" % private_key_bytes)
+        logger.debug("pub key bytes:%s" % serialized_public)
 
         return serialized_private, serialized_public
 
-    # proxy
-    # wallet
     @staticmethod
     def generate_signature(pri_key_string_bytes, raw_data_bytes):
         """
@@ -402,7 +390,6 @@ class ECCipher:
             logger.exception("signature error")
             return None
 
-    # proxy
     @staticmethod
     def verify_signature(public_key, signature, raw_data):
         """

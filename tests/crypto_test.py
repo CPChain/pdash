@@ -63,7 +63,7 @@ class CryptoTest(unittest.TestCase):
 
         print(password)
 
-        pri_key_string, pub_key_string = ECCipher.geth_load_key_pair_from_private_key(private_key_file_path, password)
+        pri_key_string, pub_key_string = ECCipher.load_key_pair_from_private_key(private_key_file_path, password)
         print("pri_key_string:")
         print(pri_key_string)
 
