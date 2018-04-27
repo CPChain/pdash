@@ -32,6 +32,7 @@ echo "activate"
 
 echo "install dependency"
 pip3 install -r $curdir/requirements-dev.txt
+./install-deps.sh proxy
 
 ROOT_PATH=`pwd`
 export PYTHONPATH=$PYTHONPATH:$ROOT_PATH
