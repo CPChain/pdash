@@ -1,8 +1,7 @@
-#!/bin/sh
-echo "all:$@"
-echo "module name:$1"
-echo "jenkins:$2"
-curdir=`pwd`
+#!/bin/bash
+
+cd "$(dirname $0)"
+
 echo "start build $1"
 modulename="$1"
 cd ../
@@ -41,24 +40,5 @@ sudo /bin/sh install-deps.sh $@
 ROOT_PATH=`pwd`
 export PYTHONPATH=$PYTHONPATH:$ROOT_PATH
 
-
-while test $# -gt 0
-do
-    case "$1" in
-        market) testcase=" "
-                ;;
-        chain) testcase="-k 'test_* and not SSLServerTestCase'"
-               ;;
-        proxy) testcase="-k 'test_*'"
-               ;;
-        wallet) testcase="-k 'test_* and not test_dispute and test_normal_process and test_timeout and test_withdraw_order'"
-                ;;
-    esac
-    shift
-done
-
-echo "testcase modulename:$modulename, param:$testcase"
-if [ -n "$testcase" ]; then
-    echo "=== unit test param:$testcase ==="
-    py.test tests/$modulename  --junitxml=test_report.xml --cov-report=xml --cov=./
-fi
+echo "unit test for $modulename"
+py.test tests/$modulename  --junitxml=test_report.xml --cov-report=xml --cov=./
