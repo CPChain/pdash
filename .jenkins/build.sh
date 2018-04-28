@@ -45,13 +45,13 @@ export PYTHONPATH=$PYTHONPATH:$ROOT_PATH
 while test $# -gt 0
 do
     case "$1" in
-        market) testcase="'test_*'"
+        market) testcase=""
                 ;;
-        chain) testcase="'test_* and not SSLServerTestCase'"
+        chain) testcase="-k 'test_* and not SSLServerTestCase'"
                ;;
-        proxy) testcase="'test_*'"
+        proxy) testcase="-k 'test_*'"
                ;;
-        wallet) testcase="'test_* and not test_dispute and test_normal_process and test_timeout and test_withdraw_order'"
+        wallet) testcase="-k 'test_* and not test_dispute and test_normal_process and test_timeout and test_withdraw_order'"
                 ;;
     esac
     shift
@@ -60,5 +60,5 @@ done
 echo "testcase modulename:$modulename, param:$testcase"
 if [ -n "$testcase" ]; then
     echo "=== unit test param:$testcase ==="
-    py.test tests/$modulename  --junitxml=test_report.xml --cov-report=xml --cov=./ -k  $testcase
+    py.test tests/$modulename  --junitxml=test_report.xml --cov-report=xml --cov=./  $testcase
 fi
