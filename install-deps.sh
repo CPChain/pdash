@@ -69,7 +69,7 @@ done
 
 
 if [ -n "$pkgs" ]; then
-    pip3 install -r <(printf "%s\n" $pkgs)
+    printf "%s\n" $pkgs | xargs pip3 install
 fi
 
 
