@@ -45,7 +45,7 @@ export PYTHONPATH=$PYTHONPATH:$ROOT_PATH
 while test $# -gt 0
 do
     case "$1" in
-        market) testcase="'not test_1 and not test_2'"
+        market) testcase="''"
                 ;;
         chain) testcase="'not SSLServerTestCase'"
                ;;
