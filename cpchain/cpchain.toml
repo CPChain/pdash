@@ -62,7 +62,7 @@ default_password = "^-_-^cpchain@2018^-_-^"
 version = 1
 disable_existing_loggers = false
 
-[logging.formatters.simple]
+[logging.formatters.standard]
 format = '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
 
 [logging.handlers.default]
@@ -70,6 +70,6 @@ level = "DEBUG"
 class = "logging.StreamHandler"
 
 [logging.loggers.cpchain]
-handlers = ["simple"]
+handlers = ["default"]
 level = "DEBUG"
 propagate = false
