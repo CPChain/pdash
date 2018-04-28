@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
-env bash
-echo ${BASH_SOURCE[0]}
-cd "$(dirname "${BASH_SOURCE[0]}")"
+cd "$(dirname $0)"
 
 ######### PIP PACKAGES
 
