@@ -1,11 +1,12 @@
 #!/bin/bash
 
-cd "$(dirname $0)"
+cd "$(dirname "${BASH_SOURCE[0]}")"
+#cd "$(dirname $0)"
 
 echo "start build $1"
 modulename="$1"
 cd ../
-PATH=$WORKSSPACE/venv/bin:/usr/local/bin:$PATH
+PATH=$WORKSPACE/venv/bin:/usr/local/bin:$PATH
 
 which python3
 which pip3
@@ -35,7 +36,7 @@ echo "activate"
 . venv/bin/activate
 
 echo "install dependency for $1"
-sudo /bin/sh install-deps.sh $@
+sudo /bin/sh install-deps.sh "$@"
 
 ROOT_PATH=`pwd`
 export PYTHONPATH=$PYTHONPATH:$ROOT_PATH
