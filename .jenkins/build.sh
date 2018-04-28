@@ -45,7 +45,7 @@ export PYTHONPATH=$PYTHONPATH:$ROOT_PATH
 while test $# -gt 0
 do
     case "$1" in
-        market) testcase=""
+        market) testcase=" "
                 ;;
         chain) testcase="-k 'test_* and not SSLServerTestCase'"
                ;;
@@ -60,5 +60,5 @@ done
 echo "testcase modulename:$modulename, param:$testcase"
 if [ -n "$testcase" ]; then
     echo "=== unit test param:$testcase ==="
-    py.test tests/$modulename  --junitxml=test_report.xml --cov-report=xml --cov=./  $testcase
+    py.test tests/$modulename  --junitxml=test_report.xml --cov-report=xml --cov=./
 fi
