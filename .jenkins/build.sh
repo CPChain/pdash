@@ -45,13 +45,13 @@ export PYTHONPATH=$PYTHONPATH:$ROOT_PATH
 while test $# -gt 0
 do
     case "$1" in
-        market) testcase="''"
+        market) testcase="'test_*'"
                 ;;
-        chain) testcase="'not SSLServerTestCase'"
+        chain) testcase="'test_* and not SSLServerTestCase'"
                ;;
-        proxy) testcase="'not test_dispute and not test_normal_process and not test_timeout and not test_withdraw_order'"
+        proxy) testcase="'test_*'"
                ;;
-        wallet) testcase="'not test_dispute and test_normal_process and test_timeout and test_withdraw_order'"
+        wallet) testcase="'test_* and not test_dispute and test_normal_process and test_timeout and test_withdraw_order'"
                 ;;
     esac
     shift
