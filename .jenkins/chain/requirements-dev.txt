@@ -1,8 +1,0 @@
-#wallet(chain)
-eth-keyfile
-web3
-toml==0.9.4
-
-#test
-pytest
-pytest-cov
