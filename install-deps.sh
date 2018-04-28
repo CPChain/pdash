@@ -3,7 +3,6 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 ######### PIP PACKAGES
-
 market_pkgs="
 djangorestframework==3.7.3
 django-rest-elasticsearch==0.4
