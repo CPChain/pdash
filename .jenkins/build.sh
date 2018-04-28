@@ -36,7 +36,7 @@ echo "activate"
 . venv/bin/activate
 
 echo "install dependency for $1"
-./install-deps.sh $@
+sudo ./install-deps.sh $@
 
 ROOT_PATH=`pwd`
 export PYTHONPATH=$PYTHONPATH:$ROOT_PATH
