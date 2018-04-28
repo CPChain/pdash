@@ -36,7 +36,7 @@ echo "activate"
 . venv/bin/activate
 
 echo "install dependency for $1"
-sudo ./install-deps.sh $@
+sudo /bin/sh install-deps.sh $@
 
 ROOT_PATH=`pwd`
 export PYTHONPATH=$PYTHONPATH:$ROOT_PATH
@@ -54,8 +54,10 @@ do
         wallet) testcase="'not test_dispute and test_normal_process and test_timeout and test_withdraw_order'"
                 ;;
     esac
+    shift
 done
 
+echo "testcase modulename:$modulename, param:$testcase"
 if [ -n "$testcase" ]; then
     echo "=== unit test param:$testcase ==="
     py.test tests/$modulename  --junitxml=test_report.xml --cov-report=xml --cov=./ -k  $testcase
