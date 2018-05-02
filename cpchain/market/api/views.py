@@ -1,5 +1,3 @@
-import logging
-
 from django.core.cache import cache
 from django.db.models import Q
 from django.http import JsonResponse
@@ -10,10 +8,10 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
 
-from .models import Product, Token, WalletMsgSequence
-from .permissions import IsOwnerOrReadOnly, IsOwner
-from .serializers import *
-from .utils import *
+from cpchain.market.api.models import WalletMsgSequence
+from cpchain.market.api.permissions import IsOwnerOrReadOnly, IsOwner
+from cpchain.market.api.serializers import *
+from cpchain.market.api.utils import *
 
 logger = logging.getLogger(__name__)
 
