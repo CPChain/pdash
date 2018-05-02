@@ -1,9 +1,8 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-cd "$(dirname "${BASH_SOURCE[0]}")"
+cd "$(dirname $0)"
 
 ######### PIP PACKAGES
-
 market_pkgs="
 djangorestframework==3.7.3
 django-rest-elasticsearch==0.4
@@ -50,7 +49,6 @@ pytest
 pytest-cov
 "
 
-
 while test $# -gt 0
 do
     case "$1" in
@@ -70,9 +68,8 @@ done
 
 
 if [ -n "$pkgs" ]; then
-    pip3 install --user -r <(printf "%s\n" $pkgs)
+    printf "%s\n" $pkgs | xargs pip3 install
 fi
-
 
 
 # DEBIAN PACKAGES

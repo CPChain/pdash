@@ -1,4 +1,12 @@
-PATH=$WORKSSPACE/venv/bin:/usr/local/bin:$PATH
+#!/bin/bash
+
+cd "$(dirname "${BASH_SOURCE[0]}")"
+#cd "$(dirname $0)"
+
+echo "start build $1"
+modulename="$1"
+cd ../
+PATH=$WORKSPACE/venv/bin:/usr/local/bin:$PATH
 
 which python3
 which pip3
@@ -27,6 +35,11 @@ fi
 echo "activate"
 . venv/bin/activate
 
-echo "install dependency"
-pip3 install -r requirements-dev.txt
-# pip3 install -r requirement.txt
+echo "install dependency for $1"
+sudo /bin/sh install-deps.sh "$@"
+
+ROOT_PATH=`pwd`
+export PYTHONPATH=$PYTHONPATH:$ROOT_PATH
+
+echo "unit test for $modulename"
+py.test tests/$modulename  --junitxml=test_report.xml --cov-report=xml --cov=./

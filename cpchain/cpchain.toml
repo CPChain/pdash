@@ -1,9 +1,10 @@
 # -*- mode: conf; -*-
 
+# for sample configuration, cf. https://github.com/toml-lang/toml
+
 # home directoy
 home = "~/.cpchain"
 
-# for sample configuration, cf. https://github.com/toml-lang/toml/tree/master/examples
 [chain]
 contract_src_dir = "cpchain/assets/chain/contracts/Trading.sol"
 contract_json = "cpchain/assets/chain/build/Trading.json"
@@ -53,3 +54,21 @@ server_port = 8083
 es_hosts = '192.168.0.132:9200'
 market_url = "http://192.168.0.132:8083/api/v1/"
 default_password = "^-_-^cpchain@2018^-_-^"
+
+
+# logging
+[logging]
+version = 1
+disable_existing_loggers = false
+
+[logging.formatters.standard]
+format = '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+
+[logging.handlers.default]
+level = "DEBUG"
+class = "logging.StreamHandler"
+
+[logging.loggers.cpchain]
+handlers = ["default"]
+level = "DEBUG"
+propagate = false
