@@ -22,7 +22,7 @@ def generate_nonce_signature(priv_key, nonce):
     return signature
 
 
-class Test1(unittest.TestCase):
+class TestMarketApi(unittest.TestCase):
 
     def setUp(self):
         private_key_file_path = join_with_root(config.wallet.private_key_file)
