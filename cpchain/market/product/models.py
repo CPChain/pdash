@@ -3,6 +3,7 @@ from django.db import models
 # Create your models here.
 from cpchain.market.account.models import WalletUser
 from .search_indexes import ProductIndex
+from django.utils.translation import ugettext_lazy as _
 
 
 class Product(models.Model):
@@ -55,3 +56,24 @@ class Product(models.Model):
         obj.save(using=es_client)
         return obj.to_dict(include_meta=True)
 
+
+class WalletMsgSequence(models.Model):
+    """
+    The wallet message sequence model.
+    """
+    public_key = models.CharField(_("PublicKey"), max_length=200, primary_key=True)
+    user = models.OneToOneField(
+        WalletUser, related_name='wallet_msg_sequence',
+        on_delete=models.CASCADE, verbose_name=_("WalletUser")
+    )
+    seq = models.IntegerField(_("seq"), default=0)
+
+    class Meta:
+        verbose_name = _("WalletUserSequence")
+        verbose_name_plural = _("WalletUserSequences")
+
+    def save(self, *args, **kwargs):
+        return super(WalletMsgSequence, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return self.public_key

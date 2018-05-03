@@ -1,6 +1,6 @@
 from django.utils import timezone
 from rest_framework import serializers
-from .models import Product, WalletUser, Token
+from .models import Product, WalletUser
 from rest_framework_elasticsearch.es_serializer import ElasticModelSerializer
 from .search_indexes import ProductIndex
 
@@ -56,25 +56,4 @@ class ElasticProductSerializer(ElasticModelSerializer):
         fields = ('pk', 'owner_address', 'title', 'description', 'tags', 'price',
                   'created', 'start_date', 'end_date', 'seq', 'file_md5',
                   'signature', 'msg_hash', 'status')
-
-
-class UserRegisterSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = WalletUser
-        fields = ('public_key', 'created')
-
-
-class UserSerializer(serializers.ModelSerializer):
-    product_set = serializers.PrimaryKeyRelatedField(many=True, queryset=Product.objects.all())
-
-    class Meta:
-        model = WalletUser
-        fields = ('public_key', 'created', 'product_set')
-
-
-class TokenSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Token
-        fields = ('public_key', 'key')
 

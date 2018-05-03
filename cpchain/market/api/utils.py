@@ -2,7 +2,7 @@ import hashlib
 import logging
 import random
 
-from cpchain.crypto import ECCipher, ECDERCipher
+from cpchain.crypto import ECCipher
 from cpchain.encoder import Encoder
 from cpchain.hash import SHA256Hash
 

@@ -6,10 +6,10 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from cpchain.market.api.models import WalletMsgSequence
-from cpchain.market.api.permissions import IsOwnerOrReadOnly, IsOwner
-from cpchain.market.api.serializers import *
-from cpchain.market.api.utils import *
+from cpchain.market.product.models import WalletMsgSequence
+from cpchain.market.product.serializers import *
+from cpchain.market.account.permissions import IsOwnerOrReadOnly, IsOwner
+from cpchain.market.account.utils import *
 
 logger = logging.getLogger(__name__)
 
