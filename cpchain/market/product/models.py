@@ -1,7 +1,7 @@
 from django.db import models
 
 # Create your models here.
-# from cpchain.market.account.models import WalletUser
+from cpchain.market.account.models import WalletUser
 from .search_indexes import ProductIndex
 
 
@@ -9,7 +9,7 @@ class Product(models.Model):
     """
     The product model.
     """
-    # owner = models.ForeignKey(WalletUser, on_delete=models.CASCADE)
+    owner = models.ForeignKey(WalletUser, on_delete=models.CASCADE)
     owner_address = models.CharField(max_length=200)
     title = models.CharField(max_length=100)
     description = models.TextField()
