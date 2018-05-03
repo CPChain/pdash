@@ -1,17 +1,12 @@
-import random
-
-from django.test import TestCase
-from django.test import Client
-
 # Create your tests here.
 
-import unittest
-import requests
 import json
+import unittest
+
+import requests
+
 from cpchain.crypto import ECCipher
-
-from cpchain.utils import join_with_root,config
-
+from cpchain.utils import join_with_root, config
 
 HOST = "http://localhost:8083"
 
@@ -62,7 +57,7 @@ class TestMarketApi(unittest.TestCase):
 
     def login_and_get_nonce(self, header):
         payload = {"public_key": self.pub_key_string}
-        url = '%s/api/v1/login/' % HOST
+        url = '%s/account/v1/login/' % HOST
         response = requests.post(url, headers=header, json=payload)
         self.assertEqual(response.status_code, 200)
         parsed_json = json.loads(response.text)
@@ -72,7 +67,7 @@ class TestMarketApi(unittest.TestCase):
         return nonce
 
     def generate_nonce_signature_and_get_token(self, header, nonce):
-        url = '%s/api/v1/confirm/' % HOST
+        url = '%s/account/v1/confirm/' % HOST
         nonce_signature = generate_nonce_signature(self.pri_key_string, nonce)
         payload = {"public_key": self.pub_key_string, "code": nonce_signature}
         # print("confirm request:%s" % payload)
@@ -86,7 +81,7 @@ class TestMarketApi(unittest.TestCase):
 
     def query_product(self, keyword):
         params = {"keyword": keyword}
-        url = '%s/api/v1/product/search/' % HOST
+        url = '%s/product/v1/product/search/' % HOST
         response = requests.get(url, params)
         print("products:%s" % response)
         print(response.text)
@@ -97,7 +92,7 @@ class TestMarketApi(unittest.TestCase):
     def query_es_product(self):
         keyword = "testtile"
         params = {"keyword": keyword}
-        url = '%s/api/v1/es_product/search/' % HOST
+        url = '%s/product/v1/es_product/search/' % HOST
         response = requests.get(url, params)
         print("products:%s" % response)
         print(response.text)
@@ -115,7 +110,7 @@ class TestMarketApi(unittest.TestCase):
         start_date = "2018-04-01 10:10:10"
         end_date = "2018-12-10 10:10:10"
         file_md5 = "12345678901234567890"
-        url = '%s/api/v1/product/publish/' % HOST
+        url = '%s/product/v1/product/publish/' % HOST
         payload = {'owner_address': self.pub_key_string, 'title': title, 'description': description, 'price': price,
                    'tags': tags, 'start_date': start_date, 'end_date': end_date, 'file_md5': file_md5}
         signature_source = self.pub_key_string + title + description + str(price) + start_date + end_date + file_md5
@@ -129,6 +124,3 @@ class TestMarketApi(unittest.TestCase):
         parsed_json = json.loads(publish_resp.text)
         self.assertEqual(parsed_json['status'], 1)
         print("market_hash:%s" % parsed_json['data']["market_hash"])
-
-
-
