@@ -4,8 +4,7 @@ import os
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import ec, rsa
-from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.asymmetric import ec, rsa, padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from eth_utils import keccak
 
@@ -266,10 +265,8 @@ class ECCipher:
         """
         private_key = ECCipher._load_private_key_from_bytes(private_key_bytes)
         public_key = private_key.public_key()
-        public_key_bytes = public_key.public_bytes(
-            encoding=serialization.Encoding.DER,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
-        )
+        public_key_bytes = public_key.public_numbers().encode_point()
+
         return private_key_bytes, public_key_bytes
 
     @staticmethod
@@ -299,7 +296,7 @@ class ECCipher:
             private key object
 
         """
-        # XXX big endian
+        # big endian
         private_value = int.from_bytes(pri_key_bytes, byteorder='big')
         private_key = ec.derive_private_key(private_value, ec.SECP256K1(), default_backend())
         return private_key
@@ -327,17 +324,12 @@ class ECCipher:
                 ec.SECP256K1(),
                 default_backend()
             )
-            serialized_private = private_key.private_bytes(
-                encoding=serialization.Encoding.DER,
-                format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=serialization.BestAvailableEncryption(password)
-            )
+            pv = private_key.private_numbers().private_value
+            serialized_private = pv.to_bytes((pv.bit_length() + 7) // 8, 'big')
 
         public_key = private_key.public_key()
-        serialized_public = public_key.public_bytes(
-            encoding=serialization.Encoding.DER,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
-        )
+        serialized_public = public_key.public_numbers().encode_point()
+
         logger.debug("pri key bytes:%s" % private_key_bytes)
         logger.debug("pub key bytes:%s" % serialized_public)
 
@@ -395,7 +387,7 @@ class ECCipher:
         """
         verify signature
         Args:
-            public_key:base64 encoded public key string
+            public_key:public key bytes
             signature:signature string
             raw_data:data string
 
@@ -404,10 +396,10 @@ class ECCipher:
 
         """
         try:
-            loaded_public_key = serialization.load_der_public_key(
-                public_key,
-                backend=default_backend()
-            )
+            loaded_public_key = ec.EllipticCurvePublicNumbers.\
+                from_encoded_point(ec.SECP256K1(), public_key).\
+                public_key(backend=default_backend())
+
             loaded_public_key.verify(
                 signature,
                 raw_data,
