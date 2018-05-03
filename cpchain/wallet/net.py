@@ -2,29 +2,21 @@ from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import deferToThread
 
 import treq
-import json
 import os
 from cpchain import crypto
-import datetime, time
 
 from eth_utils import to_bytes
 
-from cryptography.hazmat.primitives.serialization import load_der_public_key
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import padding
 
-from cpchain.chain.trans import BuyerTrans, SellerTrans, ProxyTrans
-from cpchain.chain import poll_chain
-# from twisted.internet.task import LoopingCall
+from cpchain.chain.trans import BuyerTrans
 from cpchain.chain.utils import default_web3
 from cpchain.utils import join_with_root, config
 from cpchain.chain.models import OrderInfo
 
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
-from cpchain.proxy.client import start_client, download_file
+from cpchain.proxy.client import start_client
 from cpchain.wallet.db import BuyerFileInfo
-from cpchain.wallet.fs import publish_file_update, session, FileInfo, decrypt_file_aes, add_file
+from cpchain.wallet.fs import publish_file_update, session, decrypt_file_aes, add_file
 from cpchain.crypto import Encoder
 
 
@@ -316,187 +308,3 @@ class BuyerChainClient:
                 print(proxy_reply.error)
 
         d.addBoth(buyer_request_proxy_callback)
-
-
-class SellerChainClient:
-    def __init__(self, main_wnd, market_client):
-        self.main_wnd = main_wnd
-        self.market_client = market_client
-
-        self.seller = SellerTrans(default_web3, config.chain.core_contract)
-        start_id = self.seller.get_order_num()
-        self.monitor = poll_chain.OrderMonitor(start_id, self.seller)
-
-    def query_new_order(self):
-        # new_order_list = [1,2,3,4]
-        new_order_list = self.monitor.get_new_order()
-        print('new orders: ', new_order_list)
-        return new_order_list
-
-    def claim_timeout(self, order_id):
-        tx_hash = '0xand..'
-        # tx_hash = self.seller.claim_timeout(order_id)
-        print('claim timeout: ', tx_hash)
-        return tx_hash
-
-    def send_request(self):
-        new_order = self.query_new_order()
-        if len(new_order) != 0:
-            for new_order_id in new_order:
-                new_order_info = self.seller.query_order(new_order_id)
-                print('In seller send request: new oder infomation:')
-                # print(new_order_info)
-                # send message to proxy
-                market_hash = new_order_info[0]
-                buyer_rsa_pubkey = new_order_info[1]
-                raw_aes_key = session.query(FileInfo.aes_key)\
-                    .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash))\
-                    .all()[0][0]
-                # print(raw_aes_key)
-                encrypted_aes_key = load_der_public_key(buyer_rsa_pubkey, backend=default_backend()).encrypt(
-                    raw_aes_key,
-                    padding.OAEP(
-                        mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                        algorithm=hashes.SHA256(),
-                        label=None
-                    )
-                )
-                # print(encrypted_aes_key)
-                print("Encrypted_aes_key length" + str(len(encrypted_aes_key)))
-                storage_type = Message.Storage.IPFS
-                ipfs_gateway = "192.168.0.132:5001"
-                # File hash is str type
-                file_hash = session.query(FileInfo.hashcode)\
-                    .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash))\
-                    .all()[0][0]
-                message = Message()
-                seller_data = message.seller_data
-                message.type = Message.SELLER_DATA
-                seller_data.order_id = new_order_id
-                seller_data.seller_addr = to_bytes(hexstr=new_order_info[3])
-                seller_data.buyer_addr = to_bytes(hexstr=new_order_info[2])
-                seller_data.market_hash = market_hash
-                seller_data.AES_key = encrypted_aes_key
-                storage = seller_data.storage
-                storage.type = storage_type
-                ipfs = storage.ipfs
-                ipfs.file_hash = file_hash.encode('utf-8')
-                ipfs.gateway = ipfs_gateway
-                sign_message = SignMessage()
-                sign_message.public_key = Encoder.str_to_base64_byte(self.market_client.pub_key)
-                sign_message.data = message.SerializeToString()
-                sign_message.signature = crypto.ECCipher.generate_signature(
-                    Encoder.str_to_base64_byte(self.market_client.priv_key),
-                    sign_message.data
-                )
-                d = start_client(sign_message)
-                d.addBoth(self.seller_deliver_proxy_callback)
-
-    def seller_deliver_proxy_callback(self, message):
-        # print('proxy recieved message')
-        print("Inside seller request callback.")
-        assert message.type == Message.PROXY_REPLY
-
-        proxy_reply = message.proxy_reply
-
-        if not proxy_reply.error:
-            print('file_uuid: %s' % proxy_reply.file_uuid)
-            print('AES_key: ')
-            print(proxy_reply.AES_key)
-            # add other action...
-        else:
-            print(proxy_reply.error)
-            # add other action...
-
-
-class ProxyChainClient:
-
-    def __init__(self):
-        self.proxy = ProxyTrans(default_web3, config.chain.core_contract)
-
-    # this methid should be called by proxy
-    def proxy_confirm(self):
-        print('proxy claim relay')
-        self.proxy.claim_relay(5, bytes([0, 1, 2, 3] * 8))
-
-
-proxy_chain_client = ProxyChainClient()
-
-
-
-# class SellerProxyClient:
-#
-#     def __init__(self):
-#         self.new_order = []
-#         self.new_order_info = ()
-#
-#     def send_request(self):
-#         self.new_order = seller_chain_client.query_new_order()
-#         if len(self.new_order) != 0:
-#             for i in self.new_order:
-#                 self.new_order_info = seller_chain_client.query_order(i)
-#                 print(self.new_order_info)
-
-
-# def monitor_chain_event():
-#     seller_poll_chain = LoopingCall(seller_chain_client.send_request)
-#     seller_poll_chain.start(10)
-
-
-#     # print(new_orders)
-#     # new_orders.addCallbacks()
-#     # print(order_list)
-#     # order_info_list = []
-#     # for i in order_list:
-#     #     order_info_list.append(seller_chain_client.seller.query_order(i))
-#     # print(order_info_list)
-
-#     buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm)
-#     buyer_check_confirm.start(15)
-
-
-    # from twisted.internet import reactor
-    # claim_relay = reactor.callLater(20, proxy_chain_client.proxy_confirm)
-
-
-
-    # buy_product = reactor.callLater(1, buyer_chain_client.buy_product, 'hi')
-    # withdraww_order = reactor.callLater(5, buyer_chain_client.withdraw_order, 1)
-    # confirm_order = reactor.callLater(10, buyer_chain_client.confirm_order, 1)
-    # dispute = reactor.callLater(15, buyer_chain_client.dispute, 1)
-    # timeout = reactor.callLater(20, seller_chain_client.claim_timeout, 1)
-
-
-
-# if __name__ == '__main__':
-    # mc = MarketClient()
-    # mc.login()
-    # mc.login_confirm()
-    # mc.publish_product(title='test', description='testdata', price=13, tags='temp', start_date='2018-04-01 10:10:10', end_date='2018-04-01 10:10:10', file_md5='123456')
-    # mc.query_product('test')
-    # mc.logout()
-    # from twisted.internet import reactor
-    # reactor.run()
-    # pri_key = 'MIHsMFcGCSqGSIb3DQEFDTBKMCkGCSqGSIb3DQEFDDAcBAijHDc56pWCBQICCAAwDAYIKoZIhvcNAgkFADAdBglghkgBZQMEASoEEAFP6mba6NQbUCmI2SSJdw0EgZDgxdLy3ToxSgS3PDKrcUvB0Ti6KO1OuYfsHetgUX3r4m1kacI73ooKJ9UvuPuOG7czcuxr6Zk/SOuicpxU0pticj0ZRZh4wRdbP+3qScZ8h7MapoZq0Q/sO7pYJoFg+MQPD5fMA5B7u9gLzxlF697rbWtuT17e7RmKPhE+hIEBHu6Z/blzrfT+o+QDPpPo1oE='
-    # pub_key = 'MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEddc0bkalTTqEiUu6g884be4ghnMGYWfyJHTSjEMrE+zCRq6T1VHF21vJCPXs+YBvtyPJ7mJiRyHw/2FH3b8unQ=='
-    # sig = 'MEYCIQD/bAkaxXqn3nk6nDVdR1Jf4dUrmk7nYbNEwMYRiHLCJQIhAOtYxJmcqVTFznPf98cHUHaGIIYk3XLUAV0MomJl05iG'
-    # source = 'MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEddc0bkalTTqEiUu6g884be4ghnMGYWfyJHTSjEMrE+zCRq6T1VHF21vJCPXs+YBvtyPJ7mJiRyHw/2FH3b8unQ==testtestdata1315225486101522548610123456'
-    # res = crypto.ECCipher.verify_der_signature(pub_key, sig, source)
-    # print(res)
-    # pub_key = crypto.ECCipher.get_public_key_from_private_key('MIHsMFcGCSqGSIb3DQEFDTBKMCkGCSqGSIb3DQEFDDAcBAijHDc56pWCBQICCAAwDAYIKoZIhvcNAgkFADAdBglghkgBZQMEASoEEAFP6mba6NQbUCmI2SSJdw0EgZDgxdLy3ToxSgS3PDKrcUvB0Ti6KO1OuYfsHetgUX3r4m1kacI73ooKJ9UvuPuOG7czcuxr6Zk/SOuicpxU0pticj0ZRZh4wRdbP+3qScZ8h7MapoZq0Q/sO7pYJoFg+MQPD5fMA5B7u9gLzxlF697rbWtuT17e7RmKPhE+hIEBHu6Z/blzrfT+o+QDPpPo1oE=')
-    # print(pub_key)
-    # print('MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEddc0bkalTTqEiUu6g884be4ghnMGYWfyJHTSjEMrE+zCRq6T1VHF21vJCPXs+YBvtyPJ7mJiRyHw/2FH3b8unQ==')
-
-# market_client = MarketClient()
-# buyer_chain_client = BuyerChainClient()
-# seller_chain_client = SellerChainClient()
-
-
-# seller_proxy_client = SellerProxyClient()
-# market_client.login()
-
-# def buy(msg):
-#     print(msg)
-#     order_id = market_client.buy_product()
-#     print('order id: ', order_id)
-#     return order_id
