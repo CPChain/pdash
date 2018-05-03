@@ -18,11 +18,11 @@ HOST = "http://localhost:8083"
 
 def generate_nonce_signature(priv_key, nonce):
     print("priv_key:%s, nonce:%s" % (priv_key ,nonce))
-    signature = ECCipher.geth_sign(priv_key, nonce)
+    signature = ECCipher.generate_string_signature(priv_key, nonce)
     return signature
 
 
-class Test1(unittest.TestCase):
+class MarketApiTest(unittest.TestCase):
 
     def setUp(self):
         private_key_file_path = join_with_root(config.wallet.private_key_file)
@@ -31,7 +31,7 @@ class Test1(unittest.TestCase):
         with open(password_path) as f:
             password = f.read()
 
-        self.pri_key_string, self.pub_key_string = ECCipher.geth_load_key_pair_from_private_key(private_key_file_path, password)
+        self.pri_key_string, self.pub_key_string = ECCipher.load_key_pair_from_private_key(private_key_file_path, password)
 
         # print("pub_key:%s,pri_key:%s,password:%s" % (self.pub_key_string, self.pri_key_string , password))
 
@@ -119,7 +119,7 @@ class Test1(unittest.TestCase):
         payload = {'owner_address': self.pub_key_string, 'title': title, 'description': description, 'price': price,
                    'tags': tags, 'start_date': start_date, 'end_date': end_date, 'file_md5': file_md5}
         signature_source = self.pub_key_string + title + description + str(price) + start_date + end_date + file_md5
-        signature = ECCipher.geth_sign(self.pri_key_string, signature_source)
+        signature = ECCipher.generate_string_signature(self.pri_key_string, signature_source)
         payload['signature'] = signature
         print("publish product request:%s" % payload)
         header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}

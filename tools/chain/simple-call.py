@@ -44,7 +44,7 @@ def test_server_chain():
     password_path = join_with_root(config.wallet.private_key_password_file)
     with open(password_path) as f:
         password = f.read()
-    priv_key, pub_key = ECCipher.geth_load_key_pair_from_private_key(private_key_file_path, password)
+    priv_key, pub_key = ECCipher.load_key_pair_from_private_key(private_key_file_path, password)
     pub_key_bytes = Encoder.str_to_base64_byte(pub_key)
     pub_key_loaded = load_der_public_key(pub_key_bytes, backend=default_backend())
     # print(Encoder.str_to_base64_byte(pub_key))
