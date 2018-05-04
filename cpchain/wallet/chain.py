@@ -13,7 +13,10 @@ from eth_utils import to_bytes
 from cpchain.proxy.client import start_client
 from cpchain.wallet.fs import session, FileInfo, decrypt_file_aes
 from queue import Queue
+import logging
 import os
+
+logger = logging.getLogger(__name__)
 
 
 class Broker:
@@ -100,7 +103,6 @@ class Monitor:
         reactor.callInThread(self.monitor_confirmed_order, confirmed_order_list)
 
 
-
 class Handler:
     def __init__(self, broker):
         self.broker = broker
@@ -178,18 +180,18 @@ class Handler:
 
         def seller_deliver_proxy_callback(message):
             # print('proxy recieved message')
-            print("Inside seller request callback.")
+            logger.debug("Inside seller request callback.")
             assert message.type == Message.PROXY_REPLY
 
             proxy_reply = message.proxy_reply
 
             if not proxy_reply.error:
-                print('file_uuid: %s' % proxy_reply.file_uuid)
-                print('AES_key: ')
-                print(proxy_reply.AES_key)
+                logger.debug('file_uuid: %s' % proxy_reply.file_uuid)
+                logger.debug('AES_key: ')
+                logger.debug(proxy_reply.AES_key)
                 # add other action...
             else:
-                print(proxy_reply.error)
+                logger.debug(proxy_reply.error)
                 # add other action...
 
         d.addCallback(seller_deliver_proxy_callback)
@@ -236,20 +238,20 @@ class Handler:
             return market_hash
 
         def buyer_request_proxy_callback(message):
-            print("Inside buyer request callback.")
+            logger.debug("Inside buyer request callback.")
             assert message.type == Message.PROXY_REPLY
             proxy_reply = message.proxy_reply
 
             if not proxy_reply.error:
-                print('file_uuid: %s' % proxy_reply.file_uuid)
-                print('AES_key: ')
-                print(len(proxy_reply.AES_key))
-                print(proxy_reply.AES_key)
+                logger.debug('file_uuid: %s' % proxy_reply.file_uuid)
+                logger.debug('AES_key: ')
+                logger.debug(len(proxy_reply.AES_key))
+                logger.debug(proxy_reply.AES_key)
                 file_dir = os.path.expanduser(config.wallet.download_dir)
                 file_path = os.path.join(file_dir, proxy_reply.file_uuid)
-                print(file_path)
+                logger.debug(file_path)
                 decrypted_file = decrypt_file_aes(file_path, proxy_reply.AES_key)
-                print('Decrypted file path ' + str(decrypted_file))
+                logger.debug('Decrypted file path ' + str(decrypted_file))
 
                 update_buyer_db(proxy_reply.file_uuid, decrypted_file)
                 # self.update_treasure_pane()
@@ -257,7 +259,7 @@ class Handler:
                 self.broker.confirmed_order_queue.put(order_id)
 
             else:
-                print(proxy_reply.error)
+                logger.debug(proxy_reply.error)
 
         d.addCallback(buyer_request_proxy_callback)
 
