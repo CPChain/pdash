@@ -1,6 +1,6 @@
-from queue import Queue
 import logging
 import os
+from queue import Queue
 
 from twisted.internet.threads import deferToThread
 from twisted.internet import reactor
@@ -23,7 +23,7 @@ from cpchain.wallet.fs import session, FileInfo, decrypt_file_aes
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.client import start_client
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__) # pylint: disable=locally-disabled, invalid-name
 
 
 class Broker:
@@ -37,109 +37,21 @@ class Broker:
         self.buyer = BuyerTrans(default_web3, config.chain.core_contract)
         self.seller = SellerTrans(default_web3, config.chain.core_contract)
 
-class Monitor:
-    def __init__(self, broker):
-        self.broker = broker
-        start_id = self.broker.seller.get_order_num()
-        self.chain_monitor = OrderMonitor(start_id, self.broker.seller)
-
-    # get new order info from chain through web3
-    # order list: [{order_id: (xxx, xxx, xxx)}, {order_id: (xxx, xxx, xxx)}]
-    def get_new_order_info(self):
-        new_order_id_list = self.chain_monitor.get_new_order()
-        new_order_info_list = []
-        for current_id in new_order_id_list:
-            new_order_info_list.append({current_id: self.broker.seller.query_order(current_id)})
-        return new_order_info_list
-
-    # this method should be called periodically in the main thread(reactor)
-    def monitor_new_order(self):
-        new_order_list = deferToThread(self.get_new_order_info)
-
-        def add_order(order_list):
-            for current_order in order_list:
-                self.broker.order_queue.put(current_order)
-
-        new_order_list.addCallback(add_order)
-        return self.broker.order_queue
-
     # batch process
     def query_order_state(self, order_id_list):
         unready_order_list = []
         for current_id in order_id_list:
-            state = self.broker.buyer.query_order(current_id)[10]
+            state = self.buyer.query_order(current_id)[10]
             if state == 1:
-                order_info = {current_id: self.broker.buyer.query_order(current_id)}
-                self.broker.ready_order_queue.put(order_info)
+                order_info = {current_id: self.buyer.query_order(current_id)}
+                self.ready_order_queue.put(order_info)
             else:
                 unready_order_list.append(current_id)
         return unready_order_list
 
-    def monitor_ready_order(self):
-        bought_order_list = []
-        while True:
-            if self.broker.bought_order_queue.empty():
-                break
-            else:
-                order = self.broker.bought_order_queue.get()
-                bought_order_list.append(order)
-
-        d_unready_order = deferToThread(self.query_order_state, bought_order_list)
-
-        def reset_bought_order_queue(unready_order_list):
-            for current_id in unready_order_list:
-                self.broker.bought_order_queue.put(current_id)
-
-        d_unready_order.addCallback(reset_bought_order_queue)
-
     def confirm_order(self, order_id_list):
         for current_id in order_id_list:
-            self.broker.buyer.confirm_order(current_id)
-
-    def monitor_confirmed_order(self):
-        confirmed_order_list = []
-        while True:
-            if self.broker.confirmed_order_queue.empty():
-                break
-            else:
-                order_id = self.broker.confirmed_order_queue.get()
-                confirmed_order_list.append(order_id)
-        reactor.callInThread(self.monitor_confirmed_order, confirmed_order_list)
-
-
-class Handler:
-    def __init__(self, broker):
-        self.broker = broker
-
-    def buy_product(self, msg_hash, file_title):
-        # fixme: format of hash value need to change
-        desc_hash = Encoder.str_to_base64_byte(msg_hash)
-        rsa_key = RSACipher.load_public_key()
-        product = OrderInfo(
-            desc_hash=desc_hash,
-            buyer_rsa_pubkey=rsa_key,
-            seller=self.broker.buyer.web3.eth.defaultAccount,
-            # fixme: proxy should not be seller
-            proxy=self.broker.buyer.web3.eth.defaultAccount,
-            secondary_proxy=self.broker.buyer.web3.eth.defaultAccount,
-            proxy_value=10,
-            value=20,
-            time_allowed=1000
-        )
-        d_placed_order = deferToThread(self.broker.buyer.place_order, product)
-
-        def add_bought_order(order_id):
-            self.broker.bought_order_queue.put(order_id)
-            new_buyer_file_info = BuyerFileInfo(order_id=order_id,
-                                                market_hash=Encoder.bytes_to_base64_str(desc_hash),
-                                                file_title=file_title, is_downloaded=False)
-            add_file(new_buyer_file_info)
-            # fixme: update UI pane
-            # self.update_treasure_pane()
-
-        d_placed_order.addCallback(add_bought_order)
-
-        return self.broker.bought_order_queue
+            self.buyer.confirm_order(current_id)
 
     def seller_send_request(self, order_info):
         order_id = list(order_info.keys())[0]
@@ -176,13 +88,13 @@ class Handler:
         ipfs.gateway = ipfs_gateway
         sign_message = SignMessage()
         sign_message.public_key = Encoder.str_to_base64_byte(
-            self.broker.wallet.market_client.pub_key)
+            self.wallet.market_client.pub_key)
         sign_message.data = message.SerializeToString()
         sign_message.signature = ECCipher.generate_signature(
-            Encoder.str_to_base64_byte(self.broker.wallet.market_client.priv_key),
+            Encoder.str_to_base64_byte(self.wallet.market_client.priv_key),
             sign_message.data
         )
-        d = start_client(sign_message)
+        d_proxy_reply = start_client(sign_message)
 
         def seller_deliver_proxy_callback(message):
             # print('proxy recieved message')
@@ -192,7 +104,7 @@ class Handler:
             proxy_reply = message.proxy_reply
 
             if not proxy_reply.error:
-                logger.debug('file_uuid: %s' % proxy_reply.file_uuid)
+                logger.debug('file_uuid: %s', proxy_reply.file_uuid)
                 logger.debug('AES_key: ')
                 logger.debug(proxy_reply.AES_key)
                 # add other action...
@@ -200,16 +112,7 @@ class Handler:
                 logger.debug(proxy_reply.error)
                 # add other action...
 
-        d.addCallback(seller_deliver_proxy_callback)
-
-    def handle_new_order(self):
-        while True:
-            if self.broker.order_queue.empty():
-                break
-
-            else:
-                order_info = self.broker.order_queue.get()
-                self.seller_send_request(order_info)
+        d_proxy_reply.addCallback(seller_deliver_proxy_callback)
 
     def buyer_send_request(self, order_info):
         order_id = list(order_info.keys())[0]
@@ -224,23 +127,20 @@ class Handler:
 
         sign_message = SignMessage()
         sign_message.public_key = Encoder.str_to_base64_byte(
-            self.broker.wallet.market_client.pub_key)
+            self.wallet.market_client.pub_key)
         sign_message.data = message.SerializeToString()
         sign_message.signature = ECCipher.generate_signature(
-            Encoder.str_to_base64_byte(self.broker.wallet.market_client.priv_key),
+            Encoder.str_to_base64_byte(self.wallet.market_client.priv_key),
             sign_message.data
         )
-        d = start_client(sign_message)
+        d_proxy_reply = start_client(sign_message)
 
         def update_buyer_db(file_uuid, file_path):
             market_hash = Encoder.bytes_to_base64_str(new_order_info[0])
-            session.query(BuyerFileInfo).filter(BuyerFileInfo.order_id == order_id). \
-                update({BuyerFileInfo.market_hash: market_hash,
-                        BuyerFileInfo.is_downloaded: True,
-                        BuyerFileInfo.file_uuid: file_uuid,
-                        BuyerFileInfo.path: file_path,
-                        BuyerFileInfo.size: os.path.getsize(file_path)
-                        }, synchronize_session=False)
+            session.query(BuyerFileInfo).filter(BuyerFileInfo.order_id == order_id).update(
+                {BuyerFileInfo.market_hash: market_hash, BuyerFileInfo.is_downloaded: True,
+                 BuyerFileInfo.file_uuid: file_uuid, BuyerFileInfo.path: file_path,
+                 BuyerFileInfo.size: os.path.getsize(file_path)}, synchronize_session=False)
             session.commit()
             return market_hash
 
@@ -248,9 +148,8 @@ class Handler:
             logger.debug("Inside buyer request callback.")
             assert message.type == Message.PROXY_REPLY
             proxy_reply = message.proxy_reply
-
             if not proxy_reply.error:
-                logger.debug('file_uuid: %s' % proxy_reply.file_uuid)
+                logger.debug('file_uuid: %s', proxy_reply.file_uuid)
                 logger.debug('AES_key: ')
                 logger.debug(len(proxy_reply.AES_key))
                 logger.debug(proxy_reply.AES_key)
@@ -258,17 +157,114 @@ class Handler:
                 file_path = os.path.join(file_dir, proxy_reply.file_uuid)
                 logger.debug(file_path)
                 decrypted_file = decrypt_file_aes(file_path, proxy_reply.AES_key)
-                logger.debug('Decrypted file path ' + str(decrypted_file))
+                logger.debug('Decrypted file path: %s', str(decrypted_file))
 
                 update_buyer_db(proxy_reply.file_uuid, decrypted_file)
                 # self.update_treasure_pane()
 
-                self.broker.confirmed_order_queue.put(order_id)
-
+                self.confirmed_order_queue.put(order_id)
             else:
                 logger.debug(proxy_reply.error)
 
-        d.addCallback(buyer_request_proxy_callback)
+        d_proxy_reply.addCallback(buyer_request_proxy_callback)
+
+
+class Monitor:
+    def __init__(self, broker):
+        self.broker = broker
+        start_id = self.broker.seller.get_order_num()
+        self.chain_monitor = OrderMonitor(start_id, self.broker.seller)
+
+    # get new order info from chain through web3
+    # order list: [{order_id: (xxx, xxx, xxx)}, {order_id: (xxx, xxx, xxx)}]
+    def get_new_order_info(self):
+        new_order_id_list = self.chain_monitor.get_new_order()
+        new_order_info_list = []
+        for current_id in new_order_id_list:
+            new_order_info_list.append({current_id: self.broker.seller.query_order(current_id)})
+        return new_order_info_list
+
+    # this method should be called periodically in the main thread(reactor)
+    def monitor_new_order(self):
+        new_order_list = deferToThread(self.get_new_order_info)
+
+        def add_order(order_list):
+            for current_order in order_list:
+                self.broker.order_queue.put(current_order)
+
+        new_order_list.addCallback(add_order)
+        return self.broker.order_queue
+
+    def monitor_ready_order(self):
+        bought_order_list = []
+        while True:
+            if self.broker.bought_order_queue.empty():
+                break
+            else:
+                order = self.broker.bought_order_queue.get()
+                bought_order_list.append(order)
+
+        d_unready_order = deferToThread(self.broker.query_order_state, bought_order_list)
+
+        def reset_bought_order_queue(unready_order_list):
+            for current_id in unready_order_list:
+                self.broker.bought_order_queue.put(current_id)
+
+        d_unready_order.addCallback(reset_bought_order_queue)
+
+    def monitor_confirmed_order(self):
+        confirmed_order_list = []
+        while True:
+            if self.broker.confirmed_order_queue.empty():
+                break
+            else:
+                order_id = self.broker.confirmed_order_queue.get()
+                confirmed_order_list.append(order_id)
+        reactor.callInThread(self.broker.monitor_confirmed_order, confirmed_order_list)
+
+
+class Handler:
+    def __init__(self, broker):
+        self.broker = broker
+
+    def buy_product(self, msg_hash, file_title):
+        # fixme: format of hash value need to change
+        desc_hash = Encoder.str_to_base64_byte(msg_hash)
+        rsa_key = RSACipher.load_public_key()
+        product = OrderInfo(
+            desc_hash=desc_hash,
+            buyer_rsa_pubkey=rsa_key,
+            seller=self.broker.buyer.web3.eth.defaultAccount,
+            # fixme: proxy should not be seller
+            proxy=self.broker.buyer.web3.eth.defaultAccount,
+            secondary_proxy=self.broker.buyer.web3.eth.defaultAccount,
+            proxy_value=10,
+            value=20,
+            time_allowed=1000
+        )
+        d_placed_order = deferToThread(self.broker.buyer.place_order, product)
+
+        def add_bought_order(order_id):
+            self.broker.bought_order_queue.put(order_id)
+            new_buyer_file_info = BuyerFileInfo(order_id=order_id,
+                                                market_hash=Encoder.bytes_to_base64_str(desc_hash),
+                                                file_title=file_title, is_downloaded=False)
+            add_file(new_buyer_file_info)
+            # fixme: update UI pane
+            # self.update_treasure_pane()
+
+        d_placed_order.addCallback(add_bought_order)
+
+        return self.broker.bought_order_queue
+
+    def handle_new_order(self):
+        while True:
+            if self.broker.order_queue.empty():
+                break
+
+            else:
+                order_info = self.broker.order_queue.get()
+                self.broker.seller_send_request(order_info)
 
     def handle_ready_order(self):
         while True:
@@ -276,4 +272,4 @@ class Handler:
                 break
             else:
                 order_info = self.broker.ready_order_queue.get()
-                self.buyer_send_request(order_info)
+                self.broker.buyer_send_request(order_info)
