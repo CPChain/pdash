@@ -88,3 +88,7 @@ fi
 # pip3 install pyopenssl
 
 # pip3 install -r requirements-dev.txt
+
+# openssl
+# libssl-dev
+
