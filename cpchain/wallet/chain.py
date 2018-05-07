@@ -1,20 +1,27 @@
-from cpchain.crypto import Encoder, RSACipher, ECCipher
-from cpchain.chain.models import OrderInfo
-from twisted.internet.threads import deferToThread
-from twisted.internet import reactor
-from cpchain.utils import config
-from cpchain.chain.trans import BuyerTrans, SellerTrans
-from cpchain.chain.utils import default_web3
-from cpchain.wallet.db import BuyerFileInfo
-from cpchain.wallet.fs import add_file
-from cpchain.chain.poll_chain import OrderMonitor
-from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
-from eth_utils import to_bytes
-from cpchain.proxy.client import start_client
-from cpchain.wallet.fs import session, FileInfo, decrypt_file_aes
 from queue import Queue
 import logging
 import os
+
+from twisted.internet.threads import deferToThread
+from twisted.internet import reactor
+
+from eth_utils import to_bytes
+
+from cpchain.utils import config
+
+from cpchain.crypto import Encoder, RSACipher, ECCipher
+
+from cpchain.chain.models import OrderInfo
+from cpchain.chain.trans import BuyerTrans, SellerTrans
+from cpchain.chain.utils import default_web3
+from cpchain.chain.poll_chain import OrderMonitor
+
+from cpchain.wallet.db import BuyerFileInfo
+from cpchain.wallet.fs import add_file
+from cpchain.wallet.fs import session, FileInfo, decrypt_file_aes
+
+from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
+from cpchain.proxy.client import start_client
 
 logger = logging.getLogger(__name__)
 
@@ -29,9 +36,6 @@ class Broker:
         self.confirmed_order_queue = Queue()
         self.buyer = BuyerTrans(default_web3, config.chain.core_contract)
         self.seller = SellerTrans(default_web3, config.chain.core_contract)
-        self.monitor = Monitor(self)
-        self.handler = Handler(self)
-
 
 class Monitor:
     def __init__(self, broker):
@@ -62,13 +66,13 @@ class Monitor:
     # batch process
     def query_order_state(self, order_id_list):
         unready_order_list = []
-        for id in order_id_list:
-            state = self.broker.buyer.query_order(id)[10]
+        for current_id in order_id_list:
+            state = self.broker.buyer.query_order(current_id)[10]
             if state == 1:
-                order_info = {id: self.broker.buyer.query_order(id)}
+                order_info = {current_id: self.broker.buyer.query_order(current_id)}
                 self.broker.ready_order_queue.put(order_info)
             else:
-                unready_order_list.append(id)
+                unready_order_list.append(current_id)
         return unready_order_list
 
     def monitor_ready_order(self):
@@ -82,15 +86,15 @@ class Monitor:
 
         d_unready_order = deferToThread(self.query_order_state, bought_order_list)
 
-        def reset_bought_order_queue(unreay_order_list):
-            for id in unreay_order_list:
-                self.broker.bought_order_queue.put(id)
+        def reset_bought_order_queue(unready_order_list):
+            for current_id in unready_order_list:
+                self.broker.bought_order_queue.put(current_id)
 
         d_unready_order.addCallback(reset_bought_order_queue)
 
     def confirm_order(self, order_id_list):
-        for id in order_id_list:
-            self.broker.buyer.confirm_order(id)
+        for current_id in order_id_list:
+            self.broker.buyer.confirm_order(current_id)
 
     def monitor_confirmed_order(self):
         confirmed_order_list = []
@@ -108,14 +112,14 @@ class Handler:
         self.broker = broker
 
     def buy_product(self, msg_hash, file_title):
-        # TODO: format of hash value need to change
+        # fixme: format of hash value need to change
         desc_hash = Encoder.str_to_base64_byte(msg_hash)
         rsa_key = RSACipher.load_public_key()
         product = OrderInfo(
             desc_hash=desc_hash,
             buyer_rsa_pubkey=rsa_key,
             seller=self.broker.buyer.web3.eth.defaultAccount,
-            # TODO: proxy should not be seller
+            # fixme: proxy should not be seller
             proxy=self.broker.buyer.web3.eth.defaultAccount,
             secondary_proxy=self.broker.buyer.web3.eth.defaultAccount,
             proxy_value=10,
@@ -126,10 +130,11 @@ class Handler:
 
         def add_bought_order(order_id):
             self.broker.bought_order_queue.put(order_id)
-            new_buyer_file_info = BuyerFileInfo(order_id=order_id, market_hash=Encoder.bytes_to_base64_str(desc_hash),
+            new_buyer_file_info = BuyerFileInfo(order_id=order_id,
+                                                market_hash=Encoder.bytes_to_base64_str(desc_hash),
                                                 file_title=file_title, is_downloaded=False)
             add_file(new_buyer_file_info)
-            # TODO: update UI pane
+            # fixme: update UI pane
             # self.update_treasure_pane()
 
         d_placed_order.addCallback(add_bought_order)
@@ -146,7 +151,7 @@ class Handler:
             .all()[0][0]
         # print(raw_aes_key)
 
-        # TODO
+        # fixme
         encrypted_aes_key = "encrypted aes key"
         # print(encrypted_aes_key)
         print("Encrypted_aes_key length" + str(len(encrypted_aes_key)))
@@ -170,7 +175,8 @@ class Handler:
         ipfs.file_hash = file_hash.encode('utf-8')
         ipfs.gateway = ipfs_gateway
         sign_message = SignMessage()
-        sign_message.public_key = Encoder.str_to_base64_byte(self.broker.wallet.market_client.pub_key)
+        sign_message.public_key = Encoder.str_to_base64_byte(
+            self.broker.wallet.market_client.pub_key)
         sign_message.data = message.SerializeToString()
         sign_message.signature = ECCipher.generate_signature(
             Encoder.str_to_base64_byte(self.broker.wallet.market_client.priv_key),
@@ -217,7 +223,8 @@ class Handler:
         buyer_data.market_hash = new_order_info[0]
 
         sign_message = SignMessage()
-        sign_message.public_key = Encoder.str_to_base64_byte(self.broker.wallet.market_client.pub_key)
+        sign_message.public_key = Encoder.str_to_base64_byte(
+            self.broker.wallet.market_client.pub_key)
         sign_message.data = message.SerializeToString()
         sign_message.signature = ECCipher.generate_signature(
             Encoder.str_to_base64_byte(self.broker.wallet.market_client.priv_key),
