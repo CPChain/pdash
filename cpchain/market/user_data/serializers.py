@@ -1,7 +1,10 @@
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import UploadFileInfo, BuyerFileInfo, UserInfoVersion
+from .models import UploadFileInfo, BuyerFileInfo, UserInfoVersion, ProductTag, Bookmark
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class UploadFileInfoSerializer(serializers.ModelSerializer):
@@ -54,3 +57,38 @@ class UserInfoVersionSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserInfoVersion
         fields = ('version',)
+
+
+class ProductTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductTag
+        fields = ('tag',)
+
+    def create(self, validated_data):
+        # check if the same tag exist
+        tag_name = validated_data['tag']
+        query_set = ProductTag.objects.filter(tag=tag_name)
+        if query_set:
+            logging.debug("existing the same tag:%s" % tag_name )
+            return query_set[0]
+
+        t = ProductTag(
+            tag=tag_name,
+        )
+        t.save()
+        return t
+
+
+class BookmarkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bookmark
+        fields = ('market_hash','name','public_key','created,')
+
+    def create(self, validated_data):
+        bookmark = Bookmark(
+            market_hash=validated_data['market_hash'],
+            name = validated_data['name'],
+            public_key=validated_data['public_key'],
+        )
+        bookmark.save()
+        return bookmark
