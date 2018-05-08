@@ -82,7 +82,7 @@ class ProductTagSerializer(serializers.ModelSerializer):
 class BookmarkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bookmark
-        fields = ('market_hash','name','public_key','created,')
+        fields = ('market_hash','name','public_key','created')
 
     def create(self, validated_data):
         bookmark = Bookmark(

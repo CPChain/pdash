@@ -52,7 +52,7 @@ class TestUserDataApi(unittest.TestCase):
         self._pull_user_data(header=header)
 
         # ======== TODO add bookmark =========
-        # self._add_bookmark(header=header)
+        self._add_bookmark(header=header)
 
         # ======== TODO query bookmarks =========
         self._query_bookmarks(header=header)
@@ -203,8 +203,8 @@ class TestUserDataApi(unittest.TestCase):
         parsed_json = json.loads(response.text)
         print(response.text)
         self.assertEqual(parsed_json['status'], 1)
-        nonce = parsed_json['message']
-        print("nonce:%s" % nonce)
+        message = parsed_json['message']
+        print("message:%s" % message)
 
     def _query_bookmarks(self, header):
         print("======== query bookmarks ========")
@@ -228,8 +228,8 @@ class TestUserDataApi(unittest.TestCase):
         parsed_json = json.loads(response.text)
         print(response.text)
         self.assertEqual(parsed_json['status'], 1)
-        nonce = parsed_json['message']
-        print("nonce:%s" % nonce)
+        message = parsed_json['message']
+        print("message:%s" % message)
 
     def _query_tags(self,header):
         print("======== query tags ========")

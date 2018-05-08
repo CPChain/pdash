@@ -206,13 +206,11 @@ class BookmarkAPIViewSet(APIView):
     def post(self, request):
         data = request.data
         logger.info("data:%s" % data)
-        from django.forms.models import model_to_dict
         try:
             serializer = BookmarkSerializer(data=data)
             if serializer.is_valid(raise_exception=True):
-                bookmark = serializer.save()
-                dict_obj = model_to_dict(bookmark)
-                return JsonResponse({'status': 1, 'message': 'success','data':{'bookmark':dict_obj}})
+                serializer.save()
+                return JsonResponse({'status': 1, 'message': 'success','data':{'bookmark':serializer.data}})
         except:
             logger.exception("save Bookmark error")
 
