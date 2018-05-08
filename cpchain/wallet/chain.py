@@ -66,7 +66,7 @@ class Broker:
         # fixme
         encrypted_aes_key = "encrypted aes key"
         # print(encrypted_aes_key)
-        print("Encrypted_aes_key length" + str(len(encrypted_aes_key)))
+        logger.debug("Encrypted_aes_key length", str(len(encrypted_aes_key)))
         storage_type = Message.Storage.IPFS
         ipfs_gateway = config.storage.ipfs.addr
         # File hash is str type
