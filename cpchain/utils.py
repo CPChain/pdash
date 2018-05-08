@@ -1,9 +1,13 @@
+import base64
+
 import os.path as osp
 import sys
 import subprocess
 
 import logging
 import toml
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
 
 root_dir = osp.abspath(osp.join(osp.dirname(osp.abspath(__file__)), '../'))
 
@@ -67,3 +71,50 @@ def open_file(path):
                       darwin='open')
 
     subprocess.call((executable[sys.platform], path))
+
+
+class Encoder:
+    @staticmethod
+    def bytes_to_base64_str(b64bytes):
+        """
+        convert bytes to base64 string
+        Args:
+            b64bytes:
+
+        Returns: string
+
+        """
+        return base64.b64encode(b64bytes).decode("utf-8")
+
+    @staticmethod
+    def str_to_base64_byte(b64string):
+        """
+        convert base64 string to bytes
+        Args:
+            b64string:
+
+        Returns: bytes
+
+        """
+        return base64.b64decode(b64string.encode("utf-8"))
+
+
+class SHA256Hash:
+
+    @staticmethod
+    def generate_hash(data):
+        """
+        generate hash code like this : base64(sha256(data))
+
+        Args:
+            data: str data
+
+        Returns:
+            base64 str
+
+        """
+        digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
+        digest.update(data.encode(encoding="utf-8"))
+        digest_data = digest.finalize()
+        digest_string = Encoder.bytes_to_base64_str(digest_data)
+        return digest_string

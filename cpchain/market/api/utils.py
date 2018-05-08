@@ -3,8 +3,7 @@ import logging
 import random
 
 from cpchain.crypto import ECCipher
-from cpchain.encoder import Encoder
-from cpchain.hash import SHA256Hash
+from cpchain.utils import Encoder, SHA256Hash
 
 logger = logging.getLogger(__name__)
 

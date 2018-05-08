@@ -1,6 +1,6 @@
 import unittest
 
-from cpchain.hash import SHA256Hash
+from cpchain.utils import SHA256Hash
 
 
 class HashTest(unittest.TestCase):

@@ -4,6 +4,8 @@ from twisted.internet.threads import deferToThread
 import treq
 import json
 import os
+
+import cpchain.utils
 from cpchain import crypto
 import datetime, time
 
@@ -18,7 +20,7 @@ from cpchain.chain.trans import BuyerTrans, SellerTrans, ProxyTrans
 from cpchain.chain import poll_chain
 # from twisted.internet.task import LoopingCall
 from cpchain.chain.utils import default_web3
-from cpchain.utils import join_with_root, config
+from cpchain.utils import join_with_root, config, Encoder
 from cpchain.chain.models import OrderInfo
 
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
@@ -26,7 +28,6 @@ from cpchain.proxy.client import start_client, download_file
 from cpchain.proxy.client import start_client
 from cpchain.wallet.db import BuyerFileInfo
 from cpchain.wallet.fs import publish_file_update, session, FileInfo, decrypt_file_aes, add_file
-from cpchain.encoder import Encoder
 
 
 class MarketClient:
@@ -182,7 +183,7 @@ class BuyerChainClient:
         self.order_id_list = []
 
     def buy_product(self, msg_hash, file_title):
-        desc_hash = crypto.Encoder.str_to_base64_byte(msg_hash)
+        desc_hash = cpchain.utils.Encoder.str_to_base64_byte(msg_hash)
         rsa_key = crypto.RSACipher.load_public_key()
         # rsa_key_list = []
         # for i in rsa_key:

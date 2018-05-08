@@ -8,9 +8,9 @@ from eth_utils import to_bytes
 from cpchain.wallet.fs import *
 from cpchain.chain.trans import *
 from cpchain import chain, config, root_dir
-from cpchain.utils import join_with_root
+from cpchain.utils import join_with_root, Encoder
 from cpchain.chain.models import OrderInfo
-from cpchain.crypto import Encoder, RSACipher, ECCipher, pub_key_der_to_addr, get_addr_from_public_key
+from cpchain.crypto import RSACipher, ECCipher, pub_key_der_to_addr, get_addr_from_public_key
 
 
 def test_server_chain():
