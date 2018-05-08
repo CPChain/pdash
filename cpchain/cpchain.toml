@@ -5,6 +5,11 @@
 # home directoy
 home = "~/.cpchain"
 
+[account]
+# we shall move it to ~/.cpchain
+keystore_dir = "eth/data_dir/keystore"
+
+
 [chain]
 contract_src_path = "scripts/chain/contracts/contract.sol"
 contract_bin_path = "cpchain/assets/chain/contract.json"
