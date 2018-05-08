@@ -1,6 +1,6 @@
 .PHONY: 
 
-FLAKE = python3 -m flake8
+PYLINT = python3 -m pylint
 
 lint:
 	pylint cpchain
