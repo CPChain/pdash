@@ -47,6 +47,7 @@ toml==0.9.4
 pkgs="
 pytest
 pytest-cov
+pylint
 "
 
 while test $# -gt 0
@@ -88,3 +89,7 @@ fi
 # pip3 install pyopenssl
 
 # pip3 install -r requirements-dev.txt
+
+# openssl
+# libssl-dev
+

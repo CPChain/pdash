@@ -6,14 +6,15 @@
 home = "~/.cpchain"
 
 [chain]
-contract_src_dir = "cpchain/assets/chain/contracts/Trading.sol"
-contract_json = "cpchain/assets/chain/build/Trading.json"
+contract_src_path = "scripts/chain/contracts/contract.sol"
+contract_bin_path = "cpchain/assets/chain/contract.json"
+contract_name = "Contract"
 registrar_json = "cpchain/assets/chain/registrar.json"
-core_contract = "Trading"
+
 # mode can be "test", "falcon", "local"
 mode = "falcon"
-ipc_provider_addr = "cpchain/assets/chain/sheds/data_dir/geth.ipc"
 falcon_provider_addr = "http://192.168.0.132:8545"
+local_provider_addr = "http://127.0.0.1:8545"
 
 
 [storage.s3]
