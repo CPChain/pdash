@@ -47,6 +47,7 @@ toml==0.9.4
 pkgs="
 pytest
 pytest-cov
+pylint
 "
 
 while test $# -gt 0

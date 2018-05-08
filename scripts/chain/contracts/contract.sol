@@ -47,10 +47,10 @@ library SafeMath {
 }
 
 /*
-    A Trading Contract for order processing in CPChain.
+    A Contract Contract for order processing in CPChain.
     Note: This is experimental, don't use it in main-net for now.
 */
-contract Trading {
+contract Contract {
 
     using SafeMath for uint256;
 
@@ -98,7 +98,7 @@ contract Trading {
     }
     modifier inState(uint id, State _state) { require(orderRecords[id].state == _state); _; }
 
-    function Trading() public {
+    function Contract() public {
     }
 
     function() payable {

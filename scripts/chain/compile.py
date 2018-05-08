@@ -2,30 +2,45 @@ import sys
 import json
 import os.path as osp
 
-from solc import compile_source
+# cf. http://tinyurl.com/yd7mbzp3
+from solc import compile_standard
 
-from cpchain import config, root_dir
+from cpchain import config
+from cpchain.utils import join_with_root
 
 
-# A naive approach without sufficient error handling
-def compile_solidity(contract_src_dir, contract_build_dir):
-    # First read the source code and compile the code
-    with open(contract_src_dir, "r") as file:
-        contract_source_code = file.read()
-    # Then extract the compiled contract and write contract interface to local file
-    compiled_sol = compile_source(contract_source_code)
-    with open(contract_build_dir, "w") as file:
-        file.write(json.dumps(compiled_sol))
+def compile_contract(src_path, abi_path):
+    # cf. http://tinyurl.com/yap75nl8
+    sol_map = {
+        "language": "Solidity",
+        "sources": {},
+        "settings": {
+            "outputSelection": {
+                "*": {
+                    "*": ["abi", "evm.bytecode"]
+                }
+            }
+        }
+    }
+
+    basename = osp.basename(src_path)
+    d = sol_map["sources"][basename] = {}
+    d["urls"] = [src_path]
+    output = compile_standard(sol_map, allow_paths=osp.dirname(src_path))
+
+    with open(abi_path, mode='w') as f:
+        f.write(json.dumps(output))
 
 
 def main():
-    if len(sys.argv) < 3:
-        compile_solidity(
-            osp.join(root_dir, config.chain.contract_src_dir),
-            osp.join(root_dir, config.chain.contract_json)
-        )
+    if len(sys.argv) != 3:
+        src_path = join_with_root(config.chain.contract_src_path)
+        abi_path = join_with_root(config.chain.contract_bin_path)
     else:
-        compile_solidity(sys.argv[1], sys.argv[2])
+        src_path = sys.argv[1]
+        abi_path = sys.argv[2]
+
+    compile_contract(src_path, abi_path)
 
 
 if __name__ == "__main__":
