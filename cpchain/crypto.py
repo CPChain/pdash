@@ -10,8 +10,7 @@ from eth_utils import keccak
 
 from cpchain import config
 from cpchain.chain.utils import load_private_key_from_keystore
-from cpchain.encoder import Encoder
-from cpchain.utils import join_with_root
+from cpchain.utils import join_with_root, Encoder
 
 logger = logging.getLogger(__name__)
 

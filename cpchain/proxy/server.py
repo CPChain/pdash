@@ -16,14 +16,14 @@ from twisted.web.static import File
 from cpchain import config, root_dir
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.message import message_sanity_check, sign_message_verify
-from cpchain.crypto import pub_key_der_to_addr, ECCipher, Encoder
+from cpchain.crypto import pub_key_der_to_addr, ECCipher
 
 from cpchain.storage import IPFSStorage
 from cpchain.proxy.proxy_db import Trade, ProxyDB
 
 from cpchain.chain.trans import ProxyTrans
 from cpchain.chain.utils import default_web3
-from cpchain.utils import join_with_root
+from cpchain.utils import join_with_root, Encoder
 from eth_utils import to_bytes
 
 server_root = os.path.join(config.home, config.proxy.server_root)

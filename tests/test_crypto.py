@@ -1,7 +1,6 @@
 import unittest
 
-from cpchain.encoder import Encoder
-from cpchain.utils import join_with_root,config
+from cpchain.utils import join_with_root, config, Encoder
 from cpchain.crypto import ECCipher, ECDERCipher
 
 
