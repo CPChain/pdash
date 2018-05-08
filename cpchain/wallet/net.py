@@ -22,8 +22,6 @@ class MarketClient:
         password_path = join_with_root(config.wallet.private_key_password_file)
         with open(password_path) as f:
             password = f.read()
-        self.priv_key, self.pub_key = ECCipher.load_key_pair_from_private_key(
-            private_key_file_path, password)
         self.token = ''
         self.nonce = ''
         self.message_hash = ''
@@ -65,7 +63,7 @@ class MarketClient:
         signature_source = str(self.pub_key) + str(title) + str(description) + str(
             price) + MarketClient.str_to_timestamp(start_date) + MarketClient.str_to_timestamp(
             end_date) + str(file_md5)
-        signature = crypto.ECCipher.geth_sign(self.priv_key, signature_source)
+        signature = ECCipher.geth_sign(self.priv_key, signature_source)
         data['signature'] = signature
         resp = yield treq.post(self.url + 'product/publish/', headers=header, json=data)
         confirm_info = yield treq.json_content(resp)

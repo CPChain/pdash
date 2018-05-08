@@ -231,18 +231,18 @@ class ECCipher:
     """
 
     @staticmethod
-    def load_key_pair_from_private_key(fpath, password='password'):
+    def load_key_pair_from_keystore(key_path, password):
         """
-        load geth key pair from private key file
+        load geth key pair from a keystore format file
 
         Args:
-            fpath: file path
-            password: password,default is 'password'
+            key_path: keystore key path
+            password: password
 
         Returns:
 
         """
-        pri_key_bytes = load_private_key_from_keystore(fpath, password)
+        pri_key_bytes = load_private_key_from_keystore(key_path, password)
 
         pri_key_string = Encoder.bytes_to_base64_str(pri_key_bytes)
 

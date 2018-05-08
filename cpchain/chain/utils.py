@@ -13,9 +13,9 @@ default_w3 = None
 
 def _set_default_w3():
     global default_w3
-    if default_w3:
-        return 
     mode = config.chain.mode
+    if default_w3 or mode == "dummy":
+        return 
 
     if mode == "test":
         provider = TestRPCProvider()
