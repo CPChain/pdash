@@ -39,8 +39,7 @@ class UploadFileInfoAPIViewSet(APIView):
     """
     queryset = UploadFileInfo.objects.all()
     serializer_class = UploadFileInfoSerializer
-    # permission_classes = (IsOwner,)
-    permission_classes = (AllowAny,)
+    permission_classes = (IsOwner,)
 
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
@@ -71,8 +70,7 @@ class PullUserInfoAPIViewSet(APIView):
     """
     queryset = UploadFileInfo.objects.all()
     serializer_class = UploadFileInfoSerializer
-    # permission_classes = (IsOwner,)
-    permission_classes = (AllowAny,)
+    permission_classes = (IsOwner,)
 
     def get(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
@@ -96,8 +94,7 @@ class BuyerFileInfoAPIViewSet(APIView):
     """
     queryset = BuyerFileInfo.objects.all()
     serializer_class = BuyerFileInfoSerializer
-    # permission_classes = (IsOwner,)
-    permission_classes = (AllowAny,)
+    permission_classes = (IsOwner,)
 
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
@@ -129,8 +126,7 @@ class UserInfoVersionAPIViewSet(APIView):
     """
     queryset = UserInfoVersion.objects.all()
     serializer_class = UserInfoVersionSerializer
-    # permission_classes = (IsOwner,)
-    permission_classes = (AllowAny,)
+    permission_classes = (IsOwner,)
 
     def get(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
