@@ -18,7 +18,7 @@ class MarketClient:
         password_path = join_with_root(config.wallet.private_key_password_file)
         with open(password_path) as f:
             password = f.read()
-        self.priv_key, self.pub_key = crypto.ECCipher.geth_load_key_pair_from_private_key(
+        self.priv_key, self.pub_key = crypto.ECCipher.load_key_pair_from_keystore(
             private_key_file_path, password)
         self.token = ''
         self.nonce = ''
