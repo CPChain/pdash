@@ -1,7 +1,7 @@
 import glob
 import os.path as osp
 
-from cpchain import config
+from cpchain import config, crypto
 from cpchain.utils import join_with_root
 
 class Accounts(list):
@@ -30,9 +30,9 @@ class Accounts(list):
 
 class Account:
     def __init__(self, key_path, key_passphrase=None):
-        self.priv_key = []
-        self.pub_key = []
-
+        if not key_passphrase:
+            key_passphrase = input("Input Key Passphrase: ")
+        self.priv_key, self.pub_key = crypto.ECCipher.load_key_pair_from_keystore(key_path, key_passphrase)
 
 if __name__ == '__main__':
     accounts = Accounts()
