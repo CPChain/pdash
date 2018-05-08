@@ -9,6 +9,8 @@ from cpchain.crypto import ECCipher
 from cpchain.utils import join_with_root, config
 
 HOST = "http://localhost:8083"
+private_key_file = 'tests/market/assets/UTC--2018-01-25T08-04-38.217120006Z--22114f40ed222e83bbd88dc6cbb3b9a136299a23'
+private_key_password_file = 'tests/market/assets/password'
 
 
 def generate_nonce_signature(priv_key, nonce):
@@ -20,8 +22,8 @@ def generate_nonce_signature(priv_key, nonce):
 class TestMarketApi(unittest.TestCase):
 
     def setUp(self):
-        private_key_file_path = join_with_root(config.wallet.private_key_file)
-        password_path = join_with_root(config.wallet.private_key_password_file)
+        private_key_file_path = join_with_root(private_key_file)
+        password_path = join_with_root(private_key_password_file)
 
         with open(password_path) as f:
             password = f.read()
