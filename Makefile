@@ -1,4 +1,4 @@
-.PHONY: 
+.PHONY: lint test-proxy
 
 FLAKE = python3 -m flake8
 
