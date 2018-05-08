@@ -8,12 +8,13 @@ class UploadFileInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = UploadFileInfo
         fields = (
-            'id', 'public_key', 'name', 'hashcode', 'path', 'size',
+            'id','public_key', 'name', 'hashcode', 'path', 'size',
             'remote_type', 'remote_uri', 'is_published', 'aes_key', 'market_hash',
             'created')
 
     def create(self, validated_data):
         file_info = UploadFileInfo(
+            public_key=validated_data['public_key'],
             name=validated_data['name'],
             hashcode=validated_data['hashcode'],
             path=validated_data['path'],
@@ -31,11 +32,10 @@ class BuyerFileInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = BuyerFileInfo
         fields = (
-            'id', 'public_key', 'order_id', 'market_hash', 'file_uuid', 'file_title',
+            'id','public_key', 'order_id', 'market_hash', 'file_uuid', 'file_title',
             'path', 'size', 'is_downloaded', 'created')
 
     def create(self, validated_data):
-        now = timezone.now()
         file_info = BuyerFileInfo(
             public_key=validated_data['public_key'],
             order_id=validated_data['order_id'],

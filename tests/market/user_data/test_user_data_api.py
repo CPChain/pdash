@@ -26,56 +26,43 @@ class TestUserDataApi(unittest.TestCase):
 
         self.pri_key_string, self.pub_key_string = ECCipher.load_key_pair_from_private_key(private_key_file_path, password)
 
-    def test_query_from_db(self):
-        keyword = "z7JI8DccklHodvexTCDmLxdviNtKhhRJU8bvv4vKoTc="
-        self.query_product(keyword=keyword)
-
-        keyword = "testtile"
-        self.query_product(keyword=keyword)
-
     def test_login_and_confirm(self):
 
         header = {'Content-Type': 'application/json'}
-        nonce = self.login_and_get_nonce(header)
+        nonce = self._login_and_get_nonce(header)
 
         # ======= generate nonce signature and confirm =======
-        token = self.generate_nonce_signature_and_get_token(header, nonce)
+        token = self._generate_nonce_signature_and_get_token(header, nonce)
 
-        # ======= publish product ========
-        self.publish_product(token)
-
-        # ======= query product ========
-        keyword = "testtile"
-        self.query_product(keyword=keyword)
-
-        # ======= query product via elasticsearch ========
-        self.query_es_product()
+        header["MARKET-KEY"] = self.pub_key_string
+        header["MARKET-TOKEN"] = token
 
         # ======== TODO test save upload file info in wallet ========
-        self.save_upload_file_info()
+        self._save_upload_file_info(header=header)
 
         # ======== TODO test save buyer file info in wallet ========
-        self.save_buyer_file_info()
+        self._save_buyer_file_info(header=header)
 
         # ======== TODO test query latest version info in wallet ========
-        self.query_latest_version()
+        self._query_latest_version(header=header)
 
         # ======== TODO test pull user data in wallet ========
-        self.pull_user_data()
+        self._pull_user_data(header=header)
 
-    def login_and_get_nonce(self, header):
+    def _login_and_get_nonce(self, header):
         payload = {"public_key": self.pub_key_string}
-        url = '%s/api/v1/login/' % HOST
+        url = '%s/account/v1/login/' % HOST
         response = requests.post(url, headers=header, json=payload)
         self.assertEqual(response.status_code, 200)
         parsed_json = json.loads(response.text)
         # print(response.text)
         self.assertEqual(parsed_json['success'], True)
         nonce = parsed_json['message']
+        print("nonce:%s" % nonce)
         return nonce
 
-    def generate_nonce_signature_and_get_token(self, header, nonce):
-        url = '%s/api/v1/confirm/' % HOST
+    def _generate_nonce_signature_and_get_token(self, header, nonce):
+        url = '%s/account/v1/confirm/' % HOST
         nonce_signature = generate_nonce_signature(self.pri_key_string, nonce)
         payload = {"public_key": self.pub_key_string, "code": nonce_signature}
         # print("confirm request:%s" % payload)
@@ -89,7 +76,7 @@ class TestUserDataApi(unittest.TestCase):
 
     def query_product(self, keyword):
         params = {"keyword": keyword}
-        url = '%s/api/v1/product/search/' % HOST
+        url = '%s/product/v1/product/search/' % HOST
         response = requests.get(url, params)
         print("products:%s" % response)
         print(response.text)
@@ -100,7 +87,7 @@ class TestUserDataApi(unittest.TestCase):
     def query_es_product(self):
         keyword = "testtile"
         params = {"keyword": keyword}
-        url = '%s/api/v1/es_product/search/' % HOST
+        url = '%s/product/v1/es_product/search/' % HOST
         response = requests.get(url, params)
         print("products:%s" % response)
         print(response.text)
@@ -118,7 +105,7 @@ class TestUserDataApi(unittest.TestCase):
         start_date = "2018-04-01 10:10:10"
         end_date = "2018-12-10 10:10:10"
         file_md5 = "12345678901234567890"
-        url = '%s/api/v1/product/publish/' % HOST
+        url = '%s/product/v1/product/publish/' % HOST
         payload = {'owner_address': self.pub_key_string, 'title': title, 'description': description, 'price': price,
                    'tags': tags, 'start_date': start_date, 'end_date': end_date, 'file_md5': file_md5}
         signature_source = self.pub_key_string + title + description + str(price) + start_date + end_date + file_md5
@@ -133,15 +120,60 @@ class TestUserDataApi(unittest.TestCase):
         self.assertEqual(parsed_json['status'], 1)
         print("market_hash:%s" % parsed_json['data']["market_hash"])
 
-    def save_upload_file_info(self):
-        print("======== test save upload file info in wallet ========")
-        pass
+    def _save_upload_file_info(self, header):
+        print("======== save upload file info in wallet ========")
 
-    def save_buyer_file_info(self):
-        pass
+        payload = {"public_key": self.pub_key_string,
+                   "hashcode": "hashcode", "path": "path", "size": 1222,
+                   "remote_type": "1", "remote_uri": "remote_uri", "is_published": "True",
+                   "aes_key": "aes_key", "market_hash": "market_hash","name": "nnnn"}
+        url = '%s/user_data/v1/uploaded_file/' % HOST
+        response = requests.post(url, headers=header, json=payload)
+        self.assertEqual(response.status_code, 200)
+        parsed_json = json.loads(response.text)
+        print(response.text)
+        self.assertEqual(parsed_json['status'], 1)
+        message = parsed_json['message']
+        print("message:%s" % message)
 
-    def pull_user_data(self):
-        pass
+    def _save_buyer_file_info(self, header):
+        print("======== save buyer file info in wallet ========")
 
-    def query_latest_version(self):
-        pass
+        payload = {"public_key": self.pub_key_string, "order_id": 6666,
+                   "market_hash": "market_hash", "file_uuid": "file_uuid",
+                   "file_title": "file_title", "path": "path", "size": 1245,
+                   "is_downloaded": "True"}
+        url = '%s/user_data/v1/buyer_file/' % HOST
+        response = requests.post(url, headers=header, json=payload)
+        self.assertEqual(response.status_code, 200)
+        parsed_json = json.loads(response.text)
+        print(response.text)
+        self.assertEqual(parsed_json['status'], 1)
+        nonce = parsed_json['message']
+        print("nonce:%s" % nonce)
+
+    def _pull_user_data(self, header):
+        print("======== pull user data ========")
+        url = '%s/user_data/v1/pull_all/' % HOST
+        response = requests.get(url=url, headers=header)
+        print("response:%s" % response)
+        print(response.text)
+        parsed_json = json.loads(response.text)
+
+        result = parsed_json['data']['buyer_files']
+        for p in result:
+            print("created:%s" % p["created"])
+
+    def _query_latest_version(self, header):
+        print("======== query latest version ========")
+        params = {"version": 2}
+        url = '%s/user_data/v1/latest_version/' % HOST
+        response = requests.get(url=url, headers=header, params=params)
+        print("response:%s" % response)
+        print(response.text)
+        parsed_json = json.loads(response.text)
+
+        version = parsed_json['data']['version']
+        print("version:%s" % version)
+        status = parsed_json['status']
+        self.assertEqual(1,status)
