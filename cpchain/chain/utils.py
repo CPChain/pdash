@@ -13,7 +13,7 @@ default_w3 = None
 
 def _set_default_w3():
     global default_w3
-    if default_w3:
+    if default_w3 or mode == "dummy":
         return 
     mode = config.chain.mode
 
