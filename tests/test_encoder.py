@@ -1,6 +1,6 @@
 import unittest
 
-from cpchain.encoder import Encoder
+from cpchain.utils import Encoder
 
 
 class EncoderTest(unittest.TestCase):

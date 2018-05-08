@@ -1,4 +1,4 @@
-.PHONY: 
+.PHONY: lint test-proxy
 
 PYLINT = python3 -m pylint
 

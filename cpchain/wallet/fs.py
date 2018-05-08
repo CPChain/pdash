@@ -2,7 +2,8 @@ import tempfile
 import os
 
 from cpchain.wallet.db import session, FileInfo, osp, create_engine, sessionmaker, BuyerFileInfo
-from cpchain.crypto import AESCipher, RSACipher, Encoder
+from cpchain.crypto import AESCipher, RSACipher
+from cpchain.utils import Encoder
 from cpchain.storage import IPFSStorage
 from cpchain import root_dir, config
 
