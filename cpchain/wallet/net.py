@@ -1,11 +1,15 @@
+import logging
+
 import treq
 from twisted.internet.defer import inlineCallbacks
 
-from cpchain import crypto
+from cpchain.crypto import ECCipher
 
 from cpchain.utils import join_with_root, config
 
 from cpchain.wallet.fs import publish_file_update
+
+logger = logging.getLogger(__name__) # pylint: disable=locally-disabled, invalid-name
 
 
 class MarketClient:
@@ -18,8 +22,6 @@ class MarketClient:
         password_path = join_with_root(config.wallet.private_key_password_file)
         with open(password_path) as f:
             password = f.read()
-        self.priv_key, self.pub_key = crypto.ECCipher.load_key_pair_from_keystore(
-            private_key_file_path, password)
         self.token = ''
         self.nonce = ''
         self.message_hash = ''
@@ -32,28 +34,21 @@ class MarketClient:
     def login(self):
         header = {'Content-Type': 'application/json'}
         data = {'public_key': self.pub_key}
-        try:
-            resp = yield treq.post(url=self.url + 'login/', headers=header, json=data,
-                                   persistent=False)
-            confirm_info = yield treq.json_content(resp)
-            print(confirm_info)
-            self.nonce = confirm_info['message']
-            print('login succeed')
-        except Exception as err:
-            print(err)
-
-        try:
-            signature = crypto.ECCipher.geth_sign(self.priv_key, self.nonce)
-            header_confirm = {'Content-Type': 'application/json'}
-            data_confirm = {'public_key': self.pub_key, 'code': signature}
-            resp = yield treq.post(self.url + 'confirm/', headers=header_confirm, json=data_confirm,
-                                   persistent=False)
-            confirm_info = yield treq.json_content(resp)
-            print(confirm_info)
-            self.token = confirm_info['message']
-            print('login confirmed')
-        except Exception as err:
-            print(err)
+        resp = yield treq.post(url=self.url + 'login/', headers=header, json=data,
+                               persistent=False)
+        confirm_info = yield treq.json_content(resp)
+        logger.debug("login response: %", confirm_info)
+        self.nonce = confirm_info['message']
+        logger.debug('nonce: %', self.nonce)
+        signature = ECCipher.generate_string_signature(self.priv_key, self.nonce)
+        header_confirm = {'Content-Type': 'application/json'}
+        data_confirm = {'public_key': self.pub_key, 'code': signature}
+        resp = yield treq.post(self.url + 'confirm/', headers=header_confirm, json=data_confirm,
+                               persistent=False)
+        confirm_info = yield treq.json_content(resp)
+        logger.debug('login confirm: %', confirm_info)
+        self.token = confirm_info['message']
+        logger.debug('token: %', self.token)
         return confirm_info['message']
 
     @inlineCallbacks
@@ -68,7 +63,7 @@ class MarketClient:
         signature_source = str(self.pub_key) + str(title) + str(description) + str(
             price) + MarketClient.str_to_timestamp(start_date) + MarketClient.str_to_timestamp(
             end_date) + str(file_md5)
-        signature = crypto.ECCipher.geth_sign(self.priv_key, signature_source)
+        signature = ECCipher.geth_sign(self.priv_key, signature_source)
         data['signature'] = signature
         resp = yield treq.post(self.url + 'product/publish/', headers=header, json=data)
         confirm_info = yield treq.json_content(resp)

@@ -1,9 +1,9 @@
 .PHONY: lint test-proxy
 
-FLAKE = python3 -m flake8
+PYLINT = python3 -m pylint
 
 lint:
-	pylint cpchain
+	$(PYLINT) cpchain
 
 test-proxy:
 	python3 -m twisted.trial ./tests/proxy/test_server.py
