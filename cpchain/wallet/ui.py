@@ -3,6 +3,8 @@ import sys, os
 import os.path as osp
 import string
 
+from scipy.ndimage import imread
+
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout,
                              QVBoxLayout, QGridLayout, QWidget, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel,
                              QWidget, QLineEdit, QSpacerItem, QSizePolicy, QTableWidget, QFormLayout, QComboBox, QTextEdit,
@@ -38,6 +40,75 @@ def load_stylesheet(wid, name):
     with open(path) as f:
         s = string.Template(f.read())
         wid.setStyleSheet(s.substitute(subs))
+
+
+# Copied from MusicPlayer for temp use
+class PicLabel(QLabel):
+
+    def __init__(self, src=None, width=200, height=200, pixMask=None):
+        super(PicLabel, self).__init__()
+        global picsThreadPool
+
+        self.src = None
+
+        self.width = width
+        self.height = height
+
+        self.pixMask = None
+        if pixMask:
+            self.pixMask = pixMask
+        if src:
+            self.setSrc(src)
+
+        if self.width:
+            self.setMaximumSize(self.width, self.height)
+            self.setMinimumSize(self.width, self.height)
+
+    def setSrc(self, src):
+        src = str(src)
+        if 'http' in src or 'https' in src:
+            cacheList = os.listdir(cacheFolder)
+
+            # names = str(src[src.rfind('/')+1:])
+            names = makeMd5(src)
+            localSrc = cacheFolder+'/'+names
+            if names in cacheList:
+                self.setSrc(localSrc)
+                self.src = localSrc
+                return
+
+            task = GetPicture(self, src)
+            picsThreadPool.start(task)
+        else:
+            self.src = src
+            pix = QPixmap(src)
+            pix.load(src)
+            pix = pix.scaled(self.width, self.height)
+            # the size of mask should be equal to that of pix
+            if self.pixMask:
+                mask = QPixmap(self.pixMask)
+                mask = mask.scaled(self.width, self.height)
+                pix.setMask(mask.createHeuristicMask())
+
+            self.setPixmap(pix)
+
+    def getSrc(self):
+        return self.src
+
+
+class GetPicture(QRunnable):
+
+    def __init__(self, widget, src):
+        super(GetPicture, self).__init__()
+        global picsQueue
+        self.widget = widget
+        self.src = src
+
+    def run(self):
+        # names = str(self.src[self.src.rfind('/')+1:])
+        names = makeMd5(self.src)
+        content = Requests.get(self.src).content
+        picsQueue.put([self.widget, content, names])
 
 
 
@@ -79,6 +150,7 @@ class Header(QFrame):
 
     def init_ui(self):
         def create_logos():
+            self.logo = logo = Header.LogoLabel(r'cpc-logo-single.png', 32, 32)
             self.word_label = QLabel(self)
             self.word_label.setText("<b>CPChain</b>")
             print("Pic label has not been set !")
@@ -102,7 +174,10 @@ class Header(QFrame):
             self.upload_btn = QPushButton("Upload", self)
             self.upload_btn.setObjectName("upload_btn")
 
-            self.profile_btn = QPushButton("Profile", self)
+            self.profilepage_btn = QPushButton("Profile", self)
+            self.profilepage_btn.setObjectName("profilepage_btn")
+
+            self.profile_btn = QPushButton("▼", self)
             self.profile_btn.setObjectName("profile_btn")
             def create_popmenu():
                 self.profile_menu = profile_menu = QMenu('Profile', self)
@@ -133,6 +208,7 @@ class Header(QFrame):
         def set_layout():
             self.main_layout = main_layout = QHBoxLayout(self)
             main_layout.setSpacing(0)
+            main_layout.addWidget(self.logo)
             main_layout.addWidget(self.word_label)
             main_layout.addSpacing(60)
             main_layout.addWidget(self.prev_btn)
@@ -144,7 +220,9 @@ class Header(QFrame):
             main_layout.addSpacing(1)
             main_layout.addWidget(self.upload_btn)
             main_layout.addSpacing(1)
+            main_layout.addWidget(self.profilepage_btn)
             main_layout.addWidget(self.profile_btn)
+
 
             self.setLayout(self.main_layout)
 
