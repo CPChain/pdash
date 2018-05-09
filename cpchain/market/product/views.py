@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 from cpchain.market.product.models import WalletMsgSequence
 from cpchain.market.product.serializers import *
-from cpchain.market.account.permissions import IsOwnerOrReadOnly, IsOwner
+from cpchain.market.account.permissions import IsOwnerOrReadOnly, AlreadyLoginUser
 from cpchain.market.account.utils import *
 
 logger = logging.getLogger(__name__)
@@ -104,7 +104,7 @@ class MyProductSearchAPIViewSet(APIView):
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = (IsOwner,)
+    permission_classes = (AlreadyLoginUser,)
 
     def get(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
@@ -130,7 +130,7 @@ class MyProductPagedSearchAPIViewSet(APIView):
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = (IsOwner,)
+    permission_classes = (AlreadyLoginUser,)
 
     def get(self, request):
 

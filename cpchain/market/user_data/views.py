@@ -1,11 +1,13 @@
+import json
+
 from django.http import JsonResponse
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
-from cpchain.market.account.permissions import IsOwner
+from cpchain.market.account.permissions import AlreadyLoginUser
 from cpchain.market.account.utils import *
-from cpchain.market.user_data.models import UploadFileInfo, BuyerFileInfo, UserInfoVersion
+from cpchain.market.user_data.models import UploadFileInfo, BuyerFileInfo, UserInfoVersion, ProductTag, Bookmark
 from cpchain.market.user_data.serializers import UploadFileInfoSerializer, UserInfoVersionSerializer, \
-    BuyerFileInfoSerializer
+    BuyerFileInfoSerializer, ProductTagSerializer, BookmarkSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +41,7 @@ class UploadFileInfoAPIViewSet(APIView):
     """
     queryset = UploadFileInfo.objects.all()
     serializer_class = UploadFileInfoSerializer
-    permission_classes = (IsOwner,)
+    permission_classes = (AlreadyLoginUser,)
 
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
@@ -70,7 +72,7 @@ class PullUserInfoAPIViewSet(APIView):
     """
     queryset = UploadFileInfo.objects.all()
     serializer_class = UploadFileInfoSerializer
-    permission_classes = (IsOwner,)
+    permission_classes = (AlreadyLoginUser,)
 
     def get(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
@@ -94,7 +96,7 @@ class BuyerFileInfoAPIViewSet(APIView):
     """
     queryset = BuyerFileInfo.objects.all()
     serializer_class = BuyerFileInfoSerializer
-    permission_classes = (IsOwner,)
+    permission_classes = (AlreadyLoginUser,)
 
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
@@ -122,13 +124,14 @@ class BuyerFileInfoAPIViewSet(APIView):
 
 class UserInfoVersionAPIViewSet(APIView):
     """
-    TODO API endpoint that allows query latest user data version by owner.
+    API endpoint that allows query latest user data version by owner.
     """
     queryset = UserInfoVersion.objects.all()
     serializer_class = UserInfoVersionSerializer
-    permission_classes = (IsOwner,)
+    permission_classes = (AlreadyLoginUser,)
 
     def get(self, request):
+
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         logger.info("public_key:%s" % public_key)
         params = request.query_params
@@ -141,3 +144,74 @@ class UserInfoVersionAPIViewSet(APIView):
         except UserInfoVersion.DoesNotExist:
             logger.info("user version not found for %s" % public_key)
             return JsonResponse({'status': 1, 'message': 'success', 'data': {'version': 0}})
+
+
+class ProductTagAPIViewSet(APIView):
+    """
+    TODO API endpoint that allows query product tag data by owner.
+    """
+    queryset = ProductTag.objects.all()
+    serializer_class = ProductTagSerializer
+    permission_classes = (AlreadyLoginUser,)
+
+    def get(self, request):
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        logger.info("public_key:%s" % public_key)
+
+        try:
+            tag_queryset = ProductTag.objects.all()
+            tag_serializer = ProductTagSerializer(tag_queryset, many=True)
+            tag_list = tag_serializer.data
+            return JsonResponse({'status': 1, 'message': 'success', 'data': {'tags': tag_list}})
+        except:
+            logger.exception("ProductTag not found for %s" % public_key)
+            return create_invalid_response()
+
+    def post(self, request):
+        data = request.data
+        logger.info("data:%s" % data)
+
+        try:
+            serializer = ProductTagSerializer(data=data)
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+                return JsonResponse({'status': 1, 'message': 'success'})
+        except:
+            logger.exception("save ProductTag error")
+
+        return create_invalid_response()
+
+
+class BookmarkAPIViewSet(APIView):
+    """
+    TODO API endpoint that allows query bookmark data by owner.
+    """
+    queryset = Bookmark.objects.all()
+    serializer_class = BookmarkSerializer
+    permission_classes = (AlreadyLoginUser,)
+
+    def get(self, request):
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        logger.info("public_key:%s" % public_key)
+
+        try:
+            bookmark_queryset = Bookmark.objects.filter(public_key=public_key)
+            bookmark_serializer = BookmarkSerializer(bookmark_queryset, many=True)
+            bookmark_list = bookmark_serializer.data
+            return JsonResponse({'status': 1, 'message': 'success', 'data': {'bookmarks': bookmark_list}})
+        except:
+            logger.info("bookmark not found for %s" % public_key)
+            return create_invalid_response()
+
+    def post(self, request):
+        data = request.data
+        logger.info("data:%s" % data)
+        try:
+            serializer = BookmarkSerializer(data=data)
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+                return JsonResponse({'status': 1, 'message': 'success','data':{'bookmark':serializer.data}})
+        except:
+            logger.exception("save Bookmark error")
+
+        return create_invalid_response()
