@@ -50,8 +50,18 @@ class Wallet:
 
 def main():
     wallet = Wallet(reactor)
+
+    # for test
+    mc = MarketClient(wallet)
+    logger.debug('init mc')
+    mc.query_carousel()
+    mc.query_hot_tag()
+    mc.query_promotion()
+
     sys.exit(reactor.run())
 
 
 if __name__ == '__main__':
     main()
+
+
