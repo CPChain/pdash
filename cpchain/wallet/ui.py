@@ -39,6 +39,95 @@ def load_stylesheet(wid, name):
         wid.setStyleSheet(s.substitute(subs))
 
 
+# widgets
+
+class TabContentArea(QFrame): pass
+
+class PopularTab(TabContentArea):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+        self.setObjectName("popular_tab")
+
+        self.init_ui()
+
+    def init_ui(self):
+
+        def create_banner():
+            self.banner_label = banner_label = QLabel(self)
+            print("Getting banner images......")
+            pixmap = QPixmap('cpc-logo-single.png')
+            pixmap = pixmap.scaled(150, 100)
+            banner_label.setPixmap(pixmap)
+        create_banner()
+
+        self.hot_label = QLabel("Hot")
+        self.hot_label.setObjectName("hot_label")
+        self.hot_label.setMaximumHeight(25)
+
+        self.more_btn = more_btn = QPushButton("More", self)
+        more_btn.setObjectName("more_btn")
+        more_btn.setFixedSize(18, 18)
+
+        def create_indus_trans():
+            self.trans_label = trans_label = QLabel(self)
+            print("Getting trans images......")
+            pixmap = QPixmap('cpc-logo-single.png')
+            pixmap = pixmap.scaled(75, 75)
+            trans_label.setPixmap(pixmap)
+        create_indus_trans()
+
+        def create_indus_forest():
+            self.forest_label = forest_label = QLabel(self)
+            print("Getting trans images......")
+            pixmap = QPixmap('cpc-logo-single.png')
+            pixmap = pixmap.scaled(75, 75)
+            forest_label.setPixmap(pixmap)
+        create_indus_forest()
+
+        def create_indus_medicine():
+            self.medicine_label = medicine_label = QLabel(self)
+            print("Getting trans images......")
+            pixmap = QPixmap('cpc-logo-single.png')
+            pixmap = pixmap.scaled(75, 75)
+            medicine_label.setPixmap(pixmap)
+        create_indus_medicine()
+
+        self.recom_label = QLabel("Recommended")
+        self.recom_label.setObjectName("recom_label")
+        self.recom_label.setMaximumHeight(25)
+
+        def set_layout():
+            self.main_layout = QVBoxLayout(self)
+            self.main_layout.addWidget(self.banner_label)
+            self.main_layout.addSpacing(1)
+            self.main_layout.addWidget(self.hot_label)
+
+            self.hot_layout = QHBoxLayout(self)
+            self.hot_layout.addSpacing(0)
+            self.hot_layout.addWidget(self.hot_label)
+            self.hot_layout.addSpacing(100)
+            self.hot_layout.addWidget(more_btn)
+            self.main_layout.addLayout(self.hot_layout)
+            self.main_layout.addSpacing(1)
+
+            self.hot_img_layout = QHBoxLayout(self)
+            self.hot_img_layout.addSpacing(0)
+            self.hot_img_layout.addWidget(self.trans_label)
+            self.hot_img_layout.addSpacing(10)
+            self.hot_img_layout.addWidget(self.forest_label)
+            self.hot_img_layout.addSpacing(10)
+            self.hot_img_layout.addWidget(self.medicine_label)
+            self.main_layout.addLayout(self.hot_img_layout)
+            self.main_layout.addSpacing(1)
+
+            self.main_layout.addWidget(self.recom_label)
+
+        set_layout()
+
+        print("Loading stylesheet of cloud tab widget")
+
+
 class SideBar(QScrollArea):
     def __init__(self, parent):
         super().__init__(parent)
@@ -313,6 +402,7 @@ class MainWindow(QMainWindow):
             content_tabs.setObjectName("content_tabs")
             content_tabs.tabBar().hide()
             # Temporily modified for easy test by @hyiwr
+            content_tabs.addTab(PopularTab(content_tabs), "")
             print("Adding tabs(cloud, browse, etc.) to content_tabs")
             print("Loading stylesheet to content_tabs")
         add_content_tabs()
@@ -331,8 +421,7 @@ class MainWindow(QMainWindow):
             main_layout.addWidget(self.header, 0, 0, 1, 2)
             main_layout.addWidget(self.sidebar, 1, 0, 9, 2)
 
-
-            # main_layout.addWidget(self.content_tabs, 1, 1)
+            main_layout.addWidget(self.content_tabs, 1, 1)
 
             main_layout.setRowStretch(0, 1)
             main_layout.setRowStretch(1, 10)
