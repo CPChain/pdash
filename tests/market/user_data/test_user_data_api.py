@@ -7,6 +7,8 @@ from cpchain.crypto import ECCipher
 from cpchain.utils import join_with_root, config
 
 HOST = "http://localhost:8083"
+private_key_file = 'tests/market/assets/UTC--2018-01-25T08-04-38.217120006Z--22114f40ed222e83bbd88dc6cbb3b9a136299a23'
+private_key_password_file = 'tests/market/assets/password'
 
 
 def generate_nonce_signature(priv_key, nonce):
@@ -18,8 +20,8 @@ def generate_nonce_signature(priv_key, nonce):
 class TestUserDataApi(unittest.TestCase):
 
     def setUp(self):
-        private_key_file_path = join_with_root(config.wallet.private_key_file)
-        password_path = join_with_root(config.wallet.private_key_password_file)
+        private_key_file_path = join_with_root(private_key_file)
+        password_path = join_with_root(private_key_password_file)
 
         with open(password_path) as f:
             password = f.read()
@@ -37,17 +39,29 @@ class TestUserDataApi(unittest.TestCase):
         header["MARKET-KEY"] = self.pub_key_string
         header["MARKET-TOKEN"] = token
 
-        # ======== TODO test save upload file info in wallet ========
+        # ======== test save upload file info in wallet ========
         self._save_upload_file_info(header=header)
 
-        # ======== TODO test save buyer file info in wallet ========
+        # ======== test save buyer file info in wallet ========
         self._save_buyer_file_info(header=header)
 
-        # ======== TODO test query latest version info in wallet ========
+        # ======== test query latest version info in wallet ========
         self._query_latest_version(header=header)
 
-        # ======== TODO test pull user data in wallet ========
+        # ======== test pull user data in wallet ========
         self._pull_user_data(header=header)
+
+        # ======== TODO add bookmark =========
+        self._add_bookmark(header=header)
+
+        # ======== TODO query bookmarks =========
+        self._query_bookmarks(header=header)
+
+        # ======== TODO add tag =========
+        self._add_tag(header=header)
+
+        # ======== TODO query tags =========
+        self._query_tags(header=header)
 
     def _login_and_get_nonce(self, header):
         payload = {"public_key": self.pub_key_string}
@@ -175,5 +189,57 @@ class TestUserDataApi(unittest.TestCase):
 
         version = parsed_json['data']['version']
         print("version:%s" % version)
+        status = parsed_json['status']
+        self.assertEqual(1,status)
+
+    def _add_bookmark(self, header):
+        print("======== add bookmark ========")
+
+        payload = {"public_key": self.pub_key_string,
+                   "market_hash": "market_hash", "name": "name"}
+        url = '%s/user_data/v1/bookmark/' % HOST
+        response = requests.post(url, headers=header, json=payload)
+        self.assertEqual(response.status_code, 200)
+        parsed_json = json.loads(response.text)
+        print(response.text)
+        self.assertEqual(parsed_json['status'], 1)
+        message = parsed_json['message']
+        print("message:%s" % message)
+
+    def _query_bookmarks(self, header):
+        print("======== query bookmarks ========")
+        url = '%s/user_data/v1/bookmark/' % HOST
+        response = requests.get(url=url, headers=header)
+        print("response:%s" % response)
+        print(response.text)
+        parsed_json = json.loads(response.text)
+
+        bookmarks = parsed_json['data']['bookmarks']
+        print("bookmarks:%s" % bookmarks)
+        status = parsed_json['status']
+        self.assertEqual(1, status)
+
+    def _add_tag(self,header):
+        print("======== add tag ========")
+        payload = {"tag": "abc"}
+        url = '%s/user_data/v1/tag/' % HOST
+        response = requests.post(url, headers=header, json=payload)
+        self.assertEqual(response.status_code, 200)
+        parsed_json = json.loads(response.text)
+        print(response.text)
+        self.assertEqual(parsed_json['status'], 1)
+        message = parsed_json['message']
+        print("message:%s" % message)
+
+    def _query_tags(self,header):
+        print("======== query tags ========")
+        url = '%s/user_data/v1/tag/' % HOST
+        response = requests.get(url=url, headers=header)
+        print("response:%s" % response)
+        print(response.text)
+        parsed_json = json.loads(response.text)
+
+        tags = parsed_json['data']['tags']
+        print("tags:%s" % tags)
         status = parsed_json['status']
         self.assertEqual(1,status)

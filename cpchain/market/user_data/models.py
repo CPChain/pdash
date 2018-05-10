@@ -47,3 +47,26 @@ class UserInfoVersion(models.Model):
 
     def __str__(self):
         return self.public_key
+
+
+class ProductTag(models.Model):
+    """
+    The Product Tag model.
+    """
+    tag = models.CharField(_("tag"), max_length=20)
+
+    def __str__(self):
+        return self.tag
+
+
+class Bookmark(models.Model):
+    """
+    The user bookmark model.
+    """
+    public_key = models.CharField(_("publicKey"), max_length=200)
+    market_hash = models.CharField(_("market hash"), max_length=256,null=False)
+    name = models.CharField('name', max_length=50)
+    created = models.DateTimeField('Created', auto_now_add=True)
+
+    def __str__(self):
+        return self.public_key
