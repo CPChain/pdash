@@ -114,16 +114,16 @@ class MarketClient:
         print(confirm_info)
 
     @inlineCallbacks
-    def carousel(self):
+    def get_carousel(self):
         header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key, 'MARKET-TOKEN': self.token}
         data = {''}
 
     @inlineCallbacks
-    def hot_industry(self):
+    def get_hot_tag(self):
         header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key, 'MARKET-TOKEN': self.token}
 
     @inlineCallbacks
-    def promotion(self):
+    def get_promotion(self):
         header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key, 'MARKET-TOKEN': self.token}
 
     @inlineCallbacks
