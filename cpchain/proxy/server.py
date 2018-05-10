@@ -22,7 +22,7 @@ from cpchain.storage import IPFSStorage
 from cpchain.proxy.proxy_db import Trade, ProxyDB
 
 from cpchain.chain.trans import ProxyTrans
-from cpchain.chain.utils import default_web3
+from cpchain.chain.utils import default_w3
 from cpchain.utils import join_with_root, Encoder
 from eth_utils import to_bytes
 
