@@ -189,25 +189,25 @@ class Header(QFrame):
         create_search_bar()
 
         def create_btns():
-            self.prev_btn = QPushButton("<", self)
+            self.prev_btn = QPushButton("", self)
             self.prev_btn.setObjectName("prev_btn")
 
-            self.nex_btn = QPushButton(">", self)
+            self.nex_btn = QPushButton("", self)
             self.nex_btn.setObjectName("nex_btn")
 
-            self.download_btn = QPushButton("Download", self)
+            self.download_btn = QPushButton("", self)
             self.download_btn.setObjectName("download_btn")
 
-            self.upload_btn = QPushButton("Upload", self)
+            self.upload_btn = QPushButton("", self)
             self.upload_btn.setObjectName("upload_btn")
 
-            self.message_btn = QPushButton("Message", self)
+            self.message_btn = QPushButton("", self)
             self.message_btn.setObjectName("message_btn")
 
-            self.profilepage_btn = QPushButton("Profile", self)
+            self.profilepage_btn = QPushButton("", self)
             self.profilepage_btn.setObjectName("profilepage_btn")
 
-            self.profile_btn = QPushButton("▼", self)
+            self.profile_btn = QPushButton("", self)
             self.profile_btn.setObjectName("profile_btn")
 
             def create_popmenu():
