@@ -59,15 +59,15 @@ class SideBar(QScrollArea):
 
         def add_labels():
             self.trend_label = QLabel("Trending")
-            self.trend_label.setObjectName(trend_label)
+            self.trend_label.setObjectName("trend_label")
             self.trend_label.setMaximumHeight(25)
 
             self.mine_label = QLabel("Mine")
-            self.mine_label.setObjectName(mine_label)
+            self.mine_label.setObjectName("mine_label")
             self.trend_label.setMaximumHeight(25)
 
             self.treasure_label = QLabel("Treasure")
-            self.treasure_label.setObjectName(treasure_label)
+            self.treasure_label.setObjectName("treasure_label")
             self.treasure_label.setMaximumHeight(25)
         add_labels()
 
@@ -85,7 +85,7 @@ class SideBar(QScrollArea):
             self.treasure_list.addItem(QListWidgetItem(get_icon("browse_market.png"), "Collection"))
             self.treasure_list.addItem(QListWidgetItem(get_icon("browse_market.png"), "Shopping Cart"))
 
-            self.feature_list.setCurrentRow(0)
+            self.trending_list.setCurrentRow(0)
         add_lists()
 
         def bind_slots():
@@ -324,18 +324,21 @@ class MainWindow(QMainWindow):
 
         # set layout
         def set_layout():
-            # cf. http://yu00.hatenablog.com/entry/2015/09/17/204338
-            self.main_layout = main_layout = QVBoxLayout()
-            main_layout.addWidget()
+            self.main_layout = main_layout = QGridLayout()
+            main_layout.setSpacing(0)
+            main_layout.setContentsMargins(0, 0, 0, 0)
 
-            # Temporily modified for easy test by @hyiwr
-            print("Adding widget sidebar......")
-            main_layout.addWidget(self.header, 0, 1)
-            # Temporily modified for easy test by @hyiwr
-            print("Adding widget content_tabs......")
+            main_layout.addWidget(self.header, 0, 0, 1, 2)
+            main_layout.addWidget(self.sidebar, 1, 0, 9, 2)
+
+
+            # main_layout.addWidget(self.content_tabs, 1, 1)
 
             main_layout.setRowStretch(0, 1)
-            main_layout.setRowStretch(1, 9)
+            main_layout.setRowStretch(1, 10)
+
+
+            print("Adding widget content_tabs......")
 
             wid = QWidget(self)
             wid.setLayout(self.main_layout)
