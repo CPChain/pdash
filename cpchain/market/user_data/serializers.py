@@ -65,18 +65,8 @@ class ProductTagSerializer(serializers.ModelSerializer):
         fields = ('tag',)
 
     def create(self, validated_data):
-        # check if the same tag exist
-        tag_name = validated_data['tag']
-        query_set = ProductTag.objects.filter(tag=tag_name)
-        if query_set:
-            logging.debug("existing the same tag:%s" % tag_name )
-            return query_set[0]
-
-        t = ProductTag(
-            tag=tag_name,
-        )
-        t.save()
-        return t
+        obj, created = ProductTag.objects.get_or_create(**validated_data)
+        return obj
 
 
 class BookmarkSerializer(serializers.ModelSerializer):
@@ -85,10 +75,5 @@ class BookmarkSerializer(serializers.ModelSerializer):
         fields = ('market_hash','name','public_key','created')
 
     def create(self, validated_data):
-        bookmark = Bookmark(
-            market_hash=validated_data['market_hash'],
-            name = validated_data['name'],
-            public_key=validated_data['public_key'],
-        )
-        bookmark.save()
+        bookmark, created = Bookmark.objects.get_or_create(**validated_data)
         return bookmark

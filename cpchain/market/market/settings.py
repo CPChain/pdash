@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'cpchain.market.account',
     'cpchain.market.product',
     'cpchain.market.user_data',
+    'cpchain.market.main',
 
     'cpchain.market.api',
 ]
