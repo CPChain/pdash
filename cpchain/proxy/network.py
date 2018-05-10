@@ -26,14 +26,13 @@ def generate_peer_id():
     return h.digest()
 
 class PeerProtocol(protocol.DatagramProtocol):
-    def __init__(self, port=None, timeout=5):
+    def __init__(self, peer_info=None, timeout=5):
         self.peer_id = generate_peer_id()
         self.addr = None
         self.peers = {}
         self.request = {}
         self.timeout = timeout
-
-        self.refresh_loop = LoopingCall(self.refresh_peers)
+        self.peer_info = peer_info
 
     def tranaction_timeout(self, tid):
         self.request[tid][0].callback((False, tid))
@@ -67,17 +66,12 @@ class PeerProtocol(protocol.DatagramProtocol):
     def dummy_callback(self, result):
         return result
 
-    def run(self, port):
-        port = port or 5678
-        self.refresh_loop.start(5)
-
-        return reactor.listenUDP(port, self)
-
     def datagramReceived(self, data, addr):
         msg = umsgpack.unpackb(data)
 
         if msg['type'] == 'ping':
             peer_id = msg['peer_id']
+            peer_info = msg['peer_info']
 
             if peer_id in self.peers:
                 peer = self.peers[peer_id]
@@ -91,6 +85,7 @@ class PeerProtocol(protocol.DatagramProtocol):
                 # welcome new peer
                 peer = {
                     'addr': addr,
+                    'peer_info': peer_info,
                     'ts': time.time()
                 }
 
@@ -101,6 +96,7 @@ class PeerProtocol(protocol.DatagramProtocol):
 
         elif msg['type'] == 'share_peer':
             peer_id = msg['peer_id']
+            peer_info = msg['peer_info']
 
             if peer_id in self.peers:
                 # other peer already shared this peer
@@ -109,6 +105,7 @@ class PeerProtocol(protocol.DatagramProtocol):
             else:
                 peer = {
                     'addr': (msg['addr'][0], msg['addr'][1]),
+                    'peer_info': peer_info,
                     'ts': time.time()
                 }
                 self.peers[peer_id] = peer
@@ -120,7 +117,9 @@ class PeerProtocol(protocol.DatagramProtocol):
 
             data = []
             for peer_id in self.peers:
-                data.append(self.peers[peer_id]['addr'])
+                peer = self.peers[peer_id]
+                data.append((peer['addr'], peer['peer_info']))
+
             response = {
                 'type': 'response',
                 'tid': tid,
@@ -151,11 +150,14 @@ class PeerProtocol(protocol.DatagramProtocol):
     def share_peers(self, addr):
 
         for peer_id in self.peers:
-            peer_addr = self.peers[peer_id]['addr']
+            peer = self.peers[peer_id]
+            peer_addr = peer['addr']
+            peer_info = peer['peer_info']
             msg = {
                 'type': 'share_peer',
                 'tid': generate_tid(),
                 'peer_id': peer_id,
+                'peer_info': peer_info,
                 'addr': peer_addr
             }
 
@@ -170,6 +172,7 @@ class PeerProtocol(protocol.DatagramProtocol):
             'type': 'ping',
             'tid': generate_tid(),
             'peer_id': self.peer_id,
+            'peer_info': self.peer_info
             }
 
         self.send_msg(msg, addr)
@@ -190,36 +193,3 @@ class PeerProtocol(protocol.DatagramProtocol):
 
         for peer in expired_peers:
             self.peers.pop(peer)
-
-
-
-if __name__ == '__main__':
-    # for testing purpose
-    log_format='%(asctime)s [%(levelname)s]%(funcName)s: %(message)s'
-    logging.basicConfig(level=logging.DEBUG, format=log_format)
-
-
-    if sys.argv[1] == 'tracker':
-        node = PeerProtocol()
-        node.run(5678)
-
-    elif sys.argv[1] == 'peer':
-        node = PeerProtocol()
-        node.run(4567)
-        node.ping(('192.168.0.169', 5678))
-
-    elif sys.argv[1] == 'client':
-        node = PeerProtocol()
-        node.run(7890)
-
-        def print_node(result):
-            success, data = result
-            if success:
-                print(data)
-            reactor.stop()
-
-            node.transport.stopListening()
-
-        node.select_peer(('192.168.0.169', 5678)).addCallback(print_node)
-
-    reactor.run()
