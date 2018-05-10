@@ -1,0 +1,102 @@
+QLineEdit#searchbar{
+    margin-left: 5px;
+    /* border: 1px solid #724f61;    */
+    border-radius: 10px;
+    /* color: #0f0000; */
+    color: #ddc9c9;
+    /* background: #5b4b19; */
+    /* background: #423611; */
+    background: #FCFCFC;
+}
+
+QLineEdit#searchbar:pressed {
+    color: #f3f4f7;
+}
+
+QPushButton#prev_btn {
+    min-height: 24px; 
+    min-width: 30px;  
+    max-width: 30px; 
+    max-height: 24px; 
+    padding: 5px 5px 5px 5px;
+    margin: 0 0 0 0;
+    color: #98a080;
+    /*border-radius: 10px;*/
+    /*background: #29426b;*/
+    border-image: url(${asset_dir}/icons/back.png); 
+    border-top: 3px transparent;
+    border-bottom: 3px transparent;
+    border-right: 3px transparent;
+    border-left: 3px transparent;
+}
+
+QPushButton#nex_btn {
+    min-height: 24px; 
+    min-width: 30px;  
+    max-width: 30px; 
+    max-height: 24px; 
+    padding: 5px 5px 5px 5px;
+    margin: 0 0 0 0;
+    color: #98a080;
+    border-radius: 10px;
+    background: #29426b;
+    border-image: url(${asset_dir}/icons/toward disabled.png); 
+    border-top: 3px transparent;
+    border-bottom: 3px transparent;
+    border-right: 3px transparent;
+    border-left: 3px transparent;
+}
+
+QPushButton#nex_btn {
+
+}
+
+QPushButton#nex_btn {
+
+}
+
+QPushButton#upload_btn {
+    min-height: 22px; 
+    min-width: 22px;  
+    max-width: 22px; 
+    max-height: 22px; 
+    padding: 5px 5px 5px 5px;
+    margin: 0 0 0 0;
+    color: #98a080;
+    border-radius: 10px;
+    background: #29426b;
+    border-image: url(${asset_dir}/icons/upload_btn.png); 
+    border-top: 3px transparent;
+    border-bottom: 3px transparent;
+    border-right: 3px transparent;
+    border-left: 3px transparent;
+}
+
+QPushButton#search_btn {
+    border-image: url(${asset_dir}/icons/search_btn.png); 
+}
+
+QPushButton#login_btn {
+    margin-right: 11px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #8c6a6a;
+    border: 1px solid #3a2f2f; 
+    background: #443b3b;
+}
+
+QPushButton#profilepage_btn:pressed {
+    background: #ffffff;
+}
+
+QPushButton#profilepage_btn {
+    background-color: red;
+    border-style: outset;
+    border-width: 2px;
+    border-color: beige;
+}
+
+
+QPushButton#login_btn:hover {
+    color: #efacac;
+}
