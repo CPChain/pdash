@@ -36,7 +36,6 @@ web3
 "
 
 wallet_pkgs="
-#wallet(chain)
 eth-keyfile
 web3
 qt5reactor
