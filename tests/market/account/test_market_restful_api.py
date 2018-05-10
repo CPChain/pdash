@@ -64,7 +64,7 @@ class TestMarketApi(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         parsed_json = json.loads(response.text)
         # print(response.text)
-        self.assertEqual(parsed_json['success'], True)
+        self.assertEqual(parsed_json['status'], 1)
         nonce = parsed_json['message']
         return nonce
 
@@ -76,7 +76,7 @@ class TestMarketApi(unittest.TestCase):
         confirm_resp = requests.post(url, headers=header, json=payload)
         self.assertEqual(confirm_resp.status_code, 200)
         parsed_json = json.loads(confirm_resp.text)
-        self.assertEqual(parsed_json['success'], True)
+        self.assertEqual(parsed_json['status'], 1)
         token = parsed_json['message']
         print("token:%s" % token)
         return token
