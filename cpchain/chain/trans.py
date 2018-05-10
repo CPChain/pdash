@@ -12,9 +12,9 @@ class Trans:
 
     # NB contract object belongs to web3, and so does account.
     # we shouldn't pass params like this.)
-    def __init__(self, web3, contract_name):
+    def __init__(self, web3, bin_path, contract_name):
         self.web3 = web3
-        contract_interface = utils.read_contract_interface(contract_name)
+        contract_interface = utils.read_contract_interface(bin_path, contract_name)
         self.contract = web3.eth.contract(address=utils.read_contract_address(contract_name),
                                           abi=contract_interface['abi'],
                                           bytecode=contract_interface['bin'])
