@@ -3,7 +3,6 @@ import sys, os
 import os.path as osp
 import string
 
-from scipy.ndimage import imread
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout,
                              QVBoxLayout, QGridLayout, QWidget, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel,
@@ -23,7 +22,7 @@ from twisted.internet import threads, defer
 from twisted.internet.task import LoopingCall
 
 #for temp test:
-root_dir = "/home/blockchain/CPChain/cpchain/"
+root_dir = "~/CPChain/cpchain/"
 #
 
 # utils
@@ -107,11 +106,15 @@ class Header(QFrame):
             self.upload_btn = QPushButton("Upload", self)
             self.upload_btn.setObjectName("upload_btn")
 
+            self.message_btn = QPushButton("Message", self)
+            self.message_btn.setObjectName("message_btn")
+
             self.profilepage_btn = QPushButton("Profile", self)
             self.profilepage_btn.setObjectName("profilepage_btn")
 
             self.profile_btn = QPushButton("▼", self)
             self.profile_btn.setObjectName("profile_btn")
+
             def create_popmenu():
                 self.profile_menu = profile_menu = QMenu('Profile', self)
                 profile_view_act = QAction('Profile', self)
@@ -153,9 +156,10 @@ class Header(QFrame):
             main_layout.addSpacing(1)
             main_layout.addWidget(self.upload_btn)
             main_layout.addSpacing(1)
+            main_layout.addWidget(self.message_btn)
+            main_layout.addSpacing(1)
             main_layout.addWidget(self.profilepage_btn)
             main_layout.addWidget(self.profile_btn)
-
 
             self.setLayout(self.main_layout)
 
@@ -185,6 +189,9 @@ class Header(QFrame):
     def mouseReleaseEvent(self, event):
         if event.buttons() == Qt.LeftButton:
             self.m_drag = False
+
+
+
 
 
 
