@@ -11,6 +11,8 @@ from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, 
 from PyQt5.QtCore import Qt, QSize, QPoint, pyqtSignal
 from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem
 
+from cpchain import config, root_dir
+
 # do it before any other twisted code.
 def install_reactor():
     global app
@@ -20,10 +22,6 @@ install_reactor()
 
 from twisted.internet import threads, defer
 from twisted.internet.task import LoopingCall
-
-#for temp test:
-root_dir = "~/CPChain/cpchain/"
-#
 
 # utils
 def get_icon(name):
@@ -327,9 +325,8 @@ class MainWindow(QMainWindow):
         # set layout
         def set_layout():
             # cf. http://yu00.hatenablog.com/entry/2015/09/17/204338
-            self.main_layout = main_layout = QGridLayout()
-            main_layout.setSpacing(0)
-            main_layout.setContentsMargins(0, 0, 0, 0)
+            self.main_layout = main_layout = QVBoxLayout()
+            main_layout.addWidget()
 
             # Temporily modified for easy test by @hyiwr
             print("Adding widget sidebar......")
