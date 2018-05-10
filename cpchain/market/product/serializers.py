@@ -5,6 +5,16 @@ from rest_framework_elasticsearch.es_serializer import ElasticModelSerializer
 from .search_indexes import ProductIndex
 
 
+class RecommendProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = (
+            'id', 'owner_address', 'title', 'description', 'tags', 'price',
+            'created', 'seq', 'file_md5',
+            'signature', 'msg_hash')
+
+
+
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
