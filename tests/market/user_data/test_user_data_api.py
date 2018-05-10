@@ -196,7 +196,7 @@ class TestUserDataApi(unittest.TestCase):
         print("======== add bookmark ========")
 
         payload = {"public_key": self.pub_key_string,
-                   "market_hash": "market_hash", "name": "name"}
+                   "market_hash": "market_hash", "name": "name1"}
         url = '%s/user_data/v1/bookmark/' % HOST
         response = requests.post(url, headers=header, json=payload)
         self.assertEqual(response.status_code, 200)
@@ -221,7 +221,7 @@ class TestUserDataApi(unittest.TestCase):
 
     def _add_tag(self,header):
         print("======== add tag ========")
-        payload = {"tag": "abc"}
+        payload = {"tag": "abc11"}
         url = '%s/user_data/v1/tag/' % HOST
         response = requests.post(url, headers=header, json=payload)
         self.assertEqual(response.status_code, 200)
