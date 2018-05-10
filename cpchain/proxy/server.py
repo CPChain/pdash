@@ -145,7 +145,7 @@ class SSLServerProtocol(NetstringReceiver):
         password_path = join_with_root(config.wallet.private_key_password_file)
         with open(password_path) as f:
             password = f.read()
-        priv_key, pub_key = ECCipher.load_key_pair_from_private_key(private_key_file_path, password)
+        priv_key, pub_key = ECCipher.load_key_pair_from_keystore(private_key_file_path, password)
         priv_key_bytes = Encoder.str_to_base64_byte(priv_key)
         digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
         digest.update(ECCipher.generate_signature(priv_key_bytes, to_bytes(self.trade.order_id)))

@@ -1,25 +1,26 @@
+import logging
+
 import treq
 from twisted.internet.defer import inlineCallbacks
 
-from cpchain import crypto
+from cpchain.crypto import ECCipher
 
 from cpchain.utils import join_with_root, config
 
 from cpchain.wallet.fs import publish_file_update
 
+logger = logging.getLogger(__name__)  # pylint: disable=locally-disabled, invalid-name
+
 
 class MarketClient:
-    def __init__(self, main_wnd):
-        self.main_wnd = main_wnd
-
-        # self.client = HTTPClient(reactor)
-        self.url = config.market.market_url
+    def __init__(self, wallet):
+        self.wallet = wallet
+        self.account = self.wallet.accounts.default_account
+        self.url = config.market.market_url_test
         private_key_file_path = join_with_root(config.wallet.private_key_file)
-        password_path = join_with_root(config.wallet.private_key_password_file)
-        with open(password_path) as f:
-            password = f.read()
-        self.priv_key, self.pub_key = crypto.ECCipher.geth_load_key_pair_from_private_key(
-            private_key_file_path, password)
+        # password_path = join_with_root(config.wallet.private_key_password_file)
+        # with open(password_path) as f:
+        #     password = f.read()
         self.token = ''
         self.nonce = ''
         self.message_hash = ''
@@ -31,44 +32,37 @@ class MarketClient:
     @inlineCallbacks
     def login(self):
         header = {'Content-Type': 'application/json'}
-        data = {'public_key': self.pub_key}
-        try:
-            resp = yield treq.post(url=self.url + 'login/', headers=header, json=data,
-                                   persistent=False)
-            confirm_info = yield treq.json_content(resp)
-            print(confirm_info)
-            self.nonce = confirm_info['message']
-            print('login succeed')
-        except Exception as err:
-            print(err)
-
-        try:
-            signature = crypto.ECCipher.geth_sign(self.priv_key, self.nonce)
-            header_confirm = {'Content-Type': 'application/json'}
-            data_confirm = {'public_key': self.pub_key, 'code': signature}
-            resp = yield treq.post(self.url + 'confirm/', headers=header_confirm, json=data_confirm,
-                                   persistent=False)
-            confirm_info = yield treq.json_content(resp)
-            print(confirm_info)
-            self.token = confirm_info['message']
-            print('login confirmed')
-        except Exception as err:
-            print(err)
+        data = {'public_key': self.account.pub_key}
+        resp = yield treq.post(url=self.url + 'login/', headers=header, json=data,
+                               persistent=False)
+        confirm_info = yield treq.json_content(resp)
+        logger.debug("login response: %", confirm_info)
+        self.nonce = confirm_info['message']
+        logger.debug('nonce: %', self.nonce)
+        signature = ECCipher.generate_string_signature(self.account.priv_key, self.nonce)
+        header_confirm = {'Content-Type': 'application/json'}
+        data_confirm = {'public_key': self.account.pub_key, 'code': signature}
+        resp = yield treq.post(self.url + 'confirm/', headers=header_confirm, json=data_confirm,
+                               persistent=False)
+        confirm_info = yield treq.json_content(resp)
+        logger.debug('login confirm: %', confirm_info)
+        self.token = confirm_info['message']
+        logger.debug('token: %', self.token)
         return confirm_info['message']
 
     @inlineCallbacks
     def publish_product(self, selected_id, title, description, price, tags, start_date, end_date,
                         file_md5):
         header = {'Content-Type': 'application/json'}
-        header['MARKET-KEY'] = self.pub_key
+        header['MARKET-KEY'] = self.account.pub_key
         header['MARKET-TOKEN'] = self.token
-        data = {'owner_address': self.pub_key, 'title': title, 'description': description,
+        data = {'owner_address': self.account.pub_key, 'title': title, 'description': description,
                 'price': price, 'tags': tags, 'start_date': start_date, 'end_date': end_date,
                 'file_md5': file_md5}
-        signature_source = str(self.pub_key) + str(title) + str(description) + str(
+        signature_source = str(self.account.pub_key) + str(title) + str(description) + str(
             price) + MarketClient.str_to_timestamp(start_date) + MarketClient.str_to_timestamp(
             end_date) + str(file_md5)
-        signature = crypto.ECCipher.geth_sign(self.priv_key, signature_source)
+        signature = ECCipher.generate_string_signature(self.account.priv_key, signature_source)
         data['signature'] = signature
         resp = yield treq.post(self.url + 'product/publish/', headers=header, json=data)
         confirm_info = yield treq.json_content(resp)
@@ -81,7 +75,7 @@ class MarketClient:
 
     @inlineCallbacks
     def change_product_status(self, status):
-        header = {'Content-Type': 'application/json', 'MARKET-KEY': self.pub_key, 'MARKET-TOKEN': self.token}
+        header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key, 'MARKET-TOKEN': self.token}
         data = {'status': status}
         import treq
         resp = yield treq.post(url=self.url+'product_change', headers=header, json=data)
@@ -94,6 +88,17 @@ class MarketClient:
         header = {'Content-Type': 'application/json'}
         url = self.url + 'product/search/?keyword=' + str(keyword)
         resp = yield treq.get(url=url, headers=header)
+        logger.debug("response: ", resp)
+        confirm_info = yield treq.json_content(resp)
+        print('product info: ')
+        print(confirm_info)
+        return confirm_info
+
+    @inlineCallbacks
+    def query_by_tag(self, tag):
+        header = {'Content-Type': 'application/json'}
+        url = self.url + 'product/search/?keyword=[' + str(tag) + ']'
+        resp = yield treq.get(url=url, headers=header)
         confirm_info = yield treq.json_content(resp)
         print('product info: ')
         print(confirm_info)
@@ -101,9 +106,43 @@ class MarketClient:
 
     @inlineCallbacks
     def logout(self):
-        header = {'Content-Type': 'application/json', 'MARKET-KEY': self.pub_key, 'MARKET-TOKEN': self.token}
-        data = {'public_key': self.pub_key, 'token': self.token}
-        import treq
+        header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key, 'MARKET-TOKEN': self.token}
+        data = {'public_key': self.account.pub_key, 'token': self.token}
         resp = yield treq.post(url=self.url+'logout', headers=header, json=data)
         confirm_info = yield treq.json_content(resp)
         print(confirm_info)
+
+    @inlineCallbacks
+    def query_carousel(self):
+        # try:
+        logger.debug('in query carousel')
+        url = self.url + 'carousel/list/'
+        logger.debug(url)
+        header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key, 'MARKET-TOKEN': self.token}
+        resp = yield treq.get(url=url, headers=header)
+        # logger.debug("response:", resp)
+        confirm_info = yield treq.json_content(resp)
+        print(confirm_info)
+        logger.debug("carousel response: ", confirm_info)
+        # except Exception as err:
+        #     logger.debug(err)
+
+    @inlineCallbacks
+    def query_hot_tag(self):
+        url = self.url + 'hot_tag/list/'
+        header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key,
+                  'MARKET-TOKEN': self.token}
+        resp = yield treq.get(url=url, headers=header)
+        confirm_info = yield treq.json_content(resp)
+        print(confirm_info)
+        logger.debug("carousel response: ", confirm_info)
+
+    @inlineCallbacks
+    def query_promotion(self):
+        url = self.url + 'promotion/list/'
+        header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key,
+                  'MARKET-TOKEN': self.token}
+        resp = yield treq.get(url=url, headers=header)
+        confirm_info = yield treq.json_content(resp)
+        print(confirm_info)
+        logger.debug("carousel response: ", confirm_info)
