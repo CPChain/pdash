@@ -42,76 +42,6 @@ def load_stylesheet(wid, name):
         wid.setStyleSheet(s.substitute(subs))
 
 
-# Copied from MusicPlayer for temp use
-class PicLabel(QLabel):
-
-    def __init__(self, src=None, width=200, height=200, pixMask=None):
-        super(PicLabel, self).__init__()
-        global picsThreadPool
-
-        self.src = None
-
-        self.width = width
-        self.height = height
-
-        self.pixMask = None
-        if pixMask:
-            self.pixMask = pixMask
-        if src:
-            self.setSrc(src)
-
-        if self.width:
-            self.setMaximumSize(self.width, self.height)
-            self.setMinimumSize(self.width, self.height)
-
-    def setSrc(self, src):
-        src = str(src)
-        if 'http' in src or 'https' in src:
-            cacheList = os.listdir(cacheFolder)
-
-            # names = str(src[src.rfind('/')+1:])
-            names = makeMd5(src)
-            localSrc = cacheFolder+'/'+names
-            if names in cacheList:
-                self.setSrc(localSrc)
-                self.src = localSrc
-                return
-
-            task = GetPicture(self, src)
-            picsThreadPool.start(task)
-        else:
-            self.src = src
-            pix = QPixmap(src)
-            pix.load(src)
-            pix = pix.scaled(self.width, self.height)
-            # the size of mask should be equal to that of pix
-            if self.pixMask:
-                mask = QPixmap(self.pixMask)
-                mask = mask.scaled(self.width, self.height)
-                pix.setMask(mask.createHeuristicMask())
-
-            self.setPixmap(pix)
-
-    def getSrc(self):
-        return self.src
-
-
-class GetPicture(QRunnable):
-
-    def __init__(self, widget, src):
-        super(GetPicture, self).__init__()
-        global picsQueue
-        self.widget = widget
-        self.src = src
-
-    def run(self):
-        # names = str(self.src[self.src.rfind('/')+1:])
-        names = makeMd5(self.src)
-        content = Requests.get(self.src).content
-        picsQueue.put([self.widget, content, names])
-
-
-
 class Header(QFrame):
     class SearchBar(QLineEdit):
         def __init__(self, parent=None):
@@ -150,7 +80,10 @@ class Header(QFrame):
 
     def init_ui(self):
         def create_logos():
-            self.logo = logo = Header.LogoLabel(r'cpc-logo-single.png', 32, 32)
+            self.logo_label = logo_label = QLabel(self)
+            pixmap = QPixmap('cpc-logo-single.png')
+            pixmap = pixmap.scaled(32, 32)
+            logo_label.setPixmap(pixmap)
             self.word_label = QLabel(self)
             self.word_label.setText("<b>CPChain</b>")
             print("Pic label has not been set !")
@@ -208,7 +141,7 @@ class Header(QFrame):
         def set_layout():
             self.main_layout = main_layout = QHBoxLayout(self)
             main_layout.setSpacing(0)
-            main_layout.addWidget(self.logo)
+            main_layout.addWidget(self.logo_label)
             main_layout.addWidget(self.word_label)
             main_layout.addSpacing(60)
             main_layout.addWidget(self.prev_btn)
