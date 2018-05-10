@@ -1,6 +1,6 @@
 import logging
 
-import treq
+# import treq
 from twisted.internet.defer import inlineCallbacks
 
 from cpchain.crypto import ECCipher
@@ -17,11 +17,11 @@ class MarketClient:
         self.wallet = wallet
         self.account = self.wallet.accounts.default_account
         # self.client = HTTPClient(reactor)
-        self.url = config.market.market_url
+        self.url = config.market.market_url_test
         private_key_file_path = join_with_root(config.wallet.private_key_file)
-        password_path = join_with_root(config.wallet.private_key_password_file)
-        with open(password_path) as f:
-            password = f.read()
+        # password_path = join_with_root(config.wallet.private_key_password_file)
+        # with open(password_path) as f:
+        #     password = f.read()
         self.token = ''
         self.nonce = ''
         self.message_hash = ''
@@ -88,7 +88,9 @@ class MarketClient:
     def query_product(self, keyword):
         header = {'Content-Type': 'application/json'}
         url = self.url + 'product/search/?keyword=' + str(keyword)
+        import treq
         resp = yield treq.get(url=url, headers=header)
+        logger.debug("response: ", resp)
         confirm_info = yield treq.json_content(resp)
         print('product info: ')
         print(confirm_info)
@@ -108,24 +110,50 @@ class MarketClient:
     def logout(self):
         header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key, 'MARKET-TOKEN': self.token}
         data = {'public_key': self.account.pub_key, 'token': self.token}
-        import treq
         resp = yield treq.post(url=self.url+'logout', headers=header, json=data)
         confirm_info = yield treq.json_content(resp)
         print(confirm_info)
 
     @inlineCallbacks
-    def get_carousel(self):
+    def query_carousel(self):
+        logger.debug('in query carousel')
+        url = self.url + 'carousel/list/'
+        logger.debug(url)
         header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key, 'MARKET-TOKEN': self.token}
-        data = {''}
+        import treq
+        resp = yield treq.get(url=url, headers=header)
+        logger.debug("response:", resp)
+        confirm_info = yield treq.json_content(resp)
+        logger.debug("carousel response: ", confirm_info)
 
     @inlineCallbacks
-    def get_hot_tag(self):
-        header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key, 'MARKET-TOKEN': self.token}
+    def query_hot_tag(self):
+        url = self.url + 'hot_tag/list/'
+        header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key,
+                  'MARKET-TOKEN': self.token}
+        resp = yield treq.get(url=url, headers=header)
+        confirm_info = yield treq.json_content(resp)
+        logger.debug("carousel response: ", confirm_info)
 
     @inlineCallbacks
-    def get_promotion(self):
-        header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key, 'MARKET-TOKEN': self.token}
+    def query_promotion(self):
+        url = self.url + 'promotion/list/'
+        header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key,
+                  'MARKET-TOKEN': self.token}
+        resp = yield treq.get(url=url, headers=header)
+        confirm_info = yield treq.json_content(resp)
+        logger.debug("carousel response: ", confirm_info)
 
     @inlineCallbacks
     def recommended(self):
         header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key, 'MARKET-TOKEN': self.token}
+
+if __name__ == '__main__':
+    logger.debug('in main')
+    from cpchain.wallet import wallet
+    from twisted.internet import reactor
+    wallet = wallet.Wallet(reactor)
+    logger.debug('init wallet')
+    mc = MarketClient(wallet)
+    logger.debug('init mc')
+    mc.query_carousel()
