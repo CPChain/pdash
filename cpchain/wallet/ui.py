@@ -8,7 +8,8 @@ from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, 
                              QVBoxLayout, QGridLayout, QWidget, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel,
                              QWidget, QLineEdit, QSpacerItem, QSizePolicy, QTableWidget, QFormLayout, QComboBox, QTextEdit,
                              QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog)
-from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem
+from PyQt5.QtCore import Qt, QSize, QPoint, pyqtSignal
+from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont
 
 from cpchain import config, root_dir
 
@@ -73,17 +74,17 @@ class SideBar(QScrollArea):
 
         def add_lists():
             self.trending_list = QListWidget()
-            self.trending_list.addItem(QListWidgetItem(get_icon("cloud_store.png"), "Popular"))
-            self.trending_list.addItem(QListWidgetItem(get_icon("publish_data.png"), "Following"))
+            self.trending_list.addItem(QListWidgetItem(get_icon("pop.png"), "Popular"))
+            self.trending_list.addItem(QListWidgetItem(get_icon("following.png"), "Following"))
 
             self.mine_list = QListWidget()
-            self.mine_list.addItem(QListWidgetItem(get_icon("browse_market.png"), "Cloud"))
-            self.mine_list.addItem(QListWidgetItem(get_icon("treasur.png"), "Selling"))
+            self.mine_list.addItem(QListWidgetItem(get_icon("cloud.png"), "Cloud"))
+            self.mine_list.addItem(QListWidgetItem(get_icon("store.png"), "Selling"))
 
             self.treasure_list = QListWidget()
-            self.treasure_list.addItem(QListWidgetItem(get_icon("browse_market.png"), "Purchased"))
-            self.treasure_list.addItem(QListWidgetItem(get_icon("browse_market.png"), "Collection"))
-            self.treasure_list.addItem(QListWidgetItem(get_icon("browse_market.png"), "Shopping Cart"))
+            self.treasure_list.addItem(QListWidgetItem(get_icon("purchased.png"), "Purchased"))
+            self.treasure_list.addItem(QListWidgetItem(get_icon("collection.png"), "Collection"))
+            self.treasure_list.addItem(QListWidgetItem(get_icon("collection.png"), "Shopping Cart"))
 
             self.trending_list.setCurrentRow(0)
         add_lists()
@@ -131,7 +132,7 @@ class SideBar(QScrollArea):
             main_layout.setContentsMargins(0, 10, 0, 0)
             self.setLayout(self.main_layout)
         set_layout()
-
+        load_stylesheet(self, "sidebar.qss")
         print("Loading stylesheet of Sidebar")
 
 
@@ -144,7 +145,7 @@ class Header(QFrame):
 
         def init_ui(self):
             self.setObjectName("searchbar")
-            self.setFixedSize(150, 25)
+            self.setFixedSize(450, 25)
             self.setTextMargins(3, 0, 20, 0)
 
             self.search_btn = search_btn = QPushButton(self)
@@ -175,10 +176,12 @@ class Header(QFrame):
         def create_logos():
             self.logo_label = logo_label = QLabel(self)
             pixmap = QPixmap('cpc-logo-single.png')
-            pixmap = pixmap.scaled(32, 32)
+            pixmap = pixmap.scaled(45, 45)
             logo_label.setPixmap(pixmap)
             self.word_label = QLabel(self)
             self.word_label.setText("<b>CPChain</b>")
+            self.word_label.setFont(QFont("Roman times", 25, QFont.Bold));
+            
             print("Pic label has not been set !")
         create_logos()
 
@@ -237,22 +240,24 @@ class Header(QFrame):
 
         def set_layout():
             self.main_layout = main_layout = QHBoxLayout(self)
-            main_layout.setSpacing(0)
+            #main_layout.setSpacing(0)
             main_layout.addWidget(self.logo_label)
+            main_layout.addSpacing(5)
             main_layout.addWidget(self.word_label)
-            main_layout.addSpacing(60)
+            main_layout.addSpacing(30)
             main_layout.addWidget(self.prev_btn)
             main_layout.addWidget(self.nex_btn)
             main_layout.addSpacing(2)
             main_layout.addWidget(self.search_bar)
             main_layout.addStretch(20)
-            main_layout.addWidget(self.download_btn)
-            main_layout.addSpacing(1)
             main_layout.addWidget(self.upload_btn)
-            main_layout.addSpacing(1)
+            main_layout.addSpacing(10)
             main_layout.addWidget(self.message_btn)
-            main_layout.addSpacing(1)
+            main_layout.addSpacing(10)
+            main_layout.addWidget(self.download_btn)
+            main_layout.addSpacing(10)
             main_layout.addWidget(self.profilepage_btn)
+            main_layout.addSpacing(5)
             main_layout.addWidget(self.profile_btn)
 
             self.setLayout(self.main_layout)
@@ -344,9 +349,9 @@ class MainWindow(QMainWindow):
             wid.setLayout(self.main_layout)
             self.setCentralWidget(wid)
         set_layout()
-
+        load_stylesheet(self, "main_window.qss") 
         print("Seting stylesheet of MainWindow......")
-
+          
         self.show()
 
 
