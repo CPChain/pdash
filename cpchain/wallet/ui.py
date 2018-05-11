@@ -28,6 +28,9 @@ def get_icon(name):
     path = osp.join(root_dir, "cpchain/assets/wallet/icons", name)
     return QIcon(path)
 
+def get_pixm(name):
+    path = osp.join(root_dir, "cpchain/assets/wallet/icons", name)
+    return QPixmap(path)
 
 def load_stylesheet(wid, name):
     path = osp.join(root_dir, "cpchain/assets/wallet/qss", name)
@@ -40,7 +43,6 @@ def load_stylesheet(wid, name):
 
 
 # widgets
-
 class TabContentArea(QFrame): pass
 
 class PopularTab(TabContentArea):
@@ -56,7 +58,7 @@ class PopularTab(TabContentArea):
         def create_banner():
             self.banner_label = banner_label = QLabel(self)
             print("Getting banner images......")
-            pixmap = QPixmap('cpc-logo-single.png')
+            pixmap = get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(150, 100)
             banner_label.setPixmap(pixmap)
         create_banner()
@@ -72,7 +74,7 @@ class PopularTab(TabContentArea):
         def create_indus_trans():
             self.trans_label = trans_label = QLabel(self)
             print("Getting trans images......")
-            pixmap = QPixmap('cpc-logo-single.png')
+            pixmap = get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(75, 75)
             trans_label.setPixmap(pixmap)
         create_indus_trans()
@@ -80,7 +82,7 @@ class PopularTab(TabContentArea):
         def create_indus_forest():
             self.forest_label = forest_label = QLabel(self)
             print("Getting trans images......")
-            pixmap = QPixmap('cpc-logo-single.png')
+            pixmap = get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(75, 75)
             forest_label.setPixmap(pixmap)
         create_indus_forest()
@@ -88,7 +90,7 @@ class PopularTab(TabContentArea):
         def create_indus_medicine():
             self.medicine_label = medicine_label = QLabel(self)
             print("Getting trans images......")
-            pixmap = QPixmap('cpc-logo-single.png')
+            pixmap = get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(75, 75)
             medicine_label.setPixmap(pixmap)
         create_indus_medicine()
@@ -264,7 +266,7 @@ class Header(QFrame):
     def init_ui(self):
         def create_logos():
             self.logo_label = logo_label = QLabel(self)
-            pixmap = QPixmap('cpc-logo-single.png')
+            pixmap = get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(45, 45)
             logo_label.setPixmap(pixmap)
             self.word_label = QLabel(self)
