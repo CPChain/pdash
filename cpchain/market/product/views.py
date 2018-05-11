@@ -286,3 +286,30 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         serializer = ProductSerializer(queryset, many=True)
         return Response(data=serializer.data)
+
+
+class RecommendProductsAPIView(APIView):
+    """
+    API endpoint that allows query products.
+    """
+    queryset = Product.objects.all()
+    serializer_class = RecommendProductSerializer
+    permission_classes = (AllowAny,)
+
+    def get(self, request):
+        # FIXME query current user following tags,query top 10 products with tags
+        queryset = Product.objects.filter(status=0)[0:10]
+        serializer = RecommendProductSerializer(queryset, many=True)
+        products = serializer.data
+        product_list = []
+        for p in products:
+            pk = p['owner_address']
+            u = WalletUser.objects.get(public_key=pk)
+            username = '' if not u else u.username
+
+            p['username'] = username
+            # FIXME query rating from db
+            p['rating'] = 3.5
+            product_list.append(p)
+        return JsonResponse({'status': 1, 'message': 'success', 'data': product_list})
+
