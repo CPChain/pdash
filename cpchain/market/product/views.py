@@ -308,8 +308,39 @@ class RecommendProductsAPIView(APIView):
             username = '' if not u else u.username
 
             p['username'] = username
-            # FIXME query rating from db
+            # FIXME query rating from comment table
             p['rating'] = 3.5
             product_list.append(p)
         return JsonResponse({'status': 1, 'message': 'success', 'data': product_list})
 
+
+# FIXME
+class ProductSalesQuantityAddAPIView(APIView):
+    """
+    API endpoint that allows query products.
+    """
+    queryset = Product.objects.all()
+    serializer_class = ProductSalesQuantitySerializer
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        return self.update_product_sales_quantity(request, "1")
+
+    def update_product_sales_quantity(self, request, status):
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        logger.debug("public_key:%s status:%s" % (public_key, status))
+        if public_key is None:
+            return create_invalid_response()
+        try:
+            product = Product.objects.get(owner_address=public_key, msg_hash=request.data['msg_hash'])
+        except Product.DoesNotExist:
+            return create_invalid_response()
+        data = request.data
+        data['status'] = status
+        serializer = ProductUpdateSerializer(product, data=data)
+        if not serializer.is_valid(raise_exception=True):
+            return create_invalid_response()
+        logger.debug("update product status")
+        serializer.update(product, data)
+        response = create_success_response()
+        return response

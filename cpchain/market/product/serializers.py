@@ -59,6 +59,17 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
         return instance
 
 
+class ProductSalesQuantitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ('quantity','market_hash')
+
+    def update(self, instance, validated_data):
+        instance.quantity += 1
+        instance.save()
+        return instance
+
+
 class ElasticProductSerializer(ElasticModelSerializer):
     class Meta:
         model = Product

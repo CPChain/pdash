@@ -18,4 +18,5 @@ urlpatterns = [
     url(r'^product_paged/search/$', ProductPagedSearchAPIViewSet.as_view(), name='product_paged_search'),
     url(r'^es_product/search/$', ESProductView.as_view(), name='es_product_search'),
     url(r'^recommend_product/list/$', RecommendProductsAPIView.as_view(), name='recommend_products'),
+    url(r'^product_sales_quantity/add/$', ProductSalesQuantityAddAPIView.as_view(), name='recommend_products'),
 ]

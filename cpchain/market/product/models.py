@@ -77,3 +77,15 @@ class WalletMsgSequence(models.Model):
 
     def __str__(self):
         return self.public_key
+
+
+class SalesQuantity(models.Model):
+    """
+    The SalesQuantity model.
+    """
+    market_hash = models.CharField(_("market hash"), max_length=256,null=False)
+    quantity = models.IntegerField(default=0)
+    created = models.DateTimeField('Created', auto_now_add=True)
+
+    def __str__(self):
+        return self.public_key
