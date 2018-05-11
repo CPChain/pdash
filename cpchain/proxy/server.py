@@ -21,7 +21,7 @@ from cpchain.crypto import pub_key_der_to_addr, ECCipher
 from cpchain.storage import IPFSStorage
 from cpchain.proxy.proxy_db import Trade, ProxyDB
 
-from cpchain.chain.trans import ProxyTrans
+from cpchain.chain.agent import ProxyAgent
 from cpchain.chain.utils import default_web3
 from cpchain.utils import join_with_root, Encoder
 from eth_utils import to_bytes
@@ -140,7 +140,7 @@ class SSLServerProtocol(NetstringReceiver):
                 return
 
     def proxy_claim_relay(self):
-        proxy_trans = ProxyTrans(default_web3, config.chain.core_contract)
+        proxy_trans = ProxyAgent(default_web3, config.chain.core_contract)
         private_key_file_path = join_with_root(config.wallet.private_key_file)
         password_path = join_with_root(config.wallet.private_key_password_file)
         with open(password_path) as f:

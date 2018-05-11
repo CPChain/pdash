@@ -6,7 +6,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from eth_utils import to_bytes
 
 from cpchain.wallet.fs import *
-from cpchain.chain.trans import *
+from cpchain.chain.agent import *
 from cpchain import chain, config, root_dir
 from cpchain.utils import join_with_root, Encoder
 from cpchain.chain.models import OrderInfo
@@ -17,7 +17,7 @@ def test_server_chain():
     os.chdir(root_dir)
     server_web3 = chain.default_web3
     # chain.utils.deploy_contract(config.chain.core_contract)
-    buyertrans = BuyerTrans(server_web3, config.chain.core_contract)
+    buyertrans = BuyerAgent(server_web3, config.chain.core_contract)
     print(server_web3.eth.defaultAccount)
     # desc_hash_base64 = 'AQkKqDxtNIRJ+1V82J5lP2/fRj/zbJ+2n0GzUF52Wsc='
     # desc_hash = Encoder.str_to_base64_byte(desc_hash_base64)

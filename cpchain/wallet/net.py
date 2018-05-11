@@ -126,6 +126,7 @@ class MarketClient:
         logger.debug("carousel response: ", confirm_info)
         # except Exception as err:
         #     logger.debug(err)
+        return confirm_info
 
     @inlineCallbacks
     def query_hot_tag(self):
@@ -135,7 +136,8 @@ class MarketClient:
         resp = yield treq.get(url=url, headers=header)
         confirm_info = yield treq.json_content(resp)
         print(confirm_info)
-        logger.debug("carousel response: ", confirm_info)
+        logger.debug("hot tag: ", confirm_info)
+        return confirm_info
 
     @inlineCallbacks
     def query_promotion(self):
@@ -145,4 +147,16 @@ class MarketClient:
         resp = yield treq.get(url=url, headers=header)
         confirm_info = yield treq.json_content(resp)
         print(confirm_info)
-        logger.debug("carousel response: ", confirm_info)
+        logger.debug("promotion: ", confirm_info)
+        return confirm_info
+
+    @inlineCallbacks
+    def query_recommend_product(self):
+        url = self.url + 'recommend_product/list/'
+        header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key,
+                  'MARKET-TOKEN': self.token}
+        resp = yield treq.get(url=url, headers=header)
+        confirm_info = yield treq.json_content(resp)
+        print(confirm_info)
+        logger.debug("recommend product: ", confirm_info)
+        return confirm_info

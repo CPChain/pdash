@@ -7,7 +7,7 @@ from .wait_utils import wait_for_transaction_receipt
 
 
 # base transaction class for interacting with cpchain
-class Trans:
+class Agent:
     ONE_ETH_IN_WEI = 10**18  # 1 ETH == 1,000,000,000,000,000,000 Wei
 
     # NB contract object belongs to web3, and so does account.
@@ -30,7 +30,7 @@ class Trans:
         return order_num
 
 
-class BuyerTrans(Trans):
+class BuyerAgent(Agent):
 
     # order_info is a dictionary that contains parameters for an order
     def place_order(self, order_info: models.OrderInfo, account=None) -> "order id":
@@ -87,7 +87,7 @@ class BuyerTrans(Trans):
         return tx_hash
 
 
-class SellerTrans(Trans):
+class SellerAgent(Agent):
     def claim_timeout(self, order_id, account=None):
         account = account or self.web3.eth.defaultAccount
         transaction = {'value': 0, 'from': account}
@@ -106,7 +106,7 @@ class SellerTrans(Trans):
         return id_list
 
     
-class ProxyTrans(Trans):
+class ProxyAgent(Agent):
     
     def claim_relay(self, order_id, relay_hash, account=None):
         account = account or self.web3.eth.defaultAccount

@@ -21,7 +21,7 @@ def contract_name():
 def btrans(contract_name):
     buyer_web3 = chain.utils.default_web3
     print('buyer: defaultAccount:'.format(buyer_web3.eth.defaultAccount))
-    trans_obj = chain.trans.BuyerTrans(buyer_web3, contract_name=contract_name)
+    trans_obj = chain.agent.BuyerAgent(buyer_web3, contract_name=contract_name)
     return trans_obj
 
 
@@ -29,7 +29,7 @@ def btrans(contract_name):
 def strans(contract_name):
     seller_web3 = chain.utils.default_web3
     print('seller: defaultAccount:'.format(seller_web3.eth.defaultAccount))
-    trans_obj = chain.trans.SellerTrans(chain.utils.default_web3, contract_name=contract_name)
+    trans_obj = chain.agent.SellerAgent(chain.utils.default_web3, contract_name=contract_name)
     return trans_obj
 
 
@@ -37,5 +37,5 @@ def strans(contract_name):
 def ptrans(contract_name):
     proxy_web3 = chain.utils.default_web3
     print('seller: defaultAccount:'.format(proxy_web3.eth.defaultAccount))
-    trans_obj = chain.trans.ProxyTrans(chain.utils.default_web3, contract_name=contract_name)
+    trans_obj = chain.agent.ProxyAgent(chain.utils.default_web3, contract_name=contract_name)
     return trans_obj

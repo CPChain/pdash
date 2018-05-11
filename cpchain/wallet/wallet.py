@@ -57,6 +57,7 @@ def main():
     mc.query_carousel()
     mc.query_hot_tag()
     mc.query_promotion()
+    # test end
 
     sys.exit(reactor.run())
 
