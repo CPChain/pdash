@@ -88,9 +88,6 @@ def find_peer(tracker):
 
 if __name__ == '__main__':
     import sys
-    # for testing purpose
-    log_format='%(asctime)s [%(levelname)s]%(funcName)s: %(message)s'
-    logging.basicConfig(level=logging.DEBUG, format=log_format)
 
     if sys.argv[1] == 'tracker':
         peer = Peer()

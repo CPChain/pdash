@@ -6,7 +6,7 @@ from hashlib import sha1
 from random import randint
 
 import socket
-import umsgpack
+import msgpack
 
 from twisted.internet import reactor, protocol, defer
 
@@ -40,7 +40,7 @@ class PeerProtocol(protocol.DatagramProtocol):
 
     def send_msg(self, msg, addr):
         tid = msg['tid']
-        data = umsgpack.packb(msg)
+        data = msgpack.packb(msg, use_bin_type=True)
         future = time.time() + self.timeout
         while time.time() < future:
             try:
@@ -67,7 +67,7 @@ class PeerProtocol(protocol.DatagramProtocol):
         return result
 
     def datagramReceived(self, data, addr):
-        msg = umsgpack.unpackb(data)
+        msg = msgpack.unpackb(data, raw=False)
 
         if msg['type'] == 'ping':
             peer_id = msg['peer_id']
