@@ -1,3 +1,6 @@
+* Status
+#+html: Market:<a href='http://180.173.57.162:9527/view/cpchain%20master/job/cpchain_market/'><img src='http://180.173.57.162:9527/buildStatus/icon?job=cpchain_market'></a>
+
 * CPChain
 CPChain is a blockchain-based data sharing platform.
 
