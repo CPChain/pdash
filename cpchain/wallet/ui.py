@@ -45,6 +45,16 @@ def load_stylesheet(wid, name):
 
 
 # widgets
+class HorLine(QFrame):
+    def __init__(self, parent=None, wid=2):
+        super().__init__(parent)
+        self.parent = parent
+        self.wid = wid
+        self.setFrameShape(QFrame.HLine)
+        self.setFrameShadow(QFrame.Plain)
+        self.setLineWidth(self.wid)
+
+
 class CPItem(QFrame):
     def __init__(self, parent=None, item={}):
         super().__init__(parent)
@@ -122,6 +132,11 @@ class PopularTab(QScrollArea):
         self.item_num_max = 2
         self.promo_num_max = 1
 
+        self.horline1 = HorLine(self, 2)
+        self.horline1.setObjectName("horline1")
+        self.horline2 = HorLine(self, 2)
+        self.horline2.setObjectName("horline2")
+
         def create_banner():
             self.banner_label = banner_label = QLabel(self)
             print("Getting banner images......")
@@ -190,6 +205,7 @@ class PopularTab(QScrollArea):
             self.main_layout.addWidget(self.banner_label)
             self.main_layout.addSpacing(35)
             self.main_layout.addWidget(self.hot_label)
+            self.main_layout.addWidget(self.horline1)
 
             self.hot_layout = QHBoxLayout(self)
             self.hot_layout.addSpacing(0)
@@ -208,6 +224,7 @@ class PopularTab(QScrollArea):
             self.hot_img_layout.addWidget(self.medicine_label)
             self.main_layout.addLayout(self.hot_img_layout)
             self.main_layout.addSpacing(1)
+            self.main_layout.addWidget(self.horline2)
 
             self.main_layout.addWidget(self.recom_label)
             self.main_layout.addSpacing(2)
