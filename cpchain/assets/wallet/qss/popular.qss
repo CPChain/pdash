@@ -1,0 +1,14 @@
+QLabel {
+	color: #555555;
+}
+
+QPushButton#more_btn {
+	min-height: 16px; 
+    min-width: 60px;  
+    max-width: 60px; 
+    max-height: 16px; 
+    border: none;
+    outline: none;
+    color: #006bcf;
+    background-color: #fafafa;
+}

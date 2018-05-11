@@ -32,6 +32,8 @@ def get_pixm(name):
     path = osp.join(root_dir, "cpchain/assets/wallet/icons", name)
     return QPixmap(path)
 
+    
+
 def load_stylesheet(wid, name):
     path = osp.join(root_dir, "cpchain/assets/wallet/qss", name)
 
@@ -65,11 +67,12 @@ class PopularTab(TabContentArea):
 
         self.hot_label = QLabel("Hot")
         self.hot_label.setObjectName("hot_label")
+        self.hot_label.setFont(QFont("Arial", 10, QFont.Light))
         self.hot_label.setMaximumHeight(25)
 
-        self.more_btn = more_btn = QPushButton("More", self)
+        self.more_btn = more_btn = QPushButton("More>", self)
         more_btn.setObjectName("more_btn")
-        more_btn.setFixedSize(30, 18)
+        #more_btn.setFixedSize(30, 18)
 
         def create_indus_trans():
             self.trans_label = trans_label = QLabel(self)
@@ -108,7 +111,7 @@ class PopularTab(TabContentArea):
             self.hot_layout = QHBoxLayout(self)
             self.hot_layout.addSpacing(0)
             self.hot_layout.addWidget(self.hot_label)
-            self.hot_layout.addSpacing(100)
+            self.hot_layout.addSpacing(50)
             self.hot_layout.addWidget(more_btn)
             self.main_layout.addLayout(self.hot_layout)
             self.main_layout.addSpacing(1)
@@ -126,7 +129,7 @@ class PopularTab(TabContentArea):
             self.main_layout.addWidget(self.recom_label)
 
         set_layout()
-
+        load_stylesheet(self, "popular.qss")
         print("Loading stylesheet of cloud tab widget")
 
 
@@ -269,7 +272,7 @@ class Header(QFrame):
             pixmap = get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(45, 45)
             logo_label.setPixmap(pixmap)
-            self.word_label = QLabel(self)
+            self.word_label = word_label = QLabel(self)
             self.word_label.setText("<b>CPChain</b>")
             self.word_label.setFont(QFont("Roman times", 25, QFont.Bold));
             
