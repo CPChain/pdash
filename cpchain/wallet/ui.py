@@ -419,31 +419,30 @@ class MainWindow(QMainWindow):
 
         # set layout
         def set_layout():
-            self.main_layout = main_layout = QGridLayout()
-            main_layout.setSpacing(0)
-            main_layout.setContentsMargins(0, 0, 0, 0)
+            # self.main_layout = main_layout = QGridLayout()
+            # main_layout.setSpacing(0)
+            # main_layout.setContentsMargins(0, 0, 0, 0)
 
-            main_layout.addWidget(self.header, 0, 0, 1, 2)
-            main_layout.addWidget(self.sidebar, 1, 0, 9, 2)
+            # main_layout.addWidget(self.header, 0, 0, 1, 2)
+            # main_layout.addWidget(self.sidebar, 1, 0, 9, 2)
 
-            main_layout.addWidget(self.content_tabs, 1, 2, 9, 1)
+            # main_layout.addWidget(self.content_tabs, 1, 2, 9, 1)
 
-            main_layout.setRowStretch(0, 1)
-            main_layout.setRowStretch(1, 10)
-            Layout using QVBoxLayout and QHBoxLayout
-            # self.main_layout = main_layout = QVBoxLayout()
-            # main_layout.addSpacing(0)
-            # main_layout.addWidget(self.header)
+            # main_layout.setRowStretch(0, 1)
+            # main_layout.setRowStretch(1, 10)
 
-            # self.content_layout = content_layout = QHBoxLayout()
-            # content_layout.addSacing(0)
-            # content_layout.addWidget(self.sidebar)
-            # content_layout.addSpacing(0)
-            # content_layout.addWidget(self.content_tabs)
+            #Layout using QVBoxLayout and QHBoxLayout
+            self.main_layout = main_layout = QVBoxLayout()
+            main_layout.addSpacing(0)
+            main_layout.addWidget(self.header)
 
-            # self.main_layout.addLayout(self.content_)
+            self.content_layout = content_layout = QHBoxLayout()
+            content_layout.addSpacing(0)
+            content_layout.addWidget(self.sidebar)
+            content_layout.addSpacing(0)
+            content_layout.addWidget(self.content_tabs)
 
-            print("Adding widget content_tabs......")
+            self.main_layout.addLayout(self.content_layout)
 
             wid = QWidget(self)
             wid.setLayout(self.main_layout)
