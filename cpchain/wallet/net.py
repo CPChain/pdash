@@ -33,7 +33,7 @@ class MarketClient:
     def login(self):
         header = {'Content-Type': 'application/json'}
         data = {'public_key': self.account.pub_key}
-        resp = yield treq.post(url=self.url + 'login/', headers=header, json=data,
+        resp = yield treq.post(url=self.url + 'account/v1/login/', headers=header, json=data,
                                persistent=False)
         confirm_info = yield treq.json_content(resp)
         logger.debug("login response: %", confirm_info)
@@ -42,7 +42,7 @@ class MarketClient:
         signature = ECCipher.generate_string_signature(self.account.priv_key, self.nonce)
         header_confirm = {'Content-Type': 'application/json'}
         data_confirm = {'public_key': self.account.pub_key, 'code': signature}
-        resp = yield treq.post(self.url + 'confirm/', headers=header_confirm, json=data_confirm,
+        resp = yield treq.post(self.url + 'account/v1/confirm/', headers=header_confirm, json=data_confirm,
                                persistent=False)
         confirm_info = yield treq.json_content(resp)
         logger.debug('login confirm: %', confirm_info)
@@ -77,7 +77,6 @@ class MarketClient:
     def change_product_status(self, status):
         header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key, 'MARKET-TOKEN': self.token}
         data = {'status': status}
-        import treq
         resp = yield treq.post(url=self.url+'product_change', headers=header, json=data)
         confirm_info = yield treq.json_content(response=resp)
         if confirm_info['success'] == False:
@@ -116,7 +115,7 @@ class MarketClient:
     def query_carousel(self):
         # try:
         logger.debug('in query carousel')
-        url = self.url + 'carousel/list/'
+        url = self.url + 'main/v1/carousel/list/'
         logger.debug(url)
         header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key, 'MARKET-TOKEN': self.token}
         resp = yield treq.get(url=url, headers=header)
@@ -130,7 +129,7 @@ class MarketClient:
 
     @inlineCallbacks
     def query_hot_tag(self):
-        url = self.url + 'hot_tag/list/'
+        url = self.url + 'main/v1/hot_tag/list/'
         header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key,
                   'MARKET-TOKEN': self.token}
         resp = yield treq.get(url=url, headers=header)
@@ -141,7 +140,7 @@ class MarketClient:
 
     @inlineCallbacks
     def query_promotion(self):
-        url = self.url + 'promotion/list/'
+        url = self.url + 'main/v1/promotion/list/'
         header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key,
                   'MARKET-TOKEN': self.token}
         resp = yield treq.get(url=url, headers=header)
@@ -152,7 +151,7 @@ class MarketClient:
 
     @inlineCallbacks
     def query_recommend_product(self):
-        url = self.url + 'recommend_product/list/'
+        url = self.url + 'main/v1/recommend_product/list/'
         header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key,
                   'MARKET-TOKEN': self.token}
         resp = yield treq.get(url=url, headers=header)

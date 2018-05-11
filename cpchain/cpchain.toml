@@ -59,7 +59,7 @@ server_addr = "192.168.0.132"
 server_port = 8083
 es_hosts = '192.168.0.132:9200'
 market_url = "http://192.168.0.132:8083/api/v1/"
-market_url_test = "http://localhost:8083/main/v1/"
+market_url_test = "http://localhost:8083/"
 default_password = "^-_-^cpchain@2018^-_-^"
 
 

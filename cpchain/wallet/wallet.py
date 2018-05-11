@@ -47,16 +47,15 @@ class Wallet:
         # monitor_chain_event()
 
 
-
 def main():
     wallet = Wallet(reactor)
 
     # for test
-    mc = MarketClient(wallet)
-    logger.debug('init mc')
-    mc.query_carousel()
-    mc.query_hot_tag()
-    mc.query_promotion()
+    # mc = MarketClient(wallet)
+    # logger.debug('init mc')
+    # mc.query_carousel()
+    # mc.query_hot_tag()
+    # mc.query_promotion()
     # test end
 
     sys.exit(reactor.run())
