@@ -5,11 +5,10 @@ from hashlib import sha1
 from random import randint
 
 import socket
-import msgpack
 
 from twisted.internet import reactor, protocol, defer
 
-from twisted.internet.task import LoopingCall
+import msgpack
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +57,7 @@ class PeerProtocol(protocol.DatagramProtocol):
         # for request only
         d = defer.Deferred()
         timeout = reactor.callLater(self.timeout,
-                    self.tranaction_timeout, tid)
+                                    self.tranaction_timeout, tid)
         self.request[tid] = (d, timeout)
         d.addBoth(self.dummy_callback)
         return d

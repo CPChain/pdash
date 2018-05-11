@@ -14,13 +14,13 @@ logger = logging.getLogger(__name__)
 
 class Peer:
     def __init__(self, peer_port=None,
-            ctrl_port=None, data_port=None):
-        self.peer_port = peer_port or \
-                config.proxy.server_peer_port
-        self.ctrl_port = ctrl_port or \
-                config.proxy.server_ctrl_port
-        self.data_port = data_port or \
-                config.proxy.server_data_port
+                 ctrl_port=None, data_port=None):
+        self.peer_port = (peer_port or
+                          config.proxy.server_peer_port)
+        self.ctrl_port = (ctrl_port or
+                          config.proxy.server_ctrl_port)
+        self.data_port = (data_port or
+                          config.proxy.server_data_port)
 
         self.protocol = PeerProtocol(peer_info=self.ctrl_port)
         self.protocol.peer_stat = 0
@@ -55,30 +55,30 @@ class Peer:
     def start_ssl_server(self):
 
         server_key = os.path.expanduser(
-                        os.path.join(config.home,
-                            config.proxy.server_key))
+            os.path.join(config.home,
+                         config.proxy.server_key))
         server_crt = os.path.expanduser(
-                        os.path.join(config.home,
-                            config.proxy.server_crt))
+            os.path.join(config.home,
+                         config.proxy.server_crt))
 
         if not os.path.isfile(server_key):
-            logger.info("SSL key/cert file not found, \
-                    run local self-test by default")
+            logger.info("SSL key/cert file not found, "
+                        + "run local self-test by default")
             server_key = os.path.join(root_dir,
-                    config.proxy.server_key)
+                                      config.proxy.server_key)
             server_crt = os.path.join(root_dir,
-                    config.proxy.server_crt)
+                                      config.proxy.server_crt)
 
         # ctrl channel
         reactor.listenSSL(self.ctrl_port, self.ctrl_factory,
-                ssl.DefaultOpenSSLContextFactory(
-                server_key, server_crt))
+                          ssl.DefaultOpenSSLContextFactory(
+                              server_key, server_crt))
 
         # data channel
         file_factory = Site(FileServer())
         reactor.listenSSL(self.data_port, file_factory,
-                ssl.DefaultOpenSSLContextFactory(
-                server_key, server_crt))
+                          ssl.DefaultOpenSSLContextFactory(
+                              server_key, server_crt))
 
 
 def find_peer(boot_node, udp_port=7890):
