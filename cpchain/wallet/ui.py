@@ -419,19 +419,6 @@ class MainWindow(QMainWindow):
 
         # set layout
         def set_layout():
-            # self.main_layout = main_layout = QGridLayout()
-            # main_layout.setSpacing(0)
-            # main_layout.setContentsMargins(0, 0, 0, 0)
-
-            # main_layout.addWidget(self.header, 0, 0, 1, 2)
-            # main_layout.addWidget(self.sidebar, 1, 0, 9, 2)
-
-            # main_layout.addWidget(self.content_tabs, 1, 2, 9, 1)
-
-            # main_layout.setRowStretch(0, 1)
-            # main_layout.setRowStretch(1, 10)
-
-            #Layout using QVBoxLayout and QHBoxLayout
             self.main_layout = main_layout = QVBoxLayout()
             main_layout.addSpacing(0)
             main_layout.addWidget(self.header)
