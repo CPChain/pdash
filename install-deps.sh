@@ -42,12 +42,16 @@ qt5reactor
 toml==0.9.4
 "
 
-
 pkgs="
 pytest
 pytest-cov
 pylint
 "
+
+if test $# -eq 0; then
+   echo "Usage: install-deps.sh {all|market|wallet|...}"
+   exit 1
+fi
 
 while test $# -gt 0
 do
