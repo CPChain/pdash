@@ -32,6 +32,8 @@ def get_pixm(name):
     path = osp.join(root_dir, "cpchain/assets/wallet/icons", name)
     return QPixmap(path)
 
+    
+
 def load_stylesheet(wid, name):
     path = osp.join(root_dir, "cpchain/assets/wallet/qss", name)
 
@@ -124,23 +126,24 @@ class PopularTab(QScrollArea):
             self.banner_label = banner_label = QLabel(self)
             print("Getting banner images......")
             pixmap = get_pixm('cpc-logo-single.png')
-            pixmap = pixmap.scaled(150, 100)
+            pixmap = pixmap.scaled(740, 195)
             banner_label.setPixmap(pixmap)
         create_banner()
 
         self.hot_label = QLabel("Hot")
         self.hot_label.setObjectName("hot_label")
+        self.hot_label.setFont(QFont("Arial", 10, QFont.Light))
         self.hot_label.setMaximumHeight(25)
 
-        self.more_btn = more_btn = QPushButton("More", self)
+        self.more_btn = more_btn = QPushButton("More>", self)
         more_btn.setObjectName("more_btn")
-        more_btn.setFixedSize(18, 18)
+        #more_btn.setFixedSize(30, 18)
 
         def create_indus_trans():
             self.trans_label = trans_label = QLabel(self)
             print("Getting trans images......")
             pixmap = get_pixm('cpc-logo-single.png')
-            pixmap = pixmap.scaled(75, 75)
+            pixmap = pixmap.scaled(230, 136)
             trans_label.setPixmap(pixmap)
         create_indus_trans()
 
@@ -148,7 +151,7 @@ class PopularTab(QScrollArea):
             self.forest_label = forest_label = QLabel(self)
             print("Getting trans images......")
             pixmap = get_pixm('cpc-logo-single.png')
-            pixmap = pixmap.scaled(75, 75)
+            pixmap = pixmap.scaled(230, 136)
             forest_label.setPixmap(pixmap)
         create_indus_forest()
 
@@ -156,7 +159,7 @@ class PopularTab(QScrollArea):
             self.medicine_label = medicine_label = QLabel(self)
             print("Getting trans images......")
             pixmap = get_pixm('cpc-logo-single.png')
-            pixmap = pixmap.scaled(75, 75)
+            pixmap = pixmap.scaled(230, 136)
             medicine_label.setPixmap(pixmap)
         create_indus_medicine()
 
@@ -185,23 +188,23 @@ class PopularTab(QScrollArea):
         def set_layout():
             self.main_layout = QVBoxLayout(self)
             self.main_layout.addWidget(self.banner_label)
-            self.main_layout.addSpacing(1)
+            self.main_layout.addSpacing(35)
             self.main_layout.addWidget(self.hot_label)
 
             self.hot_layout = QHBoxLayout(self)
             self.hot_layout.addSpacing(0)
             self.hot_layout.addWidget(self.hot_label)
-            self.hot_layout.addSpacing(100)
+            self.hot_layout.addSpacing(50)
             self.hot_layout.addWidget(more_btn)
             self.main_layout.addLayout(self.hot_layout)
             self.main_layout.addSpacing(1)
 
             self.hot_img_layout = QHBoxLayout(self)
-            self.hot_img_layout.addSpacing(0)
+            self.hot_img_layout.addSpacing(25)
             self.hot_img_layout.addWidget(self.trans_label)
-            self.hot_img_layout.addSpacing(10)
+            self.hot_img_layout.addSpacing(25)
             self.hot_img_layout.addWidget(self.forest_label)
-            self.hot_img_layout.addSpacing(10)
+            self.hot_img_layout.addSpacing(25)
             self.hot_img_layout.addWidget(self.medicine_label)
             self.main_layout.addLayout(self.hot_img_layout)
             self.main_layout.addSpacing(1)
@@ -226,7 +229,7 @@ class PopularTab(QScrollArea):
 
             self.main_layout.addLayout(self.bottom_layout)
         set_layout()
-
+        load_stylesheet(self, "popular.qss")
         print("Loading stylesheet of cloud tab widget")
 
 
@@ -369,7 +372,7 @@ class Header(QFrame):
             pixmap = get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(45, 45)
             logo_label.setPixmap(pixmap)
-            self.word_label = QLabel(self)
+            self.word_label = word_label = QLabel(self)
             self.word_label.setText("<b>CPChain</b>")
             self.word_label.setFont(QFont("Roman times", 25, QFont.Bold));
             

@@ -1,20 +1,22 @@
+QLabel {
+    /* Set the color of CPChain */
+    /* dont know why adding #word_label will not work */
+    color: #fefefe;
+}
+
 QLineEdit#searchbar {
     margin-left: 5px;
     /* border: 1px solid #724f61;    */
     border-radius: 10px;
     /* color: #0f0000; */
-    color: #ddc9c9;
+    color: #434343;
     /* background: #5b4b19; */
     /* background: #423611; */
     background: #FCFCFC;
 }
 
-QLabel#word_label {
-    color: #fefefe;
-}
-
 QLineEdit#searchbar:pressed {
-    color: #f3f4f7;
+    color: #434343;
 }
 
 QPushButton#prev_btn {

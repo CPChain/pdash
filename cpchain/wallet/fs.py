@@ -3,7 +3,7 @@ import os
 
 from cpchain.wallet.db import session, FileInfo, osp, create_engine, sessionmaker, BuyerFileInfo
 from cpchain.crypto import AESCipher, RSACipher
-from cpchain.utils import Encoder
+from cpchain.utils import Encoder, join_with_rc
 from cpchain.storage import IPFSStorage
 from cpchain import root_dir, config
 
@@ -29,7 +29,7 @@ def get_buyer_file_names():
 
 
 def add_file(new_file_info):
-    dbpath = osp.join(root_dir, config.wallet.dbpath)
+    dbpath = join_with_rc(config.wallet.dbpath)
     engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
     Session = sessionmaker(bind=engine)
     session = Session()
@@ -38,7 +38,7 @@ def add_file(new_file_info):
 
 
 def publish_file_update(market_hash, selected_id):
-    dbpath = osp.join(root_dir, config.wallet.dbpath)
+    dbpath = join_with_rc(config.wallet.dbpath)
     engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
     Session = sessionmaker(bind=engine)
     session = Session()
