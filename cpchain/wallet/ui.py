@@ -59,7 +59,7 @@ class PopularTab(TabContentArea):
             self.banner_label = banner_label = QLabel(self)
             print("Getting banner images......")
             pixmap = get_pixm('cpc-logo-single.png')
-            pixmap = pixmap.scaled(150, 100)
+            pixmap = pixmap.scaled(740, 195)
             banner_label.setPixmap(pixmap)
         create_banner()
 
@@ -69,13 +69,13 @@ class PopularTab(TabContentArea):
 
         self.more_btn = more_btn = QPushButton("More", self)
         more_btn.setObjectName("more_btn")
-        more_btn.setFixedSize(18, 18)
+        more_btn.setFixedSize(30, 18)
 
         def create_indus_trans():
             self.trans_label = trans_label = QLabel(self)
             print("Getting trans images......")
             pixmap = get_pixm('cpc-logo-single.png')
-            pixmap = pixmap.scaled(75, 75)
+            pixmap = pixmap.scaled(230, 136)
             trans_label.setPixmap(pixmap)
         create_indus_trans()
 
@@ -83,7 +83,7 @@ class PopularTab(TabContentArea):
             self.forest_label = forest_label = QLabel(self)
             print("Getting trans images......")
             pixmap = get_pixm('cpc-logo-single.png')
-            pixmap = pixmap.scaled(75, 75)
+            pixmap = pixmap.scaled(230, 136)
             forest_label.setPixmap(pixmap)
         create_indus_forest()
 
@@ -91,7 +91,7 @@ class PopularTab(TabContentArea):
             self.medicine_label = medicine_label = QLabel(self)
             print("Getting trans images......")
             pixmap = get_pixm('cpc-logo-single.png')
-            pixmap = pixmap.scaled(75, 75)
+            pixmap = pixmap.scaled(230, 136)
             medicine_label.setPixmap(pixmap)
         create_indus_medicine()
 
@@ -102,7 +102,7 @@ class PopularTab(TabContentArea):
         def set_layout():
             self.main_layout = QVBoxLayout(self)
             self.main_layout.addWidget(self.banner_label)
-            self.main_layout.addSpacing(1)
+            self.main_layout.addSpacing(35)
             self.main_layout.addWidget(self.hot_label)
 
             self.hot_layout = QHBoxLayout(self)
@@ -114,11 +114,11 @@ class PopularTab(TabContentArea):
             self.main_layout.addSpacing(1)
 
             self.hot_img_layout = QHBoxLayout(self)
-            self.hot_img_layout.addSpacing(0)
+            self.hot_img_layout.addSpacing(25)
             self.hot_img_layout.addWidget(self.trans_label)
-            self.hot_img_layout.addSpacing(10)
+            self.hot_img_layout.addSpacing(25)
             self.hot_img_layout.addWidget(self.forest_label)
-            self.hot_img_layout.addSpacing(10)
+            self.hot_img_layout.addSpacing(25)
             self.hot_img_layout.addWidget(self.medicine_label)
             self.main_layout.addLayout(self.hot_img_layout)
             self.main_layout.addSpacing(1)
