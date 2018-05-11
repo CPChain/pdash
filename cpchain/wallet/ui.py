@@ -50,10 +50,11 @@ class CPItem(QFrame):
         super().__init__(parent)
         self.parent = parent
         self.item = item
-
         self.init_ui()
 
     def init_ui(self):
+        #self.frame.setMinimumWidth(500)
+        self.setMinimumHeight(20)
         self.title_btn = QPushButton("Medicine big data from Mayo Clinic")
         self.title_btn.setObjectName("title_btn")
         self.seller_btn = QPushButton("Barack Obama")
@@ -77,25 +78,24 @@ class CPItem(QFrame):
 
         def setlayout():
             self.main_layout = main_layout = QVBoxLayout(self)
-            main_layout.addSpacing(0)
+            main_layout.addStretch(1)
             main_layout.addWidget(self.title_btn)
-            main_layout.addSpacing(1)
+            main_layout.addStretch(4)
 
             self.layout_2 = QHBoxLayout(self)
-            self.layout_2.addSpacing(0)
-            self.layout_2.addWidget(self.seller_btn)
-            self.layout_2.addSpacing(0)
-            self.vline = QLabel("|")
-            self.layout_2.addWidget(self.vline)
-            self.layout_2.addWidget(self.time_label)
-            self.layout_2.addSpacing(30)
             self.layout_2.addWidget(self.total_sale_label)
+            self.layout_2.addSpacing(1)
+            self.layout_2.addWidget(self.seller_btn)
+            self.layout_2.addSpacing(1)
+            self.layout_2.addWidget(self.time_label)
+            self.layout_2.addSpacing(1)
+            
 
             self.main_layout.addLayout(self.layout_2)
             self.main_layout.addWidget(self.price_label)
 
             self.layout_3 = QHBoxLayout(self)
-            self.layout_3.addSpacing(0)
+            self.layout_3.addSpacing(1)
             for i in range(self.tag_num):
                 self.layout_3.addWidget(self.tag_btn_list[i])
 
@@ -106,7 +106,7 @@ class CPItem(QFrame):
 
 
 class PopularTab(QScrollArea):
-    def __init__(self, parent=None):
+    def __init__(self, parent = None):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("popular_tab")
@@ -115,9 +115,11 @@ class PopularTab(QScrollArea):
 
     def init_ui(self):
         self.frame = QFrame()
+        self.frame.setObjectName("popular_frame")
         self.setWidget(self.frame)
         self.setWidgetResizable(True)
-        self.frame.setMinimumWidth(150)
+        self.frame.setMinimumWidth(500)
+        self.frame.setMaximumHeight(800)
 
         self.item_num_max = 2
         self.promo_num_max = 1
@@ -130,7 +132,7 @@ class PopularTab(QScrollArea):
             banner_label.setPixmap(pixmap)
         create_banner()
 
-        self.hot_label = QLabel("Hot")
+        self.hot_label = QLabel("Hot Industry")
         self.hot_label.setObjectName("hot_label")
         self.hot_label.setFont(QFont("Arial", 10, QFont.Light))
         self.hot_label.setMaximumHeight(25)
@@ -339,7 +341,7 @@ class Header(QFrame):
 
         def init_ui(self):
             self.setObjectName("searchbar")
-            self.setFixedSize(450, 25)
+            self.setFixedSize(300, 25)
             self.setTextMargins(3, 0, 20, 0)
 
             self.search_btn = search_btn = QPushButton(self)
@@ -500,7 +502,7 @@ class MainWindow(QMainWindow):
         # self.setWindowFlags(Qt.FramelessWindowHint)
 
         def set_geometry():
-            self.resize(1000, 600)  # resize before centering.
+            self.resize(1000, 800)  # resize before centering.
             center_pt = QDesktopWidget().availableGeometry().center()
             qrect = self.frameGeometry()
             qrect.moveCenter(center_pt)
