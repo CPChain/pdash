@@ -21,12 +21,13 @@ from cpchain.crypto import pub_key_der_to_addr, ECCipher
 from cpchain.storage import IPFSStorage
 from cpchain.proxy.proxy_db import Trade, ProxyDB
 
+
 from cpchain.chain.agents import ProxyAgent
-from cpchain.chain.utils import default_web3
-from cpchain.utils import join_with_root, Encoder
+from cpchain.chain.utils import default_w3
+from cpchain.utils import join_with_root, join_with_rc, Encoder
 from eth_utils import to_bytes
 
-server_root = os.path.join(config.rc_dir, config.proxy.server_root)
+server_root = join_with_rc(config.proxy.server_root)
 server_root = os.path.expanduser(server_root)
 os.makedirs(server_root, exist_ok=True)
 
@@ -243,16 +244,14 @@ def start_ssl_server():
     control_port = config.proxy.server_ctrl_port
 
     server_key = os.path.expanduser(
-                    os.path.join(config.rc_dir,
-                                config.proxy.server_key))
+                    join_with_rc(config.proxy.server_key))
     server_crt = os.path.expanduser(
-                    os.path.join(config.rc_dir,
-                                config.proxy.server_crt))
+                    join_with_rc(config.proxy.server_crt))
 
     if not os.path.isfile(server_key):
         print("SSL key/cert file not found, run local self-test by default")
-        server_key = os.path.join(root_dir, config.proxy.server_key)
-        server_crt = os.path.join(root_dir, config.proxy.server_crt)
+        server_key = join_with_root(config.proxy.server_key)
+        server_crt = join_with_root(config.proxy.server_crt)
 
     reactor.listenSSL(control_port, factory,
             ssl.DefaultOpenSSLContextFactory(
