@@ -26,7 +26,7 @@ from cpchain.chain.utils import default_w3
 from cpchain.utils import join_with_root, Encoder
 from eth_utils import to_bytes
 
-server_root = os.path.join(config.home, config.proxy.server_root)
+server_root = os.path.join(config.rc_dir, config.proxy.server_root)
 server_root = os.path.expanduser(server_root)
 os.makedirs(server_root, exist_ok=True)
 
@@ -243,10 +243,10 @@ def start_ssl_server():
     control_port = config.proxy.server_ctrl_port
 
     server_key = os.path.expanduser(
-                    os.path.join(config.home,
+                    os.path.join(config.rc_dir,
                                 config.proxy.server_key))
     server_crt = os.path.expanduser(
-                    os.path.join(config.home,
+                    os.path.join(config.rc_dir,
                                 config.proxy.server_crt))
 
     if not os.path.isfile(server_key):

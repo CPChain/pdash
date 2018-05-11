@@ -16,12 +16,11 @@ class MarketClient:
     def __init__(self, wallet):
         self.wallet = wallet
         self.account = self.wallet.accounts.default_account
-        # self.client = HTTPClient(reactor)
-        self.url = config.market.market_url
+        self.url = config.market.market_url_test
         private_key_file_path = join_with_root(config.wallet.private_key_file)
-        password_path = join_with_root(config.wallet.private_key_password_file)
-        with open(password_path) as f:
-            password = f.read()
+        # password_path = join_with_root(config.wallet.private_key_password_file)
+        # with open(password_path) as f:
+        #     password = f.read()
         self.token = ''
         self.nonce = ''
         self.message_hash = ''
@@ -89,6 +88,7 @@ class MarketClient:
         header = {'Content-Type': 'application/json'}
         url = self.url + 'product/search/?keyword=' + str(keyword)
         resp = yield treq.get(url=url, headers=header)
+        logger.debug("response: ", resp)
         confirm_info = yield treq.json_content(resp)
         print('product info: ')
         print(confirm_info)
@@ -108,24 +108,41 @@ class MarketClient:
     def logout(self):
         header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key, 'MARKET-TOKEN': self.token}
         data = {'public_key': self.account.pub_key, 'token': self.token}
-        import treq
         resp = yield treq.post(url=self.url+'logout', headers=header, json=data)
         confirm_info = yield treq.json_content(resp)
         print(confirm_info)
 
     @inlineCallbacks
-    def carousel(self):
+    def query_carousel(self):
+        # try:
+        logger.debug('in query carousel')
+        url = self.url + 'carousel/list/'
+        logger.debug(url)
         header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key, 'MARKET-TOKEN': self.token}
-        data = {''}
+        resp = yield treq.get(url=url, headers=header)
+        # logger.debug("response:", resp)
+        confirm_info = yield treq.json_content(resp)
+        print(confirm_info)
+        logger.debug("carousel response: ", confirm_info)
+        # except Exception as err:
+        #     logger.debug(err)
 
     @inlineCallbacks
-    def hot_industry(self):
-        header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key, 'MARKET-TOKEN': self.token}
+    def query_hot_tag(self):
+        url = self.url + 'hot_tag/list/'
+        header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key,
+                  'MARKET-TOKEN': self.token}
+        resp = yield treq.get(url=url, headers=header)
+        confirm_info = yield treq.json_content(resp)
+        print(confirm_info)
+        logger.debug("carousel response: ", confirm_info)
 
     @inlineCallbacks
-    def promotion(self):
-        header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key, 'MARKET-TOKEN': self.token}
-
-    @inlineCallbacks
-    def recommended(self):
-        header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key, 'MARKET-TOKEN': self.token}
+    def query_promotion(self):
+        url = self.url + 'promotion/list/'
+        header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key,
+                  'MARKET-TOKEN': self.token}
+        resp = yield treq.get(url=url, headers=header)
+        confirm_info = yield treq.json_content(resp)
+        print(confirm_info)
+        logger.debug("carousel response: ", confirm_info)

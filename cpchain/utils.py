@@ -1,17 +1,13 @@
 import base64
-
 import os.path as osp
 import sys
 import subprocess
 
-import logging
 import toml
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 
 root_dir = osp.abspath(osp.join(osp.dirname(osp.abspath(__file__)), '../'))
-
-
 
 
 class Config:
@@ -50,12 +46,14 @@ def _get_config():
 config = _get_config()
 
 
-# logging
-logging.basicConfig(format="%(levelname)s:%(module)s:%(funcName)s:L%(lineno)d:%(message)s", level=logging.DEBUG)
-
-
 def join_with_root(path):
     return osp.join(root_dir, path)
+
+
+rc_dir = osp.abspath(config.core.rc_dir)
+
+def join_with_rc(path):
+    return osp.join(rc_dir, path)
 
 
 def sizeof_fmt(num, suffix='B'):

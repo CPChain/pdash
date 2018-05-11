@@ -17,11 +17,7 @@ TIMEOUT = 1000
 
 
 def create_invalid_response():
-    return JsonResponse({"success": False, "message": "invalid request."})
-
-
-def create_success_response():
-    return JsonResponse({'status': 1, 'message': 'success'})
+    return JsonResponse({"status": 0, "message": "invalid request."})
 
 
 class UserLoginAPIView(APIView):
@@ -45,16 +41,16 @@ class UserLoginAPIView(APIView):
 
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            return self.generate_verify_code(public_key)
+            return self.generate_verify_code(public_key,is_new=True)
 
         return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
-    def generate_verify_code(self, public_key):
+    def generate_verify_code(self, public_key, is_new=False):
         nonce = generate_random_str(6)
-        # nonce = "qZaQ6S"
         logger.info("put cache public_key:%s, nonce:%s" % (public_key, nonce))
         cache.set(public_key, nonce, TIMEOUT)
-        return JsonResponse({"success": True, "message": nonce})
+        status = 2 if is_new else 1
+        return JsonResponse({"status": status, "message": nonce})
 
 
 class UserLoginConfirmAPIView(APIView):
@@ -93,7 +89,7 @@ class UserLoginConfirmAPIView(APIView):
             existing_token = Token.objects.create(user=user, public_key=public_key)
 
         serializer = TokenSerializer(existing_token)
-        return JsonResponse({"success": True, "message": serializer.data['key']})
+        return JsonResponse({"status": 1, "message": serializer.data['key']})
 
 
 class LogoutAPIView(APIView):
@@ -117,7 +113,7 @@ class LogoutAPIView(APIView):
                 return create_invalid_response()
 
             existing_token.delete()
-            return JsonResponse({"success": True, "message": "logout success"})
+            return JsonResponse({"status": 1, "message": "logout success"})
         except Token.DoesNotExist:
             logger.info("logout public_key:%s not login" % public_key)
             return create_invalid_response()

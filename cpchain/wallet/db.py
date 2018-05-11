@@ -6,8 +6,9 @@ from sqlalchemy import create_engine, Column, Integer, String, Boolean
 from sqlalchemy.orm import sessionmaker
 
 from cpchain import root_dir, config
+from cpchain.utils import join_with_rc
 
-dbpath = osp.join(root_dir, config.wallet.dbpath)
+dbpath = join_with_rc(config.wallet.dbpath)
 engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
 
 Base = declarative_base()
