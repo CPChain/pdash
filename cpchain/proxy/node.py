@@ -23,13 +23,26 @@ class Peer:
                 config.proxy.server_data_port
 
         self.protocol = PeerProtocol(peer_info=self.ctrl_port)
-        self.refresh_loop = LoopingCall(self.protocol.refresh_peers)
+        self.protocol.peer_stat = 0
+        self.refresh_loop = LoopingCall(self.refresh)
+
+        self.ctrl_factory = SSLServerFactory()
 
     def bootstrap(self, addr):
         if self.protocol.transport is None:
             return reactor.callLater(1, self.bootstrap)
 
         self.protocol.ping(addr)
+
+    def refresh(self):
+        self.protocol.refresh_peers()
+        self.update_peer_stat()
+
+    def update_peer_stat(self):
+        if self.protocol.transport is None:
+            return
+
+        self.protocol.peer_stat = self.ctrl_factory.numConnections
 
     def run(self):
 
@@ -57,8 +70,7 @@ class Peer:
                     config.proxy.server_crt)
 
         # ctrl channel
-        factory = SSLServerFactory()
-        reactor.listenSSL(self.ctrl_port, factory,
+        reactor.listenSSL(self.ctrl_port, self.ctrl_factory,
                 ssl.DefaultOpenSSLContextFactory(
                 server_key, server_crt))
 
@@ -69,21 +81,21 @@ class Peer:
                 server_key, server_crt))
 
 
-def find_peer(tracker):
+def find_peer(boot_node, udp_port=7890):
     node = PeerProtocol()
-    reactor.listenUDP(7890, node)
+    reactor.listenUDP(udp_port, node)
 
-    def print_node(result):
-        success, data = result
-        if success:
-            for peer in data:
-                print(peer[0][0])
-                print(peer[1])
-        reactor.stop()
+    def found_node(result):
 
         node.transport.stopListening()
+        success, data = result
+        if success:
+            return tuple(data)
 
-    node.select_peer(tracker).addCallback(print_node)
+    d = node.select_peer(boot_node)
+    d.addBoth(found_node)
+
+    return d
 
 
 if __name__ == '__main__':
@@ -99,7 +111,11 @@ if __name__ == '__main__':
         peer.bootstrap(('192.168.0.169', 5678))
 
     elif sys.argv[1] == 'client':
-        tracker = ('192.168.0.169', 5678)
-        find_peer(tracker)
+        boot_node = ('192.168.0.169', 5678)
+        def found_peer(peer):
+            logger.info(peer)
+
+        find_peer(boot_node).addCallback(found_peer)
+
 
     reactor.run()
