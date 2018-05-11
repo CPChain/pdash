@@ -159,3 +159,4 @@ class MarketClient:
         print(confirm_info)
         logger.debug("recommend product: ", confirm_info)
         return confirm_info
+

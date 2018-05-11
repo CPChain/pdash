@@ -12,7 +12,7 @@ from cpchain.utils import config
 from cpchain.crypto import Encoder, RSACipher, ECCipher
 
 from cpchain.chain.models import OrderInfo
-from cpchain.chain.agent import BuyerAgent, SellerAgent
+from cpchain.chain.agents import BuyerAgent, SellerAgent
 from cpchain.chain.utils import default_w3
 from cpchain.chain.poll_chain import OrderMonitor
 

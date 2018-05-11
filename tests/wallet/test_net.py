@@ -10,10 +10,10 @@ def market_client():
     market_client = MarketClient(wallet)
     return market_client
 
-def test_query_carousel(mocker, market_client):
-    mock = mocker.patch('treq.get')
-    market_client.query_carousel()
-    assert mock.called
+def test_query_carousel(market_client):
+    # mock = mocker.patch('treq.get')
+    resp = market_client.query_carousel()
+    assert 1 == resp['status']
 
 def test_query_hot_tag(mocker, market_client):
     mock = mocker.patch('treq.get')

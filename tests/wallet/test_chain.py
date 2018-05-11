@@ -3,7 +3,7 @@ import pytest
 from cpchain import config
 
 from cpchain.wallet.chain import Handler
-from cpchain.chain.agent import BuyerAgent
+from cpchain.chain.agents import BuyerAgent
 from cpchain.chain.utils import default_w3
 
 

@@ -21,7 +21,7 @@ from cpchain.crypto import pub_key_der_to_addr, ECCipher
 from cpchain.storage import IPFSStorage
 from cpchain.proxy.proxy_db import Trade, ProxyDB
 
-from cpchain.chain.agent import ProxyAgent
+from cpchain.chain.agents import ProxyAgent
 from cpchain.chain.utils import default_web3
 from cpchain.utils import join_with_root, Encoder
 from eth_utils import to_bytes

@@ -6,7 +6,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from eth_utils import to_bytes
 
 from cpchain.wallet.fs import *
-from cpchain.chain.agent import *
+from cpchain.chain.agents import *
 from cpchain import chain, config, root_dir
 from cpchain.utils import join_with_root, Encoder
 from cpchain.chain.models import OrderInfo
