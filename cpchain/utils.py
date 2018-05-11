@@ -50,7 +50,7 @@ def join_with_root(path):
     return osp.join(root_dir, path)
 
 
-rc_dir = osp.abspath(config.core.rc_dir)
+rc_dir = osp.expanduser(config.core.rc_dir)
 
 def join_with_rc(path):
     return osp.join(rc_dir, path)
