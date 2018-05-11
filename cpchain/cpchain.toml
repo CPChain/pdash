@@ -2,8 +2,8 @@
 
 # for sample configuration, cf. https://github.com/toml-lang/toml
 
-# home directoy
-home = "~/.cpchain"
+[core]
+rc_dir = "~/.cpchain"
 
 [account]
 # we shall move it to ~/.cpchain
@@ -32,7 +32,8 @@ addr = '192.168.0.132'
 port = 5001
 
 [wallet]
-dbpath = "cpchain/assets/wallet/wallet.db"
+# this file is relative to rc_dir
+dbpath = "wallet/wallet.db"
 download_dir = "~/.cpchain/downloads"
 rsa_private_key_file = "cpchain/assets/wallet/private_key.pem"
 rsa_private_key_password_file = 'cpchain/assets/wallet/password'
@@ -59,6 +60,7 @@ server_addr = "192.168.0.132"
 server_port = 8083
 es_hosts = '192.168.0.132:9200'
 market_url = "http://192.168.0.132:8083/api/v1/"
+market_url_test = "http://localhost:8083/main/v1/"
 default_password = "^-_-^cpchain@2018^-_-^"
 
 
