@@ -32,7 +32,7 @@ addr = '192.168.0.132'
 port = 5001
 
 [wallet]
-dbpath = "cpchain/assets/wallet/wallet.db"
+dbpath = "wallet/wallet.db"
 download_dir = "~/.cpchain/downloads"
 rsa_private_key_file = "cpchain/assets/wallet/private_key.pem"
 rsa_private_key_password_file = 'cpchain/assets/wallet/password'
