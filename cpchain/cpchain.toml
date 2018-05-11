@@ -5,15 +5,21 @@
 # home directoy
 home = "~/.cpchain"
 
+[account]
+# we shall move it to ~/.cpchain
+keystore_dir = "eth/data_dir/keystore"
+
+
 [chain]
-contract_src_dir = "cpchain/assets/chain/contracts/Trading.sol"
-contract_json = "cpchain/assets/chain/build/Trading.json"
+contract_src_path = "scripts/chain/contracts/contract.sol"
+contract_bin_path = "cpchain/assets/chain/contract.json"
+contract_name = "Contract"
 registrar_json = "cpchain/assets/chain/registrar.json"
-core_contract = "Trading"
+
 # mode can be "test", "falcon", "local"
-mode = "falcon"
-ipc_provider_addr = "cpchain/assets/chain/sheds/data_dir/geth.ipc"
+mode = "dummy"
 falcon_provider_addr = "http://192.168.0.132:8545"
+local_provider_addr = "http://127.0.0.1:8545"
 
 
 [storage.s3]
@@ -61,12 +67,13 @@ default_password = "^-_-^cpchain@2018^-_-^"
 version = 1
 disable_existing_loggers = false
 
-[logging.formatters.standard]
+[logging.formatters.simple]
 format = '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
 
 [logging.handlers.default]
 level = "DEBUG"
 class = "logging.StreamHandler"
+formatter = "simple"
 
 [logging.loggers.cpchain]
 handlers = ["default"]

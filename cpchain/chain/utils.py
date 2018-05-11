@@ -1,63 +1,65 @@
 import json
+import pathlib
 
-from web3 import Web3, IPCProvider, TestRPCProvider, HTTPProvider
+from web3 import Web3, TestRPCProvider, HTTPProvider
+from web3.contract import ConciseContract
 from eth_keyfile import extract_key_from_keyfile
 
 from cpchain import config
 from cpchain.utils import join_with_root
 
 
-class DefaultWeb3:
-    def __init__(self):
-        self.web3 = None
+default_w3 = None
 
-    def _set_web3(self):
-        if self.web3 is None:
-            mode = config.chain.mode
-            if mode == "test":
-                provider = TestRPCProvider()
-            elif mode == "falcon":
-                provider = HTTPProvider(config.chain.falcon_provider_addr)
-            else:
-                provider = IPCProvider(join_with_root(config.chain.ipc_provider_addr))
-            self.web3 = Web3(provider)
-            self.web3.eth.defaultAccount = self.web3.eth.accounts[0]
+def _set_default_w3():
+    global default_w3
+    mode = config.chain.mode
+    if default_w3 or mode == "dummy":
+        return 
 
-    def __getattr__(self, name):
-        self._set_web3()
-        return getattr(self.web3, name)
+    if mode == "test":
+        provider = TestRPCProvider()
+    elif mode == "falcon":
+        provider = HTTPProvider(config.chain.falcon_provider_addr)
+    elif mode == "local":
+        provider = HTTPProvider(config.chain.local_provider_addr)
+    else:
+        raise RuntimeError("No Provider Found.")
+    default_w3 = Web3(provider)
+    default_w3.eth.defaultAccount = default_w3.eth.accounts[0]
 
-
-default_web3 = DefaultWeb3()
+_set_default_w3()
 
 
-def read_contract_interface(contract_name):
+def read_contract_interface(bin_path, contract_name):
+    with open(bin_path) as f:
+        filename = "{}.sol".format(pathlib.Path(bin_path).stem)
+        data = json.load(f)
+        intf = data['contracts'][filename][contract_name]
+        return intf
 
-    with open(join_with_root(config.chain.contract_json)) as f:
-        all_contracts = json.load(f)
-        contract_interface = all_contracts['<stdin>:' + contract_name]
-    return contract_interface
+
+def deploy_contract(bin_path, contract_name, w3=default_w3):
+    interface = read_contract_interface(bin_path, contract_name)
+    contract = w3.eth.contract(abi=interface['abi'], bytecode=interface['evm']['bytecode']['object'])
+    
+    estimated_gas = contract.constructor().estimateGas()
+    tx_hash = contract.constructor().transact(dict(gas=estimated_gas))
+
+    # get tx receipt to get contract address
+    # tx_receipt = web3.eth.getTransactionReceipt(tx_hash)
+    tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+    address = tx_receipt['contractAddress']
+
+
+    contract = w3.eth.contract(address=address, abi=interface['abi'], ContractFactoryClass=ConciseContract)
+    return contract
 
 
 def read_contract_address(contract_name):
     with open(join_with_root(config.chain.registrar_json)) as f:
         contracts = json.load(f)
-    # return bytes.fromhex(contracts[contract_name][2:])
     return contracts[contract_name]
-
-
-def deploy_contract(contract_name, web3=default_web3):
-    contract_interface = read_contract_interface(contract_name)
-    new_contract = web3.eth.contract(abi=contract_interface['abi'], bytecode=contract_interface['bin'])
-    # get transaction hash from deployed contract, let web3 estimate gas for this transaction
-    tx_hash = new_contract.deploy(transaction={'from': web3.eth.accounts[0]})
-    # get tx receipt to get contract address
-    tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
-    contract_address = tx_receipt['contractAddress']
-    with open(config.chain.registrar_json, 'w') as f:
-        f.write(json.dumps(dict({contract_name: contract_address})))
-    new_contract.address = contract_address
-    return new_contract
 
 
 def load_private_key_from_keystore(key_path, password='password'):

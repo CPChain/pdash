@@ -17,6 +17,8 @@ from cpchain.wallet.ui import MainWindow
 from cpchain.wallet.chain import Broker
 from cpchain.wallet.net import MarketClient
 
+from cpchain.account import Accounts
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -27,6 +29,7 @@ class Wallet:
         self.main_wnd = MainWindow(self)
         self.chain_broker = Broker(self)
         self.market_client = MarketClient(self)
+        self.accounts = Accounts()
 
         # self._initialize_system()
 

@@ -1,8 +1,8 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-curr_dir=`pwd`
-cd ..
-ROOT_PATH=`pwd`
+cd "$(dirname "${BASH_SOURCE[0]}")"/..
+
+ROOT_PATH=$(pwd)
 export PYTHONPATH=$PYTHONPATH:$ROOT_PATH
-nohup python cpchain/market/manage.py runserver 0.0.0.0:8083 &
-cd $curr_dir
+
+python3 cpchain/market/manage.py runserver 0.0.0.0:8083

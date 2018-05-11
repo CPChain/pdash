@@ -1,3 +1,10 @@
+QFrame#header {
+    border: 2px solid green;
+    border-radius: 4px;
+    padding: 2px;
+    background-image: url(${asset_dir}/icons/upload_btn.png);
+}
+
 QWidget#main_window {
-    background: #1d2026;
+    background: #006bcf;
 }

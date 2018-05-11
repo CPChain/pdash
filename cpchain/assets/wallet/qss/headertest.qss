@@ -1,0 +1,123 @@
+QLineEdit#searchbar {
+    margin-left: 5px;
+    /* border: 1px solid #724f61;    */
+    border-radius: 10px;
+    /* color: #0f0000; */
+    color: #ddc9c9;
+    /* background: #5b4b19; */
+    /* background: #423611; */
+    background: #FCFCFC;
+}
+
+QLabel#word_label {
+    color: #fefefe;
+}
+
+QLineEdit#searchbar:pressed {
+    color: #f3f4f7;
+}
+
+QPushButton#prev_btn {
+    min-height: 16px; 
+    min-width: 20px;  
+    max-width: 20px; 
+    max-height: 16px; 
+    padding: 5px 5px 5px 5px;
+    margin: 0 0 0 0;
+    color: #98a080;
+    /*border-radius: 10px;*/
+    /*background: #29426b;*/
+    border-image: url(${asset_dir}/icons/back.png); 
+}
+
+QPushButton#nex_btn {
+    min-height: 16px; 
+    min-width: 20px;  
+    max-width: 20px; 
+    max-height: 16px;
+    padding: 5px 5px 5px 5px;
+    margin: 0 0 0 0;
+    color: #000000;
+    border-radius: 5px;
+    background: #29426b;
+    border-image: url(${asset_dir}/icons/toward disabled.png); 
+    /*border-top: 3px transparent;
+    border-bottom: 3px transparent;
+    border-right: 3px transparent;
+    border-left: 3px transparent;*/
+}
+
+QPushButton#upload_btn {
+    min-height: 20px; 
+    min-width: 20px;  
+    max-width: 20px; 
+    max-height: 20px; 
+    padding: 1px 1px 1px 1px;
+    margin: 0 0 0 0;
+    color: #006bcf;
+    background: #006bcf;
+    border-image: url(${asset_dir}/icons/upload_btn.png); 
+}
+
+QPushButton#download_btn {
+    min-height: 20px; 
+    min-width: 20px;  
+    max-width: 20px; 
+    max-height: 20px; 
+    padding: 1px 1px 1px 1px;
+    margin: 0 0 0 0;
+    color: #006bcf;
+    background: #006bcf;
+    border-image: url(${asset_dir}/icons/downloading.png); 
+}
+
+QPushButton#message_btn {
+    min-height: 20px; 
+    min-width: 20px;  
+    max-width: 20px; 
+    max-height: 20px; 
+    padding: 1px 1px 1px 1px;
+    margin: 0 0 0 0;
+    color: #006bcf;
+    background: #006bcf;
+    border-image: url(${asset_dir}/icons/message.png); 
+}
+
+QPushButton#search_btn {
+    border-image: url(${asset_dir}/icons/search_btn.png); 
+}
+
+QPushButton#login_btn {
+    margin-right: 11px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #8c6a6a;
+    border: 1px solid #3a2f2f; 
+    background: #443b3b;
+}
+
+QPushButton#profilepage_btn:pressed {
+    background: #ffffff;
+}
+
+QPushButton#profilepage_btn {
+    min-height: 35px; 
+    min-width: 35px;  
+    max-width: 35px; 
+    max-height: 35px;
+    border-image: url(${asset_dir}/icons/profile.png);
+    background-color: #006bcf;
+}
+
+QPushButton#profile_btn {
+    min-height: 5px; 
+    min-width: 8px;  
+    max-width: 8px; 
+    max-height: 5px;
+    border-image: url(${asset_dir}/icons/profile_arrow.png);
+    background-color: #006bcf;
+}
+
+QPushButton#login_btn:hover {
+    color: #efacac;
+}
