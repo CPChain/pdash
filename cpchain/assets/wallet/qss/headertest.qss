@@ -59,6 +59,10 @@ QPushButton#upload_btn {
     border-image: url(${asset_dir}/icons/upload_btn.png); 
 }
 
+QPushButton#upload_btn:pressed {
+    background: #5ca7ee;
+}
+
 QPushButton#download_btn {
     min-height: 20px; 
     min-width: 20px;  
@@ -71,6 +75,10 @@ QPushButton#download_btn {
     border-image: url(${asset_dir}/icons/downloading.png); 
 }
 
+QPushButton#download_btn:pressed {
+    background: #5ca7ee;
+}
+
 QPushButton#message_btn {
     min-height: 20px; 
     min-width: 20px;  
@@ -81,6 +89,10 @@ QPushButton#message_btn {
     color: #006bcf;
     background: #006bcf;
     border-image: url(${asset_dir}/icons/message.png); 
+}
+
+QPushButton#message_btn:pressed {
+    background: #5ca7ee;
 }
 
 QPushButton#search_btn {
@@ -97,7 +109,7 @@ QPushButton#login_btn {
 }
 
 QPushButton#profilepage_btn:pressed {
-    background: #ffffff;
+    background: #5ca7ee;
 }
 
 QPushButton#profilepage_btn {
