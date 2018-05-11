@@ -6,9 +6,10 @@ from twisted.internet import reactor, ssl
 from twisted.web.server import Site
 from twisted.internet.task import LoopingCall
 
-from cpchain import config, root_dir
+from cpchain import config
 from cpchain.proxy.network import PeerProtocol
 from cpchain.proxy.server import SSLServerFactory, FileServer
+from cpchain.utils import join_with_rc, join_with_root
 
 logger = logging.getLogger(__name__)
 
@@ -55,19 +56,15 @@ class Peer:
     def start_ssl_server(self):
 
         server_key = os.path.expanduser(
-            os.path.join(config.home,
-                         config.proxy.server_key))
+            join_with_rc(config.proxy.server_key))
         server_crt = os.path.expanduser(
-            os.path.join(config.home,
-                         config.proxy.server_crt))
+            join_with_rc(config.proxy.server_crt))
 
         if not os.path.isfile(server_key):
             logger.info("SSL key/cert file not found, "
                         + "run local self-test by default")
-            server_key = os.path.join(root_dir,
-                                      config.proxy.server_key)
-            server_crt = os.path.join(root_dir,
-                                      config.proxy.server_crt)
+            server_key = join_with_root(config.proxy.server_key)
+            server_crt = join_with_root(config.proxy.server_crt)
 
         # ctrl channel
         reactor.listenSSL(self.ctrl_port, self.ctrl_factory,
