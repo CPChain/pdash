@@ -36,6 +36,7 @@ web3
 "
 
 wallet_pkgs="
+pyqt5==5.10.1
 eth-keyfile
 web3
 qt5reactor
