@@ -34,7 +34,7 @@ class Trade(Base):
                 self.file_uuid, self.time_stamp)
 
 class ProxyDB(object):
-    db_path = os.path.join(config.home, config.proxy.dbpath)
+    db_path = os.path.join(config.rc_dir, config.proxy.dbpath)
     db_path = os.path.expanduser(db_path)
     default_db = 'sqlite:///' + db_path
 

@@ -2,8 +2,8 @@
 
 # for sample configuration, cf. https://github.com/toml-lang/toml
 
-# home directoy
-home = "~/.cpchain"
+[core]
+rc_dir = "~/.cpchain"
 
 [account]
 # we shall move it to ~/.cpchain
