@@ -12,6 +12,8 @@ QScrollArea {
 
 QFrame {
     background: #eeeeee;
+    border: none;
+    outline: none;
 }
 
 QPushButton#close_wnd_btn, QPushButton#minimize_wnd_btn, QPushButton#maximize_wnd_btn {
@@ -52,6 +54,7 @@ QListWidget {
     font-size: 10pt; 
     /*font-weight: bold;*/  
     border: none;
+    outline: none;
 }
 
 QListWidget::item::hover  {
