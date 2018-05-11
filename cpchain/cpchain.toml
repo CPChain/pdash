@@ -52,8 +52,8 @@ server_data_port = 8001
 server_peer_port = 5678
 server_key = 'cpchain/assets/proxy/key/server.key'
 server_crt = 'cpchain/assets/proxy/key/server.crt'
-dbpath = "cpchain/proxy/proxy.db"
-server_root = 'cpchain/proxy/server_root'
+dbpath = "proxy.db"
+server_root = 'server_root'
 
 
 [market]
