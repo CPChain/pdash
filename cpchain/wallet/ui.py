@@ -43,9 +43,67 @@ def load_stylesheet(wid, name):
 
 
 # widgets
-class TabContentArea(QFrame): pass
+class CPItem(QFrame):
+    def __init__(self, parent=None, item={}):
+        super().__init__(parent)
+        self.parent = parent
+        self.item = item
 
-class PopularTab(TabContentArea):
+        self.init_ui()
+
+    def init_ui(self):
+        self.title_btn = QPushButton("Medicine big data from Mayo Clinic")
+        self.title_btn.setObjectName("title_btn")
+        self.seller_btn = QPushButton("Barack Obama")
+        self.seller_btn.setObjectName("seller_btn")
+        self.time_label = QLabel("May 4, 2018")
+        self.time_label.setObjectName("time_label")
+        self.total_sale_label = QLabel("128 sales")
+        self.total_sale_label.setObjectName("total_sale_label")
+        self.price_label = QLabel()
+        self.price_label.setObjectName("price_label")
+        self.tag = ["tag1", "tag2", "tag3", "tag4"]
+        self.tag_num = 4
+        self.tag_btn_list = []
+        for i in range(self.tag_num):
+            self.tag_btn_list.append(QPushButton(self.tag[i], self))
+            self.tag_btn_list[i].setObjectName("tag_btn_{0}".format(i))
+
+        def bind_slots():
+            print("Binding slots of buttons......")
+        bind_slots()
+
+        def setlayout():
+            self.main_layout = main_layout = QVBoxLayout(self)
+            main_layout.addSpacing(0)
+            main_layout.addWidget(self.title_btn)
+            main_layout.addSpacing(1)
+
+            self.layout_2 = QHBoxLayout(self)
+            self.layout_2.addSpacing(0)
+            self.layout_2.addWidget(self.seller_btn)
+            self.layout_2.addSpacing(0)
+            self.vline = QLabel("|")
+            self.layout_2.addWidget(self.vline)
+            self.layout_2.addWidget(self.time_label)
+            self.layout_2.addSpacing(30)
+            self.layout_2.addWidget(self.total_sale_label)
+
+            self.main_layout.addLayout(self.layout_2)
+            self.main_layout.addWidget(self.price_label)
+
+            self.layout_3 = QHBoxLayout(self)
+            self.layout_3.addSpacing(0)
+            for i in range(self.tag_num):
+                self.layout_3.addWidget(self.tag_btn_list[i])
+
+            self.main_layout.addLayout(self.layout_3)
+            self.setLayout(self.main_layout)
+        setlayout()
+        print("Loading stylesheet of item")
+
+
+class PopularTab(QScrollArea):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
@@ -54,6 +112,13 @@ class PopularTab(TabContentArea):
         self.init_ui()
 
     def init_ui(self):
+        self.frame = QFrame()
+        self.setWidget(self.frame)
+        self.setWidgetResizable(True)
+        self.frame.setMinimumWidth(150)
+
+        self.item_num_max = 2
+        self.promo_num_max = 1
 
         def create_banner():
             self.banner_label = banner_label = QLabel(self)
@@ -99,6 +164,24 @@ class PopularTab(TabContentArea):
         self.recom_label.setObjectName("recom_label")
         self.recom_label.setMaximumHeight(25)
 
+        def get_items():
+            print("Getting items from backend......")
+            self.item_lists = []
+            for i in range(self.item_num_max):
+                self.item_lists.append(CPItem(self))
+        get_items()
+
+        def get_promotion():
+            print("Getting promotion images from backend.....")
+            self.promo_lists = []
+            for i in range(self.promo_num_max):
+                promo_label = QLabel(self)
+                pixmap = get_pixm('cpc-logo-single')
+                pixmap = pixmap.scaled(60, 60)
+                promo_label.setPixmap(pixmap)
+                self.promo_lists.append(promo_label)
+        get_promotion()
+
         def set_layout():
             self.main_layout = QVBoxLayout(self)
             self.main_layout.addWidget(self.banner_label)
@@ -124,7 +207,24 @@ class PopularTab(TabContentArea):
             self.main_layout.addSpacing(1)
 
             self.main_layout.addWidget(self.recom_label)
+            self.main_layout.addSpacing(2)
+            
+            self.bottom_layout = QHBoxLayout(self)
 
+            self.recom_layout = QVBoxLayout(self)
+            for i in range(self.item_num_max):
+                self.recom_layout.addWidget(self.item_lists[i])
+                self.recom_layout.addSpacing(1)
+
+            self.promo_layout = QVBoxLayout(self)
+            for i in range(self.promo_num_max):
+                self.promo_layout.addWidget(self.promo_lists[i])
+                self.promo_layout.addSpacing(1)
+
+            self.bottom_layout.addLayout(self.recom_layout)
+            self.bottom_layout.addLayout(self.promo_layout)
+
+            self.main_layout.addLayout(self.bottom_layout)
         set_layout()
 
         print("Loading stylesheet of cloud tab widget")
