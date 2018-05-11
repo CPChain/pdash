@@ -18,5 +18,14 @@ urlpatterns = [
     url(r'^product_paged/search/$', ProductPagedSearchAPIViewSet.as_view(), name='product_paged_search'),
     url(r'^es_product/search/$', ESProductView.as_view(), name='es_product_search'),
     url(r'^recommend_product/list/$', RecommendProductsAPIView.as_view(), name='recommend_products'),
-    url(r'^product_sales_quantity/add/$', ProductSalesQuantityAddAPIView.as_view(), name='recommend_products'),
+
+    url(r'^product/sales_quantity/add/$', ProductSalesQuantityAddAPIView.as_view(), name='product_sales_quantity_add'),
+
+    url(r'^product/tag/subscribe/$', ProductTagSubscribeAPIView.as_view(), name='product_tag_subscribe'),
+    url(r'^product/tag/unsubscribe/$', ProductTagUnsubscribeAPIView.as_view(), name='product_tag_unsubscribe'),
+    url(r'^product/tag/search/$', MyTaggedProductSearchAPIView.as_view(), name='product_tag_search'),
+
+    url(r'^product/seller/subscribe//$', ProductSellerSubscribeAPIView.as_view(), name='product_seller_subscribe'),
+    url(r'^product/seller/unsubscribe//$', ProductSellerUnsubscribeAPIView.as_view(), name='product_seller_unsubscribe'),
+    url(r'^product/seller/search/$', MyTaggedSellerSearchAPIView.as_view(), name='product_seller_search'),
 ]

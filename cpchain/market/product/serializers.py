@@ -1,6 +1,6 @@
 from django.utils import timezone
 from rest_framework import serializers
-from .models import Product, WalletUser
+from .models import Product, WalletUser, SalesQuantity
 from rest_framework_elasticsearch.es_serializer import ElasticModelSerializer
 from .search_indexes import ProductIndex
 
@@ -61,7 +61,7 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
 
 class ProductSalesQuantitySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Product
+        model = SalesQuantity
         fields = ('quantity','market_hash')
 
     def update(self, instance, validated_data):
