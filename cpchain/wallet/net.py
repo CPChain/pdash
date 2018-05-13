@@ -160,3 +160,69 @@ class MarketClient:
         logger.debug("recommend product: ", confirm_info)
         return confirm_info
 
+    @inlineCallbacks
+    def add_product_sales_quantity(self, market_hash):
+        url = self.url + '/product/v1/product/sales_quantity/add/'
+        payload = {'market_hash': market_hash}
+        header = {"MARKET-KEY": self.account.pub_key, "MARKET-TOKEN": self.token, 'Content-Type': 'application/json'}
+        resp = yield treq.post(url, headers=header, json=payload)
+        confirm_info = yield treq.json_content(resp)
+        return confirm_info
+
+    @inlineCallbacks
+    def subscribe_tag(self, tag):
+        url = self.url + '/product/v1/product/tag/subscribe/'
+        payload = {'public_key': self.account.pub_key, 'tag': tag}
+        header = {"MARKET-KEY": self.account.pub_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        resp = yield treq.post(url, headers=header, json=payload)
+        confirm_info = yield treq.json_content(resp)
+        return confirm_info['status']
+
+    @inlineCallbacks
+    def unsubscribe_tag(self, tag):
+        url = self.url + '/product/v1/product/tag/unsubscribe/'
+        payload = {'public_key': self.account.pub_key, 'tag': tag}
+        header = {"MARKET-KEY": self.account.pub_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        resp = yield treq.post(url, headers=header, json=payload)
+        confirm_info = yield treq.json_content(resp)
+        return confirm_info['status']
+
+    @inlineCallbacks
+    def subscribe_seller(self, seller_pub_key):
+        url = self.url + '/product/v1/product/seller/subscribe/'
+        payload = {'public_key': self.account.pub_key, 'seller_public_key': seller_pub_key}
+        header = {"MARKET-KEY": self.account.pub_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        resp = yield treq.post(url, headers=header, json=payload)
+        confirm_info = yield treq.json_content(resp)
+        return confirm_info['status']
+
+    @inlineCallbacks
+    def unsubscribe_seller(self, seller_pub_key):
+        url = self.url + '/product/v1/product/seller/unsubscribe/'
+        payload = {'public_key': self.account.pub_key, 'seller_public_key': seller_pub_key}
+        header = {"MARKET-KEY": self.account.pub_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        resp = yield treq.post(url, headers=header, json=payload)
+        confirm_info = yield treq.json_content(resp)
+        return confirm_info['status']
+
+    @inlineCallbacks
+    def query_by_subscribe_seller(self):
+        url = self.url + '/product/v1/product/seller/search/'
+        header = {"MARKET-KEY": self.account.pub_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        resp = yield treq.get(url, headers=header)
+        confirm_info = yield treq.json_content(resp)
+        return confirm_info['status']
+
+    @inlineCallbacks
+    def query_by_subscribe_tag(self):
+        url = self.url + '/product/v1/product/tag/search/'
+        header = {"MARKET-KEY": self.account.pub_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        resp = yield treq.get(url, headers=header)
+        confirm_info = yield treq.json_content(resp)
+        return confirm_info['status']
