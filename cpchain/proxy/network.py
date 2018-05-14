@@ -94,27 +94,6 @@ class PeerProtocol(protocol.DatagramProtocol):
                 self.peers[peer_id] = peer
                 logger.debug("add peer %s" % str(peer['addr']))
 
-                self.share_peers(addr)
-
-        elif msg['type'] == 'share_peer':
-            peer_id = msg['peer_id']
-            peer_info = msg['peer_info']
-            peer_stat = msg['peer_stat']
-
-            if peer_id in self.peers:
-                # other peer already shared this peer
-                peer = self.peers[peer_id]
-                logger.debug('known peer %s' % str(peer['addr']))
-            else:
-                peer = {
-                    'addr': tuple(msg['addr']),
-                    'peer_info': peer_info,
-                    'ts': time.time(),
-                    'peer_stat': peer_stat
-                }
-                self.peers[peer_id] = peer
-                logger.debug("add share peer %s" % str(peer['addr']))
-
         elif msg['type'] == 'select_peer':
             tid = msg['tid']
             logger.debug("select peer request from %s" % str(addr))
@@ -161,28 +140,6 @@ class PeerProtocol(protocol.DatagramProtocol):
 
         logger.debug('ask %s to recommend a peer' % str(addr))
         return self.send_msg(msg, addr)
-
-    def share_peers(self, addr):
-
-        for peer_id in self.peers:
-            peer = self.peers[peer_id]
-            peer_addr = peer['addr']
-            peer_info = peer['peer_info']
-            peer_stat = peer['peer_stat']
-            msg = {
-                'type': 'share_peer',
-                'tid': generate_tid(),
-                'peer_id': peer_id,
-                'peer_info': peer_info,
-                'peer_stat': peer_stat,
-                'addr': peer_addr
-            }
-
-            if addr != peer_addr:
-                self.send_msg(msg, addr)
-                logger.debug('share peer %s to %s' % \
-                        (str(peer_addr), str(addr)))
-
 
     def ping(self, addr):
         msg = {
