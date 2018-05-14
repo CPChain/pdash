@@ -4,6 +4,10 @@ QScrollArea {
 
 }
 
+QFrame.HorLine {
+	color: #e5e5e5;
+}
+
 QFrame#popular_frame {
 	background: #fafafa;
 	border: none;
@@ -14,7 +18,7 @@ QLabel {
 	color: #555555;
 }
 
-QPushButton#more_btn {
+QPushButton#more_btn_1, QPushButton#more_btn_2 {
 	min-height: 16px; 
     min-width: 60px;  
     max-width: 60px; 
@@ -25,7 +29,7 @@ QPushButton#more_btn {
     background-color: #fafafa;
 }
 
-QPushButton#more_btn:hover {
+QPushButton#more_btn_1:hover, QPushButton#more_btn_2:hover {
 	color: #5ca7ee;
 }
 

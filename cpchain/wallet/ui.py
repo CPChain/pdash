@@ -94,11 +94,11 @@ class CPItem(QFrame):
 
             self.layout_2 = QHBoxLayout(self)
             self.layout_2.addWidget(self.total_sale_label)
-            self.layout_2.addSpacing(1)
+            self.layout_2.addStretch(1)
             self.layout_2.addWidget(self.seller_btn)
-            self.layout_2.addSpacing(1)
+            self.layout_2.addSpacing(10)
             self.layout_2.addWidget(self.time_label)
-            self.layout_2.addSpacing(1)
+            self.layout_2.addStretch(2)
             
 
             self.main_layout.addLayout(self.layout_2)
@@ -108,7 +108,9 @@ class CPItem(QFrame):
             self.layout_3.addSpacing(1)
             for i in range(self.tag_num):
                 self.layout_3.addWidget(self.tag_btn_list[i])
+                self.layout_3.addSpacing(10)
 
+            self.layout_3.addStretch(1)
             self.main_layout.addLayout(self.layout_3)
             self.setLayout(self.main_layout)
         setlayout()
@@ -152,9 +154,11 @@ class PopularTab(QScrollArea):
         self.hot_label.setFont(QFont("Arial", 10, QFont.Light))
         self.hot_label.setMaximumHeight(25)
 
-        self.more_btn = more_btn = QPushButton("More>", self)
-        more_btn.setObjectName("more_btn")
+        self.more_btn_1 = more_btn_1 = QPushButton("More>", self)
+        more_btn_1.setObjectName("more_btn_1")
         #more_btn.setFixedSize(30, 18)
+        self.more_btn_2 = more_btn_2 = QPushButton("More>", self)
+        more_btn_2.setObjectName("more_btn_2")
 
         def create_indus_trans():
             self.trans_label = trans_label = QLabel(self)
@@ -207,15 +211,16 @@ class PopularTab(QScrollArea):
             self.main_layout.addWidget(self.banner_label)
             self.main_layout.addSpacing(35)
             self.main_layout.addWidget(self.hot_label)
-            self.main_layout.addWidget(self.horline1)
+            
 
             self.hot_layout = QHBoxLayout(self)
             self.hot_layout.addSpacing(0)
             self.hot_layout.addWidget(self.hot_label)
             self.hot_layout.addSpacing(50)
-            self.hot_layout.addWidget(more_btn)
+            self.hot_layout.addWidget(more_btn_1)
             self.main_layout.addLayout(self.hot_layout)
             self.main_layout.addSpacing(1)
+            self.main_layout.addWidget(self.horline1)
 
             self.hot_img_layout = QHBoxLayout(self)
             self.hot_img_layout.addSpacing(25)
@@ -226,10 +231,16 @@ class PopularTab(QScrollArea):
             self.hot_img_layout.addWidget(self.medicine_label)
             self.main_layout.addLayout(self.hot_img_layout)
             self.main_layout.addSpacing(1)
+            
+            self.recom_layout = QHBoxLayout(self)
+            self.recom_layout.addSpacing(0)
+            self.recom_layout.addWidget(self.recom_label)
+            self.recom_layout.addSpacing(50)
+            self.recom_layout.addWidget(more_btn_2)
+            self.main_layout.addLayout(self.recom_layout)
+            self.main_layout.addSpacing(1)
             self.main_layout.addWidget(self.horline2)
-
-            self.main_layout.addWidget(self.recom_label)
-            self.main_layout.addSpacing(2)
+            self.main_layout.addSpacing(1)
             
             self.bottom_layout = QHBoxLayout(self)
 
@@ -335,14 +346,20 @@ class SideBar(QScrollArea):
 
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self.frame)
-            main_layout.addSpacing(0)
+            main_layout.addSpacing(10)
             main_layout.addWidget(self.trend_label)
+            main_layout.addSpacing(3)
             main_layout.addWidget(self.trending_list)
+            main_layout.addSpacing(1)
             main_layout.addWidget(self.mine_label)
+            main_layout.addSpacing(3)
             main_layout.addWidget(self.mine_list)
+            main_layout.addSpacing(1)
             main_layout.addWidget(self.treasure_label)
+            main_layout.addSpacing(3)
             main_layout.addWidget(self.treasure_list)
-            main_layout.setContentsMargins(0, 10, 0, 0)
+            main_layout.setContentsMargins(0, 0, 0, 0)
+            main_layout.addStretch(1)
             self.setLayout(self.main_layout)
         set_layout()
         load_stylesheet(self, "sidebar.qss")
@@ -520,6 +537,7 @@ class MainWindow(QMainWindow):
 
         def set_geometry():
             self.resize(1000, 800)  # resize before centering.
+            self.setMinimumSize(800, 800)
             center_pt = QDesktopWidget().availableGeometry().center()
             qrect = self.frameGeometry()
             qrect.moveCenter(center_pt)
