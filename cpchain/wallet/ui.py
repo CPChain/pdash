@@ -12,6 +12,7 @@ from PyQt5.QtCore import Qt, QSize, QPoint, pyqtSignal
 from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont
 
 from cpchain import config, root_dir
+# from cpchain import join_with_root
 
 # do it before any other twisted code.
 def install_reactor():
@@ -71,7 +72,7 @@ class TableWidget(QTableWidget):
 
 
 
-class HorLine(QFrame):
+class HorizontalLine(QFrame):
     def __init__(self, parent=None, wid=2):
         super().__init__(parent)
         self.parent = parent
@@ -81,7 +82,7 @@ class HorLine(QFrame):
         self.setLineWidth(self.wid)
 
 
-class CPItem(QFrame):
+class Product(QFrame):
     def __init__(self, parent=None, item={}):
         super().__init__(parent)
         self.parent = parent
@@ -122,27 +123,27 @@ class CPItem(QFrame):
             main_layout.addWidget(self.title_btn)
             main_layout.addSpacing(5)
 
-            self.layout_2 = QHBoxLayout(self)
-            self.layout_2.addWidget(self.total_sale_label)
-            self.layout_2.addStretch(1)
-            self.layout_2.addWidget(self.seller_btn)
-            self.layout_2.addSpacing(5)
-            self.layout_2.addWidget(self.time_label)
-            self.layout_2.addStretch(2)
+            self.sales_layout = QHBoxLayout(self)
+            self.sales_layout.addWidget(self.total_sale_label)
+            self.sales_layout.addStretch(1)
+            self.sales_layout.addWidget(self.seller_btn)
+            self.sales_layout.addSpacing(5)
+            self.sales_layout.addWidget(self.time_label)
+            self.sales_layout.addStretch(2)
             
 
-            self.main_layout.addLayout(self.layout_2)
+            self.main_layout.addLayout(self.sales_layout)
             main_layout.addSpacing(10)
             self.main_layout.addWidget(self.price_label)
 
-            self.layout_3 = QHBoxLayout(self)
-            self.layout_3.addSpacing(1)
+            self.tag_layout = QHBoxLayout(self)
+            self.tag_layout.addSpacing(1)
             for i in range(self.tag_num):
-                self.layout_3.addWidget(self.tag_btn_list[i])
-                self.layout_3.addSpacing(5)
+                self.tag_layout.addWidget(self.tag_btn_list[i])
+                self.tag_layout.addSpacing(5)
 
-            self.layout_3.addStretch(1)
-            self.main_layout.addLayout(self.layout_3)
+            self.tag_layout.addStretch(1)
+            self.main_layout.addLayout(self.tag_layout)
             self.setLayout(self.main_layout)
         setlayout()
         #print("Loading stylesheet of item")
@@ -167,9 +168,9 @@ class PopularTab(QScrollArea):
         self.item_num_max = 2
         self.promo_num_max = 1
 
-        self.horline1 = HorLine(self, 2)
+        self.horline1 = HorizontalLine(self, 2)
         self.horline1.setObjectName("horline1")
-        self.horline2 = HorLine(self, 2)
+        self.horline2 = HorizontalLine(self, 2)
         self.horline2.setObjectName("horline2")
 
         def create_banner():
@@ -193,32 +194,32 @@ class PopularTab(QScrollArea):
         more_btn_2.setObjectName("more_btn_2")
         self.more_btn_2.setCursor(QCursor(Qt.PointingHandCursor))
 
-        def create_indus_trans():
+        def create_ind_trans():
             self.trans_label = trans_label = QLabel(self)
             trans_label.setObjectName("trans_label")
             print("Getting trans images......")
             pixmap = get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(230, 136)
             trans_label.setPixmap(pixmap)
-        create_indus_trans()
+        create_ind_trans()
 
-        def create_indus_forest():
+        def create_ind_forest():
             self.forest_label = forest_label = QLabel(self)
             forest_label.setObjectName("forest_label")
             print("Getting trans images......")
             pixmap = get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(230, 136)
             forest_label.setPixmap(pixmap)
-        create_indus_forest()
+        create_ind_forest()
 
-        def create_indus_medicine():
+        def create_ind_medicine():
             self.medicine_label = medicine_label = QLabel(self)
             medicine_label.setObjectName("medicine_label")
             print("Getting trans images......")
             pixmap = get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(230, 136)
             medicine_label.setPixmap(pixmap)
-        create_indus_medicine()
+        create_ind_medicine()
 
         self.recom_label = QLabel("Recommended")
         self.recom_label.setObjectName("recom_label")
@@ -229,7 +230,7 @@ class PopularTab(QScrollArea):
             print("Getting items from backend......")
             self.item_lists = []
             for i in range(self.item_num_max):
-                self.item_lists.append(CPItem(self))
+                self.item_lists.append(Product(self))
         get_items()
 
         def get_promotion():
@@ -411,12 +412,12 @@ class CloudTab(QScrollArea):
                 self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
         create_file_table()
 
-        self.file_table.itemClicked.connect(self.record_check)
+        # self.file_table.itemClicked.connect(self.record_check)
 
-        def record_check(self, item):
-            if item.checkState() == Qt.Checked:
-                print("{} has been checked".format(item.text()))
-                self.check_record_list
+        # def record_check(self, item):
+        #     if item.checkState() == Qt.Checked:
+        #         print("{} has been checked".format(item.text()))
+        #         self.check_record_list
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self)
             main_layout.addSpacing(0)
