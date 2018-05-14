@@ -398,7 +398,8 @@ class CloudTab(QScrollArea):
             for i in range(self.row_number):
                 file_list.append(dict_exa)
 
-            self.checkbox_lst = []
+            self.check_record_list = []
+            self.checkbox_list = []
             for cur_row in range(self.row_number):
                 if cur_row == len(file_list):
                     break
@@ -413,6 +414,12 @@ class CloudTab(QScrollArea):
                 self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
         create_file_table()
 
+        self.file_table.itemClicked.connect(self.record_check)
+
+        def record_check(self, item):
+            if item.checkState() == Qt.Checked:
+                print("{} has been checked".format(item.text()))
+                self.check_record_list
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self)
             main_layout.addSpacing(0)

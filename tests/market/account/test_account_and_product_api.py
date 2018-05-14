@@ -28,10 +28,10 @@ class TestAccountAndProductApi(BaseApiTest):
     def test_login_and_confirm(self):
 
         header = {'Content-Type': 'application/json'}
-        nonce = self.login_and_get_nonce(header)
+        nonce = self._login_and_get_nonce(header)
 
         # ======= generate nonce signature and confirm =======
-        token = self.generate_nonce_signature_and_get_token(header, nonce)
+        token = self._generate_nonce_signature_and_get_token(header, nonce)
 
         # ======= publish product ========
         self.publish_product(token)
@@ -46,10 +46,10 @@ class TestAccountAndProductApi(BaseApiTest):
     def test_add_product_sales_quantity(self):
 
         header = {'Content-Type': 'application/json'}
-        nonce = self.login_and_get_nonce(header)
+        nonce = self._login_and_get_noncelogin_and_get_nonce(header)
 
         # ======= generate nonce signature and confirm =======
-        token = self.generate_nonce_signature_and_get_token(header, nonce)
+        token = self._generate_nonce_signature_and_get_token(header, nonce)
 
         # ======= publish product ========
         self.publish_product(token)
@@ -60,10 +60,10 @@ class TestAccountAndProductApi(BaseApiTest):
     def test_subscribe_tag(self):
 
         header = {'Content-Type': 'application/json'}
-        nonce = self.login_and_get_nonce(header)
+        nonce = self._login_and_get_noncelogin_and_get_nonce(header)
 
         # ======= generate nonce signature and confirm =======
-        token = self.generate_nonce_signature_and_get_token(header, nonce)
+        token = self._generate_nonce_signature_and_get_token(header, nonce)
 
         # ======= publish product ========
         self.publish_product(token)
@@ -80,10 +80,10 @@ class TestAccountAndProductApi(BaseApiTest):
     def test_subscribe_seller(self):
 
         header = {'Content-Type': 'application/json'}
-        nonce = self.login_and_get_nonce(header)
+        nonce = self._login_and_get_noncelogin_and_get_nonce(header)
 
         # ======= generate nonce signature and confirm =======
-        token = self.generate_nonce_signature_and_get_token(header, nonce)
+        token = self._generate_nonce_signature_and_get_token(header, nonce)
 
         # ======= publish product ========
         self.publish_product(token)
@@ -96,30 +96,6 @@ class TestAccountAndProductApi(BaseApiTest):
 
         # ======= TODO query by following seller ========
         self.query_by_subscribe_seller(token)
-
-    def login_and_get_nonce(self, header):
-        payload = {"public_key": self.pub_key_string}
-        url = '%s/account/v1/login/' % HOST
-        response = requests.post(url, headers=header, json=payload)
-        self.assertEqual(response.status_code, 200)
-        parsed_json = json.loads(response.text)
-        # print(response.text)
-        self.assertEqual(parsed_json['status'], 1)
-        nonce = parsed_json['message']
-        return nonce
-
-    def generate_nonce_signature_and_get_token(self, header, nonce):
-        url = '%s/account/v1/confirm/' % HOST
-        nonce_signature = generate_nonce_signature(self.pri_key_string, nonce)
-        payload = {"public_key": self.pub_key_string, "code": nonce_signature}
-        # print("confirm request:%s" % payload)
-        confirm_resp = requests.post(url, headers=header, json=payload)
-        self.assertEqual(confirm_resp.status_code, 200)
-        parsed_json = json.loads(confirm_resp.text)
-        self.assertEqual(parsed_json['status'], 1)
-        token = parsed_json['message']
-        print("token:%s" % token)
-        return token
 
     def query_recommend_products(self):
         # TODO

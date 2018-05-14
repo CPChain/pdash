@@ -38,31 +38,6 @@ class TestUserDataApi(BaseApiTest):
         # ======== TODO query tags =========
         self._query_tags(header=header)
 
-    def _login_and_get_nonce(self, header):
-        payload = {"public_key": self.pub_key_string}
-        url = '%s/account/v1/login/' % HOST
-        response = requests.post(url, headers=header, json=payload)
-        self.assertEqual(response.status_code, 200)
-        parsed_json = json.loads(response.text)
-        # print(response.text)
-        self.assertEqual(parsed_json['status'], True)
-        nonce = parsed_json['message']
-        print("nonce:%s" % nonce)
-        return nonce
-
-    def _generate_nonce_signature_and_get_token(self, header, nonce):
-        url = '%s/account/v1/confirm/' % HOST
-        nonce_signature = generate_nonce_signature(self.pri_key_string, nonce)
-        payload = {"public_key": self.pub_key_string, "code": nonce_signature}
-        # print("confirm request:%s" % payload)
-        confirm_resp = requests.post(url, headers=header, json=payload)
-        self.assertEqual(confirm_resp.status_code, 200)
-        parsed_json = json.loads(confirm_resp.text)
-        self.assertEqual(parsed_json['status'], True)
-        token = parsed_json['message']
-        print("token:%s" % token)
-        return token
-
     def query_product(self, keyword):
         params = {"keyword": keyword}
         url = '%s/product/v1/product/search/' % HOST
