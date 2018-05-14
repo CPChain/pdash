@@ -11,6 +11,9 @@ from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, 
 from PyQt5.QtCore import Qt, QSize, QPoint, pyqtSignal
 from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont
 
+from cpchain import config, root_dir
+# from cpchain import join_with_root
+
 # do it before any other twisted code.
 # def install_reactor():
 #     global app
@@ -74,7 +77,7 @@ class TableWidget(QTableWidget):
 
 
 
-class HorLine(QFrame):
+class HorizontalLine(QFrame):
     def __init__(self, parent=None, wid=2):
         super().__init__(parent)
         self.parent = parent
@@ -84,7 +87,7 @@ class HorLine(QFrame):
         self.setLineWidth(self.wid)
 
 
-class CPItem(QFrame):
+class Product(QFrame):
     def __init__(self, parent=None, item={}):
         super().__init__(parent)
         self.parent = parent
@@ -125,27 +128,27 @@ class CPItem(QFrame):
             main_layout.addWidget(self.title_btn)
             main_layout.addSpacing(5)
 
-            self.layout_2 = QHBoxLayout(self)
-            self.layout_2.addWidget(self.total_sale_label)
-            self.layout_2.addStretch(1)
-            self.layout_2.addWidget(self.seller_btn)
-            self.layout_2.addSpacing(5)
-            self.layout_2.addWidget(self.time_label)
-            self.layout_2.addStretch(2)
+            self.sales_layout = QHBoxLayout(self)
+            self.sales_layout.addWidget(self.total_sale_label)
+            self.sales_layout.addStretch(1)
+            self.sales_layout.addWidget(self.seller_btn)
+            self.sales_layout.addSpacing(5)
+            self.sales_layout.addWidget(self.time_label)
+            self.sales_layout.addStretch(2)
             
 
-            self.main_layout.addLayout(self.layout_2)
+            self.main_layout.addLayout(self.sales_layout)
             main_layout.addSpacing(10)
             self.main_layout.addWidget(self.price_label)
 
-            self.layout_3 = QHBoxLayout(self)
-            self.layout_3.addSpacing(1)
+            self.tag_layout = QHBoxLayout(self)
+            self.tag_layout.addSpacing(1)
             for i in range(self.tag_num):
-                self.layout_3.addWidget(self.tag_btn_list[i])
-                self.layout_3.addSpacing(5)
+                self.tag_layout.addWidget(self.tag_btn_list[i])
+                self.tag_layout.addSpacing(5)
 
-            self.layout_3.addStretch(1)
-            self.main_layout.addLayout(self.layout_3)
+            self.tag_layout.addStretch(1)
+            self.main_layout.addLayout(self.tag_layout)
             self.setLayout(self.main_layout)
         setlayout()
         #print("Loading stylesheet of item")
@@ -170,9 +173,9 @@ class PopularTab(QScrollArea):
         self.item_num_max = 2
         self.promo_num_max = 1
 
-        self.horline1 = HorLine(self, 2)
+        self.horline1 = HorizontalLine(self, 2)
         self.horline1.setObjectName("horline1")
-        self.horline2 = HorLine(self, 2)
+        self.horline2 = HorizontalLine(self, 2)
         self.horline2.setObjectName("horline2")
 
         def create_banner(carousel):
@@ -198,32 +201,32 @@ class PopularTab(QScrollArea):
         more_btn_2.setObjectName("more_btn_2")
         self.more_btn_2.setCursor(QCursor(Qt.PointingHandCursor))
 
-        def create_indus_trans():
+        def create_ind_trans():
             self.trans_label = trans_label = QLabel(self)
             trans_label.setObjectName("trans_label")
             print("Getting trans images......")
             pixmap = get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(230, 136)
             trans_label.setPixmap(pixmap)
-        create_indus_trans()
+        create_ind_trans()
 
-        def create_indus_forest():
+        def create_ind_forest():
             self.forest_label = forest_label = QLabel(self)
             forest_label.setObjectName("forest_label")
             print("Getting trans images......")
             pixmap = get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(230, 136)
             forest_label.setPixmap(pixmap)
-        create_indus_forest()
+        create_ind_forest()
 
-        def create_indus_medicine():
+        def create_ind_medicine():
             self.medicine_label = medicine_label = QLabel(self)
             medicine_label.setObjectName("medicine_label")
             print("Getting trans images......")
             pixmap = get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(230, 136)
             medicine_label.setPixmap(pixmap)
-        create_indus_medicine()
+        create_ind_medicine()
 
         self.recom_label = QLabel("Recommended")
         self.recom_label.setObjectName("recom_label")
@@ -234,7 +237,7 @@ class PopularTab(QScrollArea):
             print("Getting items from backend......")
             self.item_lists = []
             for i in range(self.item_num_max):
-                self.item_lists.append(CPItem(self))
+                self.item_lists.append(Product(self))
         get_items()
 
         def get_promotion():
@@ -317,14 +320,14 @@ class CloudTab(QScrollArea):
             self.init_ui()
 
         def init_ui(self):
-            self.setObjectName("searchbar")
+            self.setObjectName("search_bar")
             self.setFixedSize(300, 25)
             self.setTextMargins(3, 0, 20, 0)
 
-            self.search_btn = search_btn = QPushButton(self)
-            search_btn.setObjectName("search_btn")
-            search_btn.setFixedSize(18, 18)
-            search_btn.setCursor(QCursor(Qt.PointingHandCursor))
+            self.search_btn_cloud = search_btn_cloud = QPushButton(self)
+            search_btn_cloud.setObjectName("search_btn_cloud")
+            search_btn_cloud.setFixedSize(18, 18)
+            search_btn_cloud.setCursor(QCursor(Qt.PointingHandCursor))
 
             def bind_slots():
                 print("Binding slots of clicked-search-btn......")
@@ -333,7 +336,7 @@ class CloudTab(QScrollArea):
             def set_layout():
                 main_layout = QHBoxLayout()
                 main_layout.addStretch(1)
-                main_layout.addWidget(search_btn)
+                main_layout.addWidget(search_btn_cloud)
                 main_layout.setContentsMargins(0, 0, 0, 0)
                 self.setLayout(main_layout)
             set_layout()
@@ -363,6 +366,9 @@ class CloudTab(QScrollArea):
             self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
         update_table()
 
+    def set_right_menu(self, func):
+        self.customContextMenuRequested[QPoint].connect(func)
+    
     def init_ui(self):
         self.frame = QFrame()
         self.frame.setObjectName("cloud_frame")
@@ -382,15 +388,33 @@ class CloudTab(QScrollArea):
         self.upload_btn = upload_btn = QPushButton("Upload")
         upload_btn.setObjectName("upload_btn")
 
-        self.searchbar = CloudTab.SearchBar(self)
+        self.search_bar = CloudTab.SearchBar(self)
         self.time_label = time_label = QLabel("Time")
     
-        self.row_number = 10
+        self.row_number = 100
+
+
         def create_file_table():
-            self.file_table = file_table = TableWidget(self)
+            self.file_table = file_table = TableWidget(self) 
+
+            def right_menu():
+                cloud_right_menu = QMenu(file_table)
+                cloud_delete_act = QAction('Delete', self)
+                cloud_publish_act = QAction('Publish', self)
+                cloud_open_act = QAction('Open Path...', self)
+
+                cloud_right_menu.addAction(cloud_delete_act)
+                cloud_right_menu.addAction(cloud_publish_act)
+                cloud_right_menu.addAction(cloud_open_act)
+
+
+                cloud_right_menu.exec_(QCursor.pos())
+
 
             file_table.setColumnCount(6)
             file_table.setRowCount(self.row_number)
+            file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+            file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['Btn_Icon', 'Type', 'Product Name', 'Size', 'Remote Type', 'Published'])
 
             #file_list = get_file_list()
@@ -414,14 +438,14 @@ class CloudTab(QScrollArea):
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["remote_type"]))
                 self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
-        create_file_table()
+        create_file_table()       
 
-        self.file_table.itemClicked.connect(self.record_check)
+        # self.file_table.itemClicked.connect(self.record_check)
 
-        def record_check(self, item):
-            if item.checkState() == Qt.Checked:
-                print("{} has been checked".format(item.text()))
-                self.check_record_list
+        # def record_check(self, item):
+        #     if item.checkState() == Qt.Checked:
+        #         print("{} has been checked".format(item.text()))
+        #         self.check_record_list
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self)
             main_layout.addSpacing(0)
@@ -436,13 +460,15 @@ class CloudTab(QScrollArea):
 
             self.main_layout.addLayout(self.layout1)
             self.main_layout.addSpacing(2)
-            self.main_layout.addWidget(self.searchbar)
+            self.main_layout.addWidget(self.search_bar)
             self.main_layout.addSpacing(2)
             self.main_layout.addWidget(self.file_table)
             self.main_layout.addSpacing(2)
             self.setLayout(self.main_layout)
         set_layout()
         print("Loading stylesheet of cloud tab widget")
+        load_stylesheet(self, "cloud.qss")
+
 
 
 
@@ -561,7 +587,7 @@ class Header(QFrame):
             self.init_ui()
 
         def init_ui(self):
-            self.setObjectName("searchbar")
+            self.setObjectName("search_bar")
             self.setFixedSize(300, 25)
             self.setTextMargins(3, 0, 20, 0)
 
@@ -625,9 +651,9 @@ class Header(QFrame):
             self.message_btn.setObjectName("message_btn")
             self.message_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
-            self.profilepage_btn = QPushButton("", self)
-            self.profilepage_btn.setObjectName("profilepage_btn")
-            self.profilepage_btn.setCursor(QCursor(Qt.PointingHandCursor))
+            self.profile_page_btn = QPushButton("", self)
+            self.profile_page_btn.setObjectName("profile_page_btn")
+            self.profile_page_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
             self.profile_btn = QPushButton("", self)
             self.profile_btn.setObjectName("profile_btn")
@@ -676,7 +702,7 @@ class Header(QFrame):
             main_layout.addSpacing(10)
             main_layout.addWidget(self.download_btn)
             main_layout.addSpacing(10)
-            main_layout.addWidget(self.profilepage_btn)
+            main_layout.addWidget(self.profile_page_btn)
             main_layout.addSpacing(5)
             main_layout.addWidget(self.profile_btn)
 
