@@ -317,10 +317,10 @@ class CloudTab(QScrollArea):
             self.setFixedSize(300, 25)
             self.setTextMargins(3, 0, 20, 0)
 
-            self.search_btn = search_btn = QPushButton(self)
-            search_btn.setObjectName("search_btn")
-            search_btn.setFixedSize(18, 18)
-            search_btn.setCursor(QCursor(Qt.PointingHandCursor))
+            self.search_btn_cloud = search_btn_cloud = QPushButton(self)
+            search_btn_cloud.setObjectName("search_btn_cloud")
+            search_btn_cloud.setFixedSize(18, 18)
+            search_btn_cloud.setCursor(QCursor(Qt.PointingHandCursor))
 
             def bind_slots():
                 print("Binding slots of clicked-search-btn......")
@@ -329,7 +329,7 @@ class CloudTab(QScrollArea):
             def set_layout():
                 main_layout = QHBoxLayout()
                 main_layout.addStretch(1)
-                main_layout.addWidget(search_btn)
+                main_layout.addWidget(search_btn_cloud)
                 main_layout.setContentsMargins(0, 0, 0, 0)
                 self.setLayout(main_layout)
             set_layout()
@@ -359,6 +359,9 @@ class CloudTab(QScrollArea):
             self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
         update_table()
 
+    def set_right_menu(self, func):
+        self.customContextMenuRequested[QPoint].connect(func)
+    
     def init_ui(self):
         self.frame = QFrame()
         self.frame.setObjectName("cloud_frame")
@@ -381,12 +384,30 @@ class CloudTab(QScrollArea):
         self.searchbar = CloudTab.SearchBar(self)
         self.time_label = time_label = QLabel("Time")
     
-        self.row_number = 10
+        self.row_number = 100
+
+
         def create_file_table():
-            self.file_table = file_table = TableWidget(self)
+            self.file_table = file_table = TableWidget(self) 
+
+            def right_menu():
+                cloud_right_menu = QMenu(file_table)
+                cloud_delete_act = QAction('Delete', self)
+                cloud_publish_act = QAction('Publish', self)
+                cloud_open_act = QAction('Open Path...', self)
+
+                cloud_right_menu.addAction(cloud_delete_act)
+                cloud_right_menu.addAction(cloud_publish_act)
+                cloud_right_menu.addAction(cloud_open_act)
+
+
+                cloud_right_menu.exec_(QCursor.pos())
+
 
             file_table.setColumnCount(6)
             file_table.setRowCount(self.row_number)
+            file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+            file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['Btn_Icon', 'Type', 'Product Name', 'Size', 'Remote Type', 'Published'])
 
             #file_list = get_file_list()
@@ -410,7 +431,7 @@ class CloudTab(QScrollArea):
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["remote_type"]))
                 self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
-        create_file_table()
+        create_file_table()       
 
         # self.file_table.itemClicked.connect(self.record_check)
 
@@ -439,6 +460,8 @@ class CloudTab(QScrollArea):
             self.setLayout(self.main_layout)
         set_layout()
         print("Loading stylesheet of cloud tab widget")
+        load_stylesheet(self, "cloud.qss")
+
 
 
 
