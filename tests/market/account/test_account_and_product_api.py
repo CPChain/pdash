@@ -1,25 +1,7 @@
-# Create your tests here.
-
-import json
-import unittest
-
-import requests
-
-from cpchain.crypto import ECCipher
-from cpchain.utils import join_with_root, config
-
-HOST = "http://localhost:8083"
-private_key_file = 'tests/market/assets/UTC--2018-01-25T08-04-38.217120006Z--22114f40ed222e83bbd88dc6cbb3b9a136299a23'
-private_key_password_file = 'tests/market/assets/password'
+from tests.market.base_api_test import *
 
 
-def generate_nonce_signature(priv_key, nonce):
-    print("priv_key:%s, nonce:%s" % (priv_key ,nonce))
-    signature = ECCipher.generate_string_signature(priv_key, nonce)
-    return signature
-
-
-class TestMarketApi(unittest.TestCase):
+class TestAccountAndProductApi(BaseApiTest):
 
     def setUp(self):
         private_key_file_path = join_with_root(private_key_file)
@@ -28,7 +10,7 @@ class TestMarketApi(unittest.TestCase):
         with open(password_path) as f:
             password = f.read()
 
-        self.pri_key_string, self.pub_key_string = ECCipher.load_key_pair_from_private_key(private_key_file_path, password)
+        self.pri_key_string, self.pub_key_string = ECCipher.load_key_pair_from_keystore(private_key_file_path, password)
 
         # print("pub_key:%s,pri_key:%s,password:%s" % (self.pub_key_string, self.pri_key_string , password))
 
@@ -61,14 +43,50 @@ class TestMarketApi(unittest.TestCase):
         # ======= query product via elasticsearch ========
         self.query_es_product()
 
+    def test_add_product_sales_quantity(self):
+
+        header = {'Content-Type': 'application/json'}
+        nonce = self.login_and_get_nonce(header)
+
+        # ======= generate nonce signature and confirm =======
+        token = self.generate_nonce_signature_and_get_token(header, nonce)
+
+        # ======= publish product ========
+        self.publish_product(token)
+
         # ======= TODO add product_sales_quantity ========
         self.add_product_sales_quantity(token)
+
+    def test_subscribe_tag(self):
+
+        header = {'Content-Type': 'application/json'}
+        nonce = self.login_and_get_nonce(header)
+
+        # ======= generate nonce signature and confirm =======
+        token = self.generate_nonce_signature_and_get_token(header, nonce)
+
+        # ======= publish product ========
+        self.publish_product(token)
 
         # ======= TODO subscribe tag ========
         self.subscribe_tag(token)
 
         # ======= TODO unsubscribe tag ========
         self.unsubscribe_tag(token)
+
+        # ======= TODO query by following tag =======
+        self.query_by_subscribe_tag(token)
+
+    def test_subscribe_seller(self):
+
+        header = {'Content-Type': 'application/json'}
+        nonce = self.login_and_get_nonce(header)
+
+        # ======= generate nonce signature and confirm =======
+        token = self.generate_nonce_signature_and_get_token(header, nonce)
+
+        # ======= publish product ========
+        self.publish_product(token)
 
         # ======= TODO subscribe seller ========
         self.subscribe_seller(token)
@@ -78,9 +96,6 @@ class TestMarketApi(unittest.TestCase):
 
         # ======= TODO query by following seller ========
         self.query_by_subscribe_seller(token)
-
-        # ======= TODO query by following tag =======
-        self.query_by_subscribe_tag(token)
 
     def login_and_get_nonce(self, header):
         payload = {"public_key": self.pub_key_string}
