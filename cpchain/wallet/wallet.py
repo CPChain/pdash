@@ -13,7 +13,7 @@ install_reactor()
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 
-from cpchain.wallet.ui import MainWindow
+# from cpchain.wallet.ui import MainWindow
 from cpchain.wallet.chain import Broker
 from cpchain.wallet.net import MarketClient
 
@@ -27,12 +27,13 @@ class Wallet:
     def __init__(self, reactor):
         self.reactor = reactor
         self.accounts = Accounts()
-        self.main_wnd = MainWindow(self.reactor)
+        # self.main_wnd = MainWindow(self)
         # self.chain_broker = Broker(self)
         self.market_client = MarketClient(self)
 
 
         # self._initialize_system()
+
 
     def _initialize_system(self):
         # TODO logging setup

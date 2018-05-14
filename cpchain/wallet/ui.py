@@ -14,11 +14,11 @@ from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont
 from cpchain import config, root_dir
 
 # do it before any other twisted code.
-# def install_reactor():
-#     global app
-#     app = QApplication(sys.argv)
-#     import qt5reactor; qt5reactor.install()
-# install_reactor()
+def install_reactor():
+    global app
+    app = QApplication(sys.argv)
+    import qt5reactor; qt5reactor.install()
+install_reactor()
 
 from twisted.internet import threads, defer
 from twisted.internet.task import LoopingCall
@@ -386,7 +386,7 @@ class CloudTab(QScrollArea):
             #file_list = get_file_list()
             file_list = []
             print("Getting file list.......")
-            dict_exa = {"type": "mkv", "name": "Infinity War", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "published"}
+            dict_exa = {"type": "mkv", "name": "Infinity War", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
             for i in range(self.row_number):
                 file_list.append(dict_exa)
 
@@ -411,9 +411,12 @@ class CloudTab(QScrollArea):
             self.layout1.addSpacing(2)
             self.layout1.addWidget(self.upload_btn)
             self.layout1.addSpacing(2)
+
             self.main_layout.addLayout(self.layout1)
             self.main_layout.addSpacing(2)
             self.main_layout.addWidget(self.searchbar)
+            self.main_layout.addSpacing(2)
+            self.main_layout.addWidget(self.file_table)
             self.main_layout.addSpacing(2)
             self.setLayout(self.main_layout)
         set_layout()
@@ -765,6 +768,19 @@ def _handle_keyboard_interrupt():
     timer = _handle_keyboard_interrupt.timer
     timer.start(300) # run each 300ms
     timer.timeout.connect(lambda: None)
+
+
+    
+def initialize_system():
+    def initialize_net():
+        # Temporily modified for easy test by @hyiwr
+        print("Initializing network......")
+    initialize_net()
+    
+    def monitor_chain_event():
+        # Temporily modified for easy test by @hyiwr
+        print("Monitoring chain event......")
+    monitor_chain_event()
 
 
 def main():
