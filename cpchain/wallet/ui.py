@@ -12,6 +12,7 @@ from PyQt5.QtCore import Qt, QSize, QPoint, pyqtSignal
 from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont
 
 from cpchain import config, root_dir
+from cpchain.wallet.wallet import Wallet
 
 # do it before any other twisted code.
 def install_reactor():
@@ -172,13 +173,15 @@ class PopularTab(QScrollArea):
         self.horline2 = HorLine(self, 2)
         self.horline2.setObjectName("horline2")
 
-        def create_banner():
+        def create_banner(carousel):
             self.banner_label = banner_label = QLabel(self)
             print("Getting banner images......")
-            pixmap = get_pixm('cpc-logo-single.png')
+            path = osp.join(root_dir, carousel[0]['image'])
+            pixmap = QPixmap(path) # get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(740, 195)
             banner_label.setPixmap(pixmap)
-        create_banner()
+        d = self.parent.parent.wallet.market_client.query_carousel()
+        d.addcallback(create_banner)
 
         self.hot_label = QLabel("Hot Industry")
         self.hot_label.setObjectName("hot_label")
@@ -703,6 +706,7 @@ class MainWindow(QMainWindow):
     def __init__(self, reactor):
         super().__init__()
         self.reactor = reactor
+        self.wallet = Wallet(self.reactor)
         self.init_ui()
 
 

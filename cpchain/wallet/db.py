@@ -1,3 +1,4 @@
+import os
 import os.path as osp
 
 # https://qiita.com/zakuro9715/items/7e393ef1c80da8811027
@@ -9,6 +10,8 @@ from cpchain import root_dir, config
 from cpchain.utils import join_with_rc
 
 dbpath = join_with_rc(config.wallet.dbpath)
+dirpath = osp.dirname(dbpath)
+os.makedirs(dirpath, exist_ok=True)
 engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
 
 Base = declarative_base()
