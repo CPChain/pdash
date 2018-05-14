@@ -7,7 +7,7 @@ from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
 
 from cpchain.market.account.serializers import *
-from cpchain.market.account.utils import *
+from cpchain.market.market.utils import *
 
 logger = logging.getLogger(__name__)
 

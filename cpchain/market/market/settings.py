@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'cpchain.market.user_data',
     'cpchain.market.main',
 
-    'cpchain.market.api',
 ]
 # Application definition
 

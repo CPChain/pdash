@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from cpchain.market.product.models import WalletMsgSequence, MyTag, MySeller
 from cpchain.market.product.serializers import *
 from cpchain.market.account.permissions import IsOwnerOrReadOnly, AlreadyLoginUser
-from cpchain.market.account.utils import *
+from cpchain.market.market.utils import *
 
 logger = logging.getLogger(__name__)
 

@@ -1,11 +1,7 @@
-import json
-import unittest
+from tests.market.base_api_test import *
 
-import requests
 
-HOST = "http://localhost:8083"
-
-class TestMainApi(unittest.TestCase):
+class TestMainApi(BaseApiTest):
 
     def test_carousel(self):
         self.add_carousel()
