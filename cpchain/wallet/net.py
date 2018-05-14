@@ -137,7 +137,7 @@ class MarketClient:
         logger.debug("carousel response: %s", confirm_info)
         # except Exception as err:
         #     logger.debug(err)
-        return confirm_info
+        return confirm_info['data']
 
 
     @inlineCallbacks

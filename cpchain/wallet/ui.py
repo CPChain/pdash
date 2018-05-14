@@ -178,13 +178,16 @@ class PopularTab(QScrollArea):
         self.horline2 = HorizontalLine(self, 2)
         self.horline2.setObjectName("horline2")
 
+        self.banner_label = banner_label = QLabel(self)
+
         def create_banner(carousel):
-            self.banner_label = banner_label = QLabel(self)
+            print(carousel)
             print("Getting banner images......")
             path = osp.join(root_dir, carousel[0]['image'])
+            print(path)
             pixmap = QPixmap(path) # get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(740, 195)
-            banner_label.setPixmap(pixmap)
+            self.banner_label.setPixmap(pixmap)
         d = wallet.market_client.query_carousel()
         d.addCallback(create_banner)
 
