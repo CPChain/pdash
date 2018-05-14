@@ -64,23 +64,27 @@ class CPItem(QFrame):
 
     def init_ui(self):
         #self.frame.setMinimumWidth(500)
-        self.setMinimumHeight(20)
+        self.setMinimumHeight(120)
+        self.setMaximumHeight(130)
         self.title_btn = QPushButton("Medicine big data from Mayo Clinic")
         self.title_btn.setObjectName("title_btn")
         self.seller_btn = QPushButton("Barack Obama")
         self.seller_btn.setObjectName("seller_btn")
+        self.seller_btn.setCursor(QCursor(Qt.PointingHandCursor))
         self.time_label = QLabel("May 4, 2018")
         self.time_label.setObjectName("time_label")
         self.total_sale_label = QLabel("128 sales")
         self.total_sale_label.setObjectName("total_sale_label")
-        self.price_label = QLabel()
+        self.price_label = QLabel("$18")
         self.price_label.setObjectName("price_label")
+        self.price_label.setFont(QFont("Arial", 15, QFont.Bold))
         self.tag = ["tag1", "tag2", "tag3", "tag4"]
         self.tag_num = 4
         self.tag_btn_list = []
         for i in range(self.tag_num):
             self.tag_btn_list.append(QPushButton(self.tag[i], self))
             self.tag_btn_list[i].setObjectName("tag_btn_{0}".format(i))
+            self.tag_btn_list[i].setCursor(QCursor(Qt.PointingHandCursor))
 
         def bind_slots():
             print("Binding slots of buttons......")
@@ -88,33 +92,34 @@ class CPItem(QFrame):
 
         def setlayout():
             self.main_layout = main_layout = QVBoxLayout(self)
-            main_layout.addStretch(1)
+            main_layout.addSpacing(1)
             main_layout.addWidget(self.title_btn)
-            main_layout.addStretch(4)
+            main_layout.addSpacing(5)
 
             self.layout_2 = QHBoxLayout(self)
             self.layout_2.addWidget(self.total_sale_label)
             self.layout_2.addStretch(1)
             self.layout_2.addWidget(self.seller_btn)
-            self.layout_2.addSpacing(10)
+            self.layout_2.addSpacing(5)
             self.layout_2.addWidget(self.time_label)
             self.layout_2.addStretch(2)
             
 
             self.main_layout.addLayout(self.layout_2)
+            main_layout.addSpacing(10)
             self.main_layout.addWidget(self.price_label)
 
             self.layout_3 = QHBoxLayout(self)
             self.layout_3.addSpacing(1)
             for i in range(self.tag_num):
                 self.layout_3.addWidget(self.tag_btn_list[i])
-                self.layout_3.addSpacing(10)
+                self.layout_3.addSpacing(5)
 
             self.layout_3.addStretch(1)
             self.main_layout.addLayout(self.layout_3)
             self.setLayout(self.main_layout)
         setlayout()
-        print("Loading stylesheet of item")
+        #print("Loading stylesheet of item")
 
 
 class PopularTab(QScrollArea):
@@ -151,14 +156,16 @@ class PopularTab(QScrollArea):
 
         self.hot_label = QLabel("Hot Industry")
         self.hot_label.setObjectName("hot_label")
-        self.hot_label.setFont(QFont("Arial", 10, QFont.Light))
+        self.hot_label.setFont(QFont("Arial", 13, QFont.Light))
         self.hot_label.setMaximumHeight(25)
 
         self.more_btn_1 = more_btn_1 = QPushButton("More>", self)
         more_btn_1.setObjectName("more_btn_1")
+        self.more_btn_1.setCursor(QCursor(Qt.PointingHandCursor))
         #more_btn.setFixedSize(30, 18)
         self.more_btn_2 = more_btn_2 = QPushButton("More>", self)
         more_btn_2.setObjectName("more_btn_2")
+        self.more_btn_2.setCursor(QCursor(Qt.PointingHandCursor))
 
         def create_indus_trans():
             self.trans_label = trans_label = QLabel(self)
@@ -186,6 +193,7 @@ class PopularTab(QScrollArea):
 
         self.recom_label = QLabel("Recommended")
         self.recom_label.setObjectName("recom_label")
+        self.recom_label.setFont(QFont("Arial", 13, QFont.Light))
         self.recom_label.setMaximumHeight(25)
 
         def get_items():
@@ -201,7 +209,7 @@ class PopularTab(QScrollArea):
             for i in range(self.promo_num_max):
                 promo_label = QLabel(self)
                 pixmap = get_pixm('cpc-logo-single')
-                pixmap = pixmap.scaled(60, 60)
+                pixmap = pixmap.scaled(250, 123)
                 promo_label.setPixmap(pixmap)
                 self.promo_lists.append(promo_label)
         get_promotion()
@@ -255,7 +263,9 @@ class PopularTab(QScrollArea):
                 self.promo_layout.addSpacing(1)
 
             self.bottom_layout.addLayout(self.recom_layout)
+            #self.bottom_layout.setStretchFactor(recom_layout,4)
             self.bottom_layout.addLayout(self.promo_layout)
+            #self.bottom_layout.setStretch(promo_layout,1)
 
             self.main_layout.addLayout(self.bottom_layout)
         set_layout()
@@ -298,14 +308,18 @@ class SideBar(QScrollArea):
 
         def add_lists():
             self.trending_list = QListWidget()
+            #self.trending_list.setMinimumHeight(100)
+            self.trending_list.setMaximumHeight(100)
             self.trending_list.addItem(QListWidgetItem(get_icon("pop.png"), "Popular"))
             self.trending_list.addItem(QListWidgetItem(get_icon("following.png"), "Following"))
 
             self.mine_list = QListWidget()
+            self.mine_list.setMaximumHeight(100)
             self.mine_list.addItem(QListWidgetItem(get_icon("cloud.png"), "Cloud"))
             self.mine_list.addItem(QListWidgetItem(get_icon("store.png"), "Selling"))
 
             self.treasure_list = QListWidget()
+            self.treasure_list.setMaximumHeight(100)
             self.treasure_list.addItem(QListWidgetItem(get_icon("purchased.png"), "Purchased"))
             self.treasure_list.addItem(QListWidgetItem(get_icon("collection.png"), "Collection"))
             self.treasure_list.addItem(QListWidgetItem(get_icon("collection.png"), "Shopping Cart"))
@@ -432,12 +446,15 @@ class Header(QFrame):
 
             self.upload_btn = QPushButton("", self)
             self.upload_btn.setObjectName("upload_btn")
+            self.upload_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
             self.message_btn = QPushButton("", self)
             self.message_btn.setObjectName("message_btn")
+            self.message_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
             self.profilepage_btn = QPushButton("", self)
             self.profilepage_btn.setObjectName("profilepage_btn")
+            self.profilepage_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
             self.profile_btn = QPushButton("", self)
             self.profile_btn.setObjectName("profile_btn")

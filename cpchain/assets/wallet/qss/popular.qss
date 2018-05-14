@@ -14,6 +14,11 @@ QFrame#popular_frame {
     outline: none;
 }
 
+QLabel#price_label{
+	color: #006bcf;
+	/*background: #006bcf;*/
+}
+
 QLabel {
 	color: #555555;
 }
@@ -58,6 +63,17 @@ QPushButton#seller_btn {
 }
 
 QPushButton#tag_btn_0, QPushButton#tag_btn_1, QPushButton#tag_btn_2, QPushButton#tag_btn_3 {
+    min-height: 20px; 
+    min-width: 50px;  
+    max-width: 50px; 
+    max-height: 20px;
+    border-image: url(${asset_dir}/icons/Tag.png);
+    background: none;
+    color: #006bcf;
+}
+
+
+QPushButton#tag_btn_0:pressed, QPushButton#tag_btn_1:pressed, QPushButton#tag_btn_2:pressed, QPushButton#tag_btn_3:pressed {
     min-height: 20px; 
     min-width: 50px;  
     max-width: 50px; 
