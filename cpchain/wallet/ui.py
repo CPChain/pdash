@@ -14,11 +14,11 @@ from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont
 from cpchain import config, root_dir
 
 # do it before any other twisted code.
-def install_reactor():
-    global app
-    app = QApplication(sys.argv)
-    import qt5reactor; qt5reactor.install()
-install_reactor()
+# def install_reactor():
+#     global app
+#     app = QApplication(sys.argv)
+#     import qt5reactor; qt5reactor.install()
+# install_reactor()
 
 from twisted.internet import threads, defer
 from twisted.internet.task import LoopingCall
@@ -765,19 +765,6 @@ def _handle_keyboard_interrupt():
     timer = _handle_keyboard_interrupt.timer
     timer.start(300) # run each 300ms
     timer.timeout.connect(lambda: None)
-
-
-    
-def initialize_system():
-    def initialize_net():
-        # Temporily modified for easy test by @hyiwr
-        print("Initializing network......")
-    initialize_net()
-    
-    def monitor_chain_event():
-        # Temporily modified for easy test by @hyiwr
-        print("Monitoring chain event......")
-    monitor_chain_event()
 
 
 def main():
