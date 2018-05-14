@@ -15,7 +15,12 @@ class TestCommentApi(BaseApiTest):
         print(response.text)
         parsed_json = json.loads(response.text)
         for p in parsed_json['data']:
-            print("title:%s" % p["title"])
+            print("content:%s" % p["content"])
+
+    def test_add_comment(self):
+
+        token, market_hash = self.get_token_market_hash()
+        self.add_comment(token,market_hash)
 
     def test_query_summary_comment(self):
         token, market_hash = self.get_token_market_hash()
@@ -25,6 +30,7 @@ class TestCommentApi(BaseApiTest):
         print("summary_comment:%s" % summary_comment)
         print(summary_comment.text)
         parsed_json = json.loads(summary_comment.text)
+        self.assertEqual(parsed_json['status'], 1)
         print("avg_rating:%s" % parsed_json['data']['avg_rating'])
         self.assertGreaterEqual(parsed_json['data']['avg_rating'],1)
 
@@ -63,6 +69,13 @@ class TestCommentApi(BaseApiTest):
         return parsed_json['data']["market_hash"]
 
     def add_comment(self, token, market_hash):
-        # FIXME add comment here
-        print("add comment here")
-        pass
+        url = '%s/comment/v1/comment/add/' % HOST
+        payload = {'public_key': self.pub_key_string, 'market_hash':market_hash, 'content':'test111'}
+        print("add_comment request:%s" % payload)
+        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
+        response = requests.post(url, headers=header, json=payload)
+
+        print("response:%s" % response)
+        print(response.text)
+        parsed_json = json.loads(response.text)
+        self.assertEqual(parsed_json['status'], 1)

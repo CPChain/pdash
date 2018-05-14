@@ -16,6 +16,10 @@ from cpchain.market.market.utils import *
 logger = logging.getLogger(__name__)
 
 
+def create_invalid_response():
+    return JsonResponse({'status': 0, "message": "invalid request."})
+
+
 class ProductCommentListAPIView(APIView):
     """
     API endpoint that allows query Comment.
@@ -32,6 +36,30 @@ class ProductCommentListAPIView(APIView):
         serializer = CommentSerializer(page_set, many=True)
 
         return JsonResponse({'status': 1, 'message': 'success', "data": serializer.data})
+
+
+class ProductCommentAddAPIView(APIView):
+    """
+    API endpoint that allows add Comment.
+    """
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = (AlreadyLoginUser,)
+
+    def post(self, request):
+        data = request.data
+        logger.info("data:%s" % data)
+
+        # TODO check if current user(public_key) buy the product(market_hash)
+        try:
+            serializer = CommentSerializer(data=data)
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+                return JsonResponse({'status': 1, 'message': 'success'})
+        except:
+            logger.exception("save Comment error")
+
+        return create_invalid_response()
 
 
 class ProductSummaryCommentSearchAPIView(APIView):
