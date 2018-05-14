@@ -403,7 +403,15 @@ class CloudTab(QScrollArea):
 
                 cloud_right_menu.exec_(QCursor.pos())
 
-
+            file_table.horizontalHeader().setStretchLastSection(True)
+            file_table.verticalHeader().setVisible(False)
+            file_table.setShowGrid(False)
+            file_table.setAlternatingRowColors(True)
+            file_table.resizeColumnsToContents()  
+            file_table.resizeRowsToContents()
+            file_table.setFocusPolicy(Qt.NoFocus) 
+            # do not highlight (bold-ize) the header
+            file_table.horizontalHeader().setHighlightSections(False)
             file_table.setColumnCount(6)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)

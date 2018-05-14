@@ -1,13 +1,10 @@
 QScrollArea {
 	border: none;
     outline: none;
-
 }
 
-QFrame.HorLine {
-	border: none;
-    outline: none;
-	color: #e5e5e5;
+QFrame#horline1, QFrame#horline2 {
+    color: #e5e5e5;
 }
 
 QFrame#popular_frame {
