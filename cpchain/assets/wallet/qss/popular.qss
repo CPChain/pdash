@@ -5,6 +5,8 @@ QScrollArea {
 }
 
 QFrame.HorLine {
+	border: none;
+    outline: none;
 	color: #e5e5e5;
 }
 
