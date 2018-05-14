@@ -45,6 +45,32 @@ def load_stylesheet(wid, name):
 
 
 # widgets
+class TableWidget(QTableWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+        self.init_ui()
+
+    def init_ui(self):
+        # size
+        self.setMinimumWidth(self.parent.width())
+        # context menu
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.horizontalHeader().setStretchLastSection(True)
+        self.verticalHeader().setVisible(False)
+        self.setShowGrid(False)
+        self.setAlternatingRowColors(True)
+        # do not highlight (bold-ize) the header
+        self.horizontalHeader().setHighlightSections(False)
+
+
+    def set_right_menu(self, func):
+        self.customContextMenuRequested[QPoint].connect(func)
+
+
+
 class HorLine(QFrame):
     def __init__(self, parent=None, wid=2):
         super().__init__(parent)
@@ -169,6 +195,7 @@ class PopularTab(QScrollArea):
 
         def create_indus_trans():
             self.trans_label = trans_label = QLabel(self)
+            trans_label.setObjectName("trans_label")
             print("Getting trans images......")
             pixmap = get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(230, 136)
@@ -177,6 +204,7 @@ class PopularTab(QScrollArea):
 
         def create_indus_forest():
             self.forest_label = forest_label = QLabel(self)
+            forest_label.setObjectName("forest_label")
             print("Getting trans images......")
             pixmap = get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(230, 136)
@@ -185,6 +213,7 @@ class PopularTab(QScrollArea):
 
         def create_indus_medicine():
             self.medicine_label = medicine_label = QLabel(self)
+            medicine_label.setObjectName("medicine_label")
             print("Getting trans images......")
             pixmap = get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(230, 136)
@@ -208,6 +237,7 @@ class PopularTab(QScrollArea):
             self.promo_lists = []
             for i in range(self.promo_num_max):
                 promo_label = QLabel(self)
+                promo_label.setObjectName("promo_label_{}".format(i))
                 pixmap = get_pixm('cpc-logo-single')
                 pixmap = pixmap.scaled(250, 123)
                 promo_label.setPixmap(pixmap)
@@ -271,6 +301,131 @@ class PopularTab(QScrollArea):
         set_layout()
         load_stylesheet(self, "popular.qss")
         print("Loading stylesheet of cloud tab widget")
+
+
+
+class CloudTab(QScrollArea):
+    class SearchBar(QLineEdit):
+        def __init__(self, parent=None):
+            super().__init__(parent)
+            self.parent = parent
+            self.init_ui()
+
+        def init_ui(self):
+            self.setObjectName("searchbar")
+            self.setFixedSize(300, 25)
+            self.setTextMargins(3, 0, 20, 0)
+
+            self.search_btn = search_btn = QPushButton(self)
+            search_btn.setObjectName("search_btn")
+            search_btn.setFixedSize(18, 18)
+            search_btn.setCursor(QCursor(Qt.PointingHandCursor))
+
+            def bind_slots():
+                print("Binding slots of clicked-search-btn......")
+            bind_slots()
+
+            def set_layout():
+                main_layout = QHBoxLayout()
+                main_layout.addStretch(1)
+                main_layout.addWidget(search_btn)
+                main_layout.setContentsMargins(0, 0, 0, 0)
+                self.setLayout(main_layout)
+            set_layout()
+
+    def __init__(self, parent = None):
+        super().__init__(parent)
+        self.parent = parent
+        self.setObjectName("cloud_tab")
+
+        self.init_ui()
+
+    def update_table(self):
+        #file_list = get_file_list()
+        print("Updating file list......")
+        file_list = []
+        dict_exa = {"type": "mkv", "name": "Infinity War", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "published"}
+        for i in range(self.row_number):
+            file_list.append(dict_exa)
+
+        for cur_row in range(self.row_number):
+            if cur_row == len(file_list):
+                break
+            self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["type"]))
+            self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["name"]))
+            self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
+            self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["remote_type"]))
+            self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
+        update_table()
+
+    def init_ui(self):
+        self.frame = QFrame()
+        self.frame.setObjectName("cloud_frame")
+        self.setWidget(self.frame)
+        self.setWidgetResizable(True)
+        self.frame.setMinimumWidth(500)
+        self.frame.setMaximumHeight(800)
+
+        self.num_file = 100
+        self.total_label = total_label = QLabel("{} Files".format(self.num_file))
+        total_label.setObjectName("total_label")
+
+        self.delete_btn = delete_btn = QPushButton("Delete")
+        delete_btn.setObjectName("delete_btn")
+
+        self.upload_btn = upload_btn = QPushButton("Upload")
+        upload_btn.setObjectName("upload_btn")
+
+        self.searchbar = CloudTab.SearchBar(self)
+        self.time_label = time_label = QLabel("Time")
+    
+        self.row_number = 10
+        def create_file_table():
+            self.file_table = file_table = TableWidget(self)
+
+            file_table.setColumnCount(6)
+            file_table.setRowCount(self.row_number)
+            file_table.setHorizontalHeaderLabels(['Btn_Icon', 'Type', 'Product Name', 'Size', 'Remote Type', 'Published'])
+
+            #file_list = get_file_list()
+            file_list = []
+            print("Getting file list.......")
+            dict_exa = {"type": "mkv", "name": "Infinity War", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
+            for i in range(self.row_number):
+                file_list.append(dict_exa)
+
+            for cur_row in range(self.row_number):
+                if cur_row == len(file_list):
+                    break
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["type"]))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["name"]))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["remote_type"]))
+                self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
+        create_file_table()
+
+        def set_layout():
+            self.main_layout = main_layout = QVBoxLayout(self)
+            main_layout.addSpacing(0)
+            self.layout1 = QHBoxLayout(self)
+            self.layout1.addSpacing(0)
+            self.layout1.addWidget(self.total_label)
+            self.layout1.addStretch(1)
+            self.layout1.addWidget(self.delete_btn)
+            self.layout1.addSpacing(2)
+            self.layout1.addWidget(self.upload_btn)
+            self.layout1.addSpacing(2)
+
+            self.main_layout.addLayout(self.layout1)
+            self.main_layout.addSpacing(2)
+            self.main_layout.addWidget(self.searchbar)
+            self.main_layout.addSpacing(2)
+            self.main_layout.addWidget(self.file_table)
+            self.main_layout.addSpacing(2)
+            self.setLayout(self.main_layout)
+        set_layout()
+        print("Loading stylesheet of cloud tab widget")
+
 
 
 class SideBar(QScrollArea):
@@ -567,7 +722,8 @@ class MainWindow(QMainWindow):
             content_tabs.tabBar().hide()
             # Temporily modified for easy test by @hyiwr
             content_tabs.addTab(PopularTab(content_tabs), "")
-            print("Adding tabs(cloud, browse, etc.) to content_tabs")
+            content_tabs.addTab(CloudTab(content_tabs), "")
+            print("Adding tabs(browse, etc.) to content_tabs")
             print("Loading stylesheet to content_tabs")
         add_content_tabs()
 
