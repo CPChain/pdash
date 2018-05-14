@@ -37,6 +37,7 @@ class Broker:
         self.buyer = BuyerAgent(default_w3, config.chain.core_contract)
         self.seller = SellerAgent(default_w3, config.chain.core_contract)
 
+
     # batch process
     def query_order_state(self, order_id_list):
         unready_order_list = []
@@ -49,9 +50,11 @@ class Broker:
                 unready_order_list.append(current_id)
         return unready_order_list
 
+
     def confirm_order(self, order_id_list):
         for current_id in order_id_list:
             self.buyer.confirm_order(current_id)
+
 
     def seller_send_request(self, order_info):
         order_id = list(order_info.keys())[0]
@@ -66,7 +69,7 @@ class Broker:
         # fixme
         encrypted_aes_key = "encrypted aes key"
         # print(encrypted_aes_key)
-        logger.debug("Encrypted_aes_key length", str(len(encrypted_aes_key)))
+        logger.debug("Encrypted_aes_key length: %s", str(len(encrypted_aes_key)))
         storage_type = Message.Storage.IPFS
         ipfs_gateway = config.storage.ipfs.addr
         # File hash is str type
@@ -113,6 +116,7 @@ class Broker:
                 # add other action...
 
         d_proxy_reply.addCallback(seller_deliver_proxy_callback)
+
 
     def buyer_send_request(self, order_info):
         order_id = list(order_info.keys())[0]
@@ -169,11 +173,14 @@ class Broker:
         d_proxy_reply.addCallback(buyer_request_proxy_callback)
 
 
+
+
 class Monitor:
     def __init__(self, broker):
         self.broker = broker
         start_id = self.broker.seller.get_order_num()
         self.chain_monitor = OrderMonitor(start_id, self.broker.seller)
+
 
     # get new order info from chain through web3
     # order list: [{order_id: (xxx, xxx, xxx)}, {order_id: (xxx, xxx, xxx)}]
@@ -183,6 +190,7 @@ class Monitor:
         for current_id in new_order_id_list:
             new_order_info_list.append({current_id: self.broker.seller.query_order(current_id)})
         return new_order_info_list
+
 
     # this method should be called periodically in the main thread(reactor)
     def monitor_new_order(self):
@@ -194,6 +202,7 @@ class Monitor:
 
         new_order_list.addCallback(add_order)
         return self.broker.order_queue
+
 
     def monitor_ready_order(self):
         bought_order_list = []
@@ -212,6 +221,7 @@ class Monitor:
 
         d_unready_order.addCallback(reset_bought_order_queue)
 
+
     def monitor_confirmed_order(self):
         confirmed_order_list = []
         while True:
@@ -223,9 +233,12 @@ class Monitor:
         reactor.callInThread(self.broker.monitor_confirmed_order, confirmed_order_list)
 
 
+
+
 class Handler:
     def __init__(self, broker):
         self.broker = broker
+
 
     def buy_product(self, msg_hash, file_title):
         # fixme: format of hash value need to change
@@ -257,6 +270,7 @@ class Handler:
 
         return self.broker.bought_order_queue
 
+
     def handle_new_order(self):
         while True:
             if self.broker.order_queue.empty():
@@ -265,6 +279,7 @@ class Handler:
             else:
                 order_info = self.broker.order_queue.get()
                 self.broker.seller_send_request(order_info)
+
 
     def handle_ready_order(self):
         while True:
