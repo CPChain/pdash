@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from cpchain.market.product.models import WalletMsgSequence
+from cpchain.market.product.models import WalletMsgSequence, MyTag, MySeller
 from cpchain.market.product.serializers import *
 from cpchain.market.account.permissions import IsOwnerOrReadOnly, AlreadyLoginUser
 from cpchain.market.account.utils import *
@@ -308,8 +308,154 @@ class RecommendProductsAPIView(APIView):
             username = '' if not u else u.username
 
             p['username'] = username
-            # FIXME query rating from db
+            # FIXME query rating from comment table
             p['rating'] = 3.5
             product_list.append(p)
         return JsonResponse({'status': 1, 'message': 'success', 'data': product_list})
 
+
+class ProductSalesQuantityAddAPIView(APIView):
+    """
+    API endpoint that allows add product SalesQuantity.
+    """
+    queryset = Product.objects.all()
+    serializer_class = ProductSalesQuantitySerializer
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        return self.increase_product_sales_quantity(request)
+
+    def increase_product_sales_quantity(self, request):
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        market_hash = request.data['market_hash']
+        logger.debug("public_key:%s market_hash:%s" % (public_key, market_hash))
+
+        obj, created = SalesQuantity.objects.get_or_create(market_hash=request.data['market_hash'])
+        if not created :
+            serializer = ProductSalesQuantitySerializer(obj, data=request.data)
+            if not serializer.is_valid(raise_exception=True):
+                return create_invalid_response()
+
+            logger.debug("update product number")
+            obj = serializer.update(obj, request.data)
+
+        logger.debug("obj.quantity:%s" % obj.quantity)
+        return JsonResponse({'status': 1, 'message': 'success','data':obj.quantity})
+
+
+
+class ProductTagSubscribeAPIView(APIView):
+    """
+    API endpoint that allows add ProductTagSubscribe
+    """
+    queryset = MyTag.objects.all()
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        # TODO ================================================
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        tag = request.data['tag']
+        logger.debug("public_key:%s tag:%s" % (public_key, tag))
+
+        obj, _ = MyTag.objects.get_or_create(public_key=public_key, tag=request.data['tag'])
+        return JsonResponse({'status': 1, 'message': 'success'})
+
+
+class ProductTagUnsubscribeAPIView(APIView):
+    """
+    API endpoint that allows add ProductTagUnsubscribe
+    """
+    queryset = MyTag.objects.all()
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        # TODO ================================================
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        tag = request.data['tag']
+        logger.debug("delete tag:%s for public_key:%s" % (tag, public_key))
+        MyTag.objects.filter(public_key=public_key, tag=request.data['tag']).delete()
+        return JsonResponse({'status': 1, 'message': 'success'})
+
+
+class MyTaggedProductSearchAPIView(APIView):
+    """
+    API endpoint that allows query products.
+    """
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = (AllowAny,)
+
+    def get(self, request):
+        # TODO ================================================
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        tag_list = MyTag.objects.filter(public_key=public_key)
+        logger.debug('taglist:%s' % tag_list)
+        keyword = ''
+
+        logger.debug("keyword is %s" % keyword)
+        queryset = Product.objects.filter(status=0).filter(Q(tags__in=keyword))
+        serializer = ProductSerializer(queryset, many=True)
+        return Response(data=serializer.data)
+
+
+class ProductSellerSubscribeAPIView(APIView):
+    """
+    API endpoint that allows add ProductTagSubscribe
+    """
+    queryset = MySeller.objects.all()
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        # TODO ================================================
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        seller_public_key = request.data['seller_public_key']
+        logger.debug("public_key:%s seller_public_key:%s" % (public_key, seller_public_key))
+
+        obj, _ = MySeller.objects.get_or_create(public_key=public_key,
+                                                seller_public_key=request.data['seller_public_key'])
+        return JsonResponse({'status': 1, 'message': 'success'})
+
+
+class ProductSellerUnsubscribeAPIView(APIView):
+    """
+    API endpoint that allows add ProductTagUnsubscribe
+    """
+    queryset = MySeller.objects.all()
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        # TODO ================================================
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        seller_public_key = request.data['seller_public_key']
+        logger.debug("delete seller_public_key:%s for public_key:%s" % (seller_public_key, public_key))
+        MySeller.objects.filter(public_key=public_key, seller_public_key=request.data['seller_public_key']).delete()
+        return JsonResponse({'status': 1, 'message': 'success'})
+
+
+# url(r'^product/seller/search/$', ProductSellerSearchAPIView.as_view(), name='product_seller_search'),
+
+class MyTaggedSellerSearchAPIView(APIView):
+    """
+    API endpoint that allows query products.
+    """
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = (AllowAny,)
+
+    def get(self, request):
+        # TODO ================================================
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        seller_list = MySeller.objects.filter(public_key=public_key).first()
+        logger.debug('seller_list:%s' % seller_list)
+        keyword = ''
+
+        if keyword is not None:
+            logger.debug("keyword is %s" % keyword)
+            queryset = Product.objects.filter(status=0).filter(
+                Q(owner_address__in=keyword)
+            )
+        else:
+            queryset = Product.objects.filter(status=0)
+
+        serializer = ProductSerializer(queryset, many=True)
+        return Response(data=serializer.data)

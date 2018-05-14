@@ -1,13 +1,16 @@
+import logging
+
 from cpchain import config
 from cpchain.chain import models
-from cpchain.utils import logging
 from cpchain.chain import utils
 
 from .wait_utils import wait_for_transaction_receipt
 
+logger = logging.getLogger(__name__)
+
 
 # base transaction class for interacting with cpchain
-class Trans:
+class Agent:
     ONE_ETH_IN_WEI = 10**18  # 1 ETH == 1,000,000,000,000,000,000 Wei
 
     # NB contract object belongs to web3, and so does account.
@@ -21,16 +24,16 @@ class Trans:
 
     def query_order(self, order_id) -> models.OrderInfo:
         order_record = self.contract.call().orderRecords(order_id)
-        logging.debug("Order record NO.{:d}: {record}\n".format(order_id, record=order_record))
+        logger.debug("Order record NO.{:d}: {record}\n".format(order_id, record=order_record))
         return order_record
 
     def get_order_num(self) -> "number of orders":
         order_num = self.contract.call().numOrders()
-        logging.debug("Total number of orders: {:d}\n".format(order_num))
+        logger.debug("Total number of orders: {:d}\n".format(order_num))
         return order_num
 
 
-class BuyerTrans(Trans):
+class BuyerAgent(Agent):
 
     # order_info is a dictionary that contains parameters for an order
     def place_order(self, order_info: models.OrderInfo, account=None) -> "order id":
@@ -51,7 +54,7 @@ class BuyerTrans(Trans):
             order_info.proxy_value,
             order_info.time_allowed
         ).transact(transaction)
-        logging.debug("Thank you for using CPChain! Initiated Tx hash {tx}".format(tx=tx_hash))
+        logger.debug("Thank you for using CPChain! Initiated Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash)
         # Get order id through emitted event
         order_event_list = event_filter.get_new_entries()
@@ -59,14 +62,14 @@ class BuyerTrans(Trans):
             order_id = -1
         else:
             order_id = order_event_list[0]['args']['orderId']
-        logging.debug("TransactionID: {:d}".format(order_id))
+        logger.debug("TransactionID: {:d}".format(order_id))
         return order_id
 
     def withdraw_order(self, order_id, account=None):
         account = account or self.web3.eth.defaultAccount
         transaction = {'value': 0, 'from': account}
         tx_hash = self.contract.transact(transaction).buyerWithdraw(order_id)
-        logging.debug("Thank you for your using! Order is withdrawn, Tx hash {tx}".format(tx=tx_hash))
+        logger.debug("Thank you for your using! Order is withdrawn, Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
@@ -74,7 +77,7 @@ class BuyerTrans(Trans):
         account = account or self.web3.eth.defaultAccount
         transaction = {'value': 0, 'from': account}
         tx_hash = self.contract.transact(transaction).confirmDeliver(order_id)
-        logging.debug("Thank you for confirming deliver! Tx hash {tx}".format(tx=tx_hash))
+        logger.debug("Thank you for confirming deliver! Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
@@ -82,17 +85,17 @@ class BuyerTrans(Trans):
         account = account or self.web3.eth.defaultAccount
         transaction = {'value': 0, 'from': account}
         tx_hash = self.contract.transact(transaction).buyerDispute(order_id)
-        logging.debug("You have started a dispute! Tx hash {tx}".format(tx=tx_hash))
+        logger.debug("You have started a dispute! Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
 
-class SellerTrans(Trans):
+class SellerAgent(Agent):
     def claim_timeout(self, order_id, account=None):
         account = account or self.web3.eth.defaultAccount
         transaction = {'value': 0, 'from': account}
         tx_hash = self.contract.transact(transaction).sellerClaimTimedOut(order_id)
-        logging.debug("Your money is claimed because of time out! Tx hash {tx}".format(tx=tx_hash))
+        logger.debug("Your money is claimed because of time out! Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
@@ -106,13 +109,13 @@ class SellerTrans(Trans):
         return id_list
 
     
-class ProxyTrans(Trans):
+class ProxyAgent(Agent):
     
     def claim_relay(self, order_id, relay_hash, account=None):
         account = account or self.web3.eth.defaultAccount
         transaction = {'value': 0, 'from': account}
         tx_hash = self.contract.transact(transaction).deliverMsg(relay_hash, order_id)
-        logging.debug("You have registered relay of file on CPChain! Tx hash {tx}".format(tx=tx_hash))
+        logger.debug("You have registered relay of file on CPChain! Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
@@ -120,6 +123,6 @@ class ProxyTrans(Trans):
         account = account or self.web3.eth.defaultAccount
         transaction = {'value': 0, 'from': account}
         tx_hash = self.contract.transact(transaction).proxyJudge(order_id, result)
-        logging.debug("You have submit the result for dispute on CPChain! Tx hash {tx}".format(tx=tx_hash))
+        logger.debug("You have submit the result for dispute on CPChain! Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash

@@ -12,7 +12,7 @@ from cpchain.utils import config
 from cpchain.crypto import Encoder, RSACipher, ECCipher
 
 from cpchain.chain.models import OrderInfo
-from cpchain.chain.trans import BuyerTrans, SellerTrans
+from cpchain.chain.agents import BuyerAgent, SellerAgent
 from cpchain.chain.utils import default_w3
 from cpchain.chain.poll_chain import OrderMonitor
 
@@ -34,8 +34,8 @@ class Broker:
         self.bought_order_queue = Queue()
         self.ready_order_queue = Queue()
         self.confirmed_order_queue = Queue()
-        self.buyer = BuyerTrans(default_w3, config.chain.core_contract)
-        self.seller = SellerTrans(default_w3, config.chain.core_contract)
+        self.buyer = BuyerAgent(default_w3, config.chain.core_contract)
+        self.seller = SellerAgent(default_w3, config.chain.core_contract)
 
     # batch process
     def query_order_state(self, order_id_list):

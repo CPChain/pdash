@@ -20,13 +20,13 @@ from cpchain.crypto import pub_key_der_to_addr, ECCipher
 
 from cpchain.storage import IPFSStorage
 from cpchain.proxy.proxy_db import Trade, ProxyDB
+from cpchain.chain.agents import ProxyAgent
+from cpchain.chain.utils import default_w3
+from cpchain.utils import join_with_root, join_with_rc, Encoder
 
-from cpchain.chain.trans import ProxyTrans
-from cpchain.chain.utils import default_web3
-from cpchain.utils import join_with_root, Encoder
 from eth_utils import to_bytes
 
-server_root = os.path.join(config.rc_dir, config.proxy.server_root)
+server_root = join_with_rc(config.proxy.server_root)
 server_root = os.path.expanduser(server_root)
 os.makedirs(server_root, exist_ok=True)
 
@@ -140,7 +140,7 @@ class SSLServerProtocol(NetstringReceiver):
                 return
 
     def proxy_claim_relay(self):
-        proxy_trans = ProxyTrans(default_web3, config.chain.core_contract)
+        proxy_trans = ProxyAgent(default_web3, config.chain.core_contract)
         private_key_file_path = join_with_root(config.wallet.private_key_file)
         password_path = join_with_root(config.wallet.private_key_password_file)
         with open(password_path) as f:
@@ -243,16 +243,14 @@ def start_ssl_server():
     control_port = config.proxy.server_ctrl_port
 
     server_key = os.path.expanduser(
-                    os.path.join(config.rc_dir,
-                                config.proxy.server_key))
+                    join_with_rc(config.proxy.server_key))
     server_crt = os.path.expanduser(
-                    os.path.join(config.rc_dir,
-                                config.proxy.server_crt))
+                    join_with_rc(config.proxy.server_crt))
 
     if not os.path.isfile(server_key):
         print("SSL key/cert file not found, run local self-test by default")
-        server_key = os.path.join(root_dir, config.proxy.server_key)
-        server_crt = os.path.join(root_dir, config.proxy.server_crt)
+        server_key = join_with_root(config.proxy.server_key)
+        server_crt = join_with_root(config.proxy.server_crt)
 
     reactor.listenSSL(control_port, factory,
             ssl.DefaultOpenSSLContextFactory(

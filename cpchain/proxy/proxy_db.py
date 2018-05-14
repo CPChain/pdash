@@ -4,7 +4,8 @@ from sqlalchemy import Column, Integer, String
 from sqlalchemy.dialects.mysql import BIGINT, BINARY, TIMESTAMP
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta
-from cpchain import config, root_dir
+from cpchain import config
+from cpchain.utils import join_with_rc
 
 import os
 from uuid import uuid1 as uuid
@@ -34,7 +35,7 @@ class Trade(Base):
                 self.file_uuid, self.time_stamp)
 
 class ProxyDB(object):
-    db_path = os.path.join(config.rc_dir, config.proxy.dbpath)
+    db_path = join_with_rc(config.proxy.dbpath)
     db_path = os.path.expanduser(db_path)
     default_db = 'sqlite:///' + db_path
 
