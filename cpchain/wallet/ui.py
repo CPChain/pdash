@@ -356,20 +356,14 @@ class CloudTab(QScrollArea):
         self.frame.setMinimumWidth(500)
         self.frame.setMaximumHeight(800)
 
-        def get_items_cloud():
-            print("Getting items from cloud.....")
-            self.items_cloud = []
-            self.num_file = len(items_cloud)
-
-        get_items_cloud()
-
+        self.num_file = 100
         self.total_label = total_label = QLabel("{} Files".format(self.num_file))
         total_label.setObjectName("total_label")
 
-        self.delete_btn = delete_btn = QButton("Delete")
+        self.delete_btn = delete_btn = QPushButton("Delete")
         delete_btn.setObjectName("delete_btn")
 
-        self.upload_btn = upload_btn = QButton("Upload")
+        self.upload_btn = upload_btn = QPushButton("Upload")
         upload_btn.setObjectName("upload_btn")
 
         self.searchbar = CloudTab.SearchBar(self)
@@ -711,7 +705,8 @@ class MainWindow(QMainWindow):
             content_tabs.tabBar().hide()
             # Temporily modified for easy test by @hyiwr
             content_tabs.addTab(PopularTab(content_tabs), "")
-            print("Adding tabs(cloud, browse, etc.) to content_tabs")
+            content_tabs.addTab(CloudTab(content_tabs), "")
+            print("Adding tabs(browse, etc.) to content_tabs")
             print("Loading stylesheet to content_tabs")
         add_content_tabs()
 
