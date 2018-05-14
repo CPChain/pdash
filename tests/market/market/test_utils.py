@@ -1,21 +1,21 @@
 import unittest
 
-from cpchain.market.api.utils import verify_signature, ECCipher, sign
+from cpchain.market.market.utils import *
 from cpchain.utils import join_with_root, config, Encoder
+private_key_file = 'tests/market/assets/UTC--2018-01-25T08-04-38.217120006Z--22114f40ed222e83bbd88dc6cbb3b9a136299a23'
+private_key_password_file = 'tests/market/assets/password'
 
 
 class UtilsTest(unittest.TestCase):
 
     def test_load_key_pair_from_private_key(self):
-        private_key_file_path = join_with_root(config.wallet.private_key_file)
-        password_path = join_with_root(config.wallet.private_key_password_file)
+        private_key_file_path = join_with_root(private_key_file)
+        password_path = join_with_root(private_key_password_file)
 
         with open(password_path) as f:
             password = f.read()
 
-        print(password)
-
-        pri_key_string, pub_key_string = ECCipher.load_key_pair_from_private_key(private_key_file_path, password)
+        pri_key_string, pub_key_string = ECCipher.load_key_pair_from_keystore(private_key_file_path, password)
         print("pri_key_string:")
         print(pri_key_string)
 

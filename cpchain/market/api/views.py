@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 from cpchain.market.api.models import WalletMsgSequence
 from cpchain.market.api.permissions import IsOwnerOrReadOnly, IsOwner
 from cpchain.market.api.serializers import *
-from cpchain.market.api.utils import *
+from cpchain.market.market.utils import *
 
 logger = logging.getLogger(__name__)
 

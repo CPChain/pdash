@@ -2,7 +2,7 @@ from cpchain.market.market.es_client import es_client
 from rest_framework_elasticsearch import es_views, es_pagination, es_filters
 # from .permissions import IsOwnerOrReadOnly, IsOwner
 from .search_indexes import ProductIndex
-from .utils import *
+from cpchain.market.market.utils import *
 
 logger = logging.getLogger(__name__)
 
