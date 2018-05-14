@@ -11,15 +11,15 @@ from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, 
 from PyQt5.QtCore import Qt, QSize, QPoint, pyqtSignal
 from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont
 
+# do it before any other twisted code.
+# def install_reactor():
+#     global app
+#     app = QApplication(sys.argv)
+#     import qt5reactor; qt5reactor.install()
+# install_reactor()
+
 from cpchain import config, root_dir
 from cpchain.wallet.wallet import Wallet
-
-# do it before any other twisted code.
-def install_reactor():
-    global app
-    app = QApplication(sys.argv)
-    import qt5reactor; qt5reactor.install()
-install_reactor()
 
 from twisted.internet import threads, defer
 from twisted.internet.task import LoopingCall
@@ -44,6 +44,8 @@ def load_stylesheet(wid, name):
         s = string.Template(f.read())
         wid.setStyleSheet(s.substitute(subs))
 
+from twisted.internet import reactor
+wallet = Wallet(reactor)
 
 # widgets
 class TableWidget(QTableWidget):
@@ -180,8 +182,8 @@ class PopularTab(QScrollArea):
             pixmap = QPixmap(path) # get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(740, 195)
             banner_label.setPixmap(pixmap)
-        d = self.parent.parent.wallet.market_client.query_carousel()
-        d.addcallback(create_banner)
+        d = wallet.market_client.query_carousel()
+        d.addCallback(create_banner)
 
         self.hot_label = QLabel("Hot Industry")
         self.hot_label.setObjectName("hot_label")
@@ -713,7 +715,6 @@ class MainWindow(QMainWindow):
     def __init__(self, reactor):
         super().__init__()
         self.reactor = reactor
-        self.wallet = Wallet(self.reactor)
         self.init_ui()
 
 

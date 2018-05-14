@@ -12,6 +12,8 @@ from cpchain.utils import join_with_rc
 dbpath = join_with_rc(config.wallet.dbpath)
 dirpath = osp.dirname(dbpath)
 os.makedirs(dirpath, exist_ok=True)
+
+print(dirpath)
 engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
 
 Base = declarative_base()
