@@ -33,7 +33,7 @@ class Peer:
         if self.protocol.transport is None:
             return reactor.callLater(1, self.bootstrap)
 
-        self.protocol.ping(addr)
+        self.protocol.bootstrap(addr)
 
     def refresh(self):
         self.protocol.refresh_peers()

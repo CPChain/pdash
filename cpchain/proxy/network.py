@@ -38,6 +38,13 @@ class PeerProtocol(protocol.DatagramProtocol):
         del self.request[tid]
 
     def send_msg(self, msg, addr):
+        try:
+            if msg['type']:
+                logger.debug('send %s to %s' %  (str(msg['type']), str(addr)))
+        except:
+            logger.debug("send wrong message %s to %s" % (str(msg), str(addr)))
+            return
+
         tid = msg['tid']
         data = msgpack.packb(msg, use_bin_type=True)
         future = time.time() + self.timeout
@@ -68,20 +75,22 @@ class PeerProtocol(protocol.DatagramProtocol):
     def datagramReceived(self, data, addr):
         msg = msgpack.unpackb(data, raw=False)
 
-        if msg['type'] == 'ping':
+        try:
+            if msg['type']:
+                logger.debug('receive %s from %s' %  (str(msg['type']), str(addr)))
+        except:
+            logger.debug("receive wrong message %s from %s" % (str(msg), str(addr)))
+            return
+
+
+        if msg['type'] == 'bootstrap':
             peer_id = msg['peer_id']
+            tid = msg['tid']
             peer_info = msg['peer_info']
             peer_stat = msg['peer_stat']
 
             if peer_id in self.peers:
-                peer = self.peers[peer_id]
-                if addr == peer['addr']:
-                    #refresh peer timestamp and statistics
-                    logger.debug('refresh peer %s' % str(addr))
-                    peer['ts'] = time.time()
-                    peer['peer_stat'] = peer_stat
-                else:
-                    logger.error("something wrong")
+                logger.debug("duplicate bootstrap message")
             else:
                 # welcome new peer
                 peer = {
@@ -94,9 +103,25 @@ class PeerProtocol(protocol.DatagramProtocol):
                 self.peers[peer_id] = peer
                 logger.debug("add peer %s" % str(peer['addr']))
 
+            response = {
+                'type': 'response',
+                'tid': tid,
+                'data': "bootstrap"
+            }
+            self.send_msg(response, addr)
+
+        elif msg['type'] == 'ping':
+            tid = msg['tid']
+
+            response = {
+                'type': 'response',
+                'tid': tid,
+                'data': 'pong'
+            }
+            self.send_msg(response, addr)
+
         elif msg['type'] == 'select_peer':
             tid = msg['tid']
-            logger.debug("select peer request from %s" % str(addr))
 
             bootnode_addr = tuple(msg['bootnode_addr'])
             logger.debug("boot node addr: %s" % str(bootnode_addr))
@@ -138,20 +163,33 @@ class PeerProtocol(protocol.DatagramProtocol):
             'bootnode_addr': addr
         }
 
-        logger.debug('ask %s to recommend a peer' % str(addr))
         return self.send_msg(msg, addr)
 
-    def ping(self, addr):
+    def bootstrap(self, addr):
         msg = {
-            'type': 'ping',
+            'type': 'bootstrap',
             'tid': generate_tid(),
             'peer_id': self.peer_id,
             'peer_info': self.peer_info,
             'peer_stat': self.peer_stat
             }
 
-        self.send_msg(msg, addr)
-        logger.debug('send ping msg to %s' %  str(addr))
+        return self.send_msg(msg, addr)
+
+
+    def ping(self, addr):
+        msg = {
+            'type': 'ping',
+            'tid': generate_tid()
+            }
+
+        return self.send_msg(msg, addr)
+
+    def refresh_peer(self, result, peer):
+        success, data = result
+        if success:
+            peer['ts'] = time.time()
+        return result
 
     def refresh_peers(self):
         now = time.time()
@@ -164,7 +202,7 @@ class PeerProtocol(protocol.DatagramProtocol):
                 logger.debug('retire peer %s' %  str(peer['addr']))
             else:
                 addr = peer['addr']
-                self.ping(addr)
+                self.ping(addr).addCallback(self.refresh_peer, peer)
 
         for peer in expired_peers:
             self.peers.pop(peer)
