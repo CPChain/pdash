@@ -25,7 +25,7 @@ urlpatterns = [
     url(r'^product/tag/unsubscribe/$', ProductTagUnsubscribeAPIView.as_view(), name='product_tag_unsubscribe'),
     url(r'^product/tag/search/$', MyTaggedProductSearchAPIView.as_view(), name='product_tag_search'),
 
-    url(r'^product/seller/subscribe//$', ProductSellerSubscribeAPIView.as_view(), name='product_seller_subscribe'),
-    url(r'^product/seller/unsubscribe//$', ProductSellerUnsubscribeAPIView.as_view(), name='product_seller_unsubscribe'),
+    url(r'^product/seller/subscribe/$', ProductSellerSubscribeAPIView.as_view(), name='product_seller_subscribe'),
+    url(r'^product/seller/unsubscribe/$', ProductSellerUnsubscribeAPIView.as_view(), name='product_seller_unsubscribe'),
     url(r'^product/seller/search/$', MyTaggedSellerSearchAPIView.as_view(), name='product_seller_search'),
 ]
