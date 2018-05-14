@@ -313,7 +313,7 @@ class CloudTab(QScrollArea):
             self.init_ui()
 
         def init_ui(self):
-            self.setObjectName("searchbar")
+            self.setObjectName("search_bar")
             self.setFixedSize(300, 25)
             self.setTextMargins(3, 0, 20, 0)
 
@@ -381,7 +381,7 @@ class CloudTab(QScrollArea):
         self.upload_btn = upload_btn = QPushButton("Upload")
         upload_btn.setObjectName("upload_btn")
 
-        self.searchbar = CloudTab.SearchBar(self)
+        self.search_bar = CloudTab.SearchBar(self)
         self.time_label = time_label = QLabel("Time")
     
         self.row_number = 100
@@ -453,7 +453,7 @@ class CloudTab(QScrollArea):
 
             self.main_layout.addLayout(self.layout1)
             self.main_layout.addSpacing(2)
-            self.main_layout.addWidget(self.searchbar)
+            self.main_layout.addWidget(self.search_bar)
             self.main_layout.addSpacing(2)
             self.main_layout.addWidget(self.file_table)
             self.main_layout.addSpacing(2)
@@ -580,7 +580,7 @@ class Header(QFrame):
             self.init_ui()
 
         def init_ui(self):
-            self.setObjectName("searchbar")
+            self.setObjectName("search_bar")
             self.setFixedSize(300, 25)
             self.setTextMargins(3, 0, 20, 0)
 
@@ -644,9 +644,9 @@ class Header(QFrame):
             self.message_btn.setObjectName("message_btn")
             self.message_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
-            self.profilepage_btn = QPushButton("", self)
-            self.profilepage_btn.setObjectName("profilepage_btn")
-            self.profilepage_btn.setCursor(QCursor(Qt.PointingHandCursor))
+            self.profile_page_btn = QPushButton("", self)
+            self.profile_page_btn.setObjectName("profile_page_btn")
+            self.profile_page_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
             self.profile_btn = QPushButton("", self)
             self.profile_btn.setObjectName("profile_btn")
@@ -695,7 +695,7 @@ class Header(QFrame):
             main_layout.addSpacing(10)
             main_layout.addWidget(self.download_btn)
             main_layout.addSpacing(10)
-            main_layout.addWidget(self.profilepage_btn)
+            main_layout.addWidget(self.profile_page_btn)
             main_layout.addSpacing(5)
             main_layout.addWidget(self.profile_btn)
 
