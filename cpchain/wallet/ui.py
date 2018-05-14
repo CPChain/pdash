@@ -366,6 +366,7 @@ class CloudTab(QScrollArea):
         self.frame.setMinimumWidth(500)
         self.frame.setMaximumHeight(800)
 
+        self.check_list = []
         self.num_file = 100
         self.total_label = total_label = QLabel("{} Files".format(self.num_file))
         total_label.setObjectName("total_label")
@@ -394,9 +395,14 @@ class CloudTab(QScrollArea):
             for i in range(self.row_number):
                 file_list.append(dict_exa)
 
+            self.checkbox_lst = []
             for cur_row in range(self.row_number):
                 if cur_row == len(file_list):
                     break
+                checkbox_item = QTableWidgetItem()
+                checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+                checkbox_item.setCheckState(Qt.Unchecked)
+                self.file_table.setItem(cur_row, 0, checkbox_item)
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["type"]))
                 self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["name"]))
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
