@@ -8,7 +8,7 @@ private_key_password_file = 'tests/market/assets/password'
 
 class UtilsTest(unittest.TestCase):
 
-    def test_load_key_pair_from_private_key(self):
+    def test_load_key_pair_from_keystore(self):
         private_key_file_path = join_with_root(private_key_file)
         password_path = join_with_root(private_key_password_file)
 
