@@ -222,7 +222,7 @@ class PopularTab(QScrollArea):
         d_hot_industry.addCallback(set_hot_industry)
 
         # def create_ind_trans():
-        #     self.trans_label = trans_label = QLabel(self)
+        #     self.trans_lanbel = trans_label = QLabel(self)
         #     trans_label.setObjectName("trans_label")
         #     print("Getting trans images......")
         #     pixmap = get_pixm('cpc-logo-single.png')

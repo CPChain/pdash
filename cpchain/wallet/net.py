@@ -173,7 +173,7 @@ class MarketClient:
         confirm_info = yield treq.json_content(resp)
         print(confirm_info)
         logger.debug("recommend product: %s", confirm_info)
-        return confirm_info
+        return confirm_info['data']
 
 
     @inlineCallbacks
