@@ -414,11 +414,10 @@ class CloudTab(QScrollArea):
         self.delete_btn.clicked.connect(self.handle_delete)
         self.upload_btn = upload_btn = QPushButton("Upload")
         upload_btn.setObjectName("upload_btn")
-<<<<<<< HEAD
+
         #upload_btn.clicked.connect(handle_upload)
-=======
         self.upload_btn.clicked.connect(self.handle_upload)
->>>>>>> 2f4782a30f074be36588321b1286013403f511a2
+
 
         self.search_bar = CloudTab.SearchBar(self)
         self.time_label = time_label = QLabel("Time")
