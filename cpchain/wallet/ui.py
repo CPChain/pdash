@@ -211,14 +211,20 @@ class PopularTab(QScrollArea):
                 hot_industry = QLabel(self)
                 hot_industry.setObjectName('hot_industry_' + str(i))
                 self.hot_industry_label.append(hot_industry)
+                print('create label' + str(i))
         create_hot_industry()
 
         def set_hot_industry(hot_industry):
             for i in range(config.wallet.hot_industry_num):
+                self.hot_industry_label[i].setText(hot_industry[i]['tag'])
+                self.hot_industry_label[i].setFont(QFont("Arial", 13, QFont.Light))
+                self.hot_industry_label[i].setAlignment(Qt.AlignCenter)
                 path = osp.join(root_dir, hot_industry[i]['image'])
-                pixmap = QPixmap(path)
-                pixmap = pixmap.scaled(230, 136)
-                self.hot_industry_label[i].setPixmap(pixmap)
+                print(path)
+                self.hot_industry_label[i].setStyleSheet("border-image: url({0}); color: #fefefe".format(path))
+                # pixmap = QPixmap(path)
+                # pixmap = pixmap.scaled(230, 136)
+                # self.hot_industry_label[i].setPixmap(pixmap)
         d_hot_industry = wallet.market_client.query_hot_tag()
         d_hot_industry.addCallback(set_hot_industry)
 
@@ -368,10 +374,10 @@ class CloudTab(QScrollArea):
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
 
-    def handle_upload():
+    def handle_upload(self):
             self.local_file = QFileDialog.getOpenFileName()[0]
-            #defered = threads.deferToThread(upload_file_ipfs, self.local_file)
-            #defered.addCallback(handle_callback_upload)
+            # defered = threads.deferToThread(upload_file_ipfs, self.local_file)
+            # defered.addCallback(handle_callback_upload)
 
     def init_ui(self):
         self.frame = QFrame()
