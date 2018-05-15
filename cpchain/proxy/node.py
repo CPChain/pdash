@@ -81,8 +81,10 @@ class Peer:
         if not os.path.isfile(server_key):
             logger.info("SSL key/cert file not found, "
                         + "run local self-test by default")
-            server_key = join_with_root(config.proxy.server_key)
-            server_crt = join_with_root(config.proxy.server_crt)
+            server_key_sample = 'cpchain/assets/proxy/key/server.key'
+            server_crt_sample = 'cpchain/assets/proxy/key/server.crt'
+            server_key = join_with_root(server_key_sample)
+            server_crt = join_with_root(server_crt_sample)
 
         # ctrl channel
         reactor.listenSSL(self.ctrl_port, self.ctrl_factory,

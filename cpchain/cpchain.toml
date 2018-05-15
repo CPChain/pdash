@@ -51,10 +51,10 @@ server_ctrl_port = 8000
 server_data_port = 8001
 server_peer_port = 5678
 server_dht_port = 5679
-server_key = 'cpchain/assets/proxy/key/server.key'
-server_crt = 'cpchain/assets/proxy/key/server.crt'
-dbpath = "proxy.db"
-server_root = 'server_root'
+server_key = 'proxy/server.key'
+server_crt = 'proxy/server.crt'
+dbpath = 'proxy/proxy.db'
+server_root = 'proxy/server_root'
 
 
 [market]
