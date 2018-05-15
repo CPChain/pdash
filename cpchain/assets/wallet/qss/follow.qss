@@ -1,41 +1,32 @@
-QScrollArea {
-	border: none;
-    outline: none;
+QFrame#follow_tag_frame, QFrame#follow_sell_frame {
+    border: none;
+    outline: none; 
+    background: #fafafa;
+}
+
+QScrollArea{
+    border: none;
+    outline: none; 
+    background: #fafafa;
+}
+
+QTableWidget{
+    border: none;
+    outline: none; 
+    background: #fafafa;
+}
+
+QLabel#total_sale_label {
+    color: #555555;
 }
 
 QFrame.HorizontalLine {
     color: #e5e5e5;
 }
 
-QFrame#popular_frame {
-	background: #fafafa;
-	border: none;
-    outline: none;
-}
-
 QLabel#price_label{
-	color: #006bcf;
-	/*background: #006bcf;*/
-}
-
-
-QLabel {
-	color: #555555;
-}
-
-QPushButton#more_btn_1, QPushButton#more_btn_2 {
-	min-height: 16px; 
-    min-width: 60px;  
-    max-width: 60px; 
-    max-height: 16px; 
-    border: none;
-    outline: none;
     color: #006bcf;
-    background-color: #fafafa;
-}
-
-QPushButton#more_btn_1:hover, QPushButton#more_btn_2:hover {
-	color: #5ca7ee;
+    /*background: #006bcf;*/
 }
 
 QPushButton#title_btn {
@@ -82,3 +73,4 @@ QPushButton#tag_btn_0:pressed, QPushButton#tag_btn_1:pressed, QPushButton#tag_bt
     background: none;
     color: #006bcf;
 }
+

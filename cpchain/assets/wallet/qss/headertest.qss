@@ -1,6 +1,4 @@
 QLabel {
-    /* Set the color of CPChain */
-    /* dont know why adding #word_label will not work */
     color: #fefefe;
 }
 
@@ -135,3 +133,5 @@ QPushButton#profile_btn {
 QPushButton#login_btn:hover {
     color: #efacac;
 }
+
+
