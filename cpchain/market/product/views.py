@@ -176,6 +176,40 @@ class ProductSearchAPIViewSet(APIView):
         return Response(data=serializer.data)
 
 
+class ProductSearchByTagAPIView(APIView):
+    """
+    API endpoint that allows query products by tag.
+    """
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = (AllowAny,)
+
+    def get(self, request):
+        params = request.query_params
+        tag = params.get('tag')
+        logger.debug("tag is %s" % tag)
+        queryset = Product.objects.filter(status=0).filter(tags__contains=tag)
+        serializer = ProductSerializer(queryset, many=True)
+        return JsonResponse({'status': 1, 'message': 'success', 'data': serializer.data})
+
+
+class ProductSearchBySellerAPIView(APIView):
+    """
+    API endpoint that allows query products by seller.
+    """
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = (AllowAny,)
+
+    def get(self, request):
+        params = request.query_params
+        seller = params.get('seller')
+        logger.debug("seller is %s" % seller)
+        queryset = Product.objects.filter(status=0).filter(owner_address=seller)
+        serializer = ProductSerializer(queryset, many=True)
+        return JsonResponse({'status': 1, 'message': 'success', 'data': serializer.data})
+
+
 class ProductPagedSearchAPIViewSet(APIView):
     """
     API endpoint that allows query products.
