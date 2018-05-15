@@ -413,7 +413,15 @@ class CloudTab(QScrollArea):
 
                 cloud_right_menu.exec_(QCursor.pos())
 
-
+            file_table.horizontalHeader().setStretchLastSection(True)
+            file_table.verticalHeader().setVisible(False)
+            file_table.setShowGrid(False)
+            file_table.setAlternatingRowColors(True)
+            file_table.resizeColumnsToContents()  
+            file_table.resizeRowsToContents()
+            file_table.setFocusPolicy(Qt.NoFocus) 
+            # do not highlight (bold-ize) the header
+            file_table.horizontalHeader().setHighlightSections(False)
             file_table.setColumnCount(6)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -427,7 +435,7 @@ class CloudTab(QScrollArea):
             for i in range(self.row_number):
                 file_list.append(dict_exa)
 
-            self.check_record_list = []
+            self.check_record_list = [False for i in range(self.row_number)]
             self.checkbox_list = []
             for cur_row in range(self.row_number):
                 if cur_row == len(file_list):
@@ -441,14 +449,15 @@ class CloudTab(QScrollArea):
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["remote_type"]))
                 self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
-        create_file_table()       
+        create_file_table()    
 
-        # self.file_table.itemClicked.connect(self.record_check)
+        def record_check(item):
+            if item.checkState() == Qt.Checked:
+                print("{} has been checked".format(item.text()))
+                self.check_record_list[item.row] = True
+        self.file_table.itemClicked.connect(record_check)
 
-        # def record_check(self, item):
-        #     if item.checkState() == Qt.Checked:
-        #         print("{} has been checked".format(item.text()))
-        #         self.check_record_list
+
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self)
             main_layout.addSpacing(0)
@@ -713,8 +722,6 @@ class Header(QFrame):
 
         set_layout()
 
-        # stylesheet
-        #print("Setting header stylesheet......")
         load_stylesheet(self, "headertest.qss")
 
     # drag support
