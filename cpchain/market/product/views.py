@@ -378,6 +378,22 @@ class ProductTagUnsubscribeAPIView(APIView):
         return JsonResponse({'status': 1, 'message': 'success'})
 
 
+class MyTagSearchAPIView(APIView):
+    """
+    API endpoint that allows query my tag.
+    """
+    queryset = MyTag.objects.all()
+    serializer_class = MyTagSerializer
+    permission_classes = (AlreadyLoginUser,)
+
+    def get(self, request):
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        queryset = MyTag.objects.filter(public_key=public_key)
+        page_set = PageNumberPagination().paginate_queryset(queryset=queryset, request=request, view=self)
+        serializer = MyTagSerializer(page_set, many=True)
+        return JsonResponse({'status': 1, 'message': 'success', "data": serializer.data})
+
+
 class MyTaggedProductSearchAPIView(APIView):
     """
     API endpoint that allows query products.
@@ -435,16 +451,31 @@ class ProductSellerUnsubscribeAPIView(APIView):
         return JsonResponse({'status': 1, 'message': 'success'})
 
 
-class MyTaggedSellerSearchAPIView(APIView):
+class MyFollowingSellerSearchAPIView(APIView):
     """
-    API endpoint that allows query products.
+    API endpoint that allows query seller list user following.
+    """
+    queryset = MySeller.objects.all()
+    serializer_class = MySellerSerializer
+    permission_classes = (AlreadyLoginUser,)
+
+    def get(self, request):
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        queryset = MySeller.objects.filter(public_key=public_key)
+        page_set = PageNumberPagination().paginate_queryset(queryset=queryset, request=request, view=self)
+        serializer = MySellerSerializer(page_set, many=True)
+        return JsonResponse({'status': 1, 'message': 'success', "data": serializer.data})
+
+
+class MyFollowingSellerProductSearchAPIView(APIView):
+    """
+    API endpoint that allows query following seller's products.
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = (AlreadyLoginUser,)
 
     def get(self, request):
-        # TODO ================================================
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         seller_list = MySeller.objects.filter(public_key=public_key)
         keyword = ','.join(x.seller_public_key for x in seller_list)
