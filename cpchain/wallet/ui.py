@@ -98,19 +98,19 @@ class Product(QFrame):
         #self.frame.setMinimumWidth(500)
         self.setMinimumHeight(120)
         self.setMaximumHeight(130)
-        self.title_btn = QPushButton("Medicine big data from Mayo Clinic")
+        self.title_btn = QPushButton(self.item['title'])
         self.title_btn.setObjectName("title_btn")
-        self.seller_btn = QPushButton("Barack Obama")
+        self.seller_btn = QPushButton("Barack Obama")  # self.item['username']
         self.seller_btn.setObjectName("seller_btn")
         self.seller_btn.setCursor(QCursor(Qt.PointingHandCursor))
-        self.time_label = QLabel("May 4, 2018")
+        self.time_label = QLabel("May 4, 2018")  #  self.item['created']
         self.time_label.setObjectName("time_label")
-        self.total_sale_label = QLabel("128 sales")
+        self.total_sale_label = QLabel("128 sales")  #  self.item['sales_number']
         self.total_sale_label.setObjectName("total_sale_label")
-        self.price_label = QLabel("$18")
+        self.price_label = QLabel("$18")  # self.item['price']
         self.price_label.setObjectName("price_label")
         self.price_label.setFont(QFont("Arial", 15, QFont.Bold))
-        self.tag = ["tag1", "tag2", "tag3", "tag4"]
+        self.tag = ["tag1", "tag2", "tag3", "tag4"]  # self.item['tags'].split(',')
         self.tag_num = 4
         self.tag_btn_list = []
         for i in range(self.tag_num):
@@ -253,13 +253,6 @@ class PopularTab(QScrollArea):
         self.recom_label.setFont(QFont("Arial", 13, QFont.Light))
         self.recom_label.setMaximumHeight(25)
 
-        def get_items():
-            print("Getting items from backend......")
-            self.item_lists = []
-            for i in range(self.item_num_max):
-                self.item_lists.append(Product(self))
-        get_items()
-
         self.promo_label = QLabel(self)
         def get_promotion(promotion):
             print("Getting promotion images from backend.....")
@@ -270,6 +263,17 @@ class PopularTab(QScrollArea):
             self.promo_label.setPixmap(pixmap)
         d_promotion = wallet.market_client.query_promotion()
         d_promotion.addCallback(get_promotion)
+
+        self.item_lists = []
+
+        def get_items(products):
+            print("Getting items from backend......")
+            for i in range(self.item_num_max):
+                self.item_lists.append(Product(self, item=products[i]))
+            set_layout()
+
+        d_products = wallet.market_client.query_recommend_product()
+        d_products.addCallback(get_items)
 
         def set_layout():
             self.main_layout = QVBoxLayout(self)
@@ -323,7 +327,7 @@ class PopularTab(QScrollArea):
             #self.bottom_layout.setStretch(promo_layout,1)
 
             self.main_layout.addLayout(self.bottom_layout)
-        set_layout()
+
         load_stylesheet(self, "popular.qss")
         print("Loading stylesheet of cloud tab widget")
 

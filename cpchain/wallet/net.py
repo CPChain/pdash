@@ -166,7 +166,7 @@ class MarketClient:
 
     @inlineCallbacks
     def query_recommend_product(self):
-        url = self.url + 'main/v1/recommend_product/list/'
+        url = self.url + 'product/v1/recommend_product/list/'
         header = {'Content-Type': 'application/json', 'MARKET-KEY': self.account.pub_key,
                   'MARKET-TOKEN': self.token}
         resp = yield treq.get(url=url, headers=header)
