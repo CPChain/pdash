@@ -376,6 +376,7 @@ class CloudTab(QScrollArea):
 
         self.check_list = []
         self.num_file = 100
+        self.cur_clicked = 0
         self.total_label = total_label = QLabel("{} Files".format(self.num_file))
         total_label.setObjectName("total_label")
 
@@ -394,18 +395,18 @@ class CloudTab(QScrollArea):
 
         def create_file_table():
             self.file_table = file_table = TableWidget(self) 
-
             def right_menu():
-                cloud_right_menu = QMenu(file_table)
-                cloud_delete_act = QAction('Delete', self)
-                cloud_publish_act = QAction('Publish', self)
-                cloud_open_act = QAction('Open Path...', self)
+                self.cloud_right_menu = QMenu(file_table)
+                self.cloud_delete_act = QAction('Delete', self)
+                self.cloud_publish_act = QAction('Publish', self)
 
-                cloud_right_menu.addAction(cloud_delete_act)
-                cloud_right_menu.addAction(cloud_publish_act)
-                cloud_right_menu.addAction(cloud_open_act)
+                self.cloud_delete_act.triggered.connect(self.handle_delete_act)
+                self.cloud_publish_act.triggered.connect(self.handle_publish_act)
 
-                cloud_right_menu.exec_(QCursor.pos())
+                self.cloud_right_menu.addAction(self.cloud_delete_act)
+                self.cloud_right_menu.addAction(self.cloud_publish_act)
+
+                self.cloud_right_menu.exec_(QCursor.pos())
 
             file_table.horizontalHeader().setStretchLastSection(True)
             file_table.verticalHeader().setVisible(False)
@@ -448,8 +449,9 @@ class CloudTab(QScrollArea):
                 self.check_record_list.append(False)
         create_file_table()    
         self.file_table.sortItems(2)
-        # record rows that are clicked and checked
+        # record rows that are clicked or checked
         def record_check(item):
+            self.cur_clicked = item.row()
             if item.checkState() == Qt.Checked:
                 self.check_record_list[item.row()] = True
         self.file_table.itemClicked.connect(record_check)
@@ -495,6 +497,13 @@ class CloudTab(QScrollArea):
         #     print("in handle_callback_upload" + x)
         #     self.update_table()
         # defered.addCallback(handle_callback_upload)
+
+    def handle_delete_act(self):
+        self.file_table.removeRow(self.cur_clicked)
+        print("row {} has been removed...".format(self.cur_clicked))
+
+    def handle_publish_act(self):
+        print("handle publish....")
         
 
 
