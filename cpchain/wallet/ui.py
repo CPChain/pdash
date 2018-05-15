@@ -377,7 +377,6 @@ class CloudTab(QScrollArea):
 
         self.delete_btn = delete_btn = QPushButton("Delete")
         delete_btn.setObjectName("delete_btn")
-
         self.upload_btn = upload_btn = QPushButton("Upload")
         upload_btn.setObjectName("upload_btn")
 
@@ -425,7 +424,7 @@ class CloudTab(QScrollArea):
             for i in range(self.row_number):
                 file_list.append(dict_exa)
 
-            self.check_record_list = [False for i in range(self.row_number)]
+            self.check_record_list = []
             self.checkbox_list = []
             for cur_row in range(self.row_number):
                 if cur_row == len(file_list):
@@ -439,12 +438,15 @@ class CloudTab(QScrollArea):
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["remote_type"]))
                 self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
+                self.check_record_list.append(False)
         create_file_table()    
 
+        # record rows that are clicked and checked
         def record_check(item):
             if item.checkState() == Qt.Checked:
                 print("{} has been checked".format(item.text()))
-                self.check_record_list[item.row] = True
+                self.check_record_list[item.row()] = True
+                print(self.check_record_list)
         self.file_table.itemClicked.connect(record_check)
 
 
