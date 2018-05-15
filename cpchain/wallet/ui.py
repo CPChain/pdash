@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, 
                              QWidget, QLineEdit, QSpacerItem, QSizePolicy, QTableWidget, QFormLayout, QComboBox, QTextEdit,
                              QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog)
 from PyQt5.QtCore import Qt, QSize, QPoint, pyqtSignal
-from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont
+from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont, QPainter
 
 from cpchain import config, root_dir
 # from cpchain import join_with_root
@@ -197,28 +197,53 @@ class PopularTab(QScrollArea):
         def create_ind_trans():
             self.trans_label = trans_label = QLabel(self)
             trans_label.setObjectName("trans_label")
+            # please specify the tag of underlying picture using .setText attributes
+            trans_label.setText("Transportation")
+            trans_label.setFont(QFont("Arial", 13, QFont.Light))
+            trans_label.setAlignment(Qt.AlignCenter)
+
+            # please specify the file name of underlying picture using string vriable icon_name
+            icon_name = 'cpc-logo-single.png'
+            path = osp.join(root_dir, "cpchain/assets/wallet/icons", icon_name)
+
+            #specify the stylesheet of this QLabel, using string variable $path
+            trans_label.setStyleSheet("border-image: url({0}); color: #fefefe".format(path))
+            
             print("Getting trans images......")
-            pixmap = get_pixm('cpc-logo-single.png')
-            pixmap = pixmap.scaled(230, 136)
-            trans_label.setPixmap(pixmap)
+
         create_ind_trans()
 
         def create_ind_forest():
             self.forest_label = forest_label = QLabel(self)
-            forest_label.setObjectName("forest_label")
+            forest_label.setObjectName("forest_label")         
+            forest_label.setText("Forest")
+            forest_label.setFont(QFont("Arial", 13, QFont.Light))
+            forest_label.setAlignment(Qt.AlignCenter)
+
+            # please specify the file name of underlying picture using string vriable icon_name
+            icon_name = 'cpc-logo-single.png'
+            path = osp.join(root_dir, "cpchain/assets/wallet/icons", icon_name)
+            
+            #specify the stylesheet of this QLabel, using string variable $path
+            forest_label.setStyleSheet("border-image: url({0}); color: #fefefe".format(path))
             print("Getting trans images......")
-            pixmap = get_pixm('cpc-logo-single.png')
-            pixmap = pixmap.scaled(230, 136)
-            forest_label.setPixmap(pixmap)
         create_ind_forest()
 
         def create_ind_medicine():
             self.medicine_label = medicine_label = QLabel(self)
             medicine_label.setObjectName("medicine_label")
+            medicine_label.setText("Medicine")
+            medicine_label.setFont(QFont("Arial", 13, QFont.Light))
+            medicine_label.setAlignment(Qt.AlignCenter)
+
+            # please specify the file name of underlying picture using string vriable icon_name
+            icon_name = 'cpc-logo-single.png'
+            path = osp.join(root_dir, "cpchain/assets/wallet/icons", icon_name)
+            
+            #specify the stylesheet of this QLabel, using string variable $path
+            medicine_label.setStyleSheet("border-image: url({0}); color: #fefefe".format(path))
             print("Getting trans images......")
-            pixmap = get_pixm('cpc-logo-single.png')
-            pixmap = pixmap.scaled(230, 136)
-            medicine_label.setPixmap(pixmap)
+            print("Getting trans images......")
         create_ind_medicine()
 
         self.recom_label = QLabel("Recommended")
@@ -361,7 +386,12 @@ class CloudTab(QScrollArea):
 
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
-    
+
+    def handle_upload():
+            self.local_file = QFileDialog.getOpenFileName()[0]
+            #defered = threads.deferToThread(upload_file_ipfs, self.local_file)
+            #defered.addCallback(handle_callback_upload)
+
     def init_ui(self):
         self.frame = QFrame()
         self.frame.setObjectName("cloud_frame")
@@ -380,6 +410,7 @@ class CloudTab(QScrollArea):
 
         self.upload_btn = upload_btn = QPushButton("Upload")
         upload_btn.setObjectName("upload_btn")
+        #upload_btn.clicked.connect(handle_upload)
 
         self.search_bar = CloudTab.SearchBar(self)
         self.time_label = time_label = QLabel("Time")

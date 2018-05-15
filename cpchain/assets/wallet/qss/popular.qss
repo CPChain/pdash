@@ -18,6 +18,7 @@ QLabel#price_label{
 	/*background: #006bcf;*/
 }
 
+
 QLabel {
 	color: #555555;
 }
