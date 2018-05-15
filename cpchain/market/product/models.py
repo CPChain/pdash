@@ -95,13 +95,13 @@ class MyTag(models.Model):
     """
     The FollowingTag model.
     """
-    public_key = models.CharField(max_length=200, unique=True)
-    tag = models.CharField(_("Tag"), max_length=40, primary_key=True)
+    public_key = models.CharField(max_length=200)
+    tag = models.CharField(_("Tag"), max_length=40)
 
 
 class MySeller(models.Model):
     """
     The FollowingSeller model.
     """
-    public_key = models.CharField(max_length=200, unique=True)
-    seller_public_key = models.CharField(max_length=200, unique=True)
+    public_key = models.CharField(max_length=200)
+    seller_public_key = models.CharField(max_length=200)

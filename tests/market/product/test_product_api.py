@@ -1,22 +1,17 @@
 from tests.market.base_api_test import *
 
 
-class TestAccountAndProductApi(BaseApiTest):
-
-    def setUp(self):
-        private_key_file_path = join_with_root(private_key_file)
-        password_path = join_with_root(private_key_password_file)
-
-        with open(password_path) as f:
-            password = f.read()
-
-        self.pri_key_string, self.pub_key_string = ECCipher.load_key_pair_from_keystore(private_key_file_path, password)
-
-        # print("pub_key:%s,pri_key:%s,password:%s" % (self.pub_key_string, self.pri_key_string , password))
+class TestProductApi(BaseApiTest):
 
     def test_query_recommend_products(self):
-        self.query_recommend_products()
-
+        url = '%s/product/v1/recommend_product/list/' % HOST
+        response = requests.get(url)
+        print("products:%s" % response)
+        print(response.text)
+        parsed_json = json.loads(response.text)
+        for p in parsed_json['data']:
+            print("title:%s" % p["title"])
+            print("sales_number:", p['sales_number'])
 
     def test_query_from_db(self):
         keyword = "z7JI8DccklHodvexTCDmLxdviNtKhhRJU8bvv4vKoTc="
@@ -25,7 +20,7 @@ class TestAccountAndProductApi(BaseApiTest):
         keyword = "testtile"
         self.query_product(keyword=keyword)
 
-    def test_login_and_confirm(self):
+    def test_query_es_product(self):
 
         header = {'Content-Type': 'application/json'}
         nonce = self._login_and_get_nonce(header)
@@ -46,41 +41,41 @@ class TestAccountAndProductApi(BaseApiTest):
     def test_add_product_sales_quantity(self):
 
         header = {'Content-Type': 'application/json'}
-        nonce = self._login_and_get_noncelogin_and_get_nonce(header)
+        nonce = self._login_and_get_nonce(header)
 
         # ======= generate nonce signature and confirm =======
         token = self._generate_nonce_signature_and_get_token(header, nonce)
 
-        # ======= publish product ========
-        self.publish_product(token)
-
-        # ======= TODO add product_sales_quantity ========
+        # ======= TODO postman add product_sales_quantity ========
         self.add_product_sales_quantity(token)
 
-    def test_subscribe_tag(self):
+    def test_subscribe_tag_and_search_product(self):
 
         header = {'Content-Type': 'application/json'}
-        nonce = self._login_and_get_noncelogin_and_get_nonce(header)
+        nonce = self._login_and_get_nonce(header)
 
         # ======= generate nonce signature and confirm =======
         token = self._generate_nonce_signature_and_get_token(header, nonce)
 
-        # ======= publish product ========
+        # # ======= publish product ========
         self.publish_product(token)
 
-        # ======= TODO subscribe tag ========
+        # ======= subscribe tag ========
         self.subscribe_tag(token)
 
-        # ======= TODO unsubscribe tag ========
-        self.unsubscribe_tag(token)
+        # ======= TODO query my tag ========
+        self.query_my_tag(token)
 
         # ======= TODO query by following tag =======
-        self.query_by_subscribe_tag(token)
+        self.query_product_by_my_tag(token)
 
-    def test_subscribe_seller(self):
+        # ======= unsubscribe tag ========
+        self.unsubscribe_tag(token)
+
+    def test_subscribe_seller_and_search_product(self):
 
         header = {'Content-Type': 'application/json'}
-        nonce = self._login_and_get_noncelogin_and_get_nonce(header)
+        nonce = self._login_and_get_nonce(header)
 
         # ======= generate nonce signature and confirm =======
         token = self._generate_nonce_signature_and_get_token(header, nonce)
@@ -91,21 +86,13 @@ class TestAccountAndProductApi(BaseApiTest):
         # ======= TODO subscribe seller ========
         self.subscribe_seller(token)
 
+        # ======= TODO query by following seller ========
+        self.query_my_seller(token)
+
+        self.query_product_by_my_seller(token)
+
         # ======= TODO unsubscribe seller ========
         self.unsubscribe_seller(token)
-
-        # ======= TODO query by following seller ========
-        self.query_by_subscribe_seller(token)
-
-    def query_recommend_products(self):
-        # TODO
-        url = '%s/product/v1/recommend_product/list/' % HOST
-        response = requests.get(url)
-        print("products:%s" % response)
-        print(response.text)
-        parsed_json = json.loads(response.text)
-        for p in parsed_json['data']:
-            print("title:%s" % p["title"])
 
     def query_product(self, keyword):
         params = {"keyword": keyword}
@@ -131,9 +118,9 @@ class TestAccountAndProductApi(BaseApiTest):
             print("title:%s" % p["title"])
 
     def publish_product(self, token):
-        title = "publish product 12444"
+        title = "Medicine big data from Mayo Clinic"
         description = "test12345654654654654"
-        price = 9527
+        price = 15
         tags = "tag1,tag2"
         start_date = "2018-04-01 10:10:10"
         end_date = "2018-12-10 10:10:10"
@@ -154,7 +141,7 @@ class TestAccountAndProductApi(BaseApiTest):
         print("market_hash:%s" % parsed_json['data']["market_hash"])
 
     def add_product_sales_quantity(self, token):
-        url = '%s/product/v1/product/sales_quantity/add/' % HOST
+        url = '%s/product/v1/sales_quantity/add/' % HOST
         payload = {'market_hash': 'market_hash_123'}
         header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
         resp = requests.post(url, headers=header, json=payload)
@@ -162,10 +149,10 @@ class TestAccountAndProductApi(BaseApiTest):
         print(resp.text)
         parsed_json = json.loads(resp.text)
         self.assertEqual(parsed_json['status'], 1)
-        self.assertGreater(parsed_json['data']['quantity'], 0)
+        self.assertGreater(parsed_json['data'], 0)
 
     def subscribe_tag(self, token):
-        url = '%s/product/v1/product/tag/subscribe/' % HOST
+        url = '%s/product/v1/my_tag/subscribe/' % HOST
         payload = {'public_key': self.pub_key_string, 'tag': 'tag1'}
         header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
         resp = requests.post(url, headers=header, json=payload)
@@ -175,7 +162,7 @@ class TestAccountAndProductApi(BaseApiTest):
         self.assertEqual(parsed_json['status'], 1)
 
     def unsubscribe_tag(self, token):
-        url = '%s/product/v1/product/tag/unsubscribe' % HOST
+        url = '%s/product/v1/my_tag/unsubscribe/' % HOST
         payload = {'public_key': self.pub_key_string, 'tag': 'tag1'}
         header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
         resp = requests.post(url, headers=header, json=payload)
@@ -184,38 +171,8 @@ class TestAccountAndProductApi(BaseApiTest):
         parsed_json = json.loads(resp.text)
         self.assertEqual(parsed_json['status'], 1)
 
-    def subscribe_seller(self, token):
-        url = '%s/product/v1/product/seller/subscribe/' % HOST
-        payload = {'public_key': self.pub_key_string,'seller_public_key': 'sss1'}
-        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
-        resp = requests.post(url, headers=header, json=payload)
-        self.assertEqual(resp.status_code, 200)
-        print(resp.text)
-        parsed_json = json.loads(resp.text)
-        self.assertEqual(parsed_json['status'], 1)
-
-    def unsubscribe_seller(self, token):
-        url = '%s/product/v1/product/seller/unsubscribe/' % HOST
-        payload = {'public_key': self.pub_key_string,'seller_public_key': 'sss1'}
-        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
-        resp = requests.post(url, headers=header, json=payload)
-        self.assertEqual(resp.status_code, 200)
-        print(resp.text)
-        parsed_json = json.loads(resp.text)
-        self.assertEqual(parsed_json['status'], 1)
-
-    def query_by_subscribe_seller(self, token):
-        url = '%s/product/v1/product/seller/search/' % HOST
-        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
-        response = requests.get(url,headers=header)
-        print("products:%s" % response)
-        print(response.text)
-        parsed_json = json.loads(response.text)
-        for p in parsed_json['data']:
-            print("title:%s" % p["title"])
-
-    def query_by_subscribe_tag(self, token):
-        url = '%s/product/v1/product/tag/search/' % HOST
+    def query_subscribed_tag(self, token):
+        url = '%s/product/v1/my_tag/search/' % HOST
         header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
         response = requests.get(url, headers=header)
         print("products:%s" % response)
@@ -224,4 +181,66 @@ class TestAccountAndProductApi(BaseApiTest):
         for p in parsed_json['data']:
             print("title:%s" % p["title"])
 
+    def query_product_by_my_tag(self, token):
+        url = '%s/product/v1/my_tag/product/search/' % HOST
+        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
+        response = requests.get(url, headers=header)
+        print("products:%s" % response)
+        print(response.text)
+        parsed_json = json.loads(response.text)
+        for p in parsed_json['data']:
+            print("title:%s" % p["title"])
 
+    def subscribe_seller(self, token):
+        url = '%s/product/v1/my_seller/subscribe/' % HOST
+        payload = {'public_key': self.pub_key_string,'seller_public_key': self.pub_key_string}
+        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
+        resp = requests.post(url, headers=header, json=payload)
+        self.assertEqual(resp.status_code, 200)
+        print(resp.text)
+        parsed_json = json.loads(resp.text)
+        self.assertEqual(parsed_json['status'], 1)
+
+    def unsubscribe_seller(self, token):
+        url = '%s/product/v1/my_seller/unsubscribe/' % HOST
+        payload = {'public_key': self.pub_key_string,'seller_public_key': 'sss1'}
+        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
+        resp = requests.post(url, headers=header, json=payload)
+        self.assertEqual(resp.status_code, 200)
+        print(resp.text)
+        parsed_json = json.loads(resp.text)
+        self.assertEqual(parsed_json['status'], 1)
+
+    def query_my_seller(self, token):
+        url = '%s/product/v1/my_seller/search/' % HOST
+        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
+        response = requests.get(url,headers=header)
+        print("products:%s" % response)
+        print(response.text)
+        parsed_json = json.loads(response.text)
+        self.assertGreaterEqual(len(parsed_json['data']), 1, "following seller's number should >=1")
+        for p in parsed_json['data']:
+            print("seller_public_key:%s" % p["seller_public_key"])
+
+    def query_product_by_my_seller(self, token):
+        # TODO -----
+        url = '%s/product/v1/my_seller_product/search/' % HOST
+        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
+        response = requests.get(url, headers=header)
+        print("products:%s" % response)
+        print(response.text)
+        parsed_json = json.loads(response.text)
+        self.assertGreaterEqual(len(parsed_json['data']), 1, "following seller's product number should >=1")
+        for p in parsed_json['data']:
+            print("title:%s" % p["title"])
+
+    def query_my_tag(self, token):
+        url = '%s/product/v1/my_tag/search/' % HOST
+        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
+        response = requests.get(url, headers=header)
+        print("products:%s" % response)
+        print(response.text)
+        parsed_json = json.loads(response.text)
+        self.assertGreaterEqual(len(parsed_json['data']), 1 ,"my tag number should be >= 1")
+        for p in parsed_json['data']:
+            print("tag:%s" % p["tag"])

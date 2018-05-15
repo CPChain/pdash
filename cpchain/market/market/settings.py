@@ -38,10 +38,11 @@ INSTALLED_APPS = [
     'rest_framework',
     # 'rest_framework.authtoken',
 
+    'cpchain.market.main',
     'cpchain.market.account',
     'cpchain.market.product',
     'cpchain.market.user_data',
-    'cpchain.market.main',
+    'cpchain.market.comment',
 
 ]
 # Application definition
@@ -102,6 +103,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
+
     #  'default': {
     #      'ENGINE': 'django.db.backends.postgresql',
     #      'NAME': 'dev',

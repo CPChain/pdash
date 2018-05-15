@@ -24,7 +24,7 @@ class TestMainApi(BaseApiTest):
 
     def add_carousel(self):
         url = '%s/main/v1/carousel/add/' % HOST
-        payload = {'name':'nnn','image':'http://111.jpg','link':'http://www.google.com'}
+        payload = {'name':'nnn','image':'cpchain/assets/wallet/icons/cpc-logo-single.png','link':'http://www.google.com'}
         header = {"MARKET-KEY": 'pub_key_string', "MARKET-TOKEN": 'token', 'Content-Type': 'application/json'}
         resp = requests.post(url, headers=header, json=payload)
         self.assertEqual(resp.status_code, 200)
@@ -43,7 +43,7 @@ class TestMainApi(BaseApiTest):
 
     def add_hot_tag(self):
         url = '%s/main/v1/hot_tag/add/' % HOST
-        payload = {'tag':'t1','image':'http://111.jpg'}
+        payload = {'tag':'t1','image':'cpchain/assets/wallet/icons/cpc-logo-single.png'}
         header = {"MARKET-KEY": 'pub_key_string', "MARKET-TOKEN": 'token', 'Content-Type': 'application/json'}
         resp = requests.post(url, headers=header, json=payload)
         self.assertEqual(resp.status_code, 200)
@@ -62,7 +62,7 @@ class TestMainApi(BaseApiTest):
 
     def add_promotion(self):
         url = '%s/main/v1/promotion/add/' % HOST
-        payload = {'link':'http://111.222.com','image':'http://111.jpg'}
+        payload = {'link':'http://111.222.com','image':'cpchain/assets/wallet/icons/cpc-logo-single.png'}
         header = {"MARKET-KEY": 'pub_key_string', "MARKET-TOKEN": 'token', 'Content-Type': 'application/json'}
         resp = requests.post(url, headers=header, json=payload)
         self.assertEqual(resp.status_code, 200)
