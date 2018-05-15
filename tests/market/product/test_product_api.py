@@ -11,6 +11,7 @@ class TestProductApi(BaseApiTest):
         parsed_json = json.loads(response.text)
         for p in parsed_json['data']:
             print("title:%s" % p["title"])
+            print("sales_number:", p['sales_number'])
 
     def test_query_from_db(self):
         keyword = "z7JI8DccklHodvexTCDmLxdviNtKhhRJU8bvv4vKoTc="

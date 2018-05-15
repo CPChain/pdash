@@ -22,6 +22,7 @@ class SummaryComment(models.Model):
     """
     market_hash = models.CharField("market hash", max_length=256,null=False)
     avg_rating = models.IntegerField("Average rating", default=1)
+    sales_number = models.IntegerField("Sales number", default=0)
     updated = models.DateTimeField('Updated', auto_now=True)
 
     def __str__(self):

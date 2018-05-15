@@ -313,6 +313,7 @@ class RecommendProductsAPIView(APIView):
             # query average rating from SummaryComment table
             comment,_ = SummaryComment.objects.get_or_create(market_hash=p['msg_hash'])
             p['avg_rating'] = 1 if not comment else comment.avg_rating
+            p['sales_number'] = 0 if not comment else comment.sales_number
             product_list.append(p)
 
         return JsonResponse({'status': 1, 'message': 'success', 'data': product_list})
