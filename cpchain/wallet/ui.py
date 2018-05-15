@@ -44,6 +44,209 @@ def load_stylesheet(wid, name):
         s = string.Template(f.read())
         wid.setStyleSheet(s.substitute(subs))
 
+class FollowingTagTab(QScrollArea):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+        self.setObjectName("follow_tab_tag")
+        self.init_ui()
+
+    def init_ui(self):  
+        self.frame = QFrame()
+        self.frame.setObjectName("follow_tag_frame")
+        self.setWidget(self.frame)
+        self.setWidgetResizable(True)
+        self.frame.setMinimumWidth(500)
+        #self.frame.setMaximumHeight(800) 
+
+        self.follow_item_num = 5
+        self.follow_promo_num = 2
+
+        def get_items():
+            print("Getting items from backend......")
+            self.item_lists = []
+            for i in range(self.follow_item_num):
+                self.item_lists.append(Product(self))
+        get_items()
+
+        def get_promotion():
+            print("Getting promotion images from backend.....")
+            self.promo_lists = []
+            for i in range(self.follow_promo_num):
+                promo_label = QLabel(self)
+                promo_label.setObjectName("promo_label_{}".format(i))
+                pixmap = get_pixm('cpc-logo-single')
+                pixmap = pixmap.scaled(250, 123)
+                promo_label.setPixmap(pixmap)
+                self.promo_lists.append(promo_label)
+        get_promotion()
+
+        def set_layout():
+            self.follow_main_layout = QHBoxLayout(self)
+
+            self.follow_tag_product_layout=QVBoxLayout(self)
+            self.follow_tag_product_layout.addSpacing(0)
+
+            self.follow_tag_promotion_layout=QVBoxLayout(self)
+            self.follow_tag_promotion_layout.addSpacing(0)
+
+            self.follow_tag_product_layout = QVBoxLayout(self)
+            for i in range(self.follow_item_num):
+                self.follow_tag_product_layout.addWidget(self.item_lists[i])
+                self.follow_tag_product_layout.addSpacing(1)
+
+            self.promo_layout = QVBoxLayout(self)
+            for i in range(self.follow_promo_num):
+                self.follow_tag_promotion_layout.addWidget(self.promo_lists[i])
+                self.follow_tag_promotion_layout.addStretch(1)
+
+            self.follow_tag_promotion_layout.addStretch(5)
+                    
+            self.follow_main_layout.addLayout(self.follow_tag_product_layout)
+            #self.bottom_layout.setStretchFactor(recom_layout,4)
+            self.follow_main_layout.addLayout(self.follow_tag_promotion_layout)
+        set_layout()
+
+class FollowingSellTab(QScrollArea):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+        self.setObjectName("follow_sell_tag")
+        self.init_ui()
+
+    def init_ui(self):  
+        self.frame = QFrame()
+        self.frame.setObjectName("follow_sell_frame")
+        self.setWidget(self.frame)
+
+        self.follow_rank_btn = QPushButton(self)
+        self.follow_time_btn = QPushButton(self)
+        self.follow_price_btn = QPushButton(self)
+        self.follow_sales_btn = QPushButton(self)
+        self.follow_filter_btn = QPushButton(self)
+
+        self.follow_rank_btn.setObjectName("follow_rank_btn")
+        self.follow_time_btn.setObjectName("follow_time_btn")
+        self.follow_price_btn.setObjectName("follow_price_btn")
+        self.follow_sales_btn.setObjectName("follow_sales_btn")
+        self.follow_filter_btn.setObjectName("follow_filter_btn")
+
+        self.follow_rank_btn.setText("Rank")
+        self.follow_time_btn.setText("Time")
+        self.follow_price_btn.setText("Price")
+        self.follow_sales_btn.setText("Sales")
+        self.follow_filter_btn.setText("Filter")
+
+        self.setWidgetResizable(True)
+        self.frame.setMinimumWidth(500)
+        #self.frame.setMaximumHeight(800) 
+
+        self.follow_item_num = 5
+        self.follow_promo_num = 2
+
+        def get_items():
+            print("Getting items from backend......")
+            self.item_lists = []
+            for i in range(self.follow_item_num):
+                self.item_lists.append(Product(self))
+        get_items()
+
+        def get_promotion():
+            print("Getting promotion images from backend.....")
+            self.promo_lists = []
+            for i in range(self.follow_promo_num):
+                promo_label = QLabel(self)
+                promo_label.setObjectName("promo_label_{}".format(i))
+                pixmap = get_pixm('cpc-logo-single')
+                pixmap = pixmap.scaled(250, 123)
+                promo_label.setPixmap(pixmap)
+                self.promo_lists.append(promo_label)
+        get_promotion()
+
+        def set_layout():
+            
+            self.follow_top_layout = QVBoxLayout(self)
+            
+            self.follow_rank_layout = QHBoxLayout(self)
+            self.follow_rank_layout.addWidget(self.follow_rank_btn)
+            self.follow_rank_layout.addSpacing(10)
+            self.follow_rank_layout.addWidget(self.follow_time_btn)
+            self.follow_rank_layout.addSpacing(10)
+            self.follow_rank_layout.addWidget(self.follow_price_btn)
+            self.follow_rank_layout.addSpacing(10)
+            self.follow_rank_layout.addWidget(self.follow_sales_btn)
+            self.follow_rank_layout.addSpacing(10)
+            self.follow_rank_layout.addWidget(self.follow_filter_btn)
+            self.follow_rank_layout.addStretch(1)    
+
+            self.follow_main_layout = QHBoxLayout(self)
+
+            self.follow_tag_product_layout=QVBoxLayout(self)
+            self.follow_tag_product_layout.addSpacing(0)
+            self.follow_tag_promotion_layout=QVBoxLayout(self)
+            self.follow_tag_promotion_layout.addSpacing(0)
+
+            self.follow_tag_product_layout = QVBoxLayout(self)
+            for i in range(self.follow_item_num):
+                self.follow_tag_product_layout.addWidget(self.item_lists[i])
+                self.follow_tag_product_layout.addSpacing(1)
+
+            self.promo_layout = QVBoxLayout(self)
+            for i in range(self.follow_promo_num):
+                self.follow_tag_promotion_layout.addWidget(self.promo_lists[i])
+                self.follow_tag_promotion_layout.addStretch(1)
+
+            self.follow_tag_promotion_layout.addStretch(5)
+                
+            self.follow_main_layout.addLayout(self.follow_tag_product_layout)
+            self.follow_main_layout.addLayout(self.follow_tag_promotion_layout)
+
+            self.follow_top_layout.addLayout(self.follow_rank_layout)
+            self.follow_top_layout.addLayout(self.follow_main_layout)
+
+        set_layout()   
+
+
+class FollowingTab(QScrollArea):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+        self.setObjectName("follow_tab")
+        self.init_ui()   
+
+    def init_ui(self):
+
+        #self.follow_tag_btn = follow_tag_btn = QPushButton(self)
+        #self.follow_tag_btn.setObjectName("follow_tag_btn")
+
+        def add_content_tabs():
+            self.follow_tabs = follow_tabs = QTabWidget(self)
+            follow_tabs.setObjectName("follow_tabs")
+            #follow_tabs.tabBar().hide()
+            follow_tabs.addTab(FollowingTagTab(follow_tabs), "Tag")
+            follow_tabs.addTab(FollowingSellTab(follow_tabs), "Sell")
+        add_content_tabs()
+
+        def set_layout():
+            self.follow_main_layout = follow_main_layout = QHBoxLayout()
+            #self.follow_main_layout.setSpacing(0)
+            #self.follow_main_layout.setContentsMargins(0, 0, 0, 0) 
+            #self.follow_main_layout.addSpacing(0)
+            #follow_main_layout.addWidget(self.follow_tag_btn)
+            follow_main_layout.addWidget(self.follow_tabs)
+            self.setLayout(self.follow_main_layout)
+            #self.main_layout.addLayout(self.content_layout)
+
+            #wid = QWidget(self)
+            #wid.setLayout(self.main_layout)
+            #self.setCentralWidget(wid)
+        set_layout()
+        load_stylesheet(self, "follow.qss")
+        print("Loading stylesheet of following tab widget")
+
+
+
 
 # widgets
 class TableWidget(QTableWidget):
@@ -82,6 +285,7 @@ class HorizontalLine(QFrame):
         self.setLineWidth(self.wid)
 
 
+
 class Product(QFrame):
     def __init__(self, parent=None, item={}):
         super().__init__(parent)
@@ -105,6 +309,8 @@ class Product(QFrame):
         self.price_label = QLabel("$18")
         self.price_label.setObjectName("price_label")
         self.price_label.setFont(QFont("Arial", 15, QFont.Bold))
+        self.gap_line = HorizontalLine(self, 2)
+        self.gap_line.setObjectName("gap_line")
         self.tag = ["tag1", "tag2", "tag3", "tag4"]
         self.tag_num = 4
         self.tag_btn_list = []
@@ -144,9 +350,11 @@ class Product(QFrame):
 
             self.tag_layout.addStretch(1)
             self.main_layout.addLayout(self.tag_layout)
+            self.main_layout.addSpacing(5)
+            self.main_layout.addWidget(self.gap_line)
             self.setLayout(self.main_layout)
         setlayout()
-        #print("Loading stylesheet of item")
+        print("Loading stylesheet of item")
 
 
 class PopularTab(QScrollArea):
@@ -203,7 +411,7 @@ class PopularTab(QScrollArea):
             trans_label.setAlignment(Qt.AlignCenter)
 
             # please specify the file name of underlying picture using string vriable icon_name
-            icon_name = 'cpc-logo-single.png'
+            icon_name = 'back.png'
             path = osp.join(root_dir, "cpchain/assets/wallet/icons", icon_name)
 
             #specify the stylesheet of this QLabel, using string variable $path
@@ -251,12 +459,7 @@ class PopularTab(QScrollArea):
         self.recom_label.setFont(QFont("Arial", 13, QFont.Light))
         self.recom_label.setMaximumHeight(25)
 
-        def get_items():
-            print("Getting items from backend......")
-            self.item_lists = []
-            for i in range(self.item_num_max):
-                self.item_lists.append(Product(self))
-        get_items()
+        self.get_items()
 
         def get_promotion():
             print("Getting promotion images from backend.....")
@@ -328,7 +531,11 @@ class PopularTab(QScrollArea):
         load_stylesheet(self, "popular.qss")
         print("Loading stylesheet of cloud tab widget")
 
-
+    def get_items(self):
+        print("Getting items from backend......")
+        self.item_lists = []
+        for i in range(self.item_num_max):
+            self.item_lists.append(Product(self))
 
 class CloudTab(QScrollArea):
     class SearchBar(QLineEdit):
@@ -391,7 +598,7 @@ class CloudTab(QScrollArea):
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
 
-    def handle_upload():
+    def handle_upload(self):
             self.local_file = QFileDialog.getOpenFileName()[0]
             #defered = threads.deferToThread(upload_file_ipfs, self.local_file)
             #defered.addCallback(handle_callback_upload)
@@ -517,12 +724,12 @@ class CloudTab(QScrollArea):
                 print("Deleting files permanently from the cloud...")
                 self.update_table()
 
-    def handle_upload(self):
+    #def handle_upload(self):
         # Maybe useful for buyer.
         # row_selected = self.file_table.selectionModel().selectedRows()[0].row()
         # selected_fpath = self.file_table.item(row_selected, 2).text()
-        self.local_file = QFileDialog.getOpenFileName()[0]
-        print("Uploading local files....")
+        #self.local_file = QFileDialog.getOpenFileName()[0]
+        #print("Uploading local files....")
         # defered = threads.deferToThread(upload_file_ipfs, self.local_file)
         # def handle_callback_upload(x):
         #     print("in handle_callback_upload" + x)
@@ -825,6 +1032,7 @@ class MainWindow(QMainWindow):
             # Temporily modified for easy test by @hyiwr
             content_tabs.addTab(PopularTab(content_tabs), "")
             content_tabs.addTab(CloudTab(content_tabs), "")
+            content_tabs.addTab(FollowingTab(content_tabs), "")
             print("Adding tabs(browse, etc.) to content_tabs")
             print("Loading stylesheet to content_tabs")
         add_content_tabs()
