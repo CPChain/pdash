@@ -1,10 +1,7 @@
-import json
-
 from django.http import JsonResponse
-from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from cpchain.market.account.permissions import AlreadyLoginUser
-from cpchain.market.account.utils import *
+from cpchain.market.market.utils import *
 from cpchain.market.user_data.models import UploadFileInfo, BuyerFileInfo, UserInfoVersion, ProductTag, Bookmark
 from cpchain.market.user_data.serializers import UploadFileInfoSerializer, UserInfoVersionSerializer, \
     BuyerFileInfoSerializer, ProductTagSerializer, BookmarkSerializer

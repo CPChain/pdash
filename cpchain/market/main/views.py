@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 
-from cpchain.market.account.utils import *
+from cpchain.market.market.utils import *
 from cpchain.market.main.models import Carousel, HotTag, Promotion
 from cpchain.market.main.serializers import CarouselQuerySerializer, HotTagSerializer, PromotionSerializer, \
     CarouselAddSerializer

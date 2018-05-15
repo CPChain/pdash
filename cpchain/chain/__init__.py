@@ -1,2 +1,2 @@
-from .trans import BuyerTrans, SellerTrans, ProxyTrans
+from .agents import BuyerAgent, SellerAgent, ProxyAgent
 from .utils import *

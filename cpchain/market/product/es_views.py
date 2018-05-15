@@ -23,6 +23,7 @@ class ESProductView(es_views.ListElasticAPIView):
         es_filters.ESFieldFilter('status', 'status')
     )
     es_search_fields = (
+        'owner_address',
         'tags',
         'title',
         'description',
