@@ -370,6 +370,7 @@ class CloudTab(QScrollArea):
         #file_list = get_file_list()
         print("Updating file list......")
         file_list = []
+        # single element data structure (assumed); to be changed 
         dict_exa = {"type": "mkv", "name": "Infinity War", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "published"}
         for i in range(self.row_number):
             file_list.append(dict_exa)
@@ -377,12 +378,15 @@ class CloudTab(QScrollArea):
         for cur_row in range(self.row_number):
             if cur_row == len(file_list):
                 break
+            checkbox_item = QTableWidgetItem()
+            checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+            checkbox_item.setCheckState(Qt.Unchecked)
+            self.file_table.setItem(cur_row, 0, checkbox_item)
             self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["type"]))
             self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["name"]))
             self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
             self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["remote_type"]))
             self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
-        update_table()
 
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
@@ -407,10 +411,14 @@ class CloudTab(QScrollArea):
 
         self.delete_btn = delete_btn = QPushButton("Delete")
         delete_btn.setObjectName("delete_btn")
-
+        self.delete_btn.clicked.connect(self.handle_delete)
         self.upload_btn = upload_btn = QPushButton("Upload")
         upload_btn.setObjectName("upload_btn")
+<<<<<<< HEAD
         #upload_btn.clicked.connect(handle_upload)
+=======
+        self.upload_btn.clicked.connect(self.handle_upload)
+>>>>>>> 2f4782a30f074be36588321b1286013403f511a2
 
         self.search_bar = CloudTab.SearchBar(self)
         self.time_label = time_label = QLabel("Time")
@@ -431,7 +439,6 @@ class CloudTab(QScrollArea):
                 cloud_right_menu.addAction(cloud_publish_act)
                 cloud_right_menu.addAction(cloud_open_act)
 
-
                 cloud_right_menu.exec_(QCursor.pos())
 
             file_table.horizontalHeader().setStretchLastSection(True)
@@ -448,6 +455,8 @@ class CloudTab(QScrollArea):
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['Btn_Icon', 'Type', 'Product Name', 'Size', 'Remote Type', 'Published'])
+            file_table.horizontalHeader
+            file_table.setSortingEnabled(True)
 
             #file_list = get_file_list()
             file_list = []
@@ -470,14 +479,15 @@ class CloudTab(QScrollArea):
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["remote_type"]))
                 self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
-        create_file_table()       
+                self.check_record_list.append(False)
+        create_file_table()    
+        self.file_table.sortItems(2)
+        # record rows that are clicked and checked
+        def record_check(item):
+            if item.checkState() == Qt.Checked:
+                self.check_record_list[item.row()] = True
+        self.file_table.itemClicked.connect(record_check)
 
-        # self.file_table.itemClicked.connect(self.record_check)
-
-        # def record_check(self, item):
-        #     if item.checkState() == Qt.Checked:
-        #         print("{} has been checked".format(item.text()))
-        #         self.check_record_list
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self)
             main_layout.addSpacing(0)
@@ -501,6 +511,25 @@ class CloudTab(QScrollArea):
         print("Loading stylesheet of cloud tab widget")
         load_stylesheet(self, "cloud.qss")
 
+    def handle_delete(self):
+        for i in range(len(self.check_record_list)):
+            if self.check_record_list[i] == True:
+                self.file_table.removeRow(i)
+                print("Deleting files permanently from the cloud...")
+                self.update_table()
+
+    def handle_upload(self):
+        # Maybe useful for buyer.
+        # row_selected = self.file_table.selectionModel().selectedRows()[0].row()
+        # selected_fpath = self.file_table.item(row_selected, 2).text()
+        self.local_file = QFileDialog.getOpenFileName()[0]
+        print("Uploading local files....")
+        # defered = threads.deferToThread(upload_file_ipfs, self.local_file)
+        # def handle_callback_upload(x):
+        #     print("in handle_callback_upload" + x)
+        #     self.update_table()
+        # defered.addCallback(handle_callback_upload)
+        
 
 
 
@@ -742,8 +771,6 @@ class Header(QFrame):
 
         set_layout()
 
-        # stylesheet
-        #print("Setting header stylesheet......")
         load_stylesheet(self, "headertest.qss")
 
     # drag support
