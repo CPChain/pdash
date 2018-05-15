@@ -1,3 +1,4 @@
+from django.utils.http import unquote
 from django.db.models import Q
 from django.http import JsonResponse
 from rest_framework import viewsets
@@ -203,9 +204,9 @@ class ProductSearchBySellerAPIView(APIView):
 
     def get(self, request):
         params = request.query_params
-        seller = params.get('seller')
+        seller = unquote(params.get('seller'))
         logger.debug("seller is %s" % seller)
-        queryset = Product.objects.filter(status=0).filter(owner_address=seller)
+        queryset = Product.objects.filter(status=0).filter(Q(owner_address=seller))
         serializer = ProductSerializer(queryset, many=True)
         return JsonResponse({'status': 1, 'message': 'success', 'data': serializer.data})
 

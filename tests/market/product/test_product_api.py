@@ -1,3 +1,4 @@
+from django.utils.http import urlquote
 from tests.market.base_api_test import *
 
 
@@ -62,9 +63,6 @@ class TestProductApi(BaseApiTest):
         # ======= query my tag ========
         self.query_my_tag(token)
 
-        # ======= query by following tag =======
-        self.query_product_by_my_tag(token)
-
         # ======= unsubscribe tag ========
         self.unsubscribe_tag(token)
 
@@ -84,8 +82,6 @@ class TestProductApi(BaseApiTest):
 
         # ======= query by following seller ========
         self.query_my_seller(token)
-
-        self.query_product_by_my_seller(token)
 
         # ======= unsubscribe seller ========
         self.unsubscribe_seller(token)
@@ -247,7 +243,7 @@ class TestProductApi(BaseApiTest):
 
         self.publish_product(token)
 
-        url = '%s/product/v1/search_by_seller/?seller=%s' % (HOST, self.pub_key_string)
+        url = '%s/product/v1/search_by_seller/?seller=%s' % (HOST, urlquote(self.pub_key_string))
         header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
         response = requests.get(url, headers=header)
         print("products:%s" % response)
