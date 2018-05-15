@@ -58,6 +58,7 @@ server_root = 'server_root'
 
 
 [market]
+dbpath = "cpchain/market/market.db"
 server_addr = "192.168.0.132"
 server_port = 8083
 es_hosts = '192.168.0.132:9200'
