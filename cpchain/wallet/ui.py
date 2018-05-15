@@ -405,7 +405,6 @@ class CloudTab(QScrollArea):
                 cloud_right_menu.addAction(cloud_publish_act)
                 cloud_right_menu.addAction(cloud_open_act)
 
-
                 cloud_right_menu.exec_(QCursor.pos())
 
             file_table.horizontalHeader().setStretchLastSection(True)
@@ -422,6 +421,8 @@ class CloudTab(QScrollArea):
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['Btn_Icon', 'Type', 'Product Name', 'Size', 'Remote Type', 'Published'])
+            file_table.horizontalHeader
+            file_table.setSortingEnabled(True)
 
             #file_list = get_file_list()
             file_list = []
@@ -446,7 +447,7 @@ class CloudTab(QScrollArea):
                 self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
                 self.check_record_list.append(False)
         create_file_table()    
-
+        self.file_table.sortItems(2)
         # record rows that are clicked and checked
         def record_check(item):
             if item.checkState() == Qt.Checked:
@@ -477,7 +478,7 @@ class CloudTab(QScrollArea):
         load_stylesheet(self, "cloud.qss")
 
     def handle_delete(self):
-        for i in self.check_record_list:
+        for i in range(len(self.check_record_list)):
             if self.check_record_list[i] == True:
                 self.file_table.removeRow(i)
                 print("Deleting files permanently from the cloud...")
