@@ -149,7 +149,7 @@ class MarketClient:
         confirm_info = yield treq.json_content(resp)
         print(confirm_info)
         logger.debug("hot tag: %s", confirm_info)
-        return confirm_info
+        return confirm_info['data']
 
 
     @inlineCallbacks
@@ -161,7 +161,7 @@ class MarketClient:
         confirm_info = yield treq.json_content(resp)
         print(confirm_info)
         logger.debug("promotion: %s", confirm_info)
-        return confirm_info
+        return confirm_info['data']
 
 
     @inlineCallbacks

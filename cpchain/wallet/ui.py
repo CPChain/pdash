@@ -178,7 +178,7 @@ class PopularTab(QScrollArea):
         self.horline2 = HorizontalLine(self, 2)
         self.horline2.setObjectName("horline2")
 
-        self.banner_label = banner_label = QLabel(self)
+        self.banner_label = QLabel(self)
 
         def create_banner(carousel):
             print(carousel)
@@ -188,8 +188,8 @@ class PopularTab(QScrollArea):
             pixmap = QPixmap(path) # get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(740, 195)
             self.banner_label.setPixmap(pixmap)
-        d = wallet.market_client.query_carousel()
-        d.addCallback(create_banner)
+        d_banner = wallet.market_client.query_carousel()
+        d_banner.addCallback(create_banner)
 
         self.hot_label = QLabel("Hot Industry")
         self.hot_label.setObjectName("hot_label")
@@ -204,32 +204,49 @@ class PopularTab(QScrollArea):
         more_btn_2.setObjectName("more_btn_2")
         self.more_btn_2.setCursor(QCursor(Qt.PointingHandCursor))
 
-        def create_ind_trans():
-            self.trans_label = trans_label = QLabel(self)
-            trans_label.setObjectName("trans_label")
-            print("Getting trans images......")
-            pixmap = get_pixm('cpc-logo-single.png')
-            pixmap = pixmap.scaled(230, 136)
-            trans_label.setPixmap(pixmap)
-        create_ind_trans()
+        def create_hot_industry():
+            self.hot_industry_label = []
+            for i in range(config.wallet.hot_industry_num):
+                hot_industry = QLabel(self)
+                hot_industry.setObjectName('hot_industry_' + str(i))
+                self.hot_industry_label.append(hot_industry)
+        create_hot_industry()
 
-        def create_ind_forest():
-            self.forest_label = forest_label = QLabel(self)
-            forest_label.setObjectName("forest_label")
-            print("Getting trans images......")
-            pixmap = get_pixm('cpc-logo-single.png')
-            pixmap = pixmap.scaled(230, 136)
-            forest_label.setPixmap(pixmap)
-        create_ind_forest()
+        def set_hot_industry(hot_industry):
+            for i in range(config.wallet.hot_industry_num):
+                path = osp.join(root_dir, hot_industry[i]['image'])
+                pixmap = QPixmap(path)
+                pixmap = pixmap.scaled(230, 136)
+                self.hot_industry_label[i].setPixmap(pixmap)
+        d_hot_industry = wallet.market_client.query_hot_tag()
+        d_hot_industry.addCallback(set_hot_industry)
 
-        def create_ind_medicine():
-            self.medicine_label = medicine_label = QLabel(self)
-            medicine_label.setObjectName("medicine_label")
-            print("Getting trans images......")
-            pixmap = get_pixm('cpc-logo-single.png')
-            pixmap = pixmap.scaled(230, 136)
-            medicine_label.setPixmap(pixmap)
-        create_ind_medicine()
+        # def create_ind_trans():
+        #     self.trans_label = trans_label = QLabel(self)
+        #     trans_label.setObjectName("trans_label")
+        #     print("Getting trans images......")
+        #     pixmap = get_pixm('cpc-logo-single.png')
+        #     pixmap = pixmap.scaled(230, 136)
+        #     trans_label.setPixmap(pixmap)
+        # create_ind_trans()
+        #
+        # def create_ind_forest():
+        #     self.forest_label = forest_label = QLabel(self)
+        #     forest_label.setObjectName("forest_label")
+        #     print("Getting trans images......")
+        #     pixmap = get_pixm('cpc-logo-single.png')
+        #     pixmap = pixmap.scaled(230, 136)
+        #     forest_label.setPixmap(pixmap)
+        # create_ind_forest()
+        #
+        # def create_ind_medicine():
+        #     self.medicine_label = medicine_label = QLabel(self)
+        #     medicine_label.setObjectName("medicine_label")
+        #     print("Getting trans images......")
+        #     pixmap = get_pixm('cpc-logo-single.png')
+        #     pixmap = pixmap.scaled(230, 136)
+        #     medicine_label.setPixmap(pixmap)
+        # create_ind_medicine()
 
         self.recom_label = QLabel("Recommended")
         self.recom_label.setObjectName("recom_label")
@@ -243,17 +260,16 @@ class PopularTab(QScrollArea):
                 self.item_lists.append(Product(self))
         get_items()
 
-        def get_promotion():
+        self.promo_label = QLabel(self)
+        def get_promotion(promotion):
             print("Getting promotion images from backend.....")
-            self.promo_lists = []
-            for i in range(self.promo_num_max):
-                promo_label = QLabel(self)
-                promo_label.setObjectName("promo_label_{}".format(i))
-                pixmap = get_pixm('cpc-logo-single')
-                pixmap = pixmap.scaled(250, 123)
-                promo_label.setPixmap(pixmap)
-                self.promo_lists.append(promo_label)
-        get_promotion()
+            self.promo_label.setObjectName("promo_label")
+            path = osp.join(root_dir, promotion[0]['image'])
+            pixmap = QPixmap(path)
+            pixmap = pixmap.scaled(250, 123)
+            self.promo_label.setPixmap(pixmap)
+        d_promotion = wallet.market_client.query_promotion()
+        d_promotion.addCallback(get_promotion)
 
         def set_layout():
             self.main_layout = QVBoxLayout(self)
@@ -272,12 +288,10 @@ class PopularTab(QScrollArea):
             self.main_layout.addWidget(self.horline1)
 
             self.hot_img_layout = QHBoxLayout(self)
-            self.hot_img_layout.addSpacing(25)
-            self.hot_img_layout.addWidget(self.trans_label)
-            self.hot_img_layout.addSpacing(25)
-            self.hot_img_layout.addWidget(self.forest_label)
-            self.hot_img_layout.addSpacing(25)
-            self.hot_img_layout.addWidget(self.medicine_label)
+            for i in range(config.wallet.hot_industry_num):
+                self.hot_img_layout.addSpacing(25)
+                self.hot_img_layout.addWidget(self.hot_industry_label[i])
+
             self.main_layout.addLayout(self.hot_img_layout)
             self.main_layout.addSpacing(1)
             
@@ -299,9 +313,9 @@ class PopularTab(QScrollArea):
                 self.recom_layout.addSpacing(1)
 
             self.promo_layout = QVBoxLayout(self)
-            for i in range(self.promo_num_max):
-                self.promo_layout.addWidget(self.promo_lists[i])
-                self.promo_layout.addSpacing(1)
+            self.promo_layout.addWidget(self.promo_label)
+            self.promo_layout.addSpacing(1)
+
 
             self.bottom_layout.addLayout(self.recom_layout)
             #self.bottom_layout.setStretchFactor(recom_layout,4)
