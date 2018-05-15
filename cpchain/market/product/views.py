@@ -324,7 +324,7 @@ class ProductSalesQuantityAddAPIView(APIView):
     """
     queryset = Product.objects.all()
     serializer_class = ProductSalesQuantitySerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (AlreadyLoginUser,)
 
     def post(self, request):
         return self.increase_product_sales_quantity(request)
@@ -352,7 +352,7 @@ class ProductTagSubscribeAPIView(APIView):
     API endpoint that allows add ProductTagSubscribe
     """
     queryset = MyTag.objects.all()
-    permission_classes = (AllowAny,)
+    permission_classes = (AlreadyLoginUser,)
 
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
@@ -368,7 +368,7 @@ class ProductTagUnsubscribeAPIView(APIView):
     API endpoint that allows add ProductTagUnsubscribe
     """
     queryset = MyTag.objects.all()
-    permission_classes = (AllowAny,)
+    permission_classes = (AlreadyLoginUser,)
 
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
@@ -384,7 +384,7 @@ class MyTaggedProductSearchAPIView(APIView):
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (AlreadyLoginUser,)
 
     def get(self, request):
         # TODO ================================================
@@ -408,7 +408,7 @@ class ProductSellerSubscribeAPIView(APIView):
     API endpoint that allows subscribe ProductSeller
     """
     queryset = MySeller.objects.all()
-    permission_classes = (AllowAny,)
+    permission_classes = (AlreadyLoginUser,)
 
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
@@ -425,7 +425,7 @@ class ProductSellerUnsubscribeAPIView(APIView):
     API endpoint that allows unsubscribe ProductSeller
     """
     queryset = MySeller.objects.all()
-    permission_classes = (AllowAny,)
+    permission_classes = (AlreadyLoginUser,)
 
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
@@ -441,7 +441,7 @@ class MyTaggedSellerSearchAPIView(APIView):
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (AlreadyLoginUser,)
 
     def get(self, request):
         # TODO ================================================
