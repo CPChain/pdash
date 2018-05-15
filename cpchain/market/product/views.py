@@ -6,6 +6,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from cpchain.market.comment.models import SummaryComment
 from cpchain.market.product.models import WalletMsgSequence, MyTag, MySeller
 from cpchain.market.product.serializers import *
 from cpchain.market.account.permissions import IsOwnerOrReadOnly, AlreadyLoginUser
@@ -290,7 +291,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
 class RecommendProductsAPIView(APIView):
     """
-    API endpoint that allows query products.
+    API endpoint that allows query recommend products.
     """
     queryset = Product.objects.all()
     serializer_class = RecommendProductSerializer
@@ -301,22 +302,25 @@ class RecommendProductsAPIView(APIView):
         queryset = Product.objects.filter(status=0)[0:10]
         serializer = RecommendProductSerializer(queryset, many=True)
         products = serializer.data
+
+        # fill username and rating for each product,return to client
         product_list = []
         for p in products:
             pk = p['owner_address']
             u = WalletUser.objects.get(public_key=pk)
-            username = '' if not u else u.username
 
-            p['username'] = username
-            # FIXME query rating from comment table
-            p['rating'] = 3.5
+            p['username'] = '' if not u else u.username
+            # query average rating from SummaryComment table
+            comment,_ = SummaryComment.objects.get_or_create(market_hash=p['msg_hash'])
+            p['avg_rating'] = 1 if not comment else comment.avg_rating
             product_list.append(p)
+
         return JsonResponse({'status': 1, 'message': 'success', 'data': product_list})
 
 
 class ProductSalesQuantityAddAPIView(APIView):
     """
-    API endpoint that allows add product SalesQuantity.
+    API endpoint that allows add product sales quantity.
     """
     queryset = Product.objects.all()
     serializer_class = ProductSalesQuantitySerializer
@@ -340,8 +344,7 @@ class ProductSalesQuantityAddAPIView(APIView):
             obj = serializer.update(obj, request.data)
 
         logger.debug("obj.quantity:%s" % obj.quantity)
-        return JsonResponse({'status': 1, 'message': 'success','data':obj.quantity})
-
+        return JsonResponse({'status': 1, 'message': 'success', 'data': obj.quantity})
 
 
 class ProductTagSubscribeAPIView(APIView):
@@ -352,7 +355,6 @@ class ProductTagSubscribeAPIView(APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request):
-        # TODO ================================================
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         tag = request.data['tag']
         logger.debug("public_key:%s tag:%s" % (public_key, tag))
@@ -369,7 +371,6 @@ class ProductTagUnsubscribeAPIView(APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request):
-        # TODO ================================================
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         tag = request.data['tag']
         logger.debug("delete tag:%s for public_key:%s" % (tag, public_key))
@@ -390,23 +391,26 @@ class MyTaggedProductSearchAPIView(APIView):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         tag_list = MyTag.objects.filter(public_key=public_key)
         logger.debug('taglist:%s' % tag_list)
-        keyword = ''
+        keyword = ','.join(x.tag for x in tag_list)
 
         logger.debug("keyword is %s" % keyword)
-        queryset = Product.objects.filter(status=0).filter(Q(tags__in=keyword))
-        serializer = ProductSerializer(queryset, many=True)
-        return Response(data=serializer.data)
+
+        queryset = Product.objects.filter(status=0).filter(Q(tags__contains=keyword))
+
+        page_set = PageNumberPagination().paginate_queryset(queryset=queryset, request=request, view=self)
+        serializer = ProductSerializer(page_set, many=True)
+
+        return JsonResponse({'status': 1, 'message': 'success', "data": serializer.data})
 
 
 class ProductSellerSubscribeAPIView(APIView):
     """
-    API endpoint that allows add ProductTagSubscribe
+    API endpoint that allows subscribe ProductSeller
     """
     queryset = MySeller.objects.all()
     permission_classes = (AllowAny,)
 
     def post(self, request):
-        # TODO ================================================
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         seller_public_key = request.data['seller_public_key']
         logger.debug("public_key:%s seller_public_key:%s" % (public_key, seller_public_key))
@@ -418,21 +422,18 @@ class ProductSellerSubscribeAPIView(APIView):
 
 class ProductSellerUnsubscribeAPIView(APIView):
     """
-    API endpoint that allows add ProductTagUnsubscribe
+    API endpoint that allows unsubscribe ProductSeller
     """
     queryset = MySeller.objects.all()
     permission_classes = (AllowAny,)
 
     def post(self, request):
-        # TODO ================================================
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         seller_public_key = request.data['seller_public_key']
         logger.debug("delete seller_public_key:%s for public_key:%s" % (seller_public_key, public_key))
         MySeller.objects.filter(public_key=public_key, seller_public_key=request.data['seller_public_key']).delete()
         return JsonResponse({'status': 1, 'message': 'success'})
 
-
-# url(r'^product/seller/search/$', ProductSellerSearchAPIView.as_view(), name='product_seller_search'),
 
 class MyTaggedSellerSearchAPIView(APIView):
     """
@@ -445,17 +446,11 @@ class MyTaggedSellerSearchAPIView(APIView):
     def get(self, request):
         # TODO ================================================
         public_key = self.request.META.get('HTTP_MARKET_KEY')
-        seller_list = MySeller.objects.filter(public_key=public_key).first()
-        logger.debug('seller_list:%s' % seller_list)
-        keyword = ''
+        seller_list = MySeller.objects.filter(public_key=public_key)
+        keyword = ','.join(x.seller_public_key for x in seller_list)
+        logger.debug('keyword:%s' % keyword)
 
-        if keyword is not None:
-            logger.debug("keyword is %s" % keyword)
-            queryset = Product.objects.filter(status=0).filter(
-                Q(owner_address__in=keyword)
-            )
-        else:
-            queryset = Product.objects.filter(status=0)
-
-        serializer = ProductSerializer(queryset, many=True)
-        return Response(data=serializer.data)
+        queryset = Product.objects.filter(status=0).filter(Q(owner_address=keyword))
+        page_set = PageNumberPagination().paginate_queryset(queryset=queryset, request=request, view=self)
+        serializer = ProductSerializer(page_set, many=True)
+        return JsonResponse({'status': 1, 'message': 'success', "data": serializer.data})
