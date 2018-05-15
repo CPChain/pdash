@@ -830,7 +830,7 @@ class CloudTab(QScrollArea):
         print("row {} has been removed...".format(self.cur_clicked))
 
     def handle_publish_act(self):
-        print("handle publish....")
+        print("handle publish act....")
         
 
 
