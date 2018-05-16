@@ -32,9 +32,9 @@ def increase_data_version(public_key):
     return user_version.version
 
 
-class UploadFileInfoAPIViewSet(APIView):
+class UploadFileInfoAPIView(APIView):
     """
-    TODO API endpoint that allows save UploadFileInfo.
+    API endpoint that allows add UploadFileInfo.
     """
     queryset = UploadFileInfo.objects.all()
     serializer_class = UploadFileInfoSerializer
@@ -63,9 +63,9 @@ class UploadFileInfoAPIViewSet(APIView):
         return create_invalid_response()
 
 
-class PullUserInfoAPIViewSet(APIView):
+class PullUserInfoAPIView(APIView):
     """
-    TODO API endpoint that allows pull user info (UploadFileInfo,BuyerFileInfo) by owner.
+    API endpoint that allows pull user info (UploadFileInfo,BuyerFileInfo) by owner.
     """
     queryset = UploadFileInfo.objects.all()
     serializer_class = UploadFileInfoSerializer
@@ -83,13 +83,13 @@ class PullUserInfoAPIViewSet(APIView):
 
         upload_file_list = upload_file_serializer.data
         buyer_file_list = buyer_file_serializer.data
-        all_data = {"public_key":public_key,"upload_files":upload_file_list,"buyer_files":buyer_file_list}
+        all_data = {"public_key": public_key, "upload_files": upload_file_list, "buyer_files": buyer_file_list}
         return JsonResponse({'status': 1, 'message': 'success', 'data': all_data})
 
 
-class BuyerFileInfoAPIViewSet(APIView):
+class BuyerFileInfoAPIView(APIView):
     """
-    TODO API endpoint that allows save BuyerFileInfo.
+    API endpoint that allows add BuyerFileInfo.
     """
     queryset = BuyerFileInfo.objects.all()
     serializer_class = BuyerFileInfoSerializer
@@ -119,7 +119,7 @@ class BuyerFileInfoAPIViewSet(APIView):
         return create_invalid_response()
 
 
-class UserInfoVersionAPIViewSet(APIView):
+class UserInfoVersionAPIView(APIView):
     """
     API endpoint that allows query latest user data version by owner.
     """
@@ -143,9 +143,9 @@ class UserInfoVersionAPIViewSet(APIView):
             return JsonResponse({'status': 1, 'message': 'success', 'data': {'version': 0}})
 
 
-class ProductTagAPIViewSet(APIView):
+class ProductTagSearchAPIView(APIView):
     """
-    TODO API endpoint that allows query product tag data by owner.
+    API endpoint that allows query product tag data by owner.
     """
     queryset = ProductTag.objects.all()
     serializer_class = ProductTagSerializer
@@ -164,6 +164,15 @@ class ProductTagAPIViewSet(APIView):
             logger.exception("ProductTag not found for %s" % public_key)
             return create_invalid_response()
 
+
+class ProductTagAddAPIView(APIView):
+    """
+    API endpoint that allows query product tag data by owner.
+    """
+    queryset = ProductTag.objects.all()
+    serializer_class = ProductTagSerializer
+    permission_classes = (AlreadyLoginUser,)
+
     def post(self, request):
         data = request.data
         logger.info("data:%s" % data)
@@ -179,9 +188,9 @@ class ProductTagAPIViewSet(APIView):
         return create_invalid_response()
 
 
-class BookmarkAPIViewSet(APIView):
+class BookmarkSearchAPIView(APIView):
     """
-    TODO API endpoint that allows query bookmark data by owner.
+    API endpoint that allows query bookmark data by owner.
     """
     queryset = Bookmark.objects.all()
     serializer_class = BookmarkSerializer
@@ -199,6 +208,15 @@ class BookmarkAPIViewSet(APIView):
         except:
             logger.info("bookmark not found for %s" % public_key)
             return create_invalid_response()
+
+
+class BookmarkAddAPIView(APIView):
+    """
+    API endpoint that allows add bookmark.
+    """
+    queryset = Bookmark.objects.all()
+    serializer_class = BookmarkSerializer
+    permission_classes = (AlreadyLoginUser,)
 
     def post(self, request):
         data = request.data
