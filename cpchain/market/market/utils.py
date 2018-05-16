@@ -52,3 +52,9 @@ def verify_signature(pub_key_string, signature, raw_data_string):
 
 def sign(pri_key_string, raw_data):
     return ECCipher.generate_string_signature(pri_key_string, raw_data)
+
+
+def get_addr_from_public_key(public_key_string):
+    pub_key_bytes = Encoder.str_to_base64_byte(public_key_string)
+    pub_key_loaded = get_addr_from_public_key(pub_key_bytes)
+    return get_addr_from_public_key(pub_key_loaded)

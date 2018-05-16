@@ -12,6 +12,7 @@ from cpchain.market.product.models import WalletMsgSequence, MyTag, MySeller
 from cpchain.market.product.serializers import *
 from cpchain.market.account.permissions import IsOwnerOrReadOnly, AlreadyLoginUser
 from cpchain.market.market.utils import *
+from cpchain.market.transaction.models import ProductSaleStatus
 
 logger = logging.getLogger(__name__)
 
@@ -347,8 +348,9 @@ class RecommendProductsAPIView(APIView):
             p['username'] = '' if not u else u.username
             # query average rating from SummaryComment table
             comment,_ = SummaryComment.objects.get_or_create(market_hash=p['msg_hash'])
+            sale_status,_ = ProductSaleStatus.objects.get_or_create(market_hash=p['msg_hash'])
             p['avg_rating'] = 1 if not comment else comment.avg_rating
-            p['sales_number'] = 0 if not comment else comment.sales_number
+            p['sales_number'] = 0 if not sale_status else sale_status.sales_number
             product_list.append(p)
 
         return JsonResponse({'status': 1, 'message': 'success', 'data': product_list})

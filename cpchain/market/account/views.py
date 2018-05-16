@@ -36,6 +36,9 @@ class UserLoginAPIView(APIView):
         if WalletUser.objects.filter(public_key__exact=public_key):
             return self.generate_verify_code(public_key)
 
+        address = get_addr_from_public_key(public_key)
+        data['address'] = address
+
         # register wallet user, generate verify code and put it into cache
         serializer = UserRegisterSerializer(data=data)
 
