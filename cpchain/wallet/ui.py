@@ -714,8 +714,8 @@ class Product(QFrame):
 
     def init_ui(self):
         #self.frame.setMinimumWidth(500)
-        self.setMinimumHeight(200)
-        self.setMaximumHeight(500)
+        self.setMinimumHeight(120)
+        self.setMaximumHeight(130)
         self.title_btn = QPushButton("Medicine big data from Mayo Clinic")
         self.title_btn.setObjectName("title_btn")
         self.seller_btn = QPushButton("Barack Obama")
@@ -791,7 +791,7 @@ class PopularTab(QScrollArea):
         self.setWidget(self.frame)
         self.setWidgetResizable(True)
         self.frame.setMinimumWidth(500)
-        self.frame.setMaximumHeight(800)
+        #self.frame.setMaximumHeight(800)
 
         self.item_num_max = 2
         self.promo_num_max = 1
@@ -1001,7 +1001,7 @@ class CloudTab(QScrollArea):
         print("Updating file list......")
         file_list = []
         # single element data structure (assumed); to be changed 
-        dict_exa = {"type": "mkv", "name": "Infinity War", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "published"}
+        dict_exa = {"type": "mkv", "name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "published"}
         for i in range(self.row_number):
             file_list.append(dict_exa)
 
@@ -1091,7 +1091,7 @@ class CloudTab(QScrollArea):
             #file_list = get_file_list()
             file_list = []
             print("Getting file list.......")
-            dict_exa = {"name": "Infinity War", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
+            dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
             for i in range(self.row_number):
                 file_list.append(dict_exa)
 
