@@ -1,3 +1,4 @@
+from django.utils.http import unquote
 from django.db.models import Q
 from django.http import JsonResponse
 from rest_framework import viewsets
@@ -176,6 +177,40 @@ class ProductSearchAPIViewSet(APIView):
         return Response(data=serializer.data)
 
 
+class ProductSearchByTagAPIView(APIView):
+    """
+    API endpoint that allows query products by tag.
+    """
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = (AllowAny,)
+
+    def get(self, request):
+        params = request.query_params
+        tag = params.get('tag')
+        logger.debug("tag is %s" % tag)
+        queryset = Product.objects.filter(status=0).filter(tags__contains=tag)
+        serializer = ProductSerializer(queryset, many=True)
+        return JsonResponse({'status': 1, 'message': 'success', 'data': serializer.data})
+
+
+class ProductSearchBySellerAPIView(APIView):
+    """
+    API endpoint that allows query products by seller.
+    """
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = (AllowAny,)
+
+    def get(self, request):
+        params = request.query_params
+        seller = unquote(params.get('seller'))
+        logger.debug("seller is %s" % seller)
+        queryset = Product.objects.filter(status=0).filter(Q(owner_address=seller))
+        serializer = ProductSerializer(queryset, many=True)
+        return JsonResponse({'status': 1, 'message': 'success', 'data': serializer.data})
+
+
 class ProductPagedSearchAPIViewSet(APIView):
     """
     API endpoint that allows query products.
@@ -313,6 +348,7 @@ class RecommendProductsAPIView(APIView):
             # query average rating from SummaryComment table
             comment,_ = SummaryComment.objects.get_or_create(market_hash=p['msg_hash'])
             p['avg_rating'] = 1 if not comment else comment.avg_rating
+            p['sales_number'] = 0 if not comment else comment.sales_number
             product_list.append(p)
 
         return JsonResponse({'status': 1, 'message': 'success', 'data': product_list})
@@ -324,7 +360,7 @@ class ProductSalesQuantityAddAPIView(APIView):
     """
     queryset = Product.objects.all()
     serializer_class = ProductSalesQuantitySerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (AlreadyLoginUser,)
 
     def post(self, request):
         return self.increase_product_sales_quantity(request)
@@ -352,7 +388,7 @@ class ProductTagSubscribeAPIView(APIView):
     API endpoint that allows add ProductTagSubscribe
     """
     queryset = MyTag.objects.all()
-    permission_classes = (AllowAny,)
+    permission_classes = (AlreadyLoginUser,)
 
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
@@ -368,7 +404,7 @@ class ProductTagUnsubscribeAPIView(APIView):
     API endpoint that allows add ProductTagUnsubscribe
     """
     queryset = MyTag.objects.all()
-    permission_classes = (AllowAny,)
+    permission_classes = (AlreadyLoginUser,)
 
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
@@ -378,13 +414,29 @@ class ProductTagUnsubscribeAPIView(APIView):
         return JsonResponse({'status': 1, 'message': 'success'})
 
 
+class MyTagSearchAPIView(APIView):
+    """
+    API endpoint that allows query my tag.
+    """
+    queryset = MyTag.objects.all()
+    serializer_class = MyTagSerializer
+    permission_classes = (AlreadyLoginUser,)
+
+    def get(self, request):
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        queryset = MyTag.objects.filter(public_key=public_key)
+        page_set = PageNumberPagination().paginate_queryset(queryset=queryset, request=request, view=self)
+        serializer = MyTagSerializer(page_set, many=True)
+        return JsonResponse({'status': 1, 'message': 'success', "data": serializer.data})
+
+
 class MyTaggedProductSearchAPIView(APIView):
     """
     API endpoint that allows query products.
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (AlreadyLoginUser,)
 
     def get(self, request):
         # TODO ================================================
@@ -408,7 +460,7 @@ class ProductSellerSubscribeAPIView(APIView):
     API endpoint that allows subscribe ProductSeller
     """
     queryset = MySeller.objects.all()
-    permission_classes = (AllowAny,)
+    permission_classes = (AlreadyLoginUser,)
 
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
@@ -425,7 +477,7 @@ class ProductSellerUnsubscribeAPIView(APIView):
     API endpoint that allows unsubscribe ProductSeller
     """
     queryset = MySeller.objects.all()
-    permission_classes = (AllowAny,)
+    permission_classes = (AlreadyLoginUser,)
 
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
@@ -435,16 +487,31 @@ class ProductSellerUnsubscribeAPIView(APIView):
         return JsonResponse({'status': 1, 'message': 'success'})
 
 
-class MyTaggedSellerSearchAPIView(APIView):
+class MyFollowingSellerSearchAPIView(APIView):
     """
-    API endpoint that allows query products.
+    API endpoint that allows query seller list user following.
+    """
+    queryset = MySeller.objects.all()
+    serializer_class = MySellerSerializer
+    permission_classes = (AlreadyLoginUser,)
+
+    def get(self, request):
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        queryset = MySeller.objects.filter(public_key=public_key)
+        page_set = PageNumberPagination().paginate_queryset(queryset=queryset, request=request, view=self)
+        serializer = MySellerSerializer(page_set, many=True)
+        return JsonResponse({'status': 1, 'message': 'success', "data": serializer.data})
+
+
+class MyFollowingSellerProductSearchAPIView(APIView):
+    """
+    API endpoint that allows query following seller's products.
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (AlreadyLoginUser,)
 
     def get(self, request):
-        # TODO ================================================
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         seller_list = MySeller.objects.filter(public_key=public_key)
         keyword = ','.join(x.seller_public_key for x in seller_list)

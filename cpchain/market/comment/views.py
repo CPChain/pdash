@@ -1,16 +1,12 @@
 from django.db.models import Q
 from django.http import JsonResponse
-from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from cpchain.market.account.permissions import AlreadyLoginUser
 from cpchain.market.comment.models import SummaryComment, Comment
 from cpchain.market.comment.serializers import SummaryCommentSerializer, CommentSerializer
-from cpchain.market.product.models import WalletMsgSequence, MyTag, MySeller
-from cpchain.market.product.serializers import *
-from cpchain.market.account.permissions import IsOwnerOrReadOnly, AlreadyLoginUser
 from cpchain.market.market.utils import *
 
 logger = logging.getLogger(__name__)
