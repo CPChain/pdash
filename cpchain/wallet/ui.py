@@ -1024,12 +1024,16 @@ class Header(QFrame):
 
             self.minimize_btn = QPushButton("_", self)
             self.minimize_btn.setObjectName("minimize_btn")
+            self.minimize_btn.clicked.connect(self.parent.showMinimized)
 
-            self.maxmize_btn = QPushButton("□", self)
-            self.maxmize_btn.setObjectName("maxmize_btn")
+
+            self.maximize_btn = QPushButton("□", self)
+            self.maximize_btn.setObjectName("maxmize_btn")
+            self.maximize_btn.clicked.connect(self.parent.showMaximized)
 
             self.close_btn = QPushButton("x", self)
             self.close_btn.setObjectName("close_btn")
+            self.close_btn.clicked.connect(self.parent.close)
 
             def create_popmenu():
                 self.profile_menu = profile_menu = QMenu('Profile', self)
@@ -1064,7 +1068,7 @@ class Header(QFrame):
             self.extra_layout = extra_layout = QHBoxLayout(self)
             extra_layout.addSpacing(20)
             extra_layout.addWidget(self.minimize_btn)
-            extra_layout.addWidget(self.maxmize_btn)
+            extra_layout.addWidget(self.maximize_btn)
             extra_layout.addWidget(self.close_btn)
 
             self.main_layout = main_layout = QHBoxLayout(self)
@@ -1131,7 +1135,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('CPChain Wallet')
         self.setObjectName("main_window")
         # no borders.  we make our own header panel.
-        # self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setWindowFlags(Qt.FramelessWindowHint)
 
         def set_geometry():
             self.resize(1000, 800)  # resize before centering.
