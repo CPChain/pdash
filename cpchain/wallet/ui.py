@@ -44,6 +44,376 @@ def load_stylesheet(wid, name):
         s = string.Template(f.read())
         wid.setStyleSheet(s.substitute(subs))
 
+class ProductInfoEdit(QScrollArea):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+        #for testing this Tab @rayhueng
+        self.setObjectName("cart_tab")
+        #self.setObjectName("product_info_tab")
+        self.init_ui()
+
+    def init_ui(self):  
+        self.frame = QFrame()
+        self.frame.setObjectName("product_info_frame")
+        self.setWidget(self.frame)
+        self.setWidgetResizable(True)
+        self.frame.setMinimumWidth(500)
+        #self.frame.setMaximumHeight(800) 
+
+        #Labels def
+        self.pinfo_title_label = pinfo_title_label = QLabel("Title:")
+        pinfo_title_label.setObjectName("pinfo_title_label")
+        self.pinfo_descrip_label = pinfo_descrip_label = QLabel("Description:")
+        pinfo_descrip_label.setObjectName("pinfo_descrip_label")
+        self.pinfo_tag_label = pinfo_tag_label = QLabel("Tag:")
+        pinfo_tag_label.setObjectName("pinfo_tag_label")
+        self.pinfo_price_label = pinfo_price_label = QLabel("Price:")
+        pinfo_price_label.setObjectName("pinfo_price_label")
+
+        self.void_lable = void_lable =QLabel()
+
+        #TextEdit def
+        self.pinfo_title_edit = pinfo_title_edit = QLineEdit()
+        pinfo_title_edit.setObjectName("pinfo_title_edit")
+        self.pinfo_descrip_edit = pinfo_descrip_edit = QTextEdit()
+        pinfo_descrip_edit.setObjectName("pinfo_descrip_edit")
+        self.pinfo_tag_edit = pinfo_tag_edit = QLineEdit()
+        pinfo_tag_edit.setObjectName("pinfo_tag_edit")
+        self.pinfo_price_edit = pinfo_price_edit = QLineEdit()
+        pinfo_price_edit.setObjectName("pinfo_price_edit")
+
+
+        def set_layout():
+            self.pinfo_top_layout = pinfo_top_layout = QGridLayout()
+            #self.pinfo_top_layout.setSpacing(10)
+            self.pinfo_top_layout.setMargin(20)
+
+            self.pinfo_top_layout.addWidget(pinfo_title_label, 1, 1, 1, 1)
+            self.pinfo_top_layout.addWidget(pinfo_title_edit, 1, 3, 1, 6)
+
+            self.pinfo_top_layout.addWidget(pinfo_descrip_label, 2, 1, 1, 1)
+            self.pinfo_top_layout.addWidget(pinfo_descrip_edit, 2, 3, 3, 6)
+
+            self.pinfo_top_layout.addWidget(pinfo_tag_label, 8, 1, 1, 1)
+            self.pinfo_top_layout.addWidget(pinfo_tag_edit, 11, 3, 1, 3) 
+
+            self.pinfo_top_layout.addWidget(pinfo_price_label, 15, 1, 1, 1)
+            self.pinfo_top_layout.addWidget(pinfo_price_edit, 15, 3, 1, 2)         
+
+            self.setLayout(pinfo_top_layout)
+        set_layout()
+
+
+
+class SellTab(QScrollArea):
+    class SearchBar(QLineEdit):
+        def __init__(self, parent=None):
+            super().__init__(parent)
+            self.parent = parent
+            self.init_ui()
+
+        def init_ui(self):
+            self.setObjectName("search_bar_sell")
+            self.setFixedSize(300, 25)
+            self.setTextMargins(3, 0, 20, 0)
+
+            self.search_btn_sell = search_btn_sell = QPushButton(self)
+            search_btn_sell.setObjectName("search_btn_sell")
+            search_btn_sell.setFixedSize(18, 18)
+            search_btn_sell.setCursor(QCursor(Qt.PointingHandCursor))
+
+            def bind_slots():
+                print("Binding slots of clicked-search-btn......")
+            bind_slots()
+
+            def set_layout():
+                main_layout = QHBoxLayout()
+                main_layout.addStretch(1)
+                main_layout.addWidget(search_btn_sell)
+                main_layout.setContentsMargins(0, 0, 0, 0)
+                self.setLayout(main_layout)
+            set_layout()
+
+    def __init__(self, parent = None):
+        super().__init__(parent)
+        self.parent = parent
+        self.setObjectName("selling_tab")
+
+        self.init_ui()
+
+    def update_table(self):
+        #file_list = get_file_list()
+        print("Updating file list......")
+        file_list = []
+        # single element data structure (assumed); to be changed 
+        dict_exa = {"type": "mkv", "name": "Infinity War", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "published"}
+        for i in range(self.row_number):
+            file_list.append(dict_exa)
+
+        for cur_row in range(self.row_number):
+            if cur_row == len(file_list):
+                break
+            checkbox_item = QTableWidgetItem()
+            checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+            checkbox_item.setCheckState(Qt.Unchecked)
+            self.file_table.setItem(cur_row, 0, checkbox_item)
+            self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["type"]))
+            self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["name"]))
+            self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
+            self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["remote_type"]))
+            self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
+
+    def set_right_menu(self, func):
+        self.customContextMenuRequested[QPoint].connect(func)
+
+    def handle_upload(self):
+            self.local_file = QFileDialog.getOpenFileName()[0]
+            #defered = threads.deferToThread(upload_file_ipfs, self.local_file)
+            #defered.addCallback(handle_callback_upload)
+
+    def init_ui(self):
+        self.frame = QFrame()
+        self.frame.setObjectName("sell_frame")
+        self.setWidget(self.frame)
+        self.setWidgetResizable(True)
+        self.frame.setMinimumWidth(500)
+        #self.frame.setMaximumHeight(800)
+
+        self.check_list = []
+        self.sell_product = 100
+        self.total_orders = 103
+        self.total_sales = 1234
+        self.cur_clicked = 0
+        self.sell_product_label = sell_product_label = QLabel("Products: {}".format(self.sell_product))
+        sell_product_label.setObjectName("sell_product_label")
+        self.sell_orders_label = sell_orders_label = QLabel("Total Orders: {}".format(self.total_orders))
+        sell_orders_label.setObjectName("sell_orders_label")
+        self.total_sales_label = total_sales_label = QLabel("Total Sales: {}".format(self.total_sales))
+        total_sales_label.setObjectName("total_sales_label")
+
+        self.sell_delete_btn = sell_delete_btn = QPushButton("Delete")
+        sell_delete_btn.setObjectName("sell_delete_btn")
+        self.sell_delete_btn.clicked.connect(self.handle_delete)
+
+        self.sell_publish_btn = sell_publish_btn = QPushButton("Publish")
+        sell_publish_btn.setObjectName("sell_publish_btn")
+        #please define the handler of publish event
+        #self.sell_publish_btn.clicked.connect(self.handle_publish)
+
+
+        self.search_bar_sell = SellTab.SearchBar(self)
+        self.time_label = time_label = QLabel("Time")
+    
+        self.row_number = 100
+
+
+        def create_file_table():
+            self.file_table = file_table = TableWidget(self) 
+            def right_menu():
+                self.sell_right_menu = QMenu(file_table)
+                self.sell_delete_act = QAction('Delete', self)
+                self.sell_publish_act = QAction('Publish', self)
+
+                self.sell_delete_act.triggered.connect(self.handle_delete_act)
+                self.sell_publish_act.triggered.connect(self.handle_publish_act)
+
+                self.sell_right_menu.addAction(self.sell_delete_act)
+                self.sell_right_menu.addAction(self.sell_publish_act)
+
+                self.sell_right_menu.exec_(QCursor.pos())
+
+            file_table.horizontalHeader().setStretchLastSection(True)
+            file_table.verticalHeader().setVisible(False)
+            file_table.setShowGrid(False)
+            file_table.setAlternatingRowColors(True)
+            file_table.resizeColumnsToContents()  
+            file_table.resizeRowsToContents()
+            file_table.setFocusPolicy(Qt.NoFocus) 
+            # do not highlight (bold-ize) the header
+            file_table.horizontalHeader().setHighlightSections(False)
+            file_table.setColumnCount(8)
+            file_table.setRowCount(self.row_number)
+            file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+            file_table.set_right_menu(right_menu)
+            file_table.setHorizontalHeaderLabels(['Icon', 'Type', 'Product Name', 'Price ($)', 'Order', 'Sales', 'Rating', 'Update Time'])
+            file_table.horizontalHeader
+            file_table.setSortingEnabled(True)
+
+            #file_list = get_file_list()
+            file_list = []
+            print("Getting file list.......")
+            dict_exa = {"type": "mkv", "name": "Infinity War", "price": "200", "order": "36", "sales": "7200", "rating": "4.5", "updatetime": "2018/5/14 08:30"}
+            for i in range(self.row_number):
+                file_list.append(dict_exa)
+
+            self.check_record_list = []
+            self.checkbox_list = []
+            for cur_row in range(self.row_number):
+                if cur_row == len(file_list):
+                    break
+                checkbox_item = QTableWidgetItem()
+                checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+                checkbox_item.setCheckState(Qt.Unchecked)
+                self.file_table.setItem(cur_row, 0, checkbox_item)
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["type"]))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["name"]))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["price"]))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["order"]))
+                self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["sales"]))
+                self.file_table.setItem(cur_row, 6, QTableWidgetItem(file_list[cur_row]["rating"]))
+                self.file_table.setItem(cur_row, 7, QTableWidgetItem(file_list[cur_row]["updatetime"]))
+                self.check_record_list.append(False)
+        create_file_table()    
+        self.file_table.sortItems(2)
+        # record rows that are clicked or checked
+        def record_check(item):
+            self.cur_clicked = item.row()
+            if item.checkState() == Qt.Checked:
+                self.check_record_list[item.row()] = True
+        self.file_table.itemClicked.connect(record_check)
+
+        def set_layout():
+            self.main_layout = main_layout = QVBoxLayout(self)
+            main_layout.addSpacing(0)
+            self.layout1 = QHBoxLayout(self)
+            self.layout1.addSpacing(0)
+            self.layout1.addWidget(self.sell_product_label)
+            self.layout1.addSpacing(5)
+            self.layout1.addWidget(self.sell_orders_label)
+            self.layout1.addSpacing(5)
+            self.layout1.addWidget(self.total_sales_label)
+            self.layout1.addStretch(1)
+            self.layout1.addWidget(self.sell_delete_btn)
+            self.layout1.addSpacing(5)
+            self.layout1.addWidget(self.sell_publish_btn)
+            self.layout1.addSpacing(5)
+
+            self.main_layout.addLayout(self.layout1)
+            self.main_layout.addSpacing(2)
+            self.main_layout.addWidget(self.search_bar_sell)
+            self.main_layout.addSpacing(2)
+            self.main_layout.addWidget(self.file_table)
+            self.main_layout.addSpacing(2)
+            self.setLayout(self.main_layout)
+        set_layout()
+        print("Loading stylesheet of cloud tab widget")
+        load_stylesheet(self, "sell.qss")
+
+    def handle_delete(self):
+        for i in range(len(self.check_record_list)):
+            if self.check_record_list[i] == True:
+                self.file_table.removeRow(i)
+                print("Deleting files permanently from the cloud...")
+                self.update_table()
+
+    class Upload_Dialog(QDialog):
+        def __init__(self, parent=None):
+            super().__init__()
+            self.parent = parent
+            self.setWindowTitle("Publish your products")
+            self.cloud_choice = {"ipfs": False, "s3": False}
+            self.file_choice = ""
+
+            self.init_ui()
+
+        def init_ui(self):
+
+            def create_btns():
+                self.ipfs_btn = ipfs_btn = QRadioButton(self)
+                ipfs_btn.setText("IPFS")
+                ipfs_btn.setObjectName("ipfs_btn")
+                ipfs_btn.setChecked(True)
+                self.s3_btn = s3_btn = QRadioButton(self)
+                s3_btn.setText("Amazon S3")
+                s3_btn.setObjectName("s3_btn")
+                self.file_choose_btn = file_choose_btn = QPushButton("Open File")
+                file_choose_btn.setObjectName("file_choose_btn")
+
+                self.cancel_btn = cancel_btn = QPushButton("Cancel")
+                cancel_btn.setObjectName("cancel_btn")
+                self.ok_btn = ok_btn = QPushButton("OK")
+                ok_btn.setObjectName("ok_btn")
+            create_btns()
+
+            def create_labels():
+                self.choice_label = choice_label = QLabel("Please select where you want to upload your data from one of the below two services: ")
+                choice_label.setObjectName("choice_label")
+            create_labels()
+
+            def bind_slots():
+                self.file_choose_btn.clicked.connect(self.choose_file)
+                self.cancel_btn.clicked.connect(self.handle_cancel)
+                self.ok_btn.clicked.connect(self.handle_ok)
+            bind_slots()
+
+            def set_layout():
+                self.main_layout = main_layout = QVBoxLayout()
+                main_layout.addSpacing(0)
+                main_layout.addWidget(self.choice_label)
+                main_layout.addSpacing(2)
+                main_layout.addWidget(self.file_choose_btn)
+                main_layout.addSpacing(1)
+                main_layout.addWidget(self.ipfs_btn)
+                main_layout.addSpacing(1)
+                main_layout.addWidget(self.s3_btn)
+                self.confirm_layout = confirm_layout = QHBoxLayout()
+                confirm_layout.addSpacing(0)
+                confirm_layout.addWidget(self.ok_btn)
+                confirm_layout.addSpacing(2)
+                confirm_layout.addWidget(self.cancel_btn)
+
+                main_layout.addLayout(self.confirm_layout)
+                self.setLayout(self.main_layout)
+            set_layout()
+
+            self.show()
+
+            print("Loading stylesheet of publish dialog....")
+
+        def choose_file(self):
+            self.file_choice = QFileDialog.getOpenFileName()[0]
+
+        def handle_cancel(self):
+            self.file_choice = ""
+            self.ipfs_btn.setChecked(True)
+            self.s3_btn.setChecked(False)
+
+            self.close()
+
+        def handle_ok(self):
+            if self.file_choice == "":
+                QMessageBox.warning(self, "Warning", "Please select your files to upload first !")
+                return
+            print("Uploading files to....")
+
+    def handle_upload(self):
+        # Maybe useful for buyer.
+        # row_selected = self.file_table.selectionModel().selectedRows()[0].row()
+        # selected_fpath = self.file_table.item(row_selected, 2).text()
+        print("Uploading local files....")
+        self.upload_dialog = CloudTab.Upload_Dialog(self)
+
+    #def handle_upload(self):
+        # Maybe useful for buyer.
+        # row_selected = self.file_table.selectionModel().selectedRows()[0].row()
+        # selected_fpath = self.file_table.item(row_selected, 2).text()
+        #self.local_file = QFileDialog.getOpenFileName()[0]
+        #print("Uploading local files....")
+        # defered = threads.deferToThread(upload_file_ipfs, self.local_file)
+        # def handle_callback_upload(x):
+        #     print("in handle_callback_upload" + x)
+        #     self.update_table()
+        # defered.addCallback(handle_callback_upload)
+
+    def handle_delete_act(self):
+        self.file_table.removeRow(self.cur_clicked)
+        print("row {} has been removed...".format(self.cur_clicked))
+
+    def handle_publish_act(self):
+        print("handle publish act....")
+        
+
 class FollowingTagTab(QScrollArea):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -75,8 +445,8 @@ class FollowingTagTab(QScrollArea):
             for i in range(self.follow_promo_num):
                 promo_label = QLabel(self)
                 promo_label.setObjectName("promo_label_{}".format(i))
-                pixmap = get_pixm('cpc-logo-single')
-                pixmap = pixmap.scaled(250, 123)
+                pixmap = get_pixm('cpc-logo-single.png')
+                pixmap = pixmap.scaled(200, 200)
                 promo_label.setPixmap(pixmap)
                 self.promo_lists.append(promo_label)
         get_promotion()
@@ -1129,6 +1499,8 @@ class MainWindow(QMainWindow):
             content_tabs.addTab(PopularTab(content_tabs), "")
             content_tabs.addTab(CloudTab(content_tabs), "")
             content_tabs.addTab(FollowingTab(content_tabs), "")
+            content_tabs.addTab(SellTab(content_tabs), "")
+            content_tabs.addTab(ProductInfoEdit(content_tabs), "")
             print("Adding tabs(browse, etc.) to content_tabs")
             print("Loading stylesheet to content_tabs")
         add_content_tabs()
