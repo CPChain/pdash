@@ -1,0 +1,70 @@
+QFrame#product_info_frame {
+    border: none;
+    outline: none; 
+    background: #fafafa;
+}
+
+QScrollArea{
+    border: none;
+    outline: none; 
+    background: #fafafa;
+}
+
+QTableWidget{
+    border: none;
+    outline: none; 
+    background: #fafafa;
+}
+
+/* Specifying QSS for each tag*/
+QPushButton[t_value = "1"] {
+    min-height: 20px; 
+    min-width: 50px;  
+    max-width: 50px; 
+    max-height: 20px;
+    border: 1px solid #006bcf;
+    border-radius: 10px;
+    background: none;
+    color: #006bcf;
+    text-align: center;
+}
+
+QPushButton[t_value = "1"]:pressed{
+    background-color: #006bcf;
+    color: #fefefe;
+}
+/* END Specifying QSS for each tag*/
+
+QPushButton#pinfo_cancel_btn{
+	min-height: 50px; 
+    min-width: 100px;  
+    max-width: 120px; 
+    max-height: 60px;
+    border: 1px solid #006bcf;
+    border-radius: 10px;
+    background: none;
+    color: #006bcf;
+    text-align: center;
+}
+
+QPushButton#pinfo_publish_btn{
+	min-height: 50px; 
+    min-width: 100px;  
+    max-width: 120px; 
+    max-height: 60px;
+    border: 1px solid #006bcf;
+    border-radius: 10px;
+    background: #006bcf;
+    color: #fefefe;
+    text-align: center;
+}
+
+/*QLineEdit#pinfo_price_edit{
+	max-width: 100px;
+	min-width: 70px;
+}
+
+QLineEdit#pinfo_price_edit{
+	max-width: 100px;
+	min-width: 70px;
+}*/
