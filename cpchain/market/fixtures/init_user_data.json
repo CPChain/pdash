@@ -1,0 +1,188 @@
+[
+  {
+    "model": "user_data.uploadfileinfo",
+    "pk": 1,
+    "fields": {
+      "public_key": "BFz998xEKB7OYHyFrbwqLBdoLkdqW19OrVRhqSqgeP+0YXPRlJ9Oo+LRZlj2z465K6sPM4ESkb15veymDVoFOoA=",
+      "name": "nnnn",
+      "hashcode": "hashcode",
+      "path": "path",
+      "size": 1222,
+      "remote_type": "1",
+      "remote_uri": null,
+      "is_published": true,
+      "aes_key": "aes_key",
+      "market_hash": "market_hash",
+      "created": "2018-05-15T09:17:22.081Z"
+    }
+  },
+  {
+    "model": "user_data.uploadfileinfo",
+    "pk": 2,
+    "fields": {
+      "public_key": "BFz998xEKB7OYHyFrbwqLBdoLkdqW19OrVRhqSqgeP+0YXPRlJ9Oo+LRZlj2z465K6sPM4ESkb15veymDVoFOoA=",
+      "name": "nnnn",
+      "hashcode": "hashcode",
+      "path": "path",
+      "size": 1222,
+      "remote_type": "1",
+      "remote_uri": null,
+      "is_published": true,
+      "aes_key": "aes_key",
+      "market_hash": "market_hash",
+      "created": "2018-05-16T01:49:02.598Z"
+    }
+  },
+  {
+    "model": "user_data.uploadfileinfo",
+    "pk": 3,
+    "fields": {
+      "public_key": "BFz998xEKB7OYHyFrbwqLBdoLkdqW19OrVRhqSqgeP+0YXPRlJ9Oo+LRZlj2z465K6sPM4ESkb15veymDVoFOoA=",
+      "name": "nnnn",
+      "hashcode": "hashcode",
+      "path": "path",
+      "size": 1222,
+      "remote_type": "1",
+      "remote_uri": null,
+      "is_published": true,
+      "aes_key": "aes_key",
+      "market_hash": "market_hash",
+      "created": "2018-05-16T02:23:03.193Z"
+    }
+  },
+  {
+    "model": "user_data.uploadfileinfo",
+    "pk": 4,
+    "fields": {
+      "public_key": "BFz998xEKB7OYHyFrbwqLBdoLkdqW19OrVRhqSqgeP+0YXPRlJ9Oo+LRZlj2z465K6sPM4ESkb15veymDVoFOoA=",
+      "name": "nnnn",
+      "hashcode": "hashcode",
+      "path": "path",
+      "size": 1222,
+      "remote_type": "1",
+      "remote_uri": null,
+      "is_published": true,
+      "aes_key": "aes_key",
+      "market_hash": "market_hash",
+      "created": "2018-05-16T02:23:40.670Z"
+    }
+  },
+  {
+    "model": "user_data.uploadfileinfo",
+    "pk": 5,
+    "fields": {
+      "public_key": "BFz998xEKB7OYHyFrbwqLBdoLkdqW19OrVRhqSqgeP+0YXPRlJ9Oo+LRZlj2z465K6sPM4ESkb15veymDVoFOoA=",
+      "name": "nnnn",
+      "hashcode": "hashcode",
+      "path": "path",
+      "size": 1222,
+      "remote_type": "1",
+      "remote_uri": null,
+      "is_published": true,
+      "aes_key": "aes_key",
+      "market_hash": "market_hash",
+      "created": "2018-05-16T02:24:17.464Z"
+    }
+  },
+  {
+    "model": "user_data.uploadfileinfo",
+    "pk": 6,
+    "fields": {
+      "public_key": "BFz998xEKB7OYHyFrbwqLBdoLkdqW19OrVRhqSqgeP+0YXPRlJ9Oo+LRZlj2z465K6sPM4ESkb15veymDVoFOoA=",
+      "name": "nnnn",
+      "hashcode": "hashcode",
+      "path": "path",
+      "size": 1222,
+      "remote_type": "1",
+      "remote_uri": null,
+      "is_published": true,
+      "aes_key": "aes_key",
+      "market_hash": "market_hash",
+      "created": "2018-05-16T02:24:53.662Z"
+    }
+  },
+  {
+    "model": "user_data.buyerfileinfo",
+    "pk": 1,
+    "fields": {
+      "public_key": "BFz998xEKB7OYHyFrbwqLBdoLkdqW19OrVRhqSqgeP+0YXPRlJ9Oo+LRZlj2z465K6sPM4ESkb15veymDVoFOoA=",
+      "order_id": 6666,
+      "market_hash": "market_hash",
+      "file_uuid": "file_uuid",
+      "file_title": "file_title",
+      "path": "path",
+      "size": 1245,
+      "is_downloaded": true,
+      "created": "2018-05-15T09:17:22.099Z"
+    }
+  },
+  {
+    "model": "user_data.buyerfileinfo",
+    "pk": 2,
+    "fields": {
+      "public_key": "BFz998xEKB7OYHyFrbwqLBdoLkdqW19OrVRhqSqgeP+0YXPRlJ9Oo+LRZlj2z465K6sPM4ESkb15veymDVoFOoA=",
+      "order_id": 6666,
+      "market_hash": "market_hash",
+      "file_uuid": "file_uuid",
+      "file_title": "file_title",
+      "path": "path",
+      "size": 1245,
+      "is_downloaded": true,
+      "created": "2018-05-16T01:49:02.615Z"
+    }
+  },
+  {
+    "model": "user_data.buyerfileinfo",
+    "pk": 3,
+    "fields": {
+      "public_key": "BFz998xEKB7OYHyFrbwqLBdoLkdqW19OrVRhqSqgeP+0YXPRlJ9Oo+LRZlj2z465K6sPM4ESkb15veymDVoFOoA=",
+      "order_id": 6666,
+      "market_hash": "market_hash",
+      "file_uuid": "file_uuid",
+      "file_title": "file_title",
+      "path": "path",
+      "size": 1245,
+      "is_downloaded": true,
+      "created": "2018-05-16T02:24:17.482Z"
+    }
+  },
+  {
+    "model": "user_data.buyerfileinfo",
+    "pk": 4,
+    "fields": {
+      "public_key": "BFz998xEKB7OYHyFrbwqLBdoLkdqW19OrVRhqSqgeP+0YXPRlJ9Oo+LRZlj2z465K6sPM4ESkb15veymDVoFOoA=",
+      "order_id": 6666,
+      "market_hash": "market_hash",
+      "file_uuid": "file_uuid",
+      "file_title": "file_title",
+      "path": "path",
+      "size": 1245,
+      "is_downloaded": true,
+      "created": "2018-05-16T02:24:53.680Z"
+    }
+  },
+  {
+    "model": "user_data.userinfoversion",
+    "pk": "BFz998xEKB7OYHyFrbwqLBdoLkdqW19OrVRhqSqgeP+0YXPRlJ9Oo+LRZlj2z465K6sPM4ESkb15veymDVoFOoA=",
+    "fields": {
+      "version": 10
+    }
+  },
+  {
+    "model": "user_data.producttag",
+    "pk": 1,
+    "fields": {
+      "tag": "abc11"
+    }
+  },
+  {
+    "model": "user_data.bookmark",
+    "pk": 1,
+    "fields": {
+      "public_key": "BFz998xEKB7OYHyFrbwqLBdoLkdqW19OrVRhqSqgeP+0YXPRlJ9Oo+LRZlj2z465K6sPM4ESkb15veymDVoFOoA=",
+      "market_hash": "market_hash",
+      "name": "name1",
+      "created": "2018-05-15T09:17:22.147Z"
+    }
+  }
+]
