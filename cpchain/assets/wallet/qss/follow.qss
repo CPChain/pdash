@@ -1,0 +1,74 @@
+QFrame#follow_tag_frame, QFrame#follow_sell_frame {
+    border: none;
+    outline: none; 
+    background: #fafafa;
+}
+
+QScrollArea{
+    border: none;
+    outline: none; 
+    background: #fafafa;
+}
+
+QTableWidget{
+    border: none;
+    outline: none; 
+    background: #fafafa;
+}
+
+QLabel#total_sale_label {
+    color: #555555;
+}
+
+QFrame.HorizontalLine {
+    color: #e5e5e5;
+}
+
+QLabel#price_label{
+    color: #006bcf;
+    /*background: #006bcf;*/
+}
+
+QPushButton#title_btn {
+	min-height: 30px; 
+    min-width: 100px;  
+    max-width: 300px; 
+    max-height: 1000px; 
+    border: none;
+    outline: none;
+    color: #2c2c2c;
+    background: none;
+    text-align: left;
+    font: bold 14px;
+}
+
+QPushButton#seller_btn {
+	min-height: 16px; 
+    min-width: 20px;  
+    max-width: 160px; 
+    max-height: 200px; 
+    border: none;
+    outline: none;
+    color: #006bcf;
+    background: none;
+}
+
+/* Specifying QSS for each tag*/
+QPushButton[t_value = "1"] {
+    min-height: 20px; 
+    min-width: 50px;  
+    max-width: 50px; 
+    max-height: 20px;
+    border: 1px solid #006bcf;
+    border-radius: 10px;
+    background: none;
+    text-align: center;
+    color: #006bcf;
+}
+
+QPushButton[t_value = "1"]:pressed{
+    background-color: #006bcf;
+    color: #fefefe;
+}
+/* END Specifying QSS for each tag*/
+

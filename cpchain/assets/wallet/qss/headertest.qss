@@ -134,4 +134,8 @@ QPushButton#login_btn:hover {
     color: #efacac;
 }
 
+QPushButton#close_btn, QPushButton#maxmize_btn, QPushButton#minimize_btn{
+    outline: none;
+}
+
 
