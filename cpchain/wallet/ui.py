@@ -282,11 +282,11 @@ class SellTab(QScrollArea):
             file_table.setFocusPolicy(Qt.NoFocus) 
             # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
-            file_table.setColumnCount(8)
+            file_table.setColumnCount(7)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             file_table.set_right_menu(right_menu)
-            file_table.setHorizontalHeaderLabels(['Icon', 'Type', 'Product Name', 'Price ($)', 'Order', 'Sales', 'Rating', 'Update Time'])
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price ($)', 'Order', 'Sales', 'Rating', 'Update Time'])
             file_table.horizontalHeader
             file_table.setSortingEnabled(True)
 
@@ -306,13 +306,12 @@ class SellTab(QScrollArea):
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 checkbox_item.setCheckState(Qt.Unchecked)
                 self.file_table.setItem(cur_row, 0, checkbox_item)
-                self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["type"]))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["name"]))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["price"]))
-                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["order"]))
-                self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["sales"]))
-                self.file_table.setItem(cur_row, 6, QTableWidgetItem(file_list[cur_row]["rating"]))
-                self.file_table.setItem(cur_row, 7, QTableWidgetItem(file_list[cur_row]["updatetime"]))
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["name"]))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["price"]))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["order"]))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["sales"]))
+                self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["rating"]))
+                self.file_table.setItem(cur_row, 6, QTableWidgetItem(file_list[cur_row]["updatetime"]))
                 self.check_record_list.append(False)
         create_file_table()    
         self.file_table.sortItems(2)
@@ -1078,18 +1077,18 @@ class CloudTab(QScrollArea):
             file_table.setFocusPolicy(Qt.NoFocus) 
             # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
-            file_table.setColumnCount(6)
+            file_table.setColumnCount(4)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             file_table.set_right_menu(right_menu)
-            file_table.setHorizontalHeaderLabels(['Btn_Icon', 'Type', 'Product Name', 'Size', 'Remote Type', 'Published'])
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Size', 'Remote Type', 'Published'])
             file_table.horizontalHeader
             file_table.setSortingEnabled(True)
 
             #file_list = get_file_list()
             file_list = []
             print("Getting file list.......")
-            dict_exa = {"type": "mkv", "name": "Infinity War", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
+            dict_exa = {"name": "Infinity War", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
             for i in range(self.row_number):
                 file_list.append(dict_exa)
 
@@ -1102,11 +1101,10 @@ class CloudTab(QScrollArea):
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 checkbox_item.setCheckState(Qt.Unchecked)
                 self.file_table.setItem(cur_row, 0, checkbox_item)
-                self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["type"]))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["name"]))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
-                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["remote_type"]))
-                self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["name"]))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["size"]))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["remote_type"]))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["is_published"]))
                 self.check_record_list.append(False)
         create_file_table()    
         self.file_table.sortItems(2)

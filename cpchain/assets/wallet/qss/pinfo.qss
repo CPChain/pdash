@@ -68,3 +68,7 @@ QLineEdit#pinfo_price_edit{
 	max-width: 100px;
 	min-width: 70px;
 }*/
+
+QPushButton#pinfo_publish_btn:pressed{
+	background: rgba(0, 107, 207, 55%);
+}
