@@ -1,0 +1,94 @@
+[
+  {
+    "model": "comment.comment",
+    "pk": 1,
+    "fields": {
+      "public_key": "BFz998xEKB7OYHyFrbwqLBdoLkdqW19OrVRhqSqgeP+0YXPRlJ9Oo+LRZlj2z465K6sPM4ESkb15veymDVoFOoA=",
+      "market_hash": "fcnfsaTCF2AJotNBPO+Rdq3Fhr4GuKTetKGAxW1CwsA=",
+      "content": "test111",
+      "rating": 1,
+      "created": "2018-05-15T09:17:02.189Z"
+    }
+  },
+  {
+    "model": "comment.comment",
+    "pk": 2,
+    "fields": {
+      "public_key": "BFz998xEKB7OYHyFrbwqLBdoLkdqW19OrVRhqSqgeP+0YXPRlJ9Oo+LRZlj2z465K6sPM4ESkb15veymDVoFOoA=",
+      "market_hash": "+meezqfTm883531K8Tmqk+Jo0q8JT75yOmrFU8WQep0=",
+      "content": "test111",
+      "rating": 1,
+      "created": "2018-05-15T09:17:03.901Z"
+    }
+  },
+  {
+    "model": "comment.summarycomment",
+    "pk": 1,
+    "fields": {
+      "market_hash": "0NrQMH0VoZfoSjitjFn484Q/SNTvmcbR4t 5z8XntWg=",
+      "avg_rating": 1,
+      "sales_number": 0,
+      "updated": "2018-05-15T09:17:05.599Z"
+    }
+  },
+  {
+    "model": "comment.summarycomment",
+    "pk": 2,
+    "fields": {
+      "market_hash": "fcnfsaTCF2AJotNBPO+Rdq3Fhr4GuKTetKGAxW1CwsA=",
+      "avg_rating": 1,
+      "sales_number": 0,
+      "updated": "2018-05-15T09:17:17.053Z"
+    }
+  },
+  {
+    "model": "comment.summarycomment",
+    "pk": 3,
+    "fields": {
+      "market_hash": "+meezqfTm883531K8Tmqk+Jo0q8JT75yOmrFU8WQep0=",
+      "avg_rating": 1,
+      "sales_number": 0,
+      "updated": "2018-05-15T09:17:17.059Z"
+    }
+  },
+  {
+    "model": "comment.summarycomment",
+    "pk": 4,
+    "fields": {
+      "market_hash": "0NrQMH0VoZfoSjitjFn484Q/SNTvmcbR4t+5z8XntWg=",
+      "avg_rating": 1,
+      "sales_number": 0,
+      "updated": "2018-05-15T09:17:17.070Z"
+    }
+  },
+  {
+    "model": "comment.summarycomment",
+    "pk": 5,
+    "fields": {
+      "market_hash": "qdPeDEJplYZpHSA2kEwVQSEGUuYym6tJFfIl+6FmLmc=",
+      "avg_rating": 1,
+      "sales_number": 0,
+      "updated": "2018-05-15T09:17:17.074Z"
+    }
+  },
+  {
+    "model": "comment.summarycomment",
+    "pk": 6,
+    "fields": {
+      "market_hash": "ZnkqEgp9/CjAnUmeylL8a+IkMDcQI28JQPX9wgXtcs4=",
+      "avg_rating": 1,
+      "sales_number": 0,
+      "updated": "2018-05-15T09:17:17.079Z"
+    }
+  },
+  {
+    "model": "comment.summarycomment",
+    "pk": 7,
+    "fields": {
+      "market_hash": "QhaMIKL4rnS+PTc7e6hPuyFLjiK+WJanYAribOXi4jY=",
+      "avg_rating": 1,
+      "sales_number": 0,
+      "updated": "2018-05-15T09:17:17.083Z"
+    }
+  }
+]
