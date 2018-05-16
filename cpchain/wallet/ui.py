@@ -1175,6 +1175,7 @@ class CloudTab(QScrollArea):
                 QMessageBox.warning(self, "Warning", "Please select your files to upload first !")
                 return
             print("Uploading files to....")
+            self.close()
 
     def handle_upload(self):
         # Maybe useful for buyer.
@@ -1391,6 +1392,19 @@ class Header(QFrame):
             self.profile_btn = QPushButton("", self)
             self.profile_btn.setObjectName("profile_btn")
 
+            self.minimize_btn = QPushButton("_", self)
+            self.minimize_btn.setObjectName("minimize_btn")
+            self.minimize_btn.clicked.connect(self.parent.showMinimized)
+
+
+            self.maximize_btn = QPushButton("□", self)
+            self.maximize_btn.setObjectName("maxmize_btn")
+            self.maximize_btn.clicked.connect(self.parent.showMaximized)
+
+            self.close_btn = QPushButton("x", self)
+            self.close_btn.setObjectName("close_btn")
+            self.close_btn.clicked.connect(self.parent.close)
+
             def create_popmenu():
                 self.profile_menu = profile_menu = QMenu('Profile', self)
                 profile_view_act = QAction('Profile', self)
@@ -1418,8 +1432,16 @@ class Header(QFrame):
         bind_slots()
 
         def set_layout():
+            self.all_layout = all_layout = QVBoxLayout(self)
+            all_layout.addSpacing(0)
+
+            self.extra_layout = extra_layout = QHBoxLayout(self)
+            extra_layout.addSpacing(20)
+            extra_layout.addWidget(self.minimize_btn)
+            extra_layout.addWidget(self.maximize_btn)
+            extra_layout.addWidget(self.close_btn)
+
             self.main_layout = main_layout = QHBoxLayout(self)
-            #main_layout.setSpacing(0)
             main_layout.addWidget(self.logo_label)
             main_layout.addSpacing(5)
             main_layout.addWidget(self.word_label)
@@ -1439,7 +1461,10 @@ class Header(QFrame):
             main_layout.addSpacing(5)
             main_layout.addWidget(self.profile_btn)
 
-            self.setLayout(self.main_layout)
+            all_layout.addLayout(self.extra_layout)
+            all_layout.addLayout(self.main_layout)
+
+            self.setLayout(self.all_layout)
 
         set_layout()
 
@@ -1480,7 +1505,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('CPChain Wallet')
         self.setObjectName("main_window")
         # no borders.  we make our own header panel.
-        # self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setWindowFlags(Qt.FramelessWindowHint)
 
         def set_geometry():
             self.resize(1000, 800)  # resize before centering.
