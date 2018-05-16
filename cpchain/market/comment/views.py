@@ -1,5 +1,4 @@
 from django.db.models import Q
-from django.http import JsonResponse
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
@@ -12,10 +11,6 @@ from cpchain.market.market.utils import *
 from cpchain.market.transaction.models import TransactionDetail
 
 logger = logging.getLogger(__name__)
-
-
-def create_invalid_response():
-    return JsonResponse({'status': 0, "message": "invalid request."})
 
 
 class ProductCommentListAPIView(APIView):

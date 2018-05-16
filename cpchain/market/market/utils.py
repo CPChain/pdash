@@ -2,10 +2,14 @@ import hashlib
 import logging
 import random
 
+from django.http import JsonResponse
+
 from cpchain.crypto import ECCipher
 from cpchain.utils import Encoder, SHA256Hash
 
 logger = logging.getLogger(__name__)
+
+PUBLIC_KEY = "public_key"
 
 
 def md5(source):
@@ -58,3 +62,11 @@ def get_addr_from_public_key(public_key_string):
     pub_key_bytes = Encoder.str_to_base64_byte(public_key_string)
     pub_key_loaded = get_addr_from_public_key(pub_key_bytes)
     return get_addr_from_public_key(pub_key_loaded)
+
+
+def create_invalid_response():
+    return JsonResponse({"status": 0, "message": "invalid request"})
+
+
+def create_success_response():
+    return JsonResponse({"status": 1, "message": "success"})

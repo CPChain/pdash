@@ -1,32 +1,19 @@
-from django.utils.http import unquote
 from django.db.models import Q
-from django.http import JsonResponse
+from django.utils.http import unquote
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from cpchain.market.comment.models import SummaryComment
-from cpchain.market.product.models import WalletMsgSequence, MyTag, MySeller
-from cpchain.market.product.serializers import *
 from cpchain.market.account.permissions import IsOwnerOrReadOnly, AlreadyLoginUser
+from cpchain.market.comment.models import SummaryComment
 from cpchain.market.market.utils import *
+from cpchain.market.product.models import WalletMsgSequence
+from cpchain.market.product.serializers import *
 from cpchain.market.transaction.models import ProductSaleStatus
 
 logger = logging.getLogger(__name__)
-
-PUBLIC_KEY = "public_key"
-VERIFY_CODE = "code"
-TIMEOUT = 1000
-
-
-def create_invalid_response():
-    return JsonResponse({"success": False, "message": "invalid request."})
-
-
-def create_success_response():
-    return JsonResponse({'status': 1, 'message': 'success'})
 
 
 class ProductPublishAPIViewSet(APIView):
