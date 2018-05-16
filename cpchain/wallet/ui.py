@@ -70,8 +70,8 @@ class ProductInfoEdit(QScrollArea):
         pinfo_tag_label.setObjectName("pinfo_tag_label")
         self.pinfo_price_label = pinfo_price_label = QLabel("Price:")
         pinfo_price_label.setObjectName("pinfo_price_label")
-
-        self.void_lable = void_lable =QLabel()
+        self.pinfo_cpc_label = pinfo_cpc_label = QLabel("CPC")
+        pinfo_cpc_label.setObjectName("pinfo_cpc_label")
 
         #TextEdit def
         self.pinfo_title_edit = pinfo_title_edit = QLineEdit()
@@ -110,32 +110,49 @@ class ProductInfoEdit(QScrollArea):
 
 
         def set_layout():
-            self.pinfo_top_layout = pinfo_top_layout = QGridLayout()
+            self.pinfo_top_layout = pinfo_top_layout = QGridLayout(self)
             #self.pinfo_top_layout.setSpacing(10)
             self.pinfo_top_layout.setContentsMargins(40, 40, 150, 100)
-
             self.pinfo_top_layout.addWidget(pinfo_title_label, 1, 1, 1, 1)
             self.pinfo_top_layout.addWidget(pinfo_title_edit, 1, 3, 1, 20)
-
             self.pinfo_top_layout.addWidget(pinfo_descrip_label, 2, 1, 1, 1)
             self.pinfo_top_layout.addWidget(pinfo_descrip_edit, 2, 3, 3, 20)
-
             self.pinfo_top_layout.addWidget(pinfo_tag_label, 8, 1, 1, 1)
+
+            #embeded layout for tag button
+            self.pinfo_tag_layout = pinfo_tag_layout = QHBoxLayout(self)
+            for i in range(self.tag_num): 
+                self.pinfo_tag_layout.addWidget(self.tag_btn_list[i])
+                self.pinfo_tag_layout.addSpacing(5)
+
+            self.pinfo_tag_layout.addStretch(1)
+            self.pinfo_top_layout.addLayout(pinfo_tag_layout, 8, 3, 1, 10)
             self.pinfo_top_layout.addWidget(pinfo_tag_edit, 9, 3, 1, 3)
 
-            for i in range(self.tag_num): 
-                self.pinfo_top_layout.addWidget(self.tag_btn_list[i], 8, 3 + i, 1, 1)
+            #embeded layout for price input
+            self.pinfo_price_layout = pinfo_price_layout = QHBoxLayout(self)
+            self.pinfo_price_layout.addWidget(pinfo_price_edit)
+            self.pinfo_price_layout.addSpacing(5)
+            self.pinfo_price_layout.addWidget(pinfo_cpc_label)
+            self.pinfo_price_layout.addStretch(1)
+            #add the layout of price input to upper layer layout
+            self.pinfo_top_layout.addLayout(pinfo_price_layout, 10, 3, 1, 10) 
+            self.pinfo_top_layout.addWidget(pinfo_price_label, 10, 1, 1, 1)   
+            self.pinfo_top_layout.addWidget(pinfo_checkbox, 12, 3, 1, 2)
 
-            self.pinfo_top_layout.addWidget(pinfo_price_label, 10, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(pinfo_price_edit, 10, 3, 1, 2)   
-
-            self.pinfo_top_layout.addWidget(pinfo_checkbox, 11, 3, 1, 2)
-
-            self.pinfo_top_layout.addWidget(pinfo_cancel_btn, 13, 3, 1, 1) 
-            self.pinfo_top_layout.addWidget(pinfo_publish_btn, 13, 4, 1, 1)      
+            #embeded layout for two buttons
+            self.pinfo_btn_layout = pinfo_btn_layout = QHBoxLayout(self)
+            self.pinfo_btn_layout.addWidget(pinfo_cancel_btn)
+            self.pinfo_btn_layout.addSpacing(80)
+            self.pinfo_btn_layout.addWidget(pinfo_publish_btn)
+            self.pinfo_btn_layout.addStretch(1)
+            #add the layout of price input to upper layer layout
+            self.pinfo_top_layout.addLayout(pinfo_btn_layout, 13, 3, 1, 15)    
 
             self.setLayout(pinfo_top_layout)
         set_layout()
+        print("Loading stylesheet of cloud tab widget")
+        load_stylesheet(self, "pinfo.qss")
 
 
 
