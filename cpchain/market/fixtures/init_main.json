@@ -1,0 +1,44 @@
+[
+  {
+    "model": "main.carousel",
+    "pk": 1,
+    "fields": {
+      "name": "nnn",
+      "image": "http://111.jpg",
+      "link": "http://www.google.com",
+      "index": 0,
+      "status": 1
+    }
+  },
+  {
+    "model": "main.hottag",
+    "pk": 1,
+    "fields": {
+      "image": "http://111.jpg",
+      "tag": "t1",
+      "index": 0,
+      "status": 1
+    }
+  },
+  {
+    "model": "main.hottag",
+    "pk": 2,
+    "fields": {
+      "image": "http://111.jpg",
+      "tag": "t1",
+      "index": 0,
+      "status": 1
+    }
+  },
+  {
+    "model": "main.promotion",
+    "pk": 1,
+    "fields": {
+      "name": "",
+      "image": "http://111.jpg",
+      "link": "http://111.222.com",
+      "index": 0,
+      "status": 1
+    }
+  }
+]
