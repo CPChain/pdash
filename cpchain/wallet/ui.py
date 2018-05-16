@@ -7,7 +7,7 @@ import string
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, 
                              QVBoxLayout, QGridLayout, QWidget, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel,
                              QWidget, QLineEdit, QSpacerItem, QSizePolicy, QTableWidget, QFormLayout, QComboBox, QTextEdit,
-                             QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton)
+                             QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox)
 from PyQt5.QtCore import Qt, QSize, QPoint, pyqtSignal
 from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont, QPainter
 
@@ -83,23 +83,56 @@ class ProductInfoEdit(QScrollArea):
         self.pinfo_price_edit = pinfo_price_edit = QLineEdit()
         pinfo_price_edit.setObjectName("pinfo_price_edit")
 
+        #Buttons and Tags
+        self.tag = ["tag1", "tag2", "tag3", "tag4"]
+        self.tag_num = 4
+        self.tag_btn_list = []
+        for i in range(self.tag_num):
+            self.tag_btn_list.append(QPushButton(self.tag[i], self))
+            self.tag_btn_list[i].setObjectName("tag_btn_{0}".format(i))
+            #ser property t_value = 1 for the convience of specifying QSS
+            self.tag_btn_list[i].setProperty("t_value", 1)
+            self.tag_btn_list[i].setCursor(QCursor(Qt.PointingHandCursor))
+
+        self.pinfo_cancel_btn = pinfo_cancel_btn = QPushButton(self)
+        self.pinfo_cancel_btn.setObjectName("pinfo_cancel_btn")
+        self.pinfo_cancel_btn.setText("Cancel")
+        self.pinfo_cancel_btn.setCursor(QCursor(Qt.PointingHandCursor))
+
+        self.pinfo_publish_btn = pinfo_publish_btn = QPushButton(self)
+        self.pinfo_publish_btn.setObjectName("pinfo_publish_btn")
+        self.pinfo_publish_btn.setText("Publish")
+        self.pinfo_publish_btn.setCursor(QCursor(Qt.PointingHandCursor))
+
+        self.pinfo_checkbox = pinfo_checkbox = QCheckBox(self)
+        self.pinfo_checkbox.setObjectName("pinfo_checkbox")
+        self.pinfo_checkbox.setText("I agree with the CPC Agreement")
+
 
         def set_layout():
             self.pinfo_top_layout = pinfo_top_layout = QGridLayout()
             #self.pinfo_top_layout.setSpacing(10)
-            self.pinfo_top_layout.setMargin(20)
+            self.pinfo_top_layout.setContentsMargins(40, 40, 150, 100)
 
             self.pinfo_top_layout.addWidget(pinfo_title_label, 1, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(pinfo_title_edit, 1, 3, 1, 6)
+            self.pinfo_top_layout.addWidget(pinfo_title_edit, 1, 3, 1, 20)
 
             self.pinfo_top_layout.addWidget(pinfo_descrip_label, 2, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(pinfo_descrip_edit, 2, 3, 3, 6)
+            self.pinfo_top_layout.addWidget(pinfo_descrip_edit, 2, 3, 3, 20)
 
             self.pinfo_top_layout.addWidget(pinfo_tag_label, 8, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(pinfo_tag_edit, 11, 3, 1, 3) 
+            self.pinfo_top_layout.addWidget(pinfo_tag_edit, 9, 3, 1, 3)
 
-            self.pinfo_top_layout.addWidget(pinfo_price_label, 15, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(pinfo_price_edit, 15, 3, 1, 2)         
+            for i in range(self.tag_num): 
+                self.pinfo_top_layout.addWidget(self.tag_btn_list[i], 8, 3 + i, 1, 1)
+
+            self.pinfo_top_layout.addWidget(pinfo_price_label, 10, 1, 1, 1)
+            self.pinfo_top_layout.addWidget(pinfo_price_edit, 10, 3, 1, 2)   
+
+            self.pinfo_top_layout.addWidget(pinfo_checkbox, 11, 3, 1, 2)
+
+            self.pinfo_top_layout.addWidget(pinfo_cancel_btn, 13, 3, 1, 1) 
+            self.pinfo_top_layout.addWidget(pinfo_publish_btn, 13, 4, 1, 1)      
 
             self.setLayout(pinfo_top_layout)
         set_layout()
@@ -687,6 +720,7 @@ class Product(QFrame):
         for i in range(self.tag_num):
             self.tag_btn_list.append(QPushButton(self.tag[i], self))
             self.tag_btn_list[i].setObjectName("tag_btn_{0}".format(i))
+            self.tag_btn_list[i].setProperty("t_value", 1)
             self.tag_btn_list[i].setCursor(QCursor(Qt.PointingHandCursor))
 
         def bind_slots():
@@ -754,7 +788,7 @@ class PopularTab(QScrollArea):
         def create_banner():
             self.banner_label = banner_label = QLabel(self)
             print("Getting banner images......")
-            pixmap = get_pixm('cpc-logo-single.png')
+            pixmap = get_pixm('Banner.png')
             pixmap = pixmap.scaled(740, 195)
             banner_label.setPixmap(pixmap)
         create_banner()
@@ -781,7 +815,7 @@ class PopularTab(QScrollArea):
             trans_label.setAlignment(Qt.AlignCenter)
 
             # please specify the file name of underlying picture using string vriable icon_name
-            icon_name = 'back.png'
+            icon_name = 'tag1.png'
             path = osp.join(root_dir, "cpchain/assets/wallet/icons", icon_name)
 
             #specify the stylesheet of this QLabel, using string variable $path
@@ -799,7 +833,7 @@ class PopularTab(QScrollArea):
             forest_label.setAlignment(Qt.AlignCenter)
 
             # please specify the file name of underlying picture using string vriable icon_name
-            icon_name = 'cpc-logo-single.png'
+            icon_name = 'tag2.png'
             path = osp.join(root_dir, "cpchain/assets/wallet/icons", icon_name)
             
             #specify the stylesheet of this QLabel, using string variable $path
@@ -815,7 +849,7 @@ class PopularTab(QScrollArea):
             medicine_label.setAlignment(Qt.AlignCenter)
 
             # please specify the file name of underlying picture using string vriable icon_name
-            icon_name = 'cpc-logo-single.png'
+            icon_name = 'tag3.png'
             path = osp.join(root_dir, "cpchain/assets/wallet/icons", icon_name)
             
             #specify the stylesheet of this QLabel, using string variable $path
@@ -1394,15 +1428,18 @@ class Header(QFrame):
 
             self.minimize_btn = QPushButton("_", self)
             self.minimize_btn.setObjectName("minimize_btn")
+            self.minimize_btn.setFixedSize(10, 10)
             self.minimize_btn.clicked.connect(self.parent.showMinimized)
 
 
             self.maximize_btn = QPushButton("□", self)
             self.maximize_btn.setObjectName("maxmize_btn")
+            self.maximize_btn.setFixedSize(10, 10)
             self.maximize_btn.clicked.connect(self.parent.showMaximized)
 
             self.close_btn = QPushButton("x", self)
             self.close_btn.setObjectName("close_btn")
+            self.close_btn.setFixedSize(10, 10)
             self.close_btn.clicked.connect(self.parent.close)
 
             def create_popmenu():
@@ -1436,10 +1473,13 @@ class Header(QFrame):
             all_layout.addSpacing(0)
 
             self.extra_layout = extra_layout = QHBoxLayout(self)
-            extra_layout.addSpacing(20)
+            extra_layout.addStretch(1)
             extra_layout.addWidget(self.minimize_btn)
+            extra_layout.addSpacing(2)
             extra_layout.addWidget(self.maximize_btn)
+            extra_layout.addSpacing(2)
             extra_layout.addWidget(self.close_btn)
+            extra_layout.addSpacing(2)
 
             self.main_layout = main_layout = QHBoxLayout(self)
             main_layout.addWidget(self.logo_label)
