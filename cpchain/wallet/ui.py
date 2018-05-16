@@ -714,8 +714,8 @@ class Product(QFrame):
 
     def init_ui(self):
         #self.frame.setMinimumWidth(500)
-        self.setMinimumHeight(120)
-        self.setMaximumHeight(130)
+        self.setMinimumHeight(200)
+        self.setMaximumHeight(500)
         self.title_btn = QPushButton("Medicine big data from Mayo Clinic")
         self.title_btn.setObjectName("title_btn")
         self.seller_btn = QPushButton("Barack Obama")
@@ -812,6 +812,7 @@ class PopularTab(QScrollArea):
         self.hot_label = QLabel("Hot Industry")
         self.hot_label.setObjectName("hot_label")
         self.hot_label.setFont(QFont("Arial", 13, QFont.Light))
+        self.hot_label.setMinimumHeight(2)
         self.hot_label.setMaximumHeight(25)
 
         self.more_btn_1 = more_btn_1 = QPushButton("More>", self)
@@ -824,6 +825,7 @@ class PopularTab(QScrollArea):
 
         def create_ind_trans():
             self.trans_label = trans_label = QLabel(self)
+            trans_label.setMinimumHeight(50)
             trans_label.setObjectName("trans_label")
             # please specify the tag of underlying picture using .setText attributes
             trans_label.setText("Transportation")
@@ -843,6 +845,7 @@ class PopularTab(QScrollArea):
 
         def create_ind_forest():
             self.forest_label = forest_label = QLabel(self)
+            forest_label.setMinimumHeight(50)
             forest_label.setObjectName("forest_label")         
             forest_label.setText("Forest")
             forest_label.setFont(QFont("Arial", 13, QFont.Light))
@@ -859,6 +862,7 @@ class PopularTab(QScrollArea):
 
         def create_ind_medicine():
             self.medicine_label = medicine_label = QLabel(self)
+            medicine_label.setMinimumHeight(50)
             medicine_label.setObjectName("medicine_label")
             medicine_label.setText("Medicine")
             medicine_label.setFont(QFont("Arial", 13, QFont.Light))
@@ -898,7 +902,6 @@ class PopularTab(QScrollArea):
             self.main_layout.addWidget(self.banner_label)
             self.main_layout.addSpacing(35)
             self.main_layout.addWidget(self.hot_label)
-            
 
             self.hot_layout = QHBoxLayout(self)
             self.hot_layout.addSpacing(0)
