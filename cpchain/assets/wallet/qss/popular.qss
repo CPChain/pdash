@@ -62,26 +62,24 @@ QPushButton#seller_btn {
     background: none;
 }
 
-QPushButton#tag_btn_0, QPushButton#tag_btn_1, QPushButton#tag_btn_2, QPushButton#tag_btn_3 {
+/* Specifying QSS for each tag*/
+QPushButton[t_value = "1"] {
     min-height: 20px; 
     min-width: 50px;  
     max-width: 50px; 
     max-height: 20px;
-    border-image: url(${asset_dir}/icons/Tag.png);
+    border: 1px solid #006bcf;
+    border-radius: 10px;
     background: none;
     color: #006bcf;
+    text-align: center;
 }
 
-
-QPushButton#tag_btn_0:pressed, QPushButton#tag_btn_1:pressed, QPushButton#tag_btn_2:pressed, QPushButton#tag_btn_3:pressed {
-    min-height: 20px; 
-    min-width: 50px;  
-    max-width: 50px; 
-    max-height: 20px;
-    border-image: url(${asset_dir}/icons/Tag.png);
-    background: none;
-    color: #006bcf;
+QPushButton[t_value = "1"]:pressed{
+    background-color: #006bcf;
+    color: #fefefe;
 }
+/* END Specifying QSS for each tag*/
 
 QScrollBar:vertical{
 width:12px;
