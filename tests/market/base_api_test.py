@@ -35,7 +35,7 @@ class BaseApiTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         parsed_json = json.loads(response.text)
         # print(response.text)
-        self.assertEqual(parsed_json['status'], True)
+        self.assertGreaterEqual(parsed_json['status'], 1)
         nonce = parsed_json['message']
         print("nonce:%s" % nonce)
         return nonce
