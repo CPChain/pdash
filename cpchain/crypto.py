@@ -446,15 +446,10 @@ class ECCipher:
         """
         try:
             loaded_private_key = ECCipher._load_private_key_from_bytes(pri_key_string_bytes)
-            signature = loaded_private_key.sign(
-                raw_data_bytes,
-                ec.ECDSA(hashes.SHA256()))
-
+            return ECCipher.create_signature(loaded_private_key,raw_data_bytes)
         except Exception:
             logger.exception("generate signature error")
             return None
-        else:
-            return signature
 
     @staticmethod
     def generate_string_signature(pri_key_string, raw_data_string):
@@ -493,7 +488,7 @@ class ECCipher:
 
         """
         pub_key = ECCipher.create_public_key(public_key)
-        return ECCipher.verify_sign(pub_key,signature,raw_data )
+        return ECCipher.verify_sign(pub_key,signature,raw_data)
 
 
 class ECDERCipher:
@@ -588,7 +583,6 @@ class ECDERCipher:
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
         return Encoder.bytes_to_base64_str(serialized_public)
-
 
 
 class ECPEMCipher:
