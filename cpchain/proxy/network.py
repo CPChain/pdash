@@ -197,7 +197,7 @@ class PeerProtocol(protocol.DatagramProtocol):
         expired_peers = []
 
         def refresh(result, peer):
-            success, data = result
+            success, _ = result
             if success:
                 peer['ts'] = time.time()
             return result
