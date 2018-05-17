@@ -298,6 +298,9 @@ class ECCipher:
     
     @staticmethod
     def create_public_key(key):
+        """
+        Create public key from key bytes or its hex representation.
+        """
         if isinstance(key, str):
             # it's the hex str
             key = bytes.fromhex(key)
