@@ -33,6 +33,8 @@ sqlalchemy
 boto3
 pyopenssl
 web3
+msgpack
+kademlia
 "
 
 wallet_pkgs="

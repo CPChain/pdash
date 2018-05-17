@@ -1,3 +1,4 @@
+# pylint: disable=wrong-import-position
 import logging
 import os
 import asyncio
@@ -114,15 +115,36 @@ class Peer:
         return d
 
     def get_peer(self, eth_addr, boot_nodes, port=None):
-        port = port or 8250
 
-        peer = KadServer()
-        peer.listen(port)
-        loop.run_until_complete(peer.bootstrap(boot_nodes))
-        value = loop.run_until_complete(peer.get(eth_addr))
-        peer.stop()
+        if isinstance(boot_nodes, tuple):
+            port = port or 8150
+            protocol = PeerProtocol()
+            reactor.listenUDP(port, protocol)
 
-        return tuple(value)
+            def get_peer_done(result):
+                protocol.transport.stopListening()
+                success, data = result
+                if success and data:
+                    return tuple(data)
+
+            d = protocol.get_peer(eth_addr, boot_nodes)
+            d.addBoth(get_peer_done)
+            return d
+
+        elif isinstance(boot_nodes, list):
+            port = port or 8250
+
+            peer = KadServer()
+            peer.listen(port)
+            loop.run_until_complete(peer.bootstrap(boot_nodes))
+            value = loop.run_until_complete(peer.get(eth_addr))
+            peer.stop()
+
+            if value:
+                return tuple(value)
+        else:
+            logger.error("wrong boot nodes")
+
 
 
 # Code below for testing purpose only, pls. ignore.
@@ -153,7 +175,7 @@ if __name__ == '__main__':
 
     elif sys.argv[1] == 'pick_peer':
         def found_peer(peer):
-            print(peer)
+            logger.debug(peer)
             reactor.stop()
 
         peer = Peer()
@@ -163,6 +185,14 @@ if __name__ == '__main__':
         peer = Peer()
         result = peer.get_peer(eth_addr=b'fake_eth_addr',
                                boot_nodes=[('127.0.0.1', 8201)])
-        print(result)
+        logger.debug(result)
+
+        def got_peer(peer):
+            logger.debug(peer)
+            reactor.stop()
+
+        peer.get_peer(eth_addr=b'fake_eth_addr',
+                      boot_nodes=('127.0.0.1', 8101)).addCallback(got_peer)
+
 
     reactor.run()
