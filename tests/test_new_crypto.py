@@ -37,19 +37,17 @@ class CryptoTest(unittest.TestCase):
         load_pub_key = ECCipher.load_public_key(self.private_key_file_path, self.password)
         self.assertIsNotNone(load_pub_key)
 
-        # check signature and verify
-        pub_key_bytes = ECCipher.convert_public_key_to_bytes(load_pub_key)
-        print(pub_key_bytes)
         v1 = ECCipher.verify_sign(load_pub_key, sig, msg)
         self.assertTrue(v1)
 
-        pub_key_bytes = ECCipher.convert_public_key_to_bytes(create_pub_key)
-        print(pub_key_bytes)
         v2 = ECCipher.verify_sign(create_pub_key, sig, msg)
         self.assertTrue(v2)
 
+        pub_key_bytes = ECCipher.convert_public_key_to_bytes(create_pub_key)
+        print(pub_key_bytes)
         pub_key = ECCipher.load_public_key_from_bytes(pub_key_bytes)
         self.assertIsNotNone(pub_key)
+
 
         addr = ECCipher.get_addr_from_public_key(pub_key)
         print(addr)

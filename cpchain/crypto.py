@@ -292,10 +292,6 @@ class ECCipher:
     def create_public_key_from_private_key(private_key):
         return private_key.public_key()
 
-    # TODO
-    @staticmethod
-    def create_public_key(key):
-        pass
 
     @staticmethod
     def load_key_pair(key_path, password):
@@ -334,7 +330,8 @@ class ECCipher:
         if len(encode_point) == 65:
             encode_point = encode_point[1:]
         return keccak(encode_point)[-20:]
-    # =================================================
+
+    # ==================== old methods below will be removed =======================
 
     """
     # cf. yellow paper
@@ -362,24 +359,6 @@ class ECCipher:
         return pri_key_string, pub_key_string
 
     @staticmethod
-    def _get_key_pairs_from_private_key_bytes(private_key_bytes):
-        """
-        get private key bytes and public key bytes pairs from private key bytes
-
-        Args:
-            private_key_bytes: private key bytes
-
-        Returns:
-            private key bytes and public key bytes pairs
-
-        """
-        private_key = ECCipher._load_private_key_from_bytes(private_key_bytes)
-        public_key = private_key.public_key()
-        public_key_bytes = public_key.public_numbers().encode_point()
-
-        return private_key_bytes, public_key_bytes
-
-    @staticmethod
     def _get_public_key_from_private_key_bytes(private_key_bytes):
         """
         get public key string from private key bytes
@@ -390,8 +369,12 @@ class ECCipher:
             public key string
 
         """
-        private_key_bytes, pub_key_bytes = ECCipher._get_key_pairs_from_private_key_bytes(private_key_bytes)
-        pub_key_string = Encoder.bytes_to_base64_str(pub_key_bytes)
+        private_key = ECCipher._load_private_key_from_bytes(private_key_bytes)
+        public_key = private_key.public_key()
+        public_key_bytes = public_key.public_numbers().encode_point()
+
+        # private_key_bytes, pub_key_bytes = ECCipher._get_key_pairs_from_private_key_bytes(private_key_bytes)
+        pub_key_string = Encoder.bytes_to_base64_str(public_key_bytes)
         logger.debug("pub_key_string:%s" % pub_key_string)
         return pub_key_string
 
