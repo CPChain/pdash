@@ -43,13 +43,7 @@ class CryptoTest(unittest.TestCase):
         v2 = ECCipher.verify_sign(create_pub_key, sig, msg)
         self.assertTrue(v2)
 
-        pub_key_bytes = ECCipher.convert_public_key_to_bytes(create_pub_key)
-        print(pub_key_bytes)
-        pub_key = ECCipher.load_public_key_from_bytes(pub_key_bytes)
-        self.assertIsNotNone(pub_key)
-
-
-        addr = ECCipher.get_addr_from_public_key(pub_key)
+        addr = ECCipher.get_address_from_public_key(load_pub_key)
         print(addr)
         self.assertIsNotNone(addr)
 

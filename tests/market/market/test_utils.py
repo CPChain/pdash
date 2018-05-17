@@ -24,9 +24,6 @@ class UtilsTest(unittest.TestCase):
 
         print("------------------verify is correct pub/pri key--------------------")
         key_bytes = Encoder.str_to_base64_byte(pri_key_string)
-        loaded_pub_key = ECCipher._get_public_key_from_private_key_bytes(key_bytes)
-        print("loaded_pub_key:" + loaded_pub_key)
-        self.assertEqual(pub_key_string, loaded_pub_key)
 
         # ---------- sign and verify ------------
         data = "testdata"
