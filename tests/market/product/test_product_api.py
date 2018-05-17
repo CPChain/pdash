@@ -1,3 +1,4 @@
+from django.utils.http import urlquote
 from tests.market.base_api_test import *
 
 
@@ -25,10 +26,8 @@ class TestProductApi(BaseApiTest):
         header = {'Content-Type': 'application/json'}
         nonce = self._login_and_get_nonce(header)
 
-        # ======= generate nonce signature and confirm =======
         token = self._generate_nonce_signature_and_get_token(header, nonce)
 
-        # ======= publish product ========
         self.publish_product(token)
 
         # ======= query product ========
@@ -43,10 +42,8 @@ class TestProductApi(BaseApiTest):
         header = {'Content-Type': 'application/json'}
         nonce = self._login_and_get_nonce(header)
 
-        # ======= generate nonce signature and confirm =======
         token = self._generate_nonce_signature_and_get_token(header, nonce)
 
-        # ======= TODO postman add product_sales_quantity ========
         self.add_product_sales_quantity(token)
 
     def test_subscribe_tag_and_search_product(self):
@@ -63,11 +60,8 @@ class TestProductApi(BaseApiTest):
         # ======= subscribe tag ========
         self.subscribe_tag(token)
 
-        # ======= TODO query my tag ========
+        # ======= query my tag ========
         self.query_my_tag(token)
-
-        # ======= TODO query by following tag =======
-        self.query_product_by_my_tag(token)
 
         # ======= unsubscribe tag ========
         self.unsubscribe_tag(token)
@@ -83,15 +77,13 @@ class TestProductApi(BaseApiTest):
         # ======= publish product ========
         self.publish_product(token)
 
-        # ======= TODO subscribe seller ========
+        # ======= subscribe seller ========
         self.subscribe_seller(token)
 
-        # ======= TODO query by following seller ========
+        # ======= query by following seller ========
         self.query_my_seller(token)
 
-        self.query_product_by_my_seller(token)
-
-        # ======= TODO unsubscribe seller ========
+        # ======= unsubscribe seller ========
         self.unsubscribe_seller(token)
 
     def query_product(self, keyword):
@@ -181,7 +173,7 @@ class TestProductApi(BaseApiTest):
         for p in parsed_json['data']:
             print("title:%s" % p["title"])
 
-    def query_product_by_my_tag(self, token):
+    def query_product_by_following_tag(self, token):
         url = '%s/product/v1/my_tag/product/search/' % HOST
         header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
         response = requests.get(url, headers=header)
@@ -222,8 +214,7 @@ class TestProductApi(BaseApiTest):
         for p in parsed_json['data']:
             print("seller_public_key:%s" % p["seller_public_key"])
 
-    def query_product_by_my_seller(self, token):
-        # TODO -----
+    def query_product_by_following_seller(self, token):
         url = '%s/product/v1/my_seller_product/search/' % HOST
         header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
         response = requests.get(url, headers=header)
@@ -244,3 +235,37 @@ class TestProductApi(BaseApiTest):
         self.assertGreaterEqual(len(parsed_json['data']), 1 ,"my tag number should be >= 1")
         for p in parsed_json['data']:
             print("tag:%s" % p["tag"])
+
+    def test_query_product_by_seller(self):
+        header = {'Content-Type': 'application/json'}
+        nonce = self._login_and_get_nonce(header)
+        token = self._generate_nonce_signature_and_get_token(header, nonce)
+
+        self.publish_product(token)
+
+        url = '%s/product/v1/search_by_seller/?seller=%s' % (HOST, urlquote(self.pub_key_string))
+        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
+        response = requests.get(url, headers=header)
+        print("products:%s" % response)
+        print(response.text)
+        parsed_json = json.loads(response.text)
+        self.assertGreaterEqual(len(parsed_json['data']), 1, "product number should be >= 1")
+        for p in parsed_json['data']:
+            print("tags:%s" % p["tags"])
+
+    def test_query_product_by_tag(self):
+        header = {'Content-Type': 'application/json'}
+        nonce = self._login_and_get_nonce(header)
+        token = self._generate_nonce_signature_and_get_token(header, nonce)
+
+        self.publish_product(token)
+
+        url = '%s/product/v1/search_by_tag/?tag=%s' % (HOST, 'tag1')
+        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
+        response = requests.get(url, headers=header)
+        print("products:%s" % response)
+        print(response.text)
+        parsed_json = json.loads(response.text)
+        self.assertGreaterEqual(len(parsed_json['data']), 1, "product number should be >= 1")
+        for p in parsed_json['data']:
+            print("tags:%s" % p["tags"])

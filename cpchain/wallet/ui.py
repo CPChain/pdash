@@ -12,17 +12,20 @@ from PyQt5.QtCore import Qt, QSize, QPoint, pyqtSignal
 from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont, QPainter
 
 from cpchain import config, root_dir
+from cpchain.wallet.wallet import Wallet
 # from cpchain import join_with_root
 
 # do it before any other twisted code.
-def install_reactor():
-    global app
-    app = QApplication(sys.argv)
-    import qt5reactor; qt5reactor.install()
-install_reactor()
+# def install_reactor():
+#     global app
+#     app = QApplication(sys.argv)
+#     import qt5reactor; qt5reactor.install()
+# install_reactor()
 
-from twisted.internet import threads, defer
+from twisted.internet import threads, defer, reactor
 from twisted.internet.task import LoopingCall
+wallet = Wallet(reactor)
+
 
 # utils
 def get_icon(name):
@@ -469,24 +472,29 @@ class FollowingTagTab(QScrollArea):
         self.follow_item_num = 5
         self.follow_promo_num = 2
 
-        def get_items():
-            print("Getting items from backend......")
-            self.item_lists = []
-            for i in range(self.follow_item_num):
-                self.item_lists.append(Product(self))
-        get_items()
+        self.item_lists = []
 
-        def get_promotion():
+        def get_items(products):
+            print("Getting items from backend......")
+            for i in range(self.item_num_max):
+                self.item_lists.append(Product(self, item=products[i]))
+            set_layout()
+
+        d_products = wallet.market_client.query_recommend_product()
+        d_products.addCallback(get_items)
+
+        self.promo_label = QLabel(self)
+
+        def get_promotion(promotion):
             print("Getting promotion images from backend.....")
-            self.promo_lists = []
-            for i in range(self.follow_promo_num):
-                promo_label = QLabel(self)
-                promo_label.setObjectName("promo_label_{}".format(i))
-                pixmap = get_pixm('cpc-logo-single.png')
-                pixmap = pixmap.scaled(200, 200)
-                promo_label.setPixmap(pixmap)
-                self.promo_lists.append(promo_label)
-        get_promotion()
+            self.promo_label.setObjectName("promo_label")
+            path = osp.join(root_dir, promotion[0]['image'])
+            pixmap = QPixmap(path)
+            pixmap = pixmap.scaled(250, 123)
+            self.promo_label.setPixmap(pixmap)
+
+        d_promotion = wallet.market_client.query_promotion()
+        d_promotion.addCallback(get_promotion)
 
         def set_layout():
             self.follow_main_layout = QHBoxLayout(self)
@@ -503,16 +511,14 @@ class FollowingTagTab(QScrollArea):
                 self.follow_tag_product_layout.addSpacing(1)
 
             self.promo_layout = QVBoxLayout(self)
-            for i in range(self.follow_promo_num):
-                self.follow_tag_promotion_layout.addWidget(self.promo_lists[i])
-                self.follow_tag_promotion_layout.addStretch(1)
+            self.promo_layout.addWidget(self.promo_label)
+            self.promo_layout.addSpacing(1)
 
             self.follow_tag_promotion_layout.addStretch(5)
                     
             self.follow_main_layout.addLayout(self.follow_tag_product_layout)
             #self.bottom_layout.setStretchFactor(recom_layout,4)
             self.follow_main_layout.addLayout(self.follow_tag_promotion_layout)
-        set_layout()
 
 class FollowingSellTab(QScrollArea):
     def __init__(self, parent=None):
@@ -551,24 +557,29 @@ class FollowingSellTab(QScrollArea):
         self.follow_item_num = 5
         self.follow_promo_num = 2
 
-        def get_items():
-            print("Getting items from backend......")
-            self.item_lists = []
-            for i in range(self.follow_item_num):
-                self.item_lists.append(Product(self))
-        get_items()
+        self.item_lists = []
 
-        def get_promotion():
+        def get_items(products):
+            print("Getting items from backend......")
+            for i in range(self.item_num_max):
+                self.item_lists.append(Product(self, item=products[i]))
+            set_layout()
+
+        d_products = wallet.market_client.query_recommend_product()
+        d_products.addCallback(get_items)
+
+        self.promo_label = QLabel(self)
+
+        def get_promotion(promotion):
             print("Getting promotion images from backend.....")
-            self.promo_lists = []
-            for i in range(self.follow_promo_num):
-                promo_label = QLabel(self)
-                promo_label.setObjectName("promo_label_{}".format(i))
-                pixmap = get_pixm('cpc-logo-single')
-                pixmap = pixmap.scaled(250, 123)
-                promo_label.setPixmap(pixmap)
-                self.promo_lists.append(promo_label)
-        get_promotion()
+            self.promo_label.setObjectName("promo_label")
+            path = osp.join(root_dir, promotion[0]['image'])
+            pixmap = QPixmap(path)
+            pixmap = pixmap.scaled(250, 123)
+            self.promo_label.setPixmap(pixmap)
+
+        d_promotion = wallet.market_client.query_promotion()
+        d_promotion.addCallback(get_promotion)
 
         def set_layout():
             
@@ -599,9 +610,8 @@ class FollowingSellTab(QScrollArea):
                 self.follow_tag_product_layout.addSpacing(1)
 
             self.promo_layout = QVBoxLayout(self)
-            for i in range(self.follow_promo_num):
-                self.follow_tag_promotion_layout.addWidget(self.promo_lists[i])
-                self.follow_tag_promotion_layout.addStretch(1)
+            self.promo_layout.addWidget(self.promo_label)
+            self.promo_layout.addSpacing(1)
 
             self.follow_tag_promotion_layout.addStretch(5)
                 
@@ -610,8 +620,6 @@ class FollowingSellTab(QScrollArea):
 
             self.follow_top_layout.addLayout(self.follow_rank_layout)
             self.follow_top_layout.addLayout(self.follow_main_layout)
-
-        set_layout()   
 
 
 class FollowingTab(QScrollArea):
@@ -705,6 +713,7 @@ class Product(QFrame):
         self.setMinimumHeight(120)
         self.setMaximumHeight(130)
         self.title_btn = QPushButton("Medicine big data from Mayo Clinic")
+
         self.title_btn.setObjectName("title_btn")
         self.seller_btn = QPushButton("Barack Obama")
         self.seller_btn.setObjectName("seller_btn")
@@ -789,13 +798,18 @@ class PopularTab(QScrollArea):
         self.horline2 = HorizontalLine(self, 2)
         self.horline2.setObjectName("horline2")
 
-        def create_banner():
-            self.banner_label = banner_label = QLabel(self)
+        self.banner_label = QLabel(self)
+        def create_banner(carousel):
+            print(carousel)
             print("Getting banner images......")
-            pixmap = get_pixm('Banner.png')
+            path = osp.join(root_dir, carousel[0]['image'])
+            print(path)
+            pixmap = QPixmap(path)  # get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(740, 195)
-            banner_label.setPixmap(pixmap)
-        create_banner()
+            self.banner_label.setPixmap(pixmap)
+
+        d_banner = wallet.market_client.query_carousel()
+        d_banner.addCallback(create_banner)
 
         self.hot_label = QLabel("Hot Industry")
         self.hot_label.setObjectName("hot_label")
@@ -811,79 +825,57 @@ class PopularTab(QScrollArea):
         more_btn_2.setObjectName("more_btn_2")
         self.more_btn_2.setCursor(QCursor(Qt.PointingHandCursor))
 
-        def create_ind_trans():
-            self.trans_label = trans_label = QLabel(self)
-            trans_label.setMinimumHeight(50)
-            trans_label.setObjectName("trans_label")
-            # please specify the tag of underlying picture using .setText attributes
-            trans_label.setText("Transportation")
-            trans_label.setFont(QFont("Arial", 13, QFont.Light))
-            trans_label.setAlignment(Qt.AlignCenter)
+        def create_hot_industry():
+            self.hot_industry_label = []
+            for i in range(config.wallet.hot_industry_num):
+                hot_industry = QLabel(self)
+                hot_industry.setObjectName('hot_industry_' + str(i))
+                self.hot_industry_label.append(hot_industry)
+                print('create label' + str(i))
+        create_hot_industry()
 
-            # please specify the file name of underlying picture using string vriable icon_name
-            icon_name = 'tag1.png'
-            path = osp.join(root_dir, "cpchain/assets/wallet/icons", icon_name)
-
-            #specify the stylesheet of this QLabel, using string variable $path
-            trans_label.setStyleSheet("border-image: url({0}); color: #fefefe".format(path))
-            
-            print("Getting trans images......")
-
-        create_ind_trans()
-
-        def create_ind_forest():
-            self.forest_label = forest_label = QLabel(self)
-            forest_label.setMinimumHeight(50)
-            forest_label.setObjectName("forest_label")         
-            forest_label.setText("Forest")
-            forest_label.setFont(QFont("Arial", 13, QFont.Light))
-            forest_label.setAlignment(Qt.AlignCenter)
-
-            # please specify the file name of underlying picture using string vriable icon_name
-            icon_name = 'tag2.png'
-            path = osp.join(root_dir, "cpchain/assets/wallet/icons", icon_name)
-            
-            #specify the stylesheet of this QLabel, using string variable $path
-            forest_label.setStyleSheet("border-image: url({0}); color: #fefefe".format(path))
-            print("Getting trans images......")
-        create_ind_forest()
-
-        def create_ind_medicine():
-            self.medicine_label = medicine_label = QLabel(self)
-            medicine_label.setMinimumHeight(50)
-            medicine_label.setObjectName("medicine_label")
-            medicine_label.setText("Medicine")
-            medicine_label.setFont(QFont("Arial", 13, QFont.Light))
-            medicine_label.setAlignment(Qt.AlignCenter)
-
-            # please specify the file name of underlying picture using string vriable icon_name
-            icon_name = 'tag3.png'
-            path = osp.join(root_dir, "cpchain/assets/wallet/icons", icon_name)
-            
-            #specify the stylesheet of this QLabel, using string variable $path
-            medicine_label.setStyleSheet("border-image: url({0}); color: #fefefe".format(path))
-            print("Getting trans images......")
-            print("Getting trans images......")
-        create_ind_medicine()
+        def set_hot_industry(hot_industry):
+            for i in range(config.wallet.hot_industry_num):
+                self.hot_industry_label[i].setText(hot_industry[i]['tag'])
+                self.hot_industry_label[i].setFont(QFont("Arial", 13, QFont.Light))
+                self.hot_industry_label[i].setAlignment(Qt.AlignCenter)
+                path = osp.join(root_dir, hot_industry[i]['image'])
+                print(path)
+                self.hot_industry_label[i].setStyleSheet("border-image: url({0}); color: #fefefe".format(path))
+                # pixmap = QPixmap(path)
+                # pixmap = pixmap.scaled(230, 136)
+                # self.hot_industry_label[i].setPixmap(pixmap)
+        d_hot_industry = wallet.market_client.query_hot_tag()
+        d_hot_industry.addCallback(set_hot_industry)
 
         self.recom_label = QLabel("Recommended")
         self.recom_label.setObjectName("recom_label")
         self.recom_label.setFont(QFont("Arial", 13, QFont.Light))
         self.recom_label.setMaximumHeight(25)
 
-        self.get_items()
+        self.promo_label = QLabel(self)
 
-        def get_promotion():
+        def get_promotion(promotion):
             print("Getting promotion images from backend.....")
-            self.promo_lists = []
-            for i in range(self.promo_num_max):
-                promo_label = QLabel(self)
-                promo_label.setObjectName("promo_label_{}".format(i))
-                pixmap = get_pixm('cpc-logo-single')
-                pixmap = pixmap.scaled(250, 123)
-                promo_label.setPixmap(pixmap)
-                self.promo_lists.append(promo_label)
-        get_promotion()
+            self.promo_label.setObjectName("promo_label")
+            path = osp.join(root_dir, promotion[0]['image'])
+            pixmap = QPixmap(path)
+            pixmap = pixmap.scaled(250, 123)
+            self.promo_label.setPixmap(pixmap)
+
+        d_promotion = wallet.market_client.query_promotion()
+        d_promotion.addCallback(get_promotion)
+
+        self.item_lists = []
+
+        def get_items(products):
+            print("Getting items from backend......")
+            for i in range(self.item_num_max):
+                self.item_lists.append(Product(self, item=products[i]))
+            set_layout()
+
+        d_products = wallet.market_client.query_recommend_product()
+        d_products.addCallback(get_items)
 
         def set_layout():
             self.main_layout = QVBoxLayout(self)
@@ -901,12 +893,9 @@ class PopularTab(QScrollArea):
             self.main_layout.addWidget(self.horline1)
 
             self.hot_img_layout = QHBoxLayout(self)
-            self.hot_img_layout.addSpacing(25)
-            self.hot_img_layout.addWidget(self.trans_label)
-            self.hot_img_layout.addSpacing(25)
-            self.hot_img_layout.addWidget(self.forest_label)
-            self.hot_img_layout.addSpacing(25)
-            self.hot_img_layout.addWidget(self.medicine_label)
+            for i in range(config.wallet.hot_industry_num):
+                self.hot_img_layout.addSpacing(25)
+                self.hot_img_layout.addWidget(self.hot_industry_label[i])
             self.main_layout.addLayout(self.hot_img_layout)
             self.main_layout.addSpacing(1)
             
@@ -928,9 +917,8 @@ class PopularTab(QScrollArea):
                 self.recom_layout.addSpacing(1)
 
             self.promo_layout = QVBoxLayout(self)
-            for i in range(self.promo_num_max):
-                self.promo_layout.addWidget(self.promo_lists[i])
-                self.promo_layout.addSpacing(1)
+            self.promo_layout.addWidget(self.promo_label)
+            self.promo_layout.addSpacing(1)
 
             self.bottom_layout.addLayout(self.recom_layout)
             #self.bottom_layout.setStretchFactor(recom_layout,4)
@@ -938,15 +926,9 @@ class PopularTab(QScrollArea):
             #self.bottom_layout.setStretch(promo_layout,1)
 
             self.main_layout.addLayout(self.bottom_layout)
-        set_layout()
         load_stylesheet(self, "popular.qss")
         print("Loading stylesheet of cloud tab widget")
 
-    def get_items(self):
-        print("Getting items from backend......")
-        self.item_lists = []
-        for i in range(self.item_num_max):
-            self.item_lists.append(Product(self))
 
 class CloudTab(QScrollArea):
     class SearchBar(QLineEdit):
@@ -1011,8 +993,8 @@ class CloudTab(QScrollArea):
 
     def handle_upload(self):
             self.local_file = QFileDialog.getOpenFileName()[0]
-            #defered = threads.deferToThread(upload_file_ipfs, self.local_file)
-            #defered.addCallback(handle_callback_upload)
+            # defered = threads.deferToThread(upload_file_ipfs, self.local_file)
+            # defered.addCallback(handle_callback_upload)
 
     def init_ui(self):
         self.frame = QFrame()
