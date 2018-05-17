@@ -16,6 +16,17 @@ QTableWidget{
     background: #fafafa;
 }
 
+/*QTabWidget::pane{
+    border: none;
+    outline: none;
+
+}*/
+
+QScrollArea.Product {
+    background: transparent;
+}
+
+
 QLabel#total_sale_label {
     color: #555555;
 }

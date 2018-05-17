@@ -926,19 +926,19 @@ class FollowingSellTab(QScrollArea):
 
         self.item_lists = []
 
-        def create_btns():
-            self.follow_rank_btn = QPushButton("Rank", self)
-            self.follow_time_btn = QPushButton("Time", self)
-            self.follow_price_btn = QPushButton("Price", self)
-            self.follow_sales_btn = QPushButton("Sales", self)
-            self.follow_filter_btn = QPushButton("Filter", self)
+        # def create_btns():
+        #     self.follow_rank_btn = QPushButton("Rank", self)
+        #     self.follow_time_btn = QPushButton("Time", self)
+        #     self.follow_price_btn = QPushButton("Price", self)
+        #     self.follow_sales_btn = QPushButton("Sales", self)
+        #     self.follow_filter_btn = QPushButton("Filter", self)
 
-            self.follow_rank_btn.setObjectName("follow_rank_btn")
-            self.follow_time_btn.setObjectName("follow_time_btn")
-            self.follow_price_btn.setObjectName("follow_price_btn")
-            self.follow_sales_btn.setObjectName("follow_sales_btn")
-            self.follow_filter_btn.setObjectName("follow_filter_btn")
-        create_btns()
+        #     self.follow_rank_btn.setObjectName("follow_rank_btn")
+        #     self.follow_time_btn.setObjectName("follow_time_btn")
+        #     self.follow_price_btn.setObjectName("follow_price_btn")
+        #     self.follow_sales_btn.setObjectName("follow_sales_btn")
+        #     self.follow_filter_btn.setObjectName("follow_filter_btn")
+        # create_btns()
 
         self.header_horline = HorizontalLine(self, 2)
         self.header_horline.setObjectName("header_horline")
@@ -966,19 +966,19 @@ class FollowingSellTab(QScrollArea):
         d_promotion.addCallback(get_promotion)
 
         def set_layout():
-            self.follow_all_layout = QVBoxLayout(self)
+            # self.follow_all_layout = QVBoxLayout(self)
 
-            self.follow_rank_layout = QHBoxLayout(self)
-            self.follow_rank_layout.addWidget(self.follow_rank_btn)
-            self.follow_rank_layout.addSpacing(10)
-            self.follow_rank_layout.addWidget(self.follow_time_btn)
-            self.follow_rank_layout.addSpacing(10)
-            self.follow_rank_layout.addWidget(self.follow_price_btn)
-            self.follow_rank_layout.addSpacing(10)
-            self.follow_rank_layout.addWidget(self.follow_sales_btn)
-            self.follow_rank_layout.addSpacing(10)
-            self.follow_rank_layout.addWidget(self.follow_filter_btn)
-            self.follow_rank_layout.addStretch(1)
+            # self.follow_rank_layout = QHBoxLayout(self)
+            # self.follow_rank_layout.addWidget(self.follow_rank_btn)
+            # self.follow_rank_layout.addSpacing(10)
+            # self.follow_rank_layout.addWidget(self.follow_time_btn)
+            # self.follow_rank_layout.addSpacing(10)
+            # self.follow_rank_layout.addWidget(self.follow_price_btn)
+            # self.follow_rank_layout.addSpacing(10)
+            # self.follow_rank_layout.addWidget(self.follow_sales_btn)
+            # self.follow_rank_layout.addSpacing(10)
+            # self.follow_rank_layout.addWidget(self.follow_filter_btn)
+            # self.follow_rank_layout.addStretch(1)
 
             self.follow_main_layout = QHBoxLayout(self)
 
@@ -999,11 +999,11 @@ class FollowingSellTab(QScrollArea):
             self.follow_main_layout.addSpacing(1)
             self.follow_main_layout.addLayout(self.follow_tag_promotion_layout)
 
-            self.follow_all_layout.addLayout(self.follow_rank_layout)
-            self.follow_all_layout.addWidget(self.header_horline)
-            self.follow_all_layout.addLayout(self.follow_main_layout)
+            # self.follow_all_layout.addLayout(self.follow_rank_layout)
+            # self.follow_all_layout.addWidget(self.header_horline)
+            # self.follow_all_layout.addLayout(self.follow_main_layout)
 
-            self.setLayout(self.follow_all_layout)
+            self.setLayout(self.follow_main_layout)
 
 class FollowingTab(QScrollArea):
 
@@ -1440,7 +1440,7 @@ class CloudTab(QScrollArea):
             file_table.setFocusPolicy(Qt.NoFocus) 
             # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
-            file_table.setColumnCount(4)
+            file_table.setColumnCount(5)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             file_table.set_right_menu(right_menu)

@@ -9,6 +9,7 @@ QFrame#sell_frame {
     outline: none;
 }
 
+
 QPushButton#search_btn_sell {
     border: none;
     outline: none;
@@ -34,7 +35,6 @@ QTableWidget::item:selected {
     background: #006bcf;
     color: #fefefe;
 }
-
 
 QScrollBar:vertical{
 width:12px;
