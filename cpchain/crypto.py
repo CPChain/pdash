@@ -52,7 +52,7 @@ class BaseCipher:
         with open(fpath, 'rb') as f:
             for buffer in iter(functools.partial(f.read, 4096), b''):
                 digest.update(buffer)
-
+                
             return d == digest.finalize()
 
 
@@ -229,9 +229,81 @@ class ECCipher:
     # cf. yellow paper
     # cf. http://tinyurl.com/y8q5g68u
     """
+    @staticmethod
+    def create_signature(private_key, message):
+        if isinstance(message, str):
+            message = message.encode(encoding="utf-8")
+        
+        try:
+            signature = private_key.sign(
+                raw_data_bytes,
+                ec.ECDSA(hashes.SHA256()))
+
+        except Exception:
+            logger.exception("generate signature error")
+            return None
+        else:
+            return signature
+
 
     @staticmethod
-    def load_key_pair_from_keystore(key_path, password):
+    def verify_signature(public_key, signature, raw_data):
+        """
+        verify signature
+        Args:
+            public_key:public key object
+            signature:signature string
+            raw_data:data string
+
+        Returns:
+            True: is valid signature;False: is invalid signature
+
+        """
+        try:
+            public_key.verify(signature, raw_data, ec.ECDSA(hashes.SHA256()))
+        except Exception:
+            logger.exception("verify signature error")
+            return False
+        else:
+            return True
+
+
+        
+    @staticmethod
+    def create_private_key(key):
+        if isintance(key, str):
+            # TODO base64 decodeing
+            pass
+        private_value = int.from_bytes(key, byteorder='big')
+        private_key = ec.derive_private_key(private_value, ec.SECP256K1(), default_backend())
+        return private_key
+
+
+    @staticmethod
+    def load_private_key(key_path, password):
+        key_bytes = load_private_key_from_keystore(key_path, password)
+        private_key = create_private_key(key_bytes)
+        return private_key
+    
+
+    @staticmethod
+    def load_public_key(key_path, password):
+        private_key = ECCipher.load_private_key(key_path, password)
+        return create_public_key_from_private_key(private_key)
+
+
+    @staticmethod
+    def create_public_key_from_private_key(private_key):
+        return private_key.public_key()
+
+    
+    @staticmethod
+    def create_public_key(key):
+        pass
+
+    
+    @staticmethod
+    def load_key_pair(key_path, password):
         """
         load geth key pair from a keystore format file
 
@@ -242,173 +314,9 @@ class ECCipher:
         Returns:
 
         """
-        pri_key_bytes = load_private_key_from_keystore(key_path, password)
-
-        pri_key_string = Encoder.bytes_to_base64_str(pri_key_bytes)
-
-        pub_key_string = ECCipher._get_public_key_from_private_key_bytes(pri_key_bytes)
-
-        return pri_key_string, pub_key_string
-
-    @staticmethod
-    def _get_key_pairs_from_private_key_bytes(private_key_bytes):
-        """
-        get private key bytes and public key bytes pairs from private key bytes
-
-        Args:
-            private_key_bytes: private key bytes
-
-        Returns:
-            private key bytes and public key bytes pairs
-
-        """
-        private_key = ECCipher._load_private_key_from_bytes(private_key_bytes)
-        public_key = private_key.public_key()
-        public_key_bytes = public_key.public_numbers().encode_point()
-
-        return private_key_bytes, public_key_bytes
-
-    @staticmethod
-    def _get_public_key_from_private_key_bytes(private_key_bytes):
-        """
-        get public key string from private key bytes
-        Args:
-            private_key_bytes:
-
-        Returns:
-            public key string
-
-        """
-        private_key_bytes, pub_key_bytes = ECCipher._get_key_pairs_from_private_key_bytes(private_key_bytes)
-        pub_key_string = Encoder.bytes_to_base64_str(pub_key_bytes)
-        logger.debug("pub_key_string:%s" % pub_key_string)
-        return pub_key_string
-
-    @staticmethod
-    def _load_private_key_from_bytes(pri_key_bytes):
-        """
-        load private key object from private key bytes
-        Args:
-            pri_key_bytes:
-
-        Returns:
-            private key object
-
-        """
-        # big endian
-        private_value = int.from_bytes(pri_key_bytes, byteorder='big')
-        private_key = ec.derive_private_key(private_value, ec.SECP256K1(), default_backend())
-        return private_key
-
-    @staticmethod
-    def generate_key_pair(private_key_bytes=None, password=None):
-        """
-        generate private and public key tuple
-
-        Args:
-            private_key_bytes:
-            password:
-
-        Returns:tuple(private key bytes,public key bytes)
-
-        """
-        password = examine_password(password)
-
-        if private_key_bytes:
-            private_key = ECCipher._load_private_key_from_bytes(private_key_bytes)
-            serialized_private = private_key_bytes
-
-        else:
-            private_key = ec.generate_private_key(
-                ec.SECP256K1(),
-                default_backend()
-            )
-            pv = private_key.private_numbers().private_value
-            serialized_private = pv.to_bytes((pv.bit_length() + 7) // 8, 'big')
-
-        public_key = private_key.public_key()
-        serialized_public = public_key.public_numbers().encode_point()
-
-        logger.debug("pri key bytes:%s" % private_key_bytes)
-        logger.debug("pub key bytes:%s" % serialized_public)
-
-        return serialized_private, serialized_public
-
-    @staticmethod
-    def generate_signature(pri_key_string_bytes, raw_data_bytes):
-        """
-        generate signature
-        Args:
-            pri_key_string_bytes: private key string bytes
-            raw_data_bytes: data bytes
-
-        Returns:
-            signature string
-
-        """
-        try:
-            loaded_private_key = ECCipher._load_private_key_from_bytes(pri_key_string_bytes)
-            signature = loaded_private_key.sign(
-                raw_data_bytes,
-                ec.ECDSA(hashes.SHA256()))
-
-        except Exception:
-            logger.exception("generate signature error")
-            return None
-        else:
-            return signature
-
-    @staticmethod
-    def generate_string_signature(pri_key_string, raw_data_string):
-        """
-        sign string data with geth private key string
-        Args:
-            pri_key_string:base64 encoded geth private key string
-            raw_data_string: string data
-
-        Returns:
-            base64 string encoded with signature bytes
-
-        """
-        try:
-            raw_data_bytes = raw_data_string.encode(encoding="utf-8")
-            pri_key_bytes = Encoder.str_to_base64_byte(pri_key_string)
-
-            signature_bytes = ECCipher.generate_signature(pri_key_bytes,raw_data_bytes)
-
-            return Encoder.bytes_to_base64_str(signature_bytes)
-        except Exception:
-            logger.exception("signature error")
-            return None
-
-    @staticmethod
-    def verify_signature(public_key, signature, raw_data):
-        """
-        verify signature
-        Args:
-            public_key:public key bytes
-            signature:signature string
-            raw_data:data string
-
-        Returns:
-            True: is valid signature;False: is invalid signature
-
-        """
-        try:
-            loaded_public_key = ec.EllipticCurvePublicNumbers.\
-                from_encoded_point(ec.SECP256K1(), public_key).\
-                public_key(backend=default_backend())
-
-            loaded_public_key.verify(
-                signature,
-                raw_data,
-                ec.ECDSA(hashes.SHA256()))
-
-        except Exception:
-            logger.exception("verify signature error")
-            return False
-        else:
-            return True
+        private_key = load_private_key(key_path, password)
+        public_key = create_public_key_from_private_key(private_key)
+        return private_key, public_key
 
     @staticmethod
     def load_public_key_from_bytes(public_key: 'bytes'):
