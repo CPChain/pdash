@@ -593,19 +593,7 @@ class SellTab(QScrollArea):
 
 
         def create_file_table():
-            self.file_table = file_table = TableWidget(self) 
-            def right_menu():
-                self.sell_right_menu = QMenu(file_table)
-                self.sell_delete_act = QAction('Delete', self)
-                self.sell_publish_act = QAction('Publish', self)
-
-                self.sell_delete_act.triggered.connect(self.handle_delete_act)
-                self.sell_publish_act.triggered.connect(self.handle_publish_act)
-
-                self.sell_right_menu.addAction(self.sell_delete_act)
-                self.sell_right_menu.addAction(self.sell_publish_act)
-
-                self.sell_right_menu.exec_(QCursor.pos())
+            self.file_table = file_table = TableWidget(self)
 
             file_table.horizontalHeader().setStretchLastSection(True)
             file_table.verticalHeader().setVisible(False)
@@ -619,7 +607,7 @@ class SellTab(QScrollArea):
             file_table.setColumnCount(7)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
-            file_table.set_right_menu(right_menu)
+
             file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price ($)', 'Order', 'Sales', 'Rating', 'Update Time'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.setSortingEnabled(True)
