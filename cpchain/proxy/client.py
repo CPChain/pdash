@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys, os
+import logging
 
 from twisted.internet import reactor, protocol, ssl, defer, _sslverify
 from twisted.protocols.basic import NetstringReceiver
@@ -13,6 +14,7 @@ from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.message import message_sanity_check
 from cpchain.crypto import ECCipher, pub_key_der_to_addr # pylint: disable=no-name-in-module
 
+logger = logging.getLogger(__name__)
 
 class SSLClientProtocol(NetstringReceiver):
     def __init__(self, factory):
@@ -24,7 +26,7 @@ class SSLClientProtocol(NetstringReceiver):
 
     def connectionMade(self):
         self.peer = str(self.transport.getPeer())
-        print("connect to server %s" % self.peer)
+        logger.debug("connect to server %s" % self.peer)
 
         string = self.sign_message.SerializeToString()
         self.sendString(string)
@@ -51,7 +53,7 @@ class SSLClientProtocol(NetstringReceiver):
         self.transport.loseConnection()
 
     def connectionLost(self, reason):
-        print("lost connection to client %s" % (self.peer))
+        logger.debug("lost connection to client %s" % (self.peer))
 
     def download_finish(self, _):
         self.factory.d.callback(self.reply_message)
@@ -92,7 +94,7 @@ def start_client(sign_message):
     message.ParseFromString(sign_message.data)
     valid = message_sanity_check(message)
     if not valid:
-        print("wrong message format")
+        logger.error("wrong message format")
         return
 
     d = defer.Deferred()
@@ -134,10 +136,10 @@ def handle_proxy_response(message):
     proxy_reply = message.proxy_reply
 
     if not proxy_reply.error:
-        print('file_uuid: %s' % proxy_reply.file_uuid)
-        print('AES_key: %s' % proxy_reply.AES_key.decode())
+        logger.debug('file_uuid: %s' % proxy_reply.file_uuid)
+        logger.debug('AES_key: %s' % proxy_reply.AES_key.decode())
     else:
-        print(proxy_reply.error)
+        logger.debug(proxy_reply.error)
 
 # Code below for testing purpose only, pls. ignore.
 # Will be removed in formal release.

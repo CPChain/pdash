@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys, os, time
+import logging
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -26,6 +27,8 @@ from cpchain.chain.agents import ProxyAgent # pylint: disable=no-name-in-module
 from cpchain.chain.utils import default_w3
 from cpchain.utils import join_with_root, join_with_rc, Encoder
 
+logger = logging.getLogger(__name__)
+
 server_root = join_with_rc(config.proxy.server_root)
 server_root = os.path.expanduser(server_root)
 os.makedirs(server_root, exist_ok=True)
@@ -42,7 +45,7 @@ class SSLServerProtocol(NetstringReceiver):
     def connectionMade(self):
         self.factory.numConnections += 1
         self.peer = str(self.transport.getPeer())
-        print("connect to client %s" % self.peer)
+        logger.debug("connect to client %s" % self.peer)
 
     def stringReceived(self, string):
         sign_message = SignMessage()
@@ -79,9 +82,9 @@ class SSLServerProtocol(NetstringReceiver):
             trade.AES_key = data.AES_key
 
             if pub_key_der_to_addr(public_key) != data.seller_addr:
-                print("pubkey seller addr")
-                print(pub_key_der_to_addr(public_key))
-                print(data.seller_addr)
+                logger.debug("pubkey seller addr")
+                logger.debug(pub_key_der_to_addr(public_key))
+                logger.debug(data.seller_addr)
                 error = "not seller's signature"
                 self.proxy_reply_error(error)
                 return
@@ -187,7 +190,7 @@ class SSLServerProtocol(NetstringReceiver):
 
     def connectionLost(self, reason):
         self.factory.numConnections -= 1
-        print("lost connection to client %s" % self.peer)
+        logger.debug("lost connection to client %s" % self.peer)
 
     def proxy_reply_error(self, error):
         message = Message()
@@ -254,7 +257,7 @@ def start_ssl_server():
         join_with_rc(config.proxy.server_crt))
 
     if not os.path.isfile(server_key):
-        print("SSL key/cert file not found, run local self-test by default")
+        logger.info("SSL key/cert file not found, run local self-test by default")
         server_key_sample = 'cpchain/assets/proxy/key/server.key'
         server_crt_sample = 'cpchain/assets/proxy/key/server.crt'
         server_key = join_with_root(server_key_sample)

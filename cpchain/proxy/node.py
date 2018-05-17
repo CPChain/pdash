@@ -175,7 +175,7 @@ if __name__ == '__main__':
 
     elif sys.argv[1] == 'pick_peer':
         def found_peer(peer):
-            print(peer)
+            logger.debug(peer)
             reactor.stop()
 
         peer = Peer()
@@ -185,10 +185,10 @@ if __name__ == '__main__':
         peer = Peer()
         result = peer.get_peer(eth_addr=b'fake_eth_addr',
                                boot_nodes=[('127.0.0.1', 8201)])
-        print(result)
+        logger.debug(result)
 
         def got_peer(peer):
-            print(peer)
+            logger.debug(peer)
             reactor.stop()
 
         peer.get_peer(eth_addr=b'fake_eth_addr',
