@@ -23,10 +23,9 @@ class TestCommentApi(BaseApiTest):
         token, market_hash = self.get_token_market_hash()
         self.add_comment_failed(token,market_hash)
 
-    def test_add_comment_success(self):
-        token, market_hash = self.get_token_market_hash()
-        self.add_comment_success(token,market_hash)
-        pass
+    # def test_add_comment_success(self):
+    #     token, market_hash = self.get_token_market_hash()
+    #     self.add_comment_success(token,market_hash)
 
     def test_query_summary_comment(self):
         token, market_hash = self.get_token_market_hash()

@@ -224,6 +224,117 @@ class AESCipher(BaseCipher):
 
 
 class ECCipher:
+    """
+    # cf. yellow paper
+    # cf. http://tinyurl.com/y8q5g68u
+    """
+    @staticmethod
+    def create_signature(private_key, message):
+        if isinstance(message, str):
+            message = message.encode(encoding="utf-8")
+
+        try:
+            signature = private_key.sign(
+                message,
+                ec.ECDSA(hashes.SHA256()))
+
+        except Exception:
+            logger.exception("generate signature error")
+            return None
+        else:
+            return signature
+
+    @staticmethod
+    def verify_sign(public_key, signature, message):
+        """
+        verify signature
+        Args:
+            public_key:public key object
+            signature:signature string
+            raw_data:data string
+
+        Returns:
+            True: is valid signature;False: is invalid signature
+
+        """
+        if isinstance(message, str):
+            message = message.encode(encoding="utf-8")
+        try:
+            public_key.verify(signature, message, ec.ECDSA(hashes.SHA256()))
+        except Exception:
+            logger.exception("verify signature error")
+            return False
+        else:
+            return True
+
+    # no use
+    @staticmethod
+    def create_private_key(key: 'bytes'):
+        # if isinstance(key, str):
+        #     # TODO base64 decodeing
+        #     pass
+        private_value = int.from_bytes(key, byteorder='big')
+        private_key = ec.derive_private_key(private_value, ec.SECP256K1(), default_backend())
+        return private_key
+
+    @staticmethod
+    def load_private_key(key_path, password):
+        key_bytes = load_private_key_from_keystore(key_path, password)
+        private_key = ECCipher.create_private_key(key_bytes)
+        return private_key
+
+    @staticmethod
+    def load_public_key(key_path, password):
+        private_key = ECCipher.load_private_key(key_path, password)
+        return ECCipher.create_public_key_from_private_key(private_key)
+
+    @staticmethod
+    def create_public_key_from_private_key(private_key):
+        return private_key.public_key()
+
+    # TODO
+    @staticmethod
+    def create_public_key(key):
+        pass
+
+    @staticmethod
+    def load_key_pair(key_path, password):
+        """
+        load geth key pair from a keystore format file
+
+        Args:
+            key_path: keystore key path
+            password: password
+
+        Returns:
+
+        """
+        private_key = ECCipher.load_private_key(key_path, password)
+        public_key = ECCipher.create_public_key_from_private_key(private_key)
+        return private_key, public_key
+
+    @staticmethod
+    def load_public_key_from_bytes(public_key: 'bytes'):
+        return ec.EllipticCurvePublicNumbers. \
+            from_encoded_point(ec.SECP256K1(), public_key). \
+            public_key(backend=default_backend())
+
+    @staticmethod
+    def convert_public_key_to_bytes(public_key):
+        return public_key.public_numbers().encode_point()
+
+    @staticmethod
+    def get_addr_from_public_key(pub_key):
+        # cf. http://tinyurl.com/yaqtjua7
+        # cf. https://kobl.one/blog/create-full-ethereum-keypair-and-address/
+
+        encode_point = pub_key.public_numbers().encode_point()
+
+        # omit the initial '\x04' prepended by openssl.
+        if len(encode_point) == 65:
+            encode_point = encode_point[1:]
+        return keccak(encode_point)[-20:]
+    # =================================================
 
     """
     # cf. yellow paper
@@ -382,6 +493,12 @@ class ECCipher:
             return None
 
     @staticmethod
+    def load_public_key_from_bytes(public_key: 'bytes'):
+        return ec.EllipticCurvePublicNumbers. \
+            from_encoded_point(ec.SECP256K1(), public_key). \
+            public_key(backend=default_backend())
+
+    @staticmethod
     def verify_signature(public_key, signature, raw_data):
         """
         verify signature
@@ -394,6 +511,8 @@ class ECCipher:
             True: is valid signature;False: is invalid signature
 
         """
+        if isinstance(raw_data, str):
+            raw_data = raw_data.encode(encoding="utf-8")
         try:
             loaded_public_key = ec.EllipticCurvePublicNumbers.\
                 from_encoded_point(ec.SECP256K1(), public_key).\
@@ -410,11 +529,6 @@ class ECCipher:
         else:
             return True
 
-    @staticmethod
-    def load_public_key_from_bytes(public_key: 'bytes'):
-        return ec.EllipticCurvePublicNumbers. \
-            from_encoded_point(ec.SECP256K1(), public_key). \
-            public_key(backend=default_backend())
 
 
 class ECDERCipher:
@@ -511,6 +625,7 @@ class ECDERCipher:
         return Encoder.bytes_to_base64_str(serialized_public)
 
 
+
 class ECPEMCipher:
     """
     PEM encoding EC
@@ -583,17 +698,8 @@ class ECPEMCipher:
 
 
 def get_addr_from_public_key(pub_key):
-    # cf. http://tinyurl.com/yaqtjua7
-    # cf. https://kobl.one/blog/create-full-ethereum-keypair-and-address/
-
-    encode_point = pub_key.public_numbers().encode_point()
-
-    # omit the initial '\x04' prepended by openssl.
-    if len(encode_point) == 65:
-        encode_point = encode_point[1:]
-    return keccak(encode_point)[-20:]
-
+    return ECCipher.get_addr_from_public_key(pub_key)
 
 def pub_key_der_to_addr(pub_key):
     pub_key_loaded = serialization.load_der_public_key(pub_key, backend=default_backend())
-    return get_addr_from_public_key(pub_key_loaded)
+    return ECCipher.get_addr_from_public_key(pub_key_loaded)
