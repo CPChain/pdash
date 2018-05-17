@@ -267,7 +267,6 @@ class ECCipher:
         else:
             return True
 
-
         
     @staticmethod
     def create_private_key(key):
@@ -300,6 +299,13 @@ class ECCipher:
     @staticmethod
     def create_public_key(key):
         pass
+
+
+    @staticmethod
+    def serialize_public_key(public_key):
+        key_bytes = public_key.public_numbers().encode_point()
+        hex_str = key_bytes.hex()
+        return hex_str
 
     
     @staticmethod
