@@ -17,7 +17,7 @@ QPushButton#search_btn_sell {
 
 QTableWidget {
     background: #fafafa;
-    alternate-background-color: #c2dffb;
+    alternate-background-color: #d9d9d9;
     border: none;
     border-top: 1px solid #555555;
     color: #555555;

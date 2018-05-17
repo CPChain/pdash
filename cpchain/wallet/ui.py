@@ -262,19 +262,7 @@ class SellTab(QScrollArea):
 
 
         def create_file_table():
-            self.file_table = file_table = TableWidget(self) 
-            def right_menu():
-                self.sell_right_menu = QMenu(file_table)
-                self.sell_delete_act = QAction('Delete', self)
-                self.sell_publish_act = QAction('Publish', self)
-
-                self.sell_delete_act.triggered.connect(self.handle_delete_act)
-                self.sell_publish_act.triggered.connect(self.handle_publish_act)
-
-                self.sell_right_menu.addAction(self.sell_delete_act)
-                self.sell_right_menu.addAction(self.sell_publish_act)
-
-                self.sell_right_menu.exec_(QCursor.pos())
+            self.file_table = file_table = TableWidget(self)
 
             file_table.horizontalHeader().setStretchLastSection(True)
             file_table.verticalHeader().setVisible(False)
@@ -288,7 +276,7 @@ class SellTab(QScrollArea):
             file_table.setColumnCount(7)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
-            file_table.set_right_menu(right_menu)
+
             file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price ($)', 'Order', 'Sales', 'Rating', 'Update Time'])
             file_table.horizontalHeader
             file_table.setSortingEnabled(True)
@@ -724,9 +712,10 @@ class Product(QFrame):
         #self.frame.setMinimumWidth(500)
         self.setMinimumHeight(200)
         self.setMaximumHeight(500)
-        self.title_btn = QPushButton("title")
-        print("xxxxxxxxxxxxxxx")
-        print(self.item['title'])
+        self.title_btn = QPushButton(self.item['title'])
+        self.setMinimumHeight(120)
+        self.setMaximumHeight(130)
+        self.title_btn = QPushButton("Medicine big data from Mayo Clinic")
         self.title_btn.setObjectName("title_btn")
         self.seller_btn = QPushButton("Barack Obama")
         self.seller_btn.setObjectName("seller_btn")
@@ -801,7 +790,7 @@ class PopularTab(QScrollArea):
         self.setWidget(self.frame)
         self.setWidgetResizable(True)
         self.frame.setMinimumWidth(500)
-        self.frame.setMaximumHeight(800)
+        #self.frame.setMaximumHeight(800)
 
         self.item_num_max = 2
         self.promo_num_max = 1
@@ -984,7 +973,7 @@ class CloudTab(QScrollArea):
         print("Updating file list......")
         file_list = []
         # single element data structure (assumed); to be changed 
-        dict_exa = {"type": "mkv", "name": "Infinity War", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "published"}
+        dict_exa = {"type": "mkv", "name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "published"}
         for i in range(self.row_number):
             file_list.append(dict_exa)
 
@@ -1074,7 +1063,7 @@ class CloudTab(QScrollArea):
             #file_list = get_file_list()
             file_list = []
             print("Getting file list.......")
-            dict_exa = {"name": "Infinity War", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
+            dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
             for i in range(self.row_number):
                 file_list.append(dict_exa)
 
