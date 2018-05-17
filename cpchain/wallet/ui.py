@@ -13,17 +13,12 @@ from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont, QPainter
 
 from cpchain import config, root_dir
 from cpchain.wallet.wallet import Wallet
-# from cpchain import join_with_root
-
-# do it before any other twisted code.
-# def install_reactor():
-#     global app
-#     app = QApplication(sys.argv)
-#     import qt5reactor; qt5reactor.install()
-# install_reactor()
+from cpchain.wallet import fs
 
 from twisted.internet import threads, defer, reactor
+from twisted.internet.threads import deferToThread
 from twisted.internet.task import LoopingCall
+
 wallet = Wallet(reactor)
 
 
@@ -1090,6 +1085,9 @@ class Product(QScrollArea):
 
     def init_ui(self):
         #self.frame.setMinimumWidth(500)
+        self.setMinimumHeight(200)
+        self.setMaximumHeight(500)
+        self.title_btn = QPushButton(self.item['title'])
         self.setMinimumHeight(120)
         self.setMaximumHeight(120)
         self.title_btn = QPushButton("Medicine big data from Mayo Clinic")
@@ -1356,35 +1354,33 @@ class CloudTab(QScrollArea):
 
         self.init_ui()
 
-    def update_table(self):
+    def  update_table(self):
         #file_list = get_file_list()
         print("Updating file list......")
-        file_list = []
+        file_list = fs.get_file_list()
         # single element data structure (assumed); to be changed 
-        dict_exa = {"type": "mkv", "name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "published"}
-        for i in range(self.row_number):
-            file_list.append(dict_exa)
-
+        # dict_exa = {"type": "mkv", "name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "published"}
+        # for i in range(self.row_number):
+        #     file_list.append(dict_exa)
+        print(len(file_list))
+        self.row_number = len(file_list)
         for cur_row in range(self.row_number):
-            if cur_row == len(file_list):
-                break
+            # if cur_row == len(file_list):
+            #     break
+            print(str(cur_row) + " row")
             checkbox_item = QTableWidgetItem()
             checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
             checkbox_item.setCheckState(Qt.Unchecked)
             self.file_table.setItem(cur_row, 0, checkbox_item)
-            self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["type"]))
-            self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["name"]))
-            self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
-            self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["remote_type"]))
-            self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
+            # self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].type))
+            self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].name))
+            self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].size))
+            self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].remote_type))
+            self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row].is_published))
 
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
 
-    def handle_upload(self):
-            self.local_file = QFileDialog.getOpenFileName()[0]
-            # defered = threads.deferToThread(upload_file_ipfs, self.local_file)
-            # defered.addCallback(handle_callback_upload)
 
     def init_ui(self):
         self.frame = QFrame()
@@ -1448,26 +1444,35 @@ class CloudTab(QScrollArea):
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.setSortingEnabled(True)
 
-            #file_list = get_file_list()
-            file_list = []
-            print("Getting file list.......")
-            dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
-            for i in range(self.row_number):
-                file_list.append(dict_exa)
 
+            file_list = fs.get_file_list()
+            print(file_list)
+            print("Getting file list.......")
+            # dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
+            # for i in range(self.row_number):
+            #     file_list.append(dict_exa)
+
+            print("type of file_list: ")
+            print(type(file_list))
+            print("type of file record: ")
+            print(type(file_list[0]))
+            print(file_list[0].name)
             self.check_record_list = []
             self.checkbox_list = []
+            self.row_number = len(file_list)
+            print("init cloud table, row num: ")
+            print(self.row_number)
             for cur_row in range(self.row_number):
-                if cur_row == len(file_list):
-                    break
+                # if cur_row == len(file_list):
+                #     break
                 checkbox_item = QTableWidgetItem()
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 checkbox_item.setCheckState(Qt.Unchecked)
                 self.file_table.setItem(cur_row, 0, checkbox_item)
-                self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["name"]))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["size"]))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["remote_type"]))
-                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["is_published"]))
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].name))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].size))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].remote_type))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].is_published))
                 self.check_record_list.append(False)
         create_file_table()    
         self.file_table.sortItems(2)
@@ -1586,8 +1591,21 @@ class CloudTab(QScrollArea):
             if self.file_choice == "":
                 QMessageBox.warning(self, "Warning", "Please select your files to upload first !")
                 return
+            else:
+                if self.ipfs_btn.isChecked():
+                    print("start uploading")
+                    d_upload = deferToThread(fs.upload_file_ipfs, self.file_choice)
+                    d_upload.addCallback(self.handle_ok_callback)
+                if self.s3_btn.isChecked():
+                    print("upload to s3")
+                    # encrypt and uoload self.file_choice
+
             print("Uploading files to....")
             self.close()
+
+        def handle_ok_callback(self, file_hash):
+            print("upload succeed: " + file_hash)
+            self.parent.update_table()
 
     def handle_upload(self):
         # Maybe useful for buyer.
