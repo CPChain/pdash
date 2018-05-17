@@ -91,7 +91,8 @@ class PurchasedTab(QScrollArea):
             self.purchased_main_layout.addWidget(self.purchased_main_tab)
             self.setLayout(self.purchased_main_layout)
         set_layout()
-
+        print("Loading stylesheet of cloud tab widget")
+        load_stylesheet(self, "purchased.qss")
 
 class PurchasedDownloadedTab(QScrollArea):
     class SearchBar(QLineEdit):
@@ -260,8 +261,8 @@ class PurchasedDownloadedTab(QScrollArea):
             self.main_layout.addSpacing(2)
             self.setLayout(self.main_layout)
         set_layout()
-        print("Loading stylesheet of cloud tab widget")
-        load_stylesheet(self, "cloud.qss")
+        #print("Loading stylesheet of cloud tab widget")
+        #load_stylesheet(self, "cloud.qss")
 
     def handle_delete(self):
         for i in range(len(self.check_record_list)):
@@ -414,8 +415,6 @@ class PurchasedDownloadingTab(QScrollArea):
             self.main_layout.addSpacing(2)
             self.setLayout(self.main_layout)
         set_layout()
-        print("Loading stylesheet of cloud tab widget")
-        load_stylesheet(self, "cloud.qss")
 
     def handle_delete(self):
         for i in range(len(self.check_record_list)):
@@ -1372,11 +1371,10 @@ class CloudTab(QScrollArea):
             checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
             checkbox_item.setCheckState(Qt.Unchecked)
             self.file_table.setItem(cur_row, 0, checkbox_item)
-            # self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].type))
-            self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].name))
-            self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].size))
-            self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].remote_type))
-            self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row].is_published))
+            self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].name))
+            self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].size)))
+            self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].remote_type))
+            self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].is_published))
 
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
@@ -1446,32 +1444,23 @@ class CloudTab(QScrollArea):
 
 
             file_list = fs.get_file_list()
-            print(file_list)
-            print("Getting file list.......")
-            # dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
-            # for i in range(self.row_number):
-            #     file_list.append(dict_exa)
-
-            print("type of file_list: ")
-            print(type(file_list))
-            print("type of file record: ")
-            print(type(file_list[0]))
-            print(file_list[0].name)
             self.check_record_list = []
             self.checkbox_list = []
             self.row_number = len(file_list)
             print("init cloud table, row num: ")
             print(self.row_number)
             for cur_row in range(self.row_number):
-                # if cur_row == len(file_list):
+                # if cur_row == len(file_list):export PYTHONPATH=/home/cpchainpublic1/Documents/cpchain/
                 #     break
                 checkbox_item = QTableWidgetItem()
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 checkbox_item.setCheckState(Qt.Unchecked)
                 self.file_table.setItem(cur_row, 0, checkbox_item)
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].name))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row].size))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].remote_type))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].size)))
+                #size
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].name))
+                #remote_type
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].is_published))
                 self.check_record_list.append(False)
         create_file_table()    
@@ -1889,6 +1878,7 @@ class Header(QFrame):
             main_layout.addWidget(self.word_label)
             main_layout.addSpacing(30)
             main_layout.addWidget(self.prev_btn)
+            main_layout.addSpacing(0)
             main_layout.addWidget(self.nex_btn)
             main_layout.addSpacing(2)
             main_layout.addWidget(self.search_bar)
@@ -1950,7 +1940,7 @@ class MainWindow(QMainWindow):
         self.setWindowFlags(Qt.FramelessWindowHint)
 
         def set_geometry():
-            self.resize(1000, 800)  # resize before centering.
+            self.resize(1020, 710)  # resize before centering.
             self.setMinimumSize(800, 800)
             center_pt = QDesktopWidget().availableGeometry().center()
             qrect = self.frameGeometry()
