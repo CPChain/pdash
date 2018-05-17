@@ -19,6 +19,13 @@ QLabel#price_label{
 }
 
 
+QLabel#trans_label, QLabel#forest_label, QLabel#medicine_label{
+    max-width: 250px;
+    max-height: 150px;
+    min-width: 150px;
+    min-height: 90px;
+}
+
 QLabel {
 	color: #555555;
 }
