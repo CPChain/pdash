@@ -484,24 +484,29 @@ class FollowingTagTab(QScrollArea):
         self.follow_item_num = 5
         self.follow_promo_num = 2
 
-        def get_items():
-            print("Getting items from backend......")
-            self.item_lists = []
-            for i in range(self.follow_item_num):
-                self.item_lists.append(Product(self))
-        get_items()
+        self.item_lists = []
 
-        def get_promotion():
+        def get_items(products):
+            print("Getting items from backend......")
+            for i in range(self.item_num_max):
+                self.item_lists.append(Product(self, item=products[i]))
+            set_layout()
+
+        d_products = wallet.market_client.query_recommend_product()
+        d_products.addCallback(get_items)
+
+        self.promo_label = QLabel(self)
+
+        def get_promotion(promotion):
             print("Getting promotion images from backend.....")
-            self.promo_lists = []
-            for i in range(self.follow_promo_num):
-                promo_label = QLabel(self)
-                promo_label.setObjectName("promo_label_{}".format(i))
-                pixmap = get_pixm('cpc-logo-single.png')
-                pixmap = pixmap.scaled(200, 200)
-                promo_label.setPixmap(pixmap)
-                self.promo_lists.append(promo_label)
-        get_promotion()
+            self.promo_label.setObjectName("promo_label")
+            path = osp.join(root_dir, promotion[0]['image'])
+            pixmap = QPixmap(path)
+            pixmap = pixmap.scaled(250, 123)
+            self.promo_label.setPixmap(pixmap)
+
+        d_promotion = wallet.market_client.query_promotion()
+        d_promotion.addCallback(get_promotion)
 
         def set_layout():
             self.follow_main_layout = QHBoxLayout(self)
@@ -518,16 +523,14 @@ class FollowingTagTab(QScrollArea):
                 self.follow_tag_product_layout.addSpacing(1)
 
             self.promo_layout = QVBoxLayout(self)
-            for i in range(self.follow_promo_num):
-                self.follow_tag_promotion_layout.addWidget(self.promo_lists[i])
-                self.follow_tag_promotion_layout.addStretch(1)
+            self.promo_layout.addWidget(self.promo_label)
+            self.promo_layout.addSpacing(1)
 
             self.follow_tag_promotion_layout.addStretch(5)
                     
             self.follow_main_layout.addLayout(self.follow_tag_product_layout)
             #self.bottom_layout.setStretchFactor(recom_layout,4)
             self.follow_main_layout.addLayout(self.follow_tag_promotion_layout)
-        set_layout()
 
 class FollowingSellTab(QScrollArea):
     def __init__(self, parent=None):
@@ -566,24 +569,29 @@ class FollowingSellTab(QScrollArea):
         self.follow_item_num = 5
         self.follow_promo_num = 2
 
-        def get_items():
-            print("Getting items from backend......")
-            self.item_lists = []
-            for i in range(self.follow_item_num):
-                self.item_lists.append(Product(self))
-        get_items()
+        self.item_lists = []
 
-        def get_promotion():
+        def get_items(products):
+            print("Getting items from backend......")
+            for i in range(self.item_num_max):
+                self.item_lists.append(Product(self, item=products[i]))
+            set_layout()
+
+        d_products = wallet.market_client.query_recommend_product()
+        d_products.addCallback(get_items)
+
+        self.promo_label = QLabel(self)
+
+        def get_promotion(promotion):
             print("Getting promotion images from backend.....")
-            self.promo_lists = []
-            for i in range(self.follow_promo_num):
-                promo_label = QLabel(self)
-                promo_label.setObjectName("promo_label_{}".format(i))
-                pixmap = get_pixm('cpc-logo-single')
-                pixmap = pixmap.scaled(250, 123)
-                promo_label.setPixmap(pixmap)
-                self.promo_lists.append(promo_label)
-        get_promotion()
+            self.promo_label.setObjectName("promo_label")
+            path = osp.join(root_dir, promotion[0]['image'])
+            pixmap = QPixmap(path)
+            pixmap = pixmap.scaled(250, 123)
+            self.promo_label.setPixmap(pixmap)
+
+        d_promotion = wallet.market_client.query_promotion()
+        d_promotion.addCallback(get_promotion)
 
         def set_layout():
             
@@ -614,9 +622,8 @@ class FollowingSellTab(QScrollArea):
                 self.follow_tag_product_layout.addSpacing(1)
 
             self.promo_layout = QVBoxLayout(self)
-            for i in range(self.follow_promo_num):
-                self.follow_tag_promotion_layout.addWidget(self.promo_lists[i])
-                self.follow_tag_promotion_layout.addStretch(1)
+            self.promo_layout.addWidget(self.promo_label)
+            self.promo_layout.addSpacing(1)
 
             self.follow_tag_promotion_layout.addStretch(5)
                 
@@ -625,8 +632,6 @@ class FollowingSellTab(QScrollArea):
 
             self.follow_top_layout.addLayout(self.follow_rank_layout)
             self.follow_top_layout.addLayout(self.follow_main_layout)
-
-        set_layout()   
 
 
 class FollowingTab(QScrollArea):
@@ -719,7 +724,9 @@ class Product(QFrame):
         #self.frame.setMinimumWidth(500)
         self.setMinimumHeight(200)
         self.setMaximumHeight(500)
-        self.title_btn = QPushButton(self.item['title'])
+        self.title_btn = QPushButton("title")
+        print("xxxxxxxxxxxxxxx")
+        print(self.item['title'])
         self.title_btn.setObjectName("title_btn")
         self.seller_btn = QPushButton("Barack Obama")
         self.seller_btn.setObjectName("seller_btn")
