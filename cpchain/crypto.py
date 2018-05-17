@@ -298,7 +298,12 @@ class ECCipher:
     
     @staticmethod
     def create_public_key(key):
-        pass
+        if isinstance(key, str):
+            # it's the hex str
+            key = bytes.fromhex(key)
+        public_numbers = ec.EllipticCurvePublicNumbers.from_encoded_point(ec.SECP256K1(), key)
+        public_key = public_numbers.public_key(backend=default_backend()) 
+        return public_key
 
 
     @staticmethod
