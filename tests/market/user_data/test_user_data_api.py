@@ -3,16 +3,8 @@ from tests.market.base_api_test import *
 
 class TestUserDataApi(BaseApiTest):
 
-    def test_user_data_api(self):
-
-        header = {'Content-Type': 'application/json'}
-        nonce = self._login_and_get_nonce(header)
-
-        # ======= generate nonce signature and confirm =======
-        token = self._generate_nonce_signature_and_get_token(header, nonce)
-
-        header["MARKET-KEY"] = self.pub_key_string
-        header["MARKET-TOKEN"] = token
+    def test_upload_user_data_api(self):
+        header = self.get_header()
 
         # ======== test save upload file info in wallet ========
         self._save_upload_file_info(header=header)
@@ -20,69 +12,41 @@ class TestUserDataApi(BaseApiTest):
         # ======== test save buyer file info in wallet ========
         self._save_buyer_file_info(header=header)
 
-        # ======== test query latest version info in wallet ========
-        self._query_latest_version(header=header)
-
         # ======== test pull user data in wallet ========
         self._pull_user_data(header=header)
 
-        # ======== TODO add bookmark =========
+    def test_query_latest_version(self):
+        header = self.get_header()
+        self._query_latest_version(header=header)
+
+    def test_add_query_bookmarks(self):
+        header = self.get_header()
+        # ======== add bookmark =========
+        # {"data": {"bookmark": {"market_hash": "market_hash", "name": "name1", "public_key": "BFz998xEKB7OYHyFrbwqLBdoLkdqW19OrVRhqSqgeP+0YXPRlJ9Oo+LRZlj2z465K6sPM4ESkb15veymDVoFOoA=", "created": "2018-05-15T09:17:22.147000Z"}}, "status": 1, "message": "success"}
         self._add_bookmark(header=header)
 
-        # ======== TODO query bookmarks =========
+        # ======== query bookmarks =========
+        # {"data":
+        # {"bookmarks": [{"market_hash": "market_hash", "name": "name1", "public_key": "BFz998xEKB7OYHyFrbwqLBdoLkdqW19OrVRhqSqgeP+0YXPRlJ9Oo+LRZlj2z465K6sPM4ESkb15veymDVoFOoA=", "created": "2018-05-15T09:17:22.147000Z"}]}
+        # ,"status": 1, "message": "success"}
         self._query_bookmarks(header=header)
 
-        # ======== TODO add tag =========
+    def test_add_query_tags(self):
+        header = self.get_header()
+        # ======== add tag =========
         self._add_tag(header=header)
 
-        # ======== TODO query tags =========
+        # ======== query tags =========
         self._query_tags(header=header)
 
-    def query_product(self, keyword):
-        params = {"keyword": keyword}
-        url = '%s/product/v1/product/search/' % HOST
-        response = requests.get(url, params)
-        print("products:%s" % response)
-        print(response.text)
-        parsed_json = json.loads(response.text)
-        for p in parsed_json:
-            print("title:%s" % p["title"])
-
-    def query_es_product(self):
-        keyword = "testtile"
-        params = {"keyword": keyword}
-        url = '%s/product/v1/es_product/search/' % HOST
-        response = requests.get(url, params)
-        print("products:%s" % response)
-        print(response.text)
-        parsed_json = json.loads(response.text)
-
-        result = parsed_json['results']
-        for p in result:
-            print("title:%s" % p["title"])
-
-    def publish_product(self, token):
-        title = "publish product 12444"
-        description = "test12345654654654654"
-        price = 9527
-        tags = "tag1,tag2"
-        start_date = "2018-04-01 10:10:10"
-        end_date = "2018-12-10 10:10:10"
-        file_md5 = "12345678901234567890"
-        url = '%s/product/v1/product/publish/' % HOST
-        payload = {'owner_address': self.pub_key_string, 'title': title, 'description': description, 'price': price,
-                   'tags': tags, 'start_date': start_date, 'end_date': end_date, 'file_md5': file_md5}
-        signature_source = self.pub_key_string + title + description + str(price) + start_date + end_date + file_md5
-        signature = ECCipher.generate_string_signature(self.pri_key_string, signature_source)
-        payload['signature'] = signature
-        print("publish product request:%s" % payload)
-        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
-        publish_resp = requests.post(url, headers=header, json=payload)
-        self.assertEqual(publish_resp.status_code, 200)
-        print(publish_resp.text)
-        parsed_json = json.loads(publish_resp.text)
-        self.assertEqual(parsed_json['status'], 1)
-        print("market_hash:%s" % parsed_json['data']["market_hash"])
+    def get_header(self):
+        header = {'Content-Type': 'application/json'}
+        nonce = self._login_and_get_nonce(header)
+        # ======= generate nonce signature and confirm =======
+        token = self._generate_nonce_signature_and_get_token(header, nonce)
+        header["MARKET-KEY"] = self.pub_key_string
+        header["MARKET-TOKEN"] = token
+        return header
 
     def _save_upload_file_info(self, header):
         print("======== save upload file info in wallet ========")
@@ -90,8 +54,8 @@ class TestUserDataApi(BaseApiTest):
         payload = {"public_key": self.pub_key_string,
                    "hashcode": "hashcode", "path": "path", "size": 1222,
                    "remote_type": "1", "remote_uri": "remote_uri", "is_published": "True",
-                   "aes_key": "aes_key", "market_hash": "market_hash","name": "nnnn"}
-        url = '%s/user_data/v1/uploaded_file/' % HOST
+                   "aes_key": "aes_key", "market_hash": "market_hash", "name": "nnnn"}
+        url = '%s/user_data/v1/uploaded_file/add/' % HOST
         response = requests.post(url, headers=header, json=payload)
         self.assertEqual(response.status_code, 200)
         parsed_json = json.loads(response.text)
@@ -107,7 +71,7 @@ class TestUserDataApi(BaseApiTest):
                    "market_hash": "market_hash", "file_uuid": "file_uuid",
                    "file_title": "file_title", "path": "path", "size": 1245,
                    "is_downloaded": "True"}
-        url = '%s/user_data/v1/buyer_file/' % HOST
+        url = '%s/user_data/v1/buyer_file/add/' % HOST
         response = requests.post(url, headers=header, json=payload)
         self.assertEqual(response.status_code, 200)
         parsed_json = json.loads(response.text)
@@ -140,14 +104,14 @@ class TestUserDataApi(BaseApiTest):
         version = parsed_json['data']['version']
         print("version:%s" % version)
         status = parsed_json['status']
-        self.assertEqual(1,status)
+        self.assertEqual(1, status)
 
     def _add_bookmark(self, header):
         print("======== add bookmark ========")
 
         payload = {"public_key": self.pub_key_string,
                    "market_hash": "market_hash", "name": "name1"}
-        url = '%s/user_data/v1/bookmark/' % HOST
+        url = '%s/user_data/v1/bookmark/add/' % HOST
         response = requests.post(url, headers=header, json=payload)
         self.assertEqual(response.status_code, 200)
         parsed_json = json.loads(response.text)
@@ -158,21 +122,20 @@ class TestUserDataApi(BaseApiTest):
 
     def _query_bookmarks(self, header):
         print("======== query bookmarks ========")
-        url = '%s/user_data/v1/bookmark/' % HOST
+        url = '%s/user_data/v1/bookmark/search/' % HOST
         response = requests.get(url=url, headers=header)
         print("response:%s" % response)
         print(response.text)
         parsed_json = json.loads(response.text)
 
         bookmarks = parsed_json['data']['bookmarks']
-        print("bookmarks:%s" % bookmarks)
         status = parsed_json['status']
         self.assertEqual(1, status)
 
-    def _add_tag(self,header):
+    def _add_tag(self, header):
         print("======== add tag ========")
         payload = {"tag": "abc11"}
-        url = '%s/user_data/v1/tag/' % HOST
+        url = '%s/user_data/v1/tag/add/' % HOST
         response = requests.post(url, headers=header, json=payload)
         self.assertEqual(response.status_code, 200)
         parsed_json = json.loads(response.text)
@@ -181,9 +144,9 @@ class TestUserDataApi(BaseApiTest):
         message = parsed_json['message']
         print("message:%s" % message)
 
-    def _query_tags(self,header):
+    def _query_tags(self, header):
         print("======== query tags ========")
-        url = '%s/user_data/v1/tag/' % HOST
+        url = '%s/user_data/v1/tag/search/' % HOST
         response = requests.get(url=url, headers=header)
         print("response:%s" % response)
         print(response.text)
@@ -192,4 +155,4 @@ class TestUserDataApi(BaseApiTest):
         tags = parsed_json['data']['tags']
         print("tags:%s" % tags)
         status = parsed_json['status']
-        self.assertEqual(1,status)
+        self.assertEqual(1, status)
