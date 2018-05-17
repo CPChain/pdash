@@ -123,6 +123,23 @@ class PeerProtocol(protocol.DatagramProtocol):
 
             self.send_msg(response, addr)
 
+        elif msg['type'] == 'get_peer':
+            tid = msg['tid']
+            peer_id = msg['peer_id']
+
+            pick_peer = None
+            if peer_id in self.peers:
+                peer = self.peers[peer_id]
+                pick_peer = (peer['addr'][0], peer['peer_info'])
+
+            response = {
+                'type': 'response',
+                'tid': tid,
+                'data': pick_peer
+            }
+
+            self.send_msg(response, addr)
+
         elif msg['type'] == 'response':
             tid = msg['tid']
             data = msg['data']
@@ -141,6 +158,16 @@ class PeerProtocol(protocol.DatagramProtocol):
         }
 
         return self.send_msg(msg, addr)
+
+    def get_peer(self, peer_id, addr):
+        msg = {
+            'type': 'get_peer',
+            'peer_id': peer_id,
+            'tid': generate_tid()
+        }
+
+        return self.send_msg(msg, addr)
+
 
     def bootstrap(self, addr):
         if self.transport is None:
