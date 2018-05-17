@@ -270,8 +270,11 @@ class ECCipher:
 
         
     @staticmethod
-    def create_private_key_from_bytes(key_bytes):
-        private_value = int.from_bytes(key_bytes, byteorder='big')
+    def create_private_key(key):
+        if isintance(key, str):
+            # TODO base64 decodeing
+            pass
+        private_value = int.from_bytes(key, byteorder='big')
         private_key = ec.derive_private_key(private_value, ec.SECP256K1(), default_backend())
         return private_key
 
@@ -279,7 +282,7 @@ class ECCipher:
     @staticmethod
     def load_private_key(key_path, password):
         key_bytes = load_private_key_from_keystore(key_path, password)
-        private_key = create_private_key_from_bytes(key_bytes)
+        private_key = create_private_key(key_bytes)
         return private_key
     
 
@@ -295,9 +298,8 @@ class ECCipher:
 
     
     @staticmethod
-    def create_public_key_from_bytes(key_bytes):
+    def create_public_key(key):
         pass
-        
 
     
     @staticmethod
