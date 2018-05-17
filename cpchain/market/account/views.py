@@ -1,23 +1,15 @@
 from django.core.cache import cache
-from django.http import JsonResponse
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
 
+from cpchain.market.account.permissions import AlreadyLoginUser
 from cpchain.market.account.serializers import *
 from cpchain.market.market.utils import *
 
 logger = logging.getLogger(__name__)
-
-PUBLIC_KEY = "public_key"
-VERIFY_CODE = "code"
-TIMEOUT = 1000
-
-
-def create_invalid_response():
-    return JsonResponse({"status": 0, "message": "invalid request."})
 
 
 class UserLoginAPIView(APIView):
@@ -36,22 +28,32 @@ class UserLoginAPIView(APIView):
         if WalletUser.objects.filter(public_key__exact=public_key):
             return self.generate_verify_code(public_key)
 
-        address = get_addr_from_public_key(public_key)
-        data['address'] = address
+        try:
+            pub_key_bytes = Encoder.str_to_base64_byte(public_key)
+            address = get_addr_from_public_key_object(pub_key_bytes)
+            logger.info("address:%s" % address)
+            WalletUser(address=address,
+                       public_key=public_key
+                       ).save()
+            return self.generate_verify_code(public_key, is_new=True)
+        except:
+            logger.exception("get_addr_from_public_key with %s error" % public_key)
+            return self.generate_verify_code(public_key, is_new=True)
 
         # register wallet user, generate verify code and put it into cache
-        serializer = UserRegisterSerializer(data=data)
-
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return self.generate_verify_code(public_key,is_new=True)
-
-        return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+        # WalletUser(**data).save()
+        # serializer = UserRegisterSerializer(data=data)
+        #
+        # if serializer.is_valid(raise_exception=True):
+        #     serializer.save()
+        #     return self.generate_verify_code(public_key,is_new=True)
+        #
+        # return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
     def generate_verify_code(self, public_key, is_new=False):
         nonce = generate_random_str(6)
         logger.info("put cache public_key:%s, nonce:%s" % (public_key, nonce))
-        cache.set(public_key, nonce, TIMEOUT)
+        cache.set(public_key, nonce, 1000)
         status = 2 if is_new else 1
         return JsonResponse({"status": status, "message": nonce})
 
@@ -67,7 +69,7 @@ class UserLoginConfirmAPIView(APIView):
     def post(self, request):
         data = request.data
         public_key = data.get(PUBLIC_KEY)
-        signature = data.get(VERIFY_CODE)
+        signature = data.get("code")
         logger.info("public_key:%s,signature:%s" % (public_key, signature))
         if public_key is None or signature is None:
             logger.info("public_key is None or code is None. public_key:%s" % public_key)
@@ -122,10 +124,39 @@ class LogoutAPIView(APIView):
             return create_invalid_response()
 
 
+class UpdateProfileAPIView(APIView):
+    queryset = WalletUser.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [AlreadyLoginUser,]
+
+    """
+    TODO API endpoint that update profile.
+    """
+    def post(self, request):
+        data = request.data
+        public_key = data.get(PUBLIC_KEY)
+        logger.info("public_key:%s" % (public_key))
+
+
+        try:
+            user = WalletUser.objects.get(public_key=public_key)
+        except Product.DoesNotExist:
+            return create_invalid_response()
+
+
+        # update profile
+        serializer = UserRegisterSerializer(user, data=data)
+
+        if serializer.is_valid(raise_exception=True):
+            serializer.update(user,data)
+            return create_success_response()
+
+        return create_invalid_response()
+
+
 class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows Products to be viewed by anyone.
     """
     queryset = WalletUser.objects.all()
     serializer_class = UserSerializer
-

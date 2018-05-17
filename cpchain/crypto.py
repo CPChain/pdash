@@ -410,6 +410,12 @@ class ECCipher:
         else:
             return True
 
+    @staticmethod
+    def load_public_key_from_bytes(public_key: 'bytes'):
+        return ec.EllipticCurvePublicNumbers. \
+            from_encoded_point(ec.SECP256K1(), public_key). \
+            public_key(backend=default_backend())
+
 
 class ECDERCipher:
 

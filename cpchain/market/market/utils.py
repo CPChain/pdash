@@ -4,7 +4,7 @@ import random
 
 from django.http import JsonResponse
 
-from cpchain.crypto import ECCipher
+from cpchain.crypto import ECCipher, get_addr_from_public_key
 from cpchain.utils import Encoder, SHA256Hash
 
 logger = logging.getLogger(__name__)
@@ -58,10 +58,10 @@ def sign(pri_key_string, raw_data):
     return ECCipher.generate_string_signature(pri_key_string, raw_data)
 
 
-def get_addr_from_public_key(public_key_string):
-    pub_key_bytes = Encoder.str_to_base64_byte(public_key_string)
-    pub_key_loaded = get_addr_from_public_key(pub_key_bytes)
-    return get_addr_from_public_key(pub_key_loaded)
+def get_addr_from_public_key_object(pub_key_bytes):
+    pub_key = ECCipher.load_public_key_from_bytes(pub_key_bytes)
+    addr_bytes = get_addr_from_public_key(pub_key)
+    return addr_bytes.hex()
 
 
 def create_invalid_response():
