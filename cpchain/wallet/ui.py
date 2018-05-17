@@ -476,7 +476,7 @@ class FollowingTagTab(QScrollArea):
 
         def get_items(products):
             print("Getting items from backend......")
-            for i in range(self.item_num_max):
+            for i in range(self.follow_item_num):
                 self.item_lists.append(Product(self, item=products[i]))
             set_layout()
 
@@ -505,20 +505,20 @@ class FollowingTagTab(QScrollArea):
             self.follow_tag_promotion_layout=QVBoxLayout(self)
             self.follow_tag_promotion_layout.addSpacing(0)
 
-            self.follow_tag_product_layout = QVBoxLayout(self)
             for i in range(self.follow_item_num):
                 self.follow_tag_product_layout.addWidget(self.item_lists[i])
-                self.follow_tag_product_layout.addSpacing(1)
+                self.follow_tag_product_layout.addSpacing(0)
 
-            self.promo_layout = QVBoxLayout(self)
-            self.promo_layout.addWidget(self.promo_label)
-            self.promo_layout.addSpacing(1)
-
+            self.follow_tag_promotion_layout.addWidget(self.promo_label)
             self.follow_tag_promotion_layout.addStretch(5)
                     
             self.follow_main_layout.addLayout(self.follow_tag_product_layout)
+            self.follow_main_layout.addSpacing(1)
             #self.bottom_layout.setStretchFactor(recom_layout,4)
             self.follow_main_layout.addLayout(self.follow_tag_promotion_layout)
+
+            self.setLayout(self.follow_main_layout)
+
 
 class FollowingSellTab(QScrollArea):
     def __init__(self, parent=None):
@@ -527,41 +527,38 @@ class FollowingSellTab(QScrollArea):
         self.setObjectName("follow_sell_tag")
         self.init_ui()
 
-    def init_ui(self):  
+    def init_ui(self):
         self.frame = QFrame()
         self.frame.setObjectName("follow_sell_frame")
         self.setWidget(self.frame)
-
-        self.follow_rank_btn = QPushButton(self)
-        self.follow_time_btn = QPushButton(self)
-        self.follow_price_btn = QPushButton(self)
-        self.follow_sales_btn = QPushButton(self)
-        self.follow_filter_btn = QPushButton(self)
-
-        self.follow_rank_btn.setObjectName("follow_rank_btn")
-        self.follow_time_btn.setObjectName("follow_time_btn")
-        self.follow_price_btn.setObjectName("follow_price_btn")
-        self.follow_sales_btn.setObjectName("follow_sales_btn")
-        self.follow_filter_btn.setObjectName("follow_filter_btn")
-
-        self.follow_rank_btn.setText("Rank")
-        self.follow_time_btn.setText("Time")
-        self.follow_price_btn.setText("Price")
-        self.follow_sales_btn.setText("Sales")
-        self.follow_filter_btn.setText("Filter")
-
         self.setWidgetResizable(True)
         self.frame.setMinimumWidth(500)
-        #self.frame.setMaximumHeight(800) 
+        # self.frame.setMaximumHeight(800)
 
         self.follow_item_num = 5
-        self.follow_promo_num = 2
 
         self.item_lists = []
 
+        def create_btns():
+            self.follow_rank_btn = QPushButton("Rank", self)
+            self.follow_time_btn = QPushButton("Time", self)
+            self.follow_price_btn = QPushButton("Price", self)
+            self.follow_sales_btn = QPushButton("Sales", self)
+            self.follow_filter_btn = QPushButton("Filter", self)
+
+            self.follow_rank_btn.setObjectName("follow_rank_btn")
+            self.follow_time_btn.setObjectName("follow_time_btn")
+            self.follow_price_btn.setObjectName("follow_price_btn")
+            self.follow_sales_btn.setObjectName("follow_sales_btn")
+            self.follow_filter_btn.setObjectName("follow_filter_btn")
+        create_btns()
+
+        self.header_horline = HorizontalLine(self, 2)
+        self.header_horline.setObjectName("header_horline")
+
         def get_items(products):
             print("Getting items from backend......")
-            for i in range(self.item_num_max):
+            for i in range(self.follow_item_num):
                 self.item_lists.append(Product(self, item=products[i]))
             set_layout()
 
@@ -582,9 +579,8 @@ class FollowingSellTab(QScrollArea):
         d_promotion.addCallback(get_promotion)
 
         def set_layout():
-            
-            self.follow_top_layout = QVBoxLayout(self)
-            
+            self.follow_all_layout = QVBoxLayout(self)
+
             self.follow_rank_layout = QHBoxLayout(self)
             self.follow_rank_layout.addWidget(self.follow_rank_btn)
             self.follow_rank_layout.addSpacing(10)
@@ -595,32 +591,32 @@ class FollowingSellTab(QScrollArea):
             self.follow_rank_layout.addWidget(self.follow_sales_btn)
             self.follow_rank_layout.addSpacing(10)
             self.follow_rank_layout.addWidget(self.follow_filter_btn)
-            self.follow_rank_layout.addStretch(1)    
+            self.follow_rank_layout.addStretch(1)
 
             self.follow_main_layout = QHBoxLayout(self)
 
-            self.follow_tag_product_layout=QVBoxLayout(self)
+            self.follow_tag_product_layout = QVBoxLayout(self)
             self.follow_tag_product_layout.addSpacing(0)
-            self.follow_tag_promotion_layout=QVBoxLayout(self)
+
+            self.follow_tag_promotion_layout = QVBoxLayout(self)
             self.follow_tag_promotion_layout.addSpacing(0)
 
-            self.follow_tag_product_layout = QVBoxLayout(self)
             for i in range(self.follow_item_num):
                 self.follow_tag_product_layout.addWidget(self.item_lists[i])
                 self.follow_tag_product_layout.addSpacing(1)
 
-            self.promo_layout = QVBoxLayout(self)
-            self.promo_layout.addWidget(self.promo_label)
-            self.promo_layout.addSpacing(1)
-
+            self.follow_tag_promotion_layout.addWidget(self.promo_label)
             self.follow_tag_promotion_layout.addStretch(5)
-                
+
             self.follow_main_layout.addLayout(self.follow_tag_product_layout)
+            self.follow_main_layout.addSpacing(1)
             self.follow_main_layout.addLayout(self.follow_tag_promotion_layout)
 
-            self.follow_top_layout.addLayout(self.follow_rank_layout)
-            self.follow_top_layout.addLayout(self.follow_main_layout)
+            self.follow_all_layout.addLayout(self.follow_rank_layout)
+            self.follow_all_layout.addWidget(self.header_horline)
+            self.follow_all_layout.addLayout(self.follow_main_layout)
 
+            self.setLayout(self.follow_all_layout)
 
 class FollowingTab(QScrollArea):
 
@@ -713,11 +709,12 @@ class Product(QFrame):
         self.setMinimumHeight(120)
         self.setMaximumHeight(130)
         self.title_btn = QPushButton("Medicine big data from Mayo Clinic")
-
         self.title_btn.setObjectName("title_btn")
+
         self.seller_btn = QPushButton("Barack Obama")
         self.seller_btn.setObjectName("seller_btn")
         self.seller_btn.setCursor(QCursor(Qt.PointingHandCursor))
+
         self.time_label = QLabel("May 4, 2018")
         self.time_label.setObjectName("time_label")
         self.total_sale_label = QLabel("128 sales")
@@ -725,11 +722,14 @@ class Product(QFrame):
         self.price_label = QLabel("$18")
         self.price_label.setObjectName("price_label")
         self.price_label.setFont(QFont("Arial", 15, QFont.Bold))
+
         self.gap_line = HorizontalLine(self, 2)
         self.gap_line.setObjectName("gap_line")
+
         self.tag = ["tag1", "tag2", "tag3", "tag4"]
         self.tag_num = 4
         self.tag_btn_list = []
+
         for i in range(self.tag_num):
             self.tag_btn_list.append(QPushButton(self.tag[i], self))
             self.tag_btn_list[i].setObjectName("tag_btn_{0}".format(i))
@@ -742,7 +742,7 @@ class Product(QFrame):
 
         def setlayout():
             self.main_layout = main_layout = QVBoxLayout(self)
-            main_layout.addSpacing(1)
+            main_layout.addSpacing(0)
             main_layout.addWidget(self.title_btn)
             main_layout.addSpacing(5)
 
@@ -1423,7 +1423,6 @@ class Header(QFrame):
             self.maximize_btn = QPushButton("□", self)
             self.maximize_btn.setObjectName("maxmize_btn")
             self.maximize_btn.setFixedSize(10, 10)
-            self.maximize_btn.clicked.connect(self.parent.showMaximized)
 
             self.close_btn = QPushButton("x", self)
             self.close_btn.setObjectName("close_btn")
