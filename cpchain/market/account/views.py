@@ -37,18 +37,8 @@ class UserLoginAPIView(APIView):
                        ).save()
             return self.generate_verify_code(public_key, is_new=True)
         except:
-            logger.exception("get_addr_from_public_key with %s error" % public_key)
-            return self.generate_verify_code(public_key, is_new=True)
-
-        # register wallet user, generate verify code and put it into cache
-        # WalletUser(**data).save()
-        # serializer = UserRegisterSerializer(data=data)
-        #
-        # if serializer.is_valid(raise_exception=True):
-        #     serializer.save()
-        #     return self.generate_verify_code(public_key,is_new=True)
-        #
-        # return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+            logger.exception("login error with public_key:%s" % public_key)
+            return Response("login error", status=HTTP_400_BAD_REQUEST)
 
     def generate_verify_code(self, public_key, is_new=False):
         nonce = generate_random_str(6)
