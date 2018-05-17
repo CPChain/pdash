@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 
-import sys, os, time
+import os, time
 import logging
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 
-from twisted.internet import reactor, threads, protocol, ssl
+from twisted.internet import threads, protocol
 from twisted.protocols.basic import NetstringReceiver
-from twisted.python import log
 
 from twisted.web.resource import Resource, ForbiddenResource
-from twisted.web.server import Site
 from twisted.web.static import File
 
 from eth_utils import to_bytes
@@ -241,52 +239,3 @@ class FileServer(Resource):
             return File(file_path)
 
         return ForbiddenResource()
-
-
-def start_ssl_server():
-
-    log.startLogging(sys.stdout)
-
-    # control channel
-    factory = SSLServerFactory()
-    control_port = config.proxy.server_ctrl_port
-
-    server_key = os.path.expanduser(
-        join_with_rc(config.proxy.server_key))
-    server_crt = os.path.expanduser(
-        join_with_rc(config.proxy.server_crt))
-
-    if not os.path.isfile(server_key):
-        logger.info("SSL key/cert file not found, run local self-test by default")
-        server_key_sample = 'cpchain/assets/proxy/key/server.key'
-        server_crt_sample = 'cpchain/assets/proxy/key/server.crt'
-        server_key = join_with_root(server_key_sample)
-        server_crt = join_with_root(server_crt_sample)
-
-    reactor.listenSSL(
-        control_port,
-        factory,
-        ssl.DefaultOpenSSLContextFactory(
-            server_key,
-            server_crt
-            )
-        )
-
-    # data channel
-    data_port = config.proxy.server_data_port
-    file_factory = Site(FileServer())
-    reactor.listenSSL(
-        data_port,
-        file_factory,
-        ssl.DefaultOpenSSLContextFactory(
-            server_key,
-            server_crt
-            )
-        )
-
-    reactor.run()
-
-
-
-if __name__ == '__main__':
-    start_ssl_server()
