@@ -479,21 +479,12 @@ class FollowingTagTab(QScrollArea):
             for i in range(self.item_num_max):
                 self.item_lists.append(Product(self, item=products[i]))
             set_layout()
-<<<<<<< HEAD
 
         d_products = wallet.market_client.query_recommend_product()
         d_products.addCallback(get_items)
 
         self.promo_label = QLabel(self)
 
-=======
-
-        d_products = wallet.market_client.query_recommend_product()
-        d_products.addCallback(get_items)
-
-        self.promo_label = QLabel(self)
-
->>>>>>> b74000a7c62c6dc619ef276c3821e3dacabf669a
         def get_promotion(promotion):
             print("Getting promotion images from backend.....")
             self.promo_label.setObjectName("promo_label")
