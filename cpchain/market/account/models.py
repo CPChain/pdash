@@ -11,10 +11,16 @@ class WalletUser(models.Model):
     The wallet user model.
     """
     public_key = models.CharField(max_length=200, unique=True)
-    username = models.CharField(max_length=50)
+    username = models.CharField(max_length=50, null=True)
     created = models.DateTimeField('created', auto_now_add=True)
     active_date = models.DateTimeField('active date', auto_now_add=True)
     status = models.IntegerField('0:normal,1:frozen,2:suspend,3.deleted', default=0)
+    address = models.CharField(max_length=50,null=True)
+    avatar = models.CharField(max_length=50,null=True)
+    email = models.CharField(max_length=50,null=True)
+    gender = models.IntegerField('0:unknown,1:male,2:female', default=0)
+    mobile = models.CharField(max_length=50,null=True)
+    product_number = models.IntegerField(null=True)
 
     USERNAME_FIELD = 'public_key'
     REQUIRED_FIELDS = ['public_key']
