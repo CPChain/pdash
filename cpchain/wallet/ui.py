@@ -428,8 +428,8 @@ class PurchasedDownloadingTab(QScrollArea):
         print("row {} has been removed...".format(self.cur_clicked))
 
 
-class ProductInfoEdit(QScrollArea):
-    def __init__(self, parent=None):
+class PublishDialog(QDialog):
+    def __init__(self, parent=None, item={}):
         super().__init__(parent)
         self.parent = parent
         #for testing this Tab @rayhueng
@@ -437,13 +437,7 @@ class ProductInfoEdit(QScrollArea):
         #self.setObjectName("product_info_tab")
         self.init_ui()
 
-    def init_ui(self):  
-        self.frame = QFrame()
-        self.frame.setObjectName("product_info_frame")
-        self.setWidget(self.frame)
-        self.setWidgetResizable(True)
-        self.frame.setMinimumWidth(500)
-        #self.frame.setMaximumHeight(800) 
+    def init_ui(self):
 
         #Labels def
         self.pinfo_title_label = pinfo_title_label = QLabel("Title:")
@@ -482,11 +476,13 @@ class ProductInfoEdit(QScrollArea):
         self.pinfo_cancel_btn.setObjectName("pinfo_cancel_btn")
         self.pinfo_cancel_btn.setText("Cancel")
         self.pinfo_cancel_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        self.pinfo_cancel_btn.clicked.connect(self.handle_cancel)
 
         self.pinfo_publish_btn = pinfo_publish_btn = QPushButton(self)
         self.pinfo_publish_btn.setObjectName("pinfo_publish_btn")
         self.pinfo_publish_btn.setText("Publish")
         self.pinfo_publish_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        self.pinfo_publish_btn.clicked.connect(self.handle_publish)
 
         self.pinfo_checkbox = pinfo_checkbox = QCheckBox(self)
         self.pinfo_checkbox.setObjectName("pinfo_checkbox")
@@ -537,6 +533,28 @@ class ProductInfoEdit(QScrollArea):
         set_layout()
         print("Loading stylesheet of cloud tab widget")
         load_stylesheet(self, "pinfo.qss")
+
+        self.show()
+
+    def handle_publish(self):
+        self.pinfo_title = self.pinfo_title_edit.text()
+        self.pinfo_descrip = self.pinfo_descrip_edit.toPlainText()
+        self.pinfo_tag = self.pinfo_tag_edit.text()
+        self.pinfo_price = self.pinfo_price_edit.text()
+        self.pinfo_checkbox_state = self.pinfo_checkbox.isChecked()
+        if self.pinfo_title and self.pinfo_descrip and self.pinfo_tag and self.pinfo_price and self.pinfo_checkbox_state:
+            print("Updating item info in wallet database and other relevant databases")
+            print("Updating self.parent tab info: selling tab or cloud tab")
+            QMessageBox.information(self, "Tips", "Successful !")
+            self.close()
+        else:
+            QMessageBox.warning(self, "Warning", "Please fill out the necessary selling information first!")
+
+    def handle_cancel(self):
+        print("exiting the current dialog")
+        self.close()
+        # will be changed next according to calling tab (cloud tab or selling tab)
+
 
 
 
@@ -813,7 +831,7 @@ class SellTab(QScrollArea):
         # row_selected = self.file_table.selectionModel().selectedRows()[0].row()
         # selected_fpath = self.file_table.item(row_selected, 2).text()
         print("Uploading local files....")
-        self.upload_dialog = CloudTab.Upload_Dialog(self)
+        self.upload_dialog = CloudTab.UploadDialog(self)
 
     #def handle_upload(self):
         # Maybe useful for buyer.
@@ -1356,6 +1374,7 @@ class CloudTab(QScrollArea):
     def  update_table(self):
         #file_list = get_file_list()
         print("Updating file list......")
+<<<<<<< HEAD
         file_list = fs.get_file_list()
         # single element data structure (assumed); to be changed 
         # dict_exa = {"type": "mkv", "name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "published"}
@@ -1363,6 +1382,14 @@ class CloudTab(QScrollArea):
         #     file_list.append(dict_exa)
         print(len(file_list))
         self.row_number = len(file_list)
+=======
+        file_list = []
+        # single element data structure (assumed); to be changed
+        dict_exa = {"type": "mkv", "name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "published"}
+        for i in range(self.row_number):
+            file_list.append(dict_exa)
+
+>>>>>>> 6e70403b903424233a662bfa8389b127fc531991
         for cur_row in range(self.row_number):
             # if cur_row == len(file_list):
             #     break
@@ -1442,13 +1469,25 @@ class CloudTab(QScrollArea):
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.setSortingEnabled(True)
 
+<<<<<<< HEAD
+=======
+            #file_list = get_file_list()
+            self.file_list = file_list = []
+            print("Getting file list.......")
+            dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
+            for i in range(self.row_number):
+                self.file_list.append(dict_exa)
+>>>>>>> 6e70403b903424233a662bfa8389b127fc531991
 
             file_list = fs.get_file_list()
             self.check_record_list = []
+<<<<<<< HEAD
             self.checkbox_list = []
             self.row_number = len(file_list)
             print("init cloud table, row num: ")
             print(self.row_number)
+=======
+>>>>>>> 6e70403b903424233a662bfa8389b127fc531991
             for cur_row in range(self.row_number):
                 # if cur_row == len(file_list):export PYTHONPATH=/home/cpchainpublic1/Documents/cpchain/
                 #     break
@@ -1502,7 +1541,7 @@ class CloudTab(QScrollArea):
                 print("Deleting files permanently from the cloud...")
                 self.update_table()
 
-    class Upload_Dialog(QDialog):
+    class UploadDialog(QDialog):
         def __init__(self, parent=None):
             super().__init__()
             self.parent = parent
@@ -1620,8 +1659,10 @@ class CloudTab(QScrollArea):
         print("row {} has been removed...".format(self.cur_clicked))
 
     def handle_publish_act(self):
+        item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
+        self.publish_dialog = PublishDialog(self, item)
+        # self.file_list[self.cur_clicked]
         print("handle publish act....")
-        
 
 
 
@@ -1957,7 +1998,7 @@ class MainWindow(QMainWindow):
             content_tabs.addTab(CloudTab(content_tabs), "")
             content_tabs.addTab(FollowingTab(content_tabs), "")
             content_tabs.addTab(SellTab(content_tabs), "")
-            content_tabs.addTab(ProductInfoEdit(content_tabs), "")
+            # content_tabs.addTab(ProductInfoEdit(content_tabs), "")
             content_tabs.addTab(PurchasedDownloadedTab(content_tabs), "") 
             content_tabs.addTab(PurchasedDownloadingTab(content_tabs), "") 
             content_tabs.addTab(PurchasedTab(content_tabs), "")
