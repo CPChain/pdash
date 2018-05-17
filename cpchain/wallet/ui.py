@@ -1403,7 +1403,6 @@ class CloudTab(QScrollArea):
                 file_list.append(dict_exa)
 
             self.check_record_list = []
-            self.checkbox_list = []
             for cur_row in range(self.row_number):
                 if cur_row == len(file_list):
                     break
