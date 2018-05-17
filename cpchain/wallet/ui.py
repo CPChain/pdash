@@ -1813,6 +1813,13 @@ class Header(QFrame):
             self.maximize_btn = QPushButton("□", self)
             self.maximize_btn.setObjectName("maxmize_btn")
             self.maximize_btn.setFixedSize(10, 10)
+            def toggle_maximization():
+                state = Qt.WindowFullScreen | Qt.WindowMaximized
+                if state & self.parent.windowState():
+                    self.parent.showNormal()
+                else:
+                    self.parent.showMaximized()
+            self.maximize_btn.clicked.connect(toggle_maximization)
 
             self.close_btn = QPushButton("x", self)
             self.close_btn.setObjectName("close_btn")
