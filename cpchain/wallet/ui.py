@@ -48,6 +48,56 @@ def load_stylesheet(wid, name):
         wid.setStyleSheet(s.substitute(subs))
 
 
+class PurchasedTab(QScrollArea):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+        self.parent = parent
+        self.setObjectName("purchase_tab")
+        #self.setObjectName("purchased_downloading_tab")
+        self.init_ui()
+
+    def init_ui(self):
+        self.purchased_dled_tab_btn = purchased_dled_tab_btn = QPushButton("Downloaded")
+        self.purchased_dled_tab_btn.setObjectName("purchased_dled_tab_btn")
+        self.purchased_dling_tab_btn = purchased_dling_tab_btn = QPushButton("Downloading")
+        self.purchased_dling_tab_btn.setObjectName("purchased_dling_tab_btn")
+
+        self.purchased_main_tab = purchased_main_tab = QTabWidget(self)
+        purchased_main_tab.setObjectName("purchased_main_tab")
+        purchased_main_tab.tabBar().hide()
+        # Temporily modified for easy test by @hyiwr
+        purchased_main_tab.addTab(PurchasedDownloadedTab(purchased_main_tab), "")
+        purchased_main_tab.addTab(PurchasedDownloadingTab(purchased_main_tab), "")
+
+        def dled_btn_clicked(item):
+            self.purchased_main_tab.setCurrentIndex(0)
+        
+        self.purchased_dled_tab_btn.clicked.connect(dled_btn_clicked)
+
+        def dling_btn_clicked(item):
+            self.purchased_main_tab.setCurrentIndex(1)
+        
+        self.purchased_dling_tab_btn.clicked.connect(dling_btn_clicked)
+
+
+        def set_layout():
+            self.purchased_main_layout = purchased_main_layout = QVBoxLayout(self)
+
+            #add downloaded/downloading buttons for tab switch
+            self.purchased_switch_layout = purchased_switch_layout = QHBoxLayout(self)
+            self.purchased_switch_layout.addStretch(1)
+            self.purchased_switch_layout.addWidget(self.purchased_dled_tab_btn)
+            self.purchased_switch_layout.addSpacing(0)
+            self.purchased_switch_layout.addWidget(self.purchased_dling_tab_btn)
+            self.purchased_switch_layout.addStretch(1)
+
+            self.purchased_main_layout.addLayout(self.purchased_switch_layout)
+            self.purchased_main_layout.addSpacing(5)
+            self.purchased_main_layout.addWidget(self.purchased_main_tab)
+            self.setLayout(self.purchased_main_layout)
+        set_layout()
+
+
 class PurchasedDownloadedTab(QScrollArea):
     class SearchBar(QLineEdit):
         def __init__(self, parent=None):
@@ -80,8 +130,8 @@ class PurchasedDownloadedTab(QScrollArea):
     def __init__(self, parent = None):
         super().__init__(parent)
         self.parent = parent
-        self.setObjectName("purchase_tab")
-        #self.setObjectName("purchased_downloaded_tab")
+        #self.setObjectName("purchase_tab")
+        self.setObjectName("purchased_downloaded_tab")
         self.init_ui()
 
     def update_table(self):
@@ -105,11 +155,11 @@ class PurchasedDownloadedTab(QScrollArea):
             self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
             self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["price"]))
 
-    def set_right_menu(self, func):
-        self.customContextMenuRequested[QPoint].connect(func)
+    # def set_right_menu(self, func):
+    #     self.customContextMenuRequested[QPoint].connect(func)
 
-    def handle_upload(self):
-            self.local_file = QFileDialog.getOpenFileName()[0]
+    # def handle_upload(self):
+    #         self.local_file = QFileDialog.getOpenFileName()[0]
             #defered = threads.deferToThread(upload_file_ipfs, self.local_file)
             #defered.addCallback(handle_callback_upload)
 
@@ -124,7 +174,7 @@ class PurchasedDownloadedTab(QScrollArea):
         self.purchased_delete_btn = purchased_delete_btn = QPushButton("Delete")
         purchased_delete_btn.setObjectName("purchased_delete_btn")
 
-        self.purchased_delete_btn.clicked.connect(self.handle_upload)
+        self.purchased_delete_btn.clicked.connect(self.handle_delete)
         self.search_bar = PurchasedDownloadedTab.SearchBar(self)
         self.time_label = time_label = QLabel("Time")
         self.open_path = open_path = QLabel("Open file path...")
@@ -134,18 +184,18 @@ class PurchasedDownloadedTab(QScrollArea):
 
         def create_file_table():
             self.file_table = file_table = TableWidget(self) 
-            def right_menu():
-                self.purchased_right_menu = QMenu(file_table)
-                self.purchased_delete_act = QAction('Delete', self)
-                self.purchased_publish_act = QAction('Publish', self)
+            # def right_menu():
+            #     self.purchased_right_menu = QMenu(file_table)
+            #     self.purchased_delete_act = QAction('Delete', self)
+            #     self.purchased_publish_act = QAction('Publish', self)
 
-                self.purchased_delete_act.triggered.connect(self.handle_delete_act)
-                self.purchased_publish_act.triggered.connect(self.handle_publish_act)
+            #     self.purchased_delete_act.triggered.connect(self.handle_delete_act)
+            #     self.purchased_publish_act.triggered.connect(self.handle_publish_act)
 
-                self.purchased_right_menu.addAction(self.purchased_delete_act)
-                self.purchased_right_menu.addAction(self.purchased_publish_act)
+            #     self.purchased_right_menu.addAction(self.purchased_delete_act)
+            #     self.purchased_right_menu.addAction(self.purchased_publish_act)
 
-                self.purchased_right_menu.exec_(QCursor.pos())
+            #     self.purchased_right_menu.exec_(QCursor.pos())
 
             file_table.horizontalHeader().setStretchLastSection(True)
             file_table.verticalHeader().setVisible(False)
@@ -159,7 +209,7 @@ class PurchasedDownloadedTab(QScrollArea):
             file_table.setColumnCount(5)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
-            file_table.set_right_menu(right_menu)
+            #file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price', 'Size', 'Order Time'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.setSortingEnabled(True)
@@ -197,19 +247,19 @@ class PurchasedDownloadedTab(QScrollArea):
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self)
             main_layout.addSpacing(0)
-            self.purchased_upper_layout = QHBoxLayout(self)
-            self.purchased_upper_layout.addSpacing(0)
-            self.purchased_upper_layout.addWidget(self.purchased_total_orders_label)
-            self.purchased_upper_layout.addSpacing(10)
-            self.purchased_upper_layout.addWidget(self.search_bar)
-            self.purchased_upper_layout.addSpacing(10)
-            self.purchased_upper_layout.addWidget(self.time_label)
-            self.purchased_upper_layout.addSpacing(10)           
-            self.purchased_upper_layout.addWidget(self.open_path)
-            self.purchased_upper_layout.addStretch(1)
-            self.purchased_upper_layout.addWidget(self.purchased_delete_btn)
+            self.purchased_dled_upper_layout = QHBoxLayout(self)
+            self.purchased_dled_upper_layout.addSpacing(0)
+            self.purchased_dled_upper_layout.addWidget(self.purchased_total_orders_label)
+            self.purchased_dled_upper_layout.addSpacing(10)
+            self.purchased_dled_upper_layout.addWidget(self.search_bar)
+            self.purchased_dled_upper_layout.addSpacing(10)
+            self.purchased_dled_upper_layout.addWidget(self.time_label)
+            self.purchased_dled_upper_layout.addSpacing(10)           
+            self.purchased_dled_upper_layout.addWidget(self.open_path)
+            self.purchased_dled_upper_layout.addStretch(1)
+            self.purchased_dled_upper_layout.addWidget(self.purchased_delete_btn)
 
-            self.main_layout.addLayout(self.purchased_upper_layout)
+            self.main_layout.addLayout(self.purchased_dled_upper_layout)
             self.main_layout.addSpacing(2)
             self.main_layout.addWidget(self.file_table)
             self.main_layout.addSpacing(2)
@@ -225,17 +275,17 @@ class PurchasedDownloadedTab(QScrollArea):
                 print("Deleting files permanently from the cloud...")
                 self.update_table()
 
-    def handle_delete_act(self):
-        self.file_table.removeRow(self.cur_clicked)
-        print("row {} has been removed...".format(self.cur_clicked))
+    # def handle_delete_act(self):
+    #     self.file_table.removeRow(self.cur_clicked)
+    #     print("row {} has been removed...".format(self.cur_clicked))
 
 
 class PurchasedDownloadingTab(QScrollArea):
     def __init__(self, parent = None):
         super().__init__(parent)
         self.parent = parent
-        self.setObjectName("purchase_tab")
-        #self.setObjectName("purchased_downloading_tab")
+        #self.setObjectName("purchase_tab")
+        self.setObjectName("purchased_downloading_tab")
         self.init_ui()
 
     def update_table(self):
@@ -265,18 +315,21 @@ class PurchasedDownloadingTab(QScrollArea):
             self.local_file = QFileDialog.getOpenFileName()[0]
 
     def init_ui(self):
-
         self.check_list = []
         self.purchased_total_orders = 103
         self.num_file = 100
         self.cur_clicked = 0
+
         self.purchased_total_orders_label = purchased_total_orders_label = QLabel("Total Orders: {}".format(self.purchased_total_orders))
         purchased_total_orders_label.setObjectName("purchased_total_orders_label")
-        self.purchased_delete_btn = purchased_delete_btn = QPushButton("Delete")
-        purchased_delete_btn.setObjectName("purchased_delete_btn")
+        self.purchased_dling_delete_btn = purchased_dling_delete_btn = QPushButton("Delete")
+        purchased_dling_delete_btn.setObjectName("purchased_dling_delete_btn")
+        self.purchased_dling_start_btn = purchased_dling_start_btn = QPushButton("Start")
+        purchased_dling_start_btn.setObjectName("purchased_dling_start_btn")
+        self.purchased_dling_pause_btn = purchased_dling_pause_btn = QPushButton("Pause")
+        purchased_dling_pause_btn.setObjectName("purchased_dling_pause_btn")
 
-        self.purchased_delete_btn.clicked.connect(self.handle_upload)
-        self.search_bar = PurchasedDownloadedTab.SearchBar(self)
+        self.purchased_dling_delete_btn.clicked.connect(self.handle_upload)
         self.time_label = time_label = QLabel("Time")
         self.open_path = open_path = QLabel("Open file path...")
     
@@ -307,18 +360,18 @@ class PurchasedDownloadingTab(QScrollArea):
             file_table.setFocusPolicy(Qt.NoFocus) 
             # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
-            file_table.setColumnCount(5)
+            file_table.setColumnCount(4)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             file_table.set_right_menu(right_menu)
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price', 'Size', 'Order Time'])
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Progress', 'Size', 'Order Time'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.setSortingEnabled(True)
 
             #file_list = get_file_list()
             file_list = []
             print("Getting file list.......")
-            dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "ordertime": "2018/2/4 08:30", "price": "36"}
+            dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "ordertime": "2018/2/4 08:30", "price": "36", "progress": "50%"}
             for i in range(self.row_number):
                 file_list.append(dict_exa)
 
@@ -332,9 +385,8 @@ class PurchasedDownloadingTab(QScrollArea):
                 checkbox_item.setCheckState(Qt.Unchecked)
                 self.file_table.setItem(cur_row, 0, checkbox_item)
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["name"]))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["price"]))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
-                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["ordertime"]))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["progress"]))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["ordertime"]))
                 self.check_record_list.append(False)
         create_file_table()    
         self.file_table.sortItems(2)
@@ -351,14 +403,15 @@ class PurchasedDownloadingTab(QScrollArea):
             self.purchased_upper_layout = QHBoxLayout(self)
             self.purchased_upper_layout.addSpacing(0)
             self.purchased_upper_layout.addWidget(self.purchased_total_orders_label)
-            self.purchased_upper_layout.addSpacing(10)
-            self.purchased_upper_layout.addWidget(self.search_bar)
-            self.purchased_upper_layout.addSpacing(10)
-            self.purchased_upper_layout.addWidget(self.time_label)
-            self.purchased_upper_layout.addSpacing(10)           
+            self.purchased_upper_layout.addSpacing(10)         
             self.purchased_upper_layout.addWidget(self.open_path)
             self.purchased_upper_layout.addStretch(1)
-            self.purchased_upper_layout.addWidget(self.purchased_delete_btn)
+            self.purchased_upper_layout.addWidget(self.purchased_dling_start_btn)
+            self.purchased_upper_layout.addSpacing(10)
+            self.purchased_upper_layout.addWidget(self.purchased_dling_pause_btn)
+            self.purchased_upper_layout.addSpacing(10)            
+            self.purchased_upper_layout.addWidget(self.purchased_dling_delete_btn)
+            self.purchased_upper_layout.addSpacing(5)
 
             self.main_layout.addLayout(self.purchased_upper_layout)
             self.main_layout.addSpacing(2)
@@ -1897,6 +1950,8 @@ class MainWindow(QMainWindow):
             content_tabs.addTab(SellTab(content_tabs), "")
             content_tabs.addTab(ProductInfoEdit(content_tabs), "")
             content_tabs.addTab(PurchasedDownloadedTab(content_tabs), "") 
+            content_tabs.addTab(PurchasedDownloadingTab(content_tabs), "") 
+            content_tabs.addTab(PurchasedTab(content_tabs), "")
             print("Adding tabs(browse, etc.) to content_tabs")
             print("Loading stylesheet to content_tabs")
         add_content_tabs()
