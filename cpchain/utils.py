@@ -96,6 +96,14 @@ class Encoder:
         """
         return base64.b64decode(b64string.encode("utf-8"))
 
+    @staticmethod
+    def bytes_to_hex(hex_bytes):
+        return hex_bytes.hex()
+
+    @staticmethod
+    def hex_to_bytes(hex_string):
+        return bytes.fromhex(hex_string)
+
 
 class SHA256Hash:
 

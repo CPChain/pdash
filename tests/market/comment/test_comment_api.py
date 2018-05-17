@@ -6,7 +6,8 @@ class TestCommentApi(BaseApiTest):
     def test_query_comment_list(self):
 
         token, market_hash = self.get_token_market_hash()
-        self.add_comment(token,market_hash)
+        self.add_comment_failed(token,market_hash)
+        # self.add_comment_success(token, market_hash)
 
         url = '%s/comment/v1/comment/list/?market_hash=%s' % (HOST,market_hash)
         print("url:", url)
@@ -17,10 +18,14 @@ class TestCommentApi(BaseApiTest):
         for p in parsed_json['data']:
             print("content:%s" % p["content"])
 
-    def test_add_comment(self):
+    def test_add_comment_failed(self):
 
         token, market_hash = self.get_token_market_hash()
-        self.add_comment(token,market_hash)
+        self.add_comment_failed(token,market_hash)
+
+    # def test_add_comment_success(self):
+    #     token, market_hash = self.get_token_market_hash()
+    #     self.add_comment_success(token,market_hash)
 
     def test_query_summary_comment(self):
         token, market_hash = self.get_token_market_hash()
@@ -68,7 +73,20 @@ class TestCommentApi(BaseApiTest):
         print("market_hash:%s" % parsed_json['data']["market_hash"])
         return parsed_json['data']["market_hash"]
 
-    def add_comment(self, token, market_hash):
+    def add_comment_failed(self, token, market_hash):
+        url = '%s/comment/v1/comment/add/' % HOST
+        payload = {'public_key': self.pub_key_string, 'market_hash':market_hash, 'content':'test111'}
+        print("add_comment request:%s" % payload)
+        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
+        response = requests.post(url, headers=header, json=payload)
+
+        print("response:%s" % response)
+        print(response.text)
+        parsed_json = json.loads(response.text)
+        self.assertEqual(parsed_json['status'], 0)
+
+    def add_comment_success(self, token, market_hash):
+        # TODO need create tx record first
         url = '%s/comment/v1/comment/add/' % HOST
         payload = {'public_key': self.pub_key_string, 'market_hash':market_hash, 'content':'test111'}
         print("add_comment request:%s" % payload)

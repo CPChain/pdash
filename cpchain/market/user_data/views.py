@@ -1,5 +1,11 @@
-from django.http import JsonResponse
 from rest_framework.views import APIView
+from cpchain.market.account.permissions import AlreadyLoginUser
+from cpchain.market.market.utils import *
+from cpchain.market.user_data.models import UploadFileInfo, BuyerFileInfo, UserInfoVersion, ProductTag, Bookmark
+from cpchain.market.user_data.serializers import UploadFileInfoSerializer, UserInfoVersionSerializer, \
+    BuyerFileInfoSerializer, ProductTagSerializer, BookmarkSerializer
+from rest_framework.views import APIView
+
 from cpchain.market.account.permissions import AlreadyLoginUser
 from cpchain.market.market.utils import *
 from cpchain.market.user_data.models import UploadFileInfo, BuyerFileInfo, UserInfoVersion, ProductTag, Bookmark
@@ -11,14 +17,6 @@ logger = logging.getLogger(__name__)
 PUBLIC_KEY = "public_key"
 VERIFY_CODE = "code"
 TIMEOUT = 1000
-
-
-def create_invalid_response():
-    return JsonResponse({'status': 0, "message": "invalid request."})
-
-
-def create_success_response():
-    return JsonResponse({'status': 1, 'message': 'success'})
 
 
 def increase_data_version(public_key):

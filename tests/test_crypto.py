@@ -31,6 +31,7 @@ class CryptoTest(unittest.TestCase):
         print("new_signature is:", new_signature)
         self.assertIsNotNone(new_signature)
 
+        # is_valid_sign = ECCipher.verify_sign(new_pub_key, new_signature, sample)
         is_valid_sign = ECCipher.verify_signature(new_pub_key, new_signature, sample)
         print("is valid new_signature:", is_valid_sign)
         self.assertTrue(is_valid_sign)

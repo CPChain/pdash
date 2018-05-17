@@ -32,7 +32,7 @@ class Account:
     def __init__(self, key_path, key_passphrase=None):
         if not key_passphrase:
             key_passphrase = input("Input Key Passphrase: ")
-        self.priv_key, self.pub_key = crypto.ECCipher.load_key_pair_from_keystore(key_path, key_passphrase)
+        self.private_key, self.public_key = crypto.ECCipher.load_key_pair(key_path, key_passphrase)
 
 if __name__ == '__main__':
     accounts = Accounts()
