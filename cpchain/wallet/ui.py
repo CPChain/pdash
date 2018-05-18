@@ -70,13 +70,16 @@ class PurchasedTab(QScrollArea):
 
         def dled_btn_clicked(item):
             self.purchased_main_tab.setCurrentIndex(0)
-            #self.tag_btn_list[i].setProperty("t_value", 1)
-        
+            self.purchased_dled_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8;  border-radius: 5px; color: #ffffff; min-height: 30px; max-height: 30px; background: #3173d8; }")
+            self.purchased_dling_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8;  border-radius: 5px; color: #3173d8; min-height: 30px; max-height: 30px; background: #ffffff; }")
+                   
         self.purchased_dled_tab_btn.clicked.connect(dled_btn_clicked)
 
         def dling_btn_clicked(item):
             self.purchased_main_tab.setCurrentIndex(1)
-        
+            self.purchased_dling_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8;  border-radius: 5px; color: #ffffff; min-height: 30px; max-height: 30px; background: #3173d8; }")
+            self.purchased_dled_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8;  border-radius: 5px; color: #3173d8; min-height: 30px; max-height: 30px; background: #ffffff; }")
+
         self.purchased_dling_tab_btn.clicked.connect(dling_btn_clicked)
 
 
@@ -109,7 +112,7 @@ class PurchasedDownloadedTab(QScrollArea):
         def init_ui(self):
             self.setObjectName("search_bar")
             self.setFixedSize(300, 25)
-            self.setTextMargins(3, 0, 20, 0)
+            self.setTextMargins(25, 0, 20, 0)
 
             self.search_btn_cloud = search_btn_cloud = QPushButton(self)
             search_btn_cloud.setObjectName("search_btn")
@@ -122,9 +125,9 @@ class PurchasedDownloadedTab(QScrollArea):
 
             def set_layout():
                 main_layout = QHBoxLayout()
-                main_layout.addStretch(1)
                 main_layout.addWidget(search_btn_cloud)
-                main_layout.setContentsMargins(0, 0, 0, 0)
+                main_layout.addStretch()
+                main_layout.setContentsMargins(5, 0, 0, 0)
                 self.setLayout(main_layout)
             set_layout()
 
@@ -584,14 +587,14 @@ class SellTab(QScrollArea):
             self.init_ui()
 
         def init_ui(self):
-            self.setObjectName("search_bar_sell")
+            self.setObjectName("search_bar")
             self.setFixedSize(300, 25)
-            self.setTextMargins(3, 0, 20, 0)
+            self.setTextMargins(25, 0, 20, 0)
 
-            self.search_btn_sell = search_btn_sell = QPushButton(self)
-            search_btn_sell.setObjectName("search_btn_sell")
-            search_btn_sell.setFixedSize(18, 18)
-            search_btn_sell.setCursor(QCursor(Qt.PointingHandCursor))
+            self.search_btn_cloud = search_btn_cloud = QPushButton(self)
+            search_btn_cloud.setObjectName("search_btn_sell")
+            search_btn_cloud.setFixedSize(18, 18)
+            search_btn_cloud.setCursor(QCursor(Qt.PointingHandCursor))
 
             def bind_slots():
                 print("Binding slots of clicked-search-btn......")
@@ -599,9 +602,9 @@ class SellTab(QScrollArea):
 
             def set_layout():
                 main_layout = QHBoxLayout()
-                main_layout.addStretch(1)
-                main_layout.addWidget(search_btn_sell)
-                main_layout.setContentsMargins(0, 0, 0, 0)
+                main_layout.addWidget(search_btn_cloud)
+                main_layout.addStretch()
+                main_layout.setContentsMargins(5, 0, 0, 0)
                 self.setLayout(main_layout)
             set_layout()
 
@@ -1364,7 +1367,7 @@ class CloudTab(QScrollArea):
         def init_ui(self):
             self.setObjectName("search_bar")
             self.setFixedSize(300, 25)
-            self.setTextMargins(3, 0, 20, 0)
+            self.setTextMargins(25, 0, 20, 0)
 
             self.search_btn_cloud = search_btn_cloud = QPushButton(self)
             search_btn_cloud.setObjectName("search_btn_cloud")
@@ -1377,9 +1380,9 @@ class CloudTab(QScrollArea):
 
             def set_layout():
                 main_layout = QHBoxLayout()
-                main_layout.addStretch(1)
                 main_layout.addWidget(search_btn_cloud)
-                main_layout.setContentsMargins(0, 0, 0, 0)
+                main_layout.addStretch()
+                main_layout.setContentsMargins(5, 0, 0, 0)
                 self.setLayout(main_layout)
             set_layout()
 
@@ -1782,12 +1785,12 @@ class Header(QFrame):
         def init_ui(self):
             self.setObjectName("search_bar")
             self.setFixedSize(300, 25)
-            self.setTextMargins(3, 0, 20, 0)
+            self.setTextMargins(25, 0, 20, 0)
 
-            self.search_btn = search_btn = QPushButton(self)
-            search_btn.setObjectName("search_btn")
-            search_btn.setFixedSize(18, 18)
-            search_btn.setCursor(QCursor(Qt.PointingHandCursor))
+            self.search_btn_cloud = search_btn_cloud = QPushButton(self)
+            search_btn_cloud.setObjectName("search_btn")
+            search_btn_cloud.setFixedSize(18, 18)
+            search_btn_cloud.setCursor(QCursor(Qt.PointingHandCursor))
 
             def bind_slots():
                 print("Binding slots of clicked-search-btn......")
@@ -1795,9 +1798,9 @@ class Header(QFrame):
 
             def set_layout():
                 main_layout = QHBoxLayout()
-                main_layout.addStretch(1)
-                main_layout.addWidget(search_btn)
-                main_layout.setContentsMargins(0, 0, 0, 0)
+                main_layout.addWidget(search_btn_cloud)
+                main_layout.addStretch()
+                main_layout.setContentsMargins(5, 0, 0, 0)
                 self.setLayout(main_layout)
             set_layout()
 
