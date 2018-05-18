@@ -1,3 +1,17 @@
+QLineEdit#search_bar{
+    /* border: 1px solid #724f61;    */
+    border-radius: 5px;
+    border: 1px solid #d7d7d7;
+    /* color: #0f0000; */
+    /* background: #5b4b19; */
+    /* background: #423611; */
+}
+
+QLineEdit#search_bar:hover {
+    border-radius: 5px;
+    border: 1px solid #3984f7;
+}
+
 QPushButton#search_btn_sell {
     border: none;
     outline: none;
@@ -93,14 +107,6 @@ QTableWidget.QHeaderView::section {
     border: 1px solid #c9c9c9;
 }
 
-QLineEdit.SearchBar{
-    border-radius: 7px;
-    border-color: #d7d7d7;
-}
-
-QLineEdit.SearchBar:hover{
-    border-color: #3984f7;
-}
 
 QTableWidget {
     background: #fafafa;
