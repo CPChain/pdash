@@ -32,11 +32,14 @@ class SSLClientProtocol(NetstringReceiver):
         message = Message()
         message.ParseFromString(string)
         valid = message_sanity_check(message)
+
         if not valid or message.type != Message.PROXY_REPLY:
             # should never happen
-            message = proxy_reply_error("wrong server response")
+            proxy_reply = proxy_reply_error("wrong server response")
+        else:
+            proxy_reply = message.proxy_reply
 
-        self.factory.d.callback(message)
+        self.factory.d.callback(proxy_reply)
 
         self.transport.loseConnection()
 
@@ -54,8 +57,8 @@ class SSLClientFactory(protocol.ClientFactory):
         return SSLClientProtocol(self)
 
     def clientConnectionFailed(self, connector, reason):
-        message = proxy_reply_error("connection failed")
-        self.d.callback(message)
+        proxy_reply = proxy_reply_error("connection failed")
+        self.d.callback(proxy_reply)
 
 
 def proxy_reply_error(error):
@@ -63,7 +66,7 @@ def proxy_reply_error(error):
     message.type = Message.PROXY_REPLY
     proxy_reply = message.proxy_reply
     proxy_reply.error = error
-    return message
+    return proxy_reply
 
 
 def start_client(sign_message, addr=None):
@@ -87,7 +90,20 @@ def start_client(sign_message, addr=None):
     reactor.connectSSL(host, port, factory,
                        ssl.ClientContextFactory())
 
-    return factory.d
+    def handle_proxy_response(proxy_reply):
+
+        if not proxy_reply.error:
+            logger.debug('file_uuid: %s' % proxy_reply.file_uuid)
+            logger.debug('AES_key: %s' % proxy_reply.AES_key.decode())
+        else:
+            logger.debug(proxy_reply.error)
+
+        return proxy_reply
+
+    d = factory.d
+    d.addBoth(handle_proxy_response)
+
+    return d
 
 
 def download_file(file_uuid):
@@ -108,18 +124,6 @@ def download_file(file_uuid):
     d.addBoth(lambda _: f.close())
     return d
 
-
-def handle_proxy_response(message):
-
-    assert message.type == Message.PROXY_REPLY
-
-    proxy_reply = message.proxy_reply
-
-    if not proxy_reply.error:
-        logger.debug('file_uuid: %s' % proxy_reply.file_uuid)
-        logger.debug('AES_key: %s' % proxy_reply.AES_key.decode())
-    else:
-        logger.debug(proxy_reply.error)
 
 # Code below for testing purpose only, pls. ignore.
 # Will be removed in formal release.
@@ -176,8 +180,6 @@ if __name__ == '__main__':
             )
 
         d = start_client(sign_message)
-
-        d.addBoth(handle_proxy_response)
         d.addBoth(lambda _: reactor.stop())
 
     elif test_type == 'buyer_data':
@@ -198,7 +200,6 @@ if __name__ == '__main__':
             )
 
         d = start_client(sign_message)
-        d.addBoth(handle_proxy_response)
         d.addBoth(lambda _: reactor.stop())
 
     elif test_type == 'proxy_reply':
@@ -215,7 +216,6 @@ if __name__ == '__main__':
             )
 
         d = start_client(sign_message)
-        d.addBoth(handle_proxy_response)
         d.addBoth(lambda _: reactor.stop())
 
     reactor.run()
