@@ -85,6 +85,7 @@ class PurchasedTab(QScrollArea):
 
             #add downloaded/downloading buttons for tab switch
             self.purchased_switch_layout = purchased_switch_layout = QHBoxLayout(self)
+            self.purchased_switch_layout.setContentsMargins(0, 0, 0, 0) 
             self.purchased_switch_layout.addStretch(1)
             self.purchased_switch_layout.addWidget(self.purchased_dled_tab_btn)
             self.purchased_switch_layout.addSpacing(0)
