@@ -2,6 +2,7 @@
 import sys, os
 import os.path as osp
 import string
+import logging
 
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, 
@@ -23,6 +24,8 @@ wallet = Wallet(reactor)
 
 
 # utils
+logger = logging.getLogger(__name__)
+
 def get_icon(name):
     path = osp.join(root_dir, "cpchain/assets/wallet/icons", name)
     return QIcon(path)
@@ -41,6 +44,180 @@ def load_stylesheet(wid, name):
     with open(path) as f:
         s = string.Template(f.read())
         wid.setStyleSheet(s.substitute(subs))
+
+# widgets
+class CollectedTab(QScrollArea):
+    class SearchBar(QLineEdit):
+        def __init__(self, parent=None):
+            super().__init__(parent)
+            self.parent = parent
+            self.init_ui()
+
+        def init_ui(self):
+            self.setObjectName("search_bar")
+            self.setFixedSize(300, 25)
+            self.setTextMargins(25, 0, 20, 0)
+
+            self.search_btn_cloud = search_btn_cloud = QPushButton(self)
+            search_btn_cloud.setObjectName("search_btn")
+            search_btn_cloud.setFixedSize(18, 18)
+            search_btn_cloud.setCursor(QCursor(Qt.PointingHandCursor))
+
+            def bind_slots():
+                print("Binding slots of clicked-search-btn......")
+
+            bind_slots()
+
+            def set_layout():
+                main_layout = QHBoxLayout()
+                main_layout.addWidget(search_btn_cloud)
+                main_layout.addStretch()
+                main_layout.setContentsMargins(5, 0, 0, 0)
+                self.setLayout(main_layout)
+
+            set_layout()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+        # self.setObjectName("purchase_tab")
+        self.setObjectName("collect_tab")
+        self.init_ui()
+
+    def update_table(self):
+        # file_list = get_file_list()
+        print("Updating file list......")
+        file_list = []
+        # single element data structure (assumed); to be changed
+        dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "ordertime": "2018/2/4 08:30",
+                    "price": "36"}
+        for i in range(self.row_number):
+            file_list.append(dict_exa)
+
+        for cur_row in range(self.row_number):
+            if cur_row == len(file_list):
+                break
+            checkbox_item = QTableWidgetItem()
+            checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+            checkbox_item.setCheckState(Qt.Unchecked)
+            self.file_table.setItem(cur_row, 0, checkbox_item)
+            self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["name"]))
+            self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["price"]))
+            self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
+
+    # def set_right_menu(self, func):
+    #     self.customContextMenuRequested[QPoint].connect(func)
+
+    # def handle_upload(self):
+    #         self.local_file = QFileDialog.getOpenFileName()[0]
+    # defered = threads.deferToThread(upload_file_ipfs, self.local_file)
+    # defered.addCallback(handle_callback_upload)
+
+    def init_ui(self):
+
+        self.check_list = []
+        self.purchased_total_orders = 103
+        self.num_file = 100
+        self.cur_clicked = 0
+
+        self.purchased_dled_delete_btn = purchased_dled_delete_btn = QPushButton("Delete")
+        purchased_dled_delete_btn.setObjectName("purchased_dled_delete_btn")
+
+        self.purchased_dled_delete_btn.clicked.connect(self.handle_delete)
+        self.search_bar = PurchasedDownloadedTab.SearchBar(self)
+
+        self.row_number = 100
+
+        def create_file_table():
+            self.file_table = file_table = TableWidget(self)
+            # def right_menu():
+            #     self.purchased_right_menu = QMenu(file_table)
+            #     self.purchased_delete_act = QAction('Delete', self)
+            #     self.purchased_publish_act = QAction('Publish', self)
+
+            #     self.purchased_delete_act.triggered.connect(self.handle_delete_act)
+            #     self.purchased_publish_act.triggered.connect(self.handle_publish_act)
+
+            #     self.purchased_right_menu.addAction(self.purchased_delete_act)
+            #     self.purchased_right_menu.addAction(self.purchased_publish_act)
+
+            #     self.purchased_right_menu.exec_(QCursor.pos())
+
+            file_table.horizontalHeader().setStretchLastSection(True)
+            file_table.verticalHeader().setVisible(False)
+            file_table.setShowGrid(False)
+            file_table.setAlternatingRowColors(True)
+            file_table.resizeColumnsToContents()
+            file_table.resizeRowsToContents()
+            file_table.setFocusPolicy(Qt.NoFocus)
+            # do not highlight (bold-ize) the header
+            file_table.horizontalHeader().setHighlightSections(False)
+            file_table.setColumnCount(5)
+            file_table.setRowCount(self.row_number)
+            file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+            # file_table.set_right_menu(right_menu)
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price', 'Size', 'Order Time'])
+            file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+            file_table.setSortingEnabled(True)
+
+            # file_list = get_file_list()
+            file_list = []
+            print("Getting file list.......")
+            dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "ordertime": "2018/2/4 08:30",
+                        "price": "36"}
+            for i in range(self.row_number):
+                file_list.append(dict_exa)
+
+            self.check_record_list = []
+            self.checkbox_list = []
+            for cur_row in range(self.row_number):
+                if cur_row == len(file_list):
+                    break
+                checkbox_item = QTableWidgetItem()
+                checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+                checkbox_item.setCheckState(Qt.Unchecked)
+                self.file_table.setItem(cur_row, 0, checkbox_item)
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["name"]))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["price"]))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
+                self.check_record_list.append(False)
+
+        create_file_table()
+        self.file_table.sortItems(2)
+
+        # record rows that are clicked or checked
+        def record_check(item):
+            self.cur_clicked = item.row()
+            if item.checkState() == Qt.Checked:
+                self.check_record_list[item.row()] = True
+
+        self.file_table.itemClicked.connect(record_check)
+
+        def set_layout():
+            self.main_layout = main_layout = QVBoxLayout(self)
+            main_layout.addSpacing(0)
+            self.purchased_dled_upper_layout = QHBoxLayout(self)
+            self.purchased_dled_upper_layout.addSpacing(0)
+            self.purchased_dled_upper_layout.addWidget(self.search_bar)
+            self.purchased_dled_upper_layout.addSpacing(10)
+            self.purchased_dled_upper_layout.addWidget(self.purchased_dled_delete_btn)
+
+            self.main_layout.addLayout(self.purchased_dled_upper_layout)
+            self.main_layout.addSpacing(2)
+            self.main_layout.addWidget(self.file_table)
+            self.main_layout.addSpacing(2)
+            self.setLayout(self.main_layout)
+
+        set_layout()
+        # print("Loading stylesheet of cloud tab widget")
+        # load_stylesheet(self, "cloud.qss")
+
+    def handle_delete(self):
+        for i in range(len(self.check_record_list)):
+            if self.check_record_list[i] == True:
+                self.file_table.removeRow(i)
+                print("Deleting files permanently from the cloud...")
+                self.update_table()
 
 
 
@@ -335,7 +512,7 @@ class PurchasedDownloadingTab(QScrollArea):
         self.purchased_dling_pause_btn = purchased_dling_pause_btn = QPushButton("Pause")
         purchased_dling_pause_btn.setObjectName("purchased_dling_pause_btn")
 
-        self.purchased_dling_delete_btn.clicked.connect(self.handle_upload)
+        self.purchased_dling_delete_btn.clicked.connect(self.handle_purchased_delete)
         self.time_label = time_label = QLabel("Time")
         self.open_path = open_path = QLabel("Open file path...")
     
@@ -432,16 +609,15 @@ class PurchasedDownloadingTab(QScrollArea):
             self.setLayout(self.main_layout)
         set_layout()
 
-    def handle_delete(self):
+    def handle_purchased_delete(self):
+        # TODO: delete event
         for i in range(len(self.check_record_list)):
             if self.check_record_list[i] == True:
                 self.file_table.removeRow(i)
-                print("Deleting files permanently from the cloud...")
-                self.update_table()
-
-    def handle_delete_act(self):
-        self.file_table.removeRow(self.cur_clicked)
-        print("row {} has been removed...".format(self.cur_clicked))
+                #self.update_table()
+        logger.debug("Delete the corresponding row (i.e. self.cur_clicked) in TableWidget as before")
+        logger.debug("Cancel uploading from backend")
+        logger.debug("Uploading the table")
 
 
 class PublishDialog(QDialog):
@@ -603,7 +779,7 @@ class SellTab(QScrollArea):
                 self.setLayout(main_layout)
             set_layout()
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("selling_tab")
@@ -1864,8 +2040,19 @@ class Header(QFrame):
 
         def handle_login(self):
             print("check access......")
-            QMessageBox.information(self, "Tips", "Successful !")
+            d_login = wallet.market_client.login()
+
+            def login_result(status):
+                if status == 1:
+                    QMessageBox.information(self, "Tips", "Successful !")
+                elif status == 2:
+                    QMessageBox.information(self, "Tips", "Failed !")
+                else:
+                    QMessageBox.information(self, "Tips", "New Users !")
+                    # TODO: jump to userfile
+            d_login.addCallback(login_result)
             self.close()
+
 
 
     def __init__(self, parent):
@@ -2072,7 +2259,8 @@ class MainWindow(QMainWindow):
             content_tabs.addTab(PurchasedDownloadedTab(content_tabs), "") 
             content_tabs.addTab(PurchasedDownloadingTab(content_tabs), "") 
             content_tabs.addTab(PurchasedTab(content_tabs), "")
-            print("Adding tabs(browse, etc.) to content_tabs")
+            content_tabs.addTab(CollectedTab(content_tabs), "")
+            print("Adding tabs(shopping cart tab, etc.) to content_tabs")
             print("Loading stylesheet to content_tabs")
         add_content_tabs()
 
