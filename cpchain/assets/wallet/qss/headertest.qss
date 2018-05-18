@@ -1,10 +1,8 @@
 QLabel {
-    /* Set the color of CPChain */
-    /* dont know why adding #word_label will not work */
     color: #fefefe;
 }
 
-QLineEdit#searchbar {
+QLineEdit#search_bar {
     margin-left: 5px;
     /* border: 1px solid #724f61;    */
     border-radius: 10px;
@@ -15,7 +13,7 @@ QLineEdit#searchbar {
     background: #FCFCFC;
 }
 
-QLineEdit#searchbar:pressed {
+QLineEdit#search_bar:pressed {
     color: #434343;
 }
 
@@ -110,11 +108,11 @@ QPushButton#login_btn {
     background: #443b3b;
 }
 
-QPushButton#profilepage_btn:pressed {
+QPushButton#profile_page_btn:pressed {
     background: #5ca7ee;
 }
 
-QPushButton#profilepage_btn {
+QPushButton#profile_page_btn {
     min-height: 35px; 
     min-width: 35px;  
     max-width: 35px; 
@@ -135,3 +133,9 @@ QPushButton#profile_btn {
 QPushButton#login_btn:hover {
     color: #efacac;
 }
+
+QPushButton#close_btn, QPushButton#maxmize_btn, QPushButton#minimize_btn{
+    outline: none;
+}
+
+

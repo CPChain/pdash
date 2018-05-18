@@ -1,3 +1,16 @@
 QWidget#main_window {
     background: #006bcf;
 }
+
+QTableWidget#content_tabs {
+    border: none;
+    outline: none; 
+    background: #006bcf;
+}
+
+QScrollArea{
+    border: none;
+    outline: none; 
+    background: #fafafa;
+}
+

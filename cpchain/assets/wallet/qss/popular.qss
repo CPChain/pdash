@@ -1,11 +1,10 @@
 QScrollArea {
 	border: none;
     outline: none;
-
 }
 
-QFrame.HorLine {
-	color: #e5e5e5;
+QFrame.HorizontalLine {
+    color: #e5e5e5;
 }
 
 QFrame#popular_frame {
@@ -17,6 +16,14 @@ QFrame#popular_frame {
 QLabel#price_label{
 	color: #006bcf;
 	/*background: #006bcf;*/
+}
+
+
+QLabel#trans_label, QLabel#forest_label, QLabel#medicine_label{
+    max-width: 250px;
+    max-height: 150px;
+    min-width: 150px;
+    min-height: 90px;
 }
 
 QLabel {
@@ -62,23 +69,86 @@ QPushButton#seller_btn {
     background: none;
 }
 
-QPushButton#tag_btn_0, QPushButton#tag_btn_1, QPushButton#tag_btn_2, QPushButton#tag_btn_3 {
+/* Specifying QSS for each tag*/
+QPushButton[t_value = "1"] {
+    padding-left: 5px;
+    padding-right: 5px;
     min-height: 20px; 
     min-width: 50px;  
     max-width: 50px; 
     max-height: 20px;
-    border-image: url(${asset_dir}/icons/Tag.png);
-    background: none;
-    color: #006bcf;
+    border: 1px solid #ececec;
+    border-radius: 5px;
+    background: #ececec;
+    color: #202020;
+    text-align: center;
 }
 
-
-QPushButton#tag_btn_0:pressed, QPushButton#tag_btn_1:pressed, QPushButton#tag_btn_2:pressed, QPushButton#tag_btn_3:pressed {
-    min-height: 20px; 
-    min-width: 50px;  
-    max-width: 50px; 
-    max-height: 20px;
-    border-image: url(${asset_dir}/icons/Tag.png);
-    background: none;
+QPushButton[t_value = "1"]:pressed{
+    background-color: #cfe3f5;
+    border: 1px solid #cfe3f5;
     color: #006bcf;
 }
+/* END Specifying QSS for each tag*/
+
+QScrollBar:vertical{
+width:12px;
+border:1px solid rgba(0,0,0,50);
+margin:0px,0px,0px,0px;
+padding-top:15px;
+padding-bottom:15px;
+}
+
+QScrollBar::handle:vertical{
+width:16px;
+background:rgba(0,0,0,25%);
+min-height:20;
+}
+
+QScrollBar::handle:vertical:hover{
+background:rgba(0,0,0,50%);
+border:0px rgba(0,0,0,25%);
+}
+
+QScrollBar::sub-line:vertical{
+height:15px;
+border-image:url(:/Res/scroll_up.png);
+subcontrol-position:top;
+}
+
+QScrollBar::sub-line:vertical:hover{
+height:15px;
+background:rgba(0,0,0,25%);
+subcontrol-position:top;
+}
+
+QScrollBar::add-line:vertical{
+height:15px;
+border-image:url(:/Res/scroll_down.png);
+subcontrol-position:bottom;
+}
+
+QScrollBar::add-line:vertical:hover{
+height:15px;
+background:rgba(0,0,0,25%);
+subcontrol-position:bottom;
+}
+
+QScrollBar::add-page:vertical{
+background:rgb(255,255,255);
+}
+
+QScrollBar::sub-page:vertical{
+background:rgb(255,255,255);
+}
+
+QScrollBar::up-arrow:vertical{
+border-width:0px;
+max-height:16px;
+min-width:17px;
+}
+
+QScrollBar::down-arrow:vertical{
+border-style:outset;
+border-width:0px;
+} 

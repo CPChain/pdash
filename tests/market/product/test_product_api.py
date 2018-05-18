@@ -110,9 +110,9 @@ class TestProductApi(BaseApiTest):
             print("title:%s" % p["title"])
 
     def publish_product(self, token):
-        title = "publish product 12444"
+        title = "Medicine big data from Mayo Clinic"
         description = "test12345654654654654"
-        price = 9527
+        price = 15
         tags = "tag1,tag2"
         start_date = "2018-04-01 10:10:10"
         end_date = "2018-12-10 10:10:10"

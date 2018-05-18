@@ -49,7 +49,7 @@ class Wallet:
 
 def main():
     wallet = Wallet(reactor)
-
+    wallet.market_client.query_recommend_product()
     sys.exit(reactor.run())
 
 
