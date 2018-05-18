@@ -71,20 +71,23 @@ QPushButton#seller_btn {
 
 /* Specifying QSS for each tag*/
 QPushButton[t_value = "1"] {
+    padding-left: 5px;
+    padding-right: 5px;
     min-height: 20px; 
     min-width: 50px;  
     max-width: 50px; 
     max-height: 20px;
-    border: 1px solid #006bcf;
-    border-radius: 10px;
-    background: none;
-    color: #006bcf;
+    border: 1px solid #ececec;
+    border-radius: 5px;
+    background: #ececec;
+    color: #202020;
     text-align: center;
 }
 
 QPushButton[t_value = "1"]:pressed{
-    background-color: #006bcf;
-    color: #fefefe;
+    background-color: #cfe3f5;
+    border: 1px solid #cfe3f5;
+    color: #006bcf;
 }
 /* END Specifying QSS for each tag*/
 
