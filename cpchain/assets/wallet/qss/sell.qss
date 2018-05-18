@@ -1,3 +1,9 @@
+QPushButton#search_btn_sell {
+    border: none;
+    outline: none;
+    border-image: url(${asset_dir}/icons/search_btn.png); 
+}
+
 QPushButton#sell_publish_btn{
     padding-left: 14px;
     padding-right: 14px;
@@ -94,12 +100,6 @@ QLineEdit.SearchBar{
 
 QLineEdit.SearchBar:hover{
     border-color: #3984f7;
-}
-
-QPushButton#search_btn_sell {
-    border: none;
-    outline: none;
-    border-image: url(${asset_dir}/icons/search_btn.png); 
 }
 
 QTableWidget {

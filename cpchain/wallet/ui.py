@@ -66,6 +66,7 @@ class PurchasedTab(QScrollArea):
 
         def dled_btn_clicked(item):
             self.purchased_main_tab.setCurrentIndex(0)
+            #self.tag_btn_list[i].setProperty("t_value", 1)
         
         self.purchased_dled_tab_btn.clicked.connect(dled_btn_clicked)
 
@@ -167,10 +168,10 @@ class PurchasedDownloadedTab(QScrollArea):
         self.cur_clicked = 0
         self.purchased_total_orders_label = purchased_total_orders_label = QLabel("Total Orders: {}".format(self.purchased_total_orders))
         purchased_total_orders_label.setObjectName("purchased_total_orders_label")
-        self.purchased_delete_btn = purchased_delete_btn = QPushButton("Delete")
-        purchased_delete_btn.setObjectName("purchased_delete_btn")
+        self.purchased_dled_delete_btn = purchased_dled_delete_btn = QPushButton("Delete")
+        purchased_dled_delete_btn.setObjectName("purchased_dled_delete_btn")
 
-        self.purchased_delete_btn.clicked.connect(self.handle_delete)
+        self.purchased_dled_delete_btn.clicked.connect(self.handle_delete)
         self.search_bar = PurchasedDownloadedTab.SearchBar(self)
         self.time_label = time_label = QLabel("Time")
         self.open_path = open_path = QLabel("Open file path...")
@@ -253,7 +254,7 @@ class PurchasedDownloadedTab(QScrollArea):
             self.purchased_dled_upper_layout.addSpacing(10)           
             self.purchased_dled_upper_layout.addWidget(self.open_path)
             self.purchased_dled_upper_layout.addStretch(1)
-            self.purchased_dled_upper_layout.addWidget(self.purchased_delete_btn)
+            self.purchased_dled_upper_layout.addWidget(self.purchased_dled_delete_btn)
 
             self.main_layout.addLayout(self.purchased_dled_upper_layout)
             self.main_layout.addSpacing(2)
@@ -1374,7 +1375,6 @@ class CloudTab(QScrollArea):
     def  update_table(self):
         #file_list = get_file_list()
         print("Updating file list......")
-<<<<<<< HEAD
         file_list = fs.get_file_list()
         # single element data structure (assumed); to be changed 
         # dict_exa = {"type": "mkv", "name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "published"}
@@ -1382,14 +1382,12 @@ class CloudTab(QScrollArea):
         #     file_list.append(dict_exa)
         print(len(file_list))
         self.row_number = len(file_list)
-=======
         file_list = []
         # single element data structure (assumed); to be changed
         dict_exa = {"type": "mkv", "name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "published"}
         for i in range(self.row_number):
             file_list.append(dict_exa)
 
->>>>>>> 6e70403b903424233a662bfa8389b127fc531991
         for cur_row in range(self.row_number):
             # if cur_row == len(file_list):
             #     break
@@ -1469,25 +1467,20 @@ class CloudTab(QScrollArea):
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.setSortingEnabled(True)
 
-<<<<<<< HEAD
-=======
             #file_list = get_file_list()
             self.file_list = file_list = []
             print("Getting file list.......")
             dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
             for i in range(self.row_number):
                 self.file_list.append(dict_exa)
->>>>>>> 6e70403b903424233a662bfa8389b127fc531991
 
             file_list = fs.get_file_list()
             self.check_record_list = []
-<<<<<<< HEAD
             self.checkbox_list = []
             self.row_number = len(file_list)
             print("init cloud table, row num: ")
             print(self.row_number)
-=======
->>>>>>> 6e70403b903424233a662bfa8389b127fc531991
+
             for cur_row in range(self.row_number):
                 # if cur_row == len(file_list):export PYTHONPATH=/home/cpchainpublic1/Documents/cpchain/
                 #     break
