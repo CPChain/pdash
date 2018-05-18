@@ -27,14 +27,23 @@ class CryptoTest(unittest.TestCase):
         self.assertIsNotNone(new_pri_key)
         self.assertIsNotNone(new_pub_key)
 
-        new_signature = ECCipher.generate_signature(new_pri_key, sample)
+        new_signature = self.generate_signature(new_pri_key, sample)
         print("new_signature is:", new_signature)
         self.assertIsNotNone(new_signature)
 
-        # is_valid_sign = ECCipher.verify_sign(new_pub_key, new_signature, sample)
-        is_valid_sign = ECCipher.verify_signature(new_pub_key, new_signature, sample)
+        pub_key = ECCipher.create_public_key(new_pub_key)
+        is_valid_sign = ECCipher.verify_sign(pub_key, new_signature, sample)
+
         print("is valid new_signature:", is_valid_sign)
         self.assertTrue(is_valid_sign)
+
+    @staticmethod
+    def generate_signature(pri_key_string_bytes, raw_data_bytes):
+        try:
+            loaded_private_key = ECCipher._load_private_key_from_bytes(pri_key_string_bytes)
+            return ECCipher.create_signature(loaded_private_key,raw_data_bytes)
+        except Exception:
+            return None
 
     def test_generate_key_pair_signature_and_verify_geth(self):
         sample = b"qZaQ6S"
@@ -46,11 +55,13 @@ class CryptoTest(unittest.TestCase):
         self.assertIsNotNone(new_pri_key)
         self.assertIsNotNone(new_pub_key)
 
-        new_signature = ECCipher.generate_signature(new_pri_key, sample)
+        new_signature = self.generate_signature(new_pri_key, sample)
         print("new_signature is:", new_signature)
         self.assertIsNotNone(new_signature)
 
-        is_valid_sign = ECCipher.verify_signature(new_pub_key, new_signature, sample)
+        pub_key = ECCipher.create_public_key(new_pub_key)
+        is_valid_sign = ECCipher.verify_sign(pub_key, new_signature, sample)
+
         print("is valid new_signature:", is_valid_sign)
         self.assertTrue(is_valid_sign)
 
@@ -124,7 +135,8 @@ def verify_geth_signature(pub_key_string, signature, raw_data_string):
     pub_key_string_bytes = Encoder.str_to_base64_byte(pub_key_string)
     sig_bytes = Encoder.str_to_base64_byte(signature)
     raw_data = raw_data_string.encode(encoding="utf-8")
-    return ECCipher.verify_signature(pub_key_string_bytes, sig_bytes, raw_data)
+    pub_key = ECCipher.create_public_key(pub_key_string_bytes)
+    return ECCipher.verify_sign(pub_key, sig_bytes, raw_data)
 
 
 if __name__ == '__main__':
