@@ -21,7 +21,7 @@ sign_message_verify, is_address_from_key
 # from cpchain.crypto import ECCipher # pylint: disable=no-name-in-module
 
 from cpchain.storage import IPFSStorage
-from cpchain.proxy.proxy_db import Trade, ProxyDB
+from cpchain.proxy.db import Trade, ProxyDB
 # from cpchain.chain.agents import ProxyAgent # pylint: disable=no-name-in-module
 # from cpchain.chain.utils import default_w3
 # from cpchain.utils import join_with_root, join_with_rc, Encoder
