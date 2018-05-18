@@ -65,6 +65,7 @@ QTableWidget {
 }
 
 QTableWidget::item {
+    padding: 5px;
     border: none;
     outline: none;
     outline-style: none;
@@ -96,6 +97,9 @@ QPushButton#search_btn_sell {
     border-image: url(${asset_dir}/icons/search_btn.png); 
 }
 
+QProgressBar{
+    padding: 5px;
+}
 
 /*QPushButton[c_flag = "1"]{
     padding-left: 14px;
