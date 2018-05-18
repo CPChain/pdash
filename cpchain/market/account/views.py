@@ -29,8 +29,7 @@ class UserLoginAPIView(APIView):
             return self.generate_verify_code(public_key)
 
         try:
-            pub_key_bytes = Encoder.str_to_base64_byte(public_key)
-            address = get_addr_from_public_key_object(pub_key_bytes)
+            address = get_address_from_public_key_object(public_key)
             logger.info("address:%s" % address)
             WalletUser(address=address,
                        public_key=public_key
@@ -58,30 +57,30 @@ class UserLoginConfirmAPIView(APIView):
 
     def post(self, request):
         data = request.data
-        public_key = data.get(PUBLIC_KEY)
+        public_key_string = data.get(PUBLIC_KEY)
         signature = data.get("code")
-        logger.info("public_key:%s,signature:%s" % (public_key, signature))
-        if public_key is None or signature is None:
-            logger.info("public_key is None or code is None. public_key:%s" % public_key)
-            return create_invalid_response()
-
-        verify_code = cache.get(public_key)
-        if verify_code is None:
-            logger.info("verify_code not found for public_key:%s" % public_key)
-            return create_invalid_response()
-
-        if not is_valid_signature(public_key, verify_code, signature):
+        logger.info("public_key_string:%s,signature:%s" % (public_key_string, signature))
+        if public_key_string is None or signature is None:
+            logger.info("public_key is None or code is None. public_key:%s" % public_key_string)
             return create_invalid_response()
 
         try:
-            user = WalletUser.objects.get(public_key__exact=public_key)
+            verify_code = cache.get(public_key_string)
+            if verify_code is None:
+                logger.info("verify_code not found for public_key:%s" % public_key_string)
+                return create_invalid_response()
+
+            if not is_valid_signature(public_key_string, verify_code, signature):
+                return create_invalid_response()
+
+            user = WalletUser.objects.get(public_key__exact=public_key_string)
         except WalletUser.DoesNotExist:
             return create_invalid_response()
 
         try:
-            existing_token = Token.objects.get(public_key=public_key)
+            existing_token = Token.objects.get(public_key=public_key_string)
         except Token.DoesNotExist:
-            existing_token = Token.objects.create(user=user, public_key=public_key)
+            existing_token = Token.objects.create(user=user, public_key=public_key_string)
 
         serializer = TokenSerializer(existing_token)
         return JsonResponse({"status": 1, "message": serializer.data['key']})

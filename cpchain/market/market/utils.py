@@ -33,9 +33,10 @@ def generate_random_str(randomlength=16):
     return random_str
 
 
-def is_valid_signature(public_key, raw_data, signature):
-    # TODO verify signature of public_key+verify_code
-    logger.debug("is_valid_verify_code public_key:" + public_key + ",raw_data:" + raw_data + ",signature:" + signature)
+def is_valid_signature(public_key_string, raw_data, signature):
+    public_key_bytes = Encoder.hex_to_bytes(public_key_string)
+    public_key = ECCipher.create_public_key(public_key_bytes)
+    logger.debug("is_valid_verify_code public_key:" + public_key_string + ",raw_data:" + raw_data + ",signature:" + signature)
     return verify_signature(public_key, signature, raw_data)
 
 
@@ -47,23 +48,23 @@ def generate_msg_hash(msg_hash_source):
     return SHA256Hash.generate_hash(msg_hash_source)
 
 
-def verify_signature(pub_key_string, signature, raw_data_string):
-    pub_key_string_bytes = Encoder.str_to_base64_byte(pub_key_string)
-    signature_bytes = Encoder.str_to_base64_byte(signature)
+def verify_signature(public_key, signature, raw_data_string):
     raw_data = raw_data_string.encode(encoding="utf-8")
-    pub_key = ECCipher.create_public_key(pub_key_string_bytes)
-    return ECCipher.verify_sign(pub_key, signature_bytes, raw_data)
+    return ECCipher.verify_sign(public_key, signature, raw_data)
 
 
-def sign(pri_key_string, raw_data):
-    return ECCipher.generate_string_signature(pri_key_string, raw_data)
+def sign(private_key, message):
+    return ECCipher.create_signature(private_key=private_key, message=message)
 
 
-def get_addr_from_public_key_object(pub_key_bytes):
-    pub_key = ECCipher.create_public_key(pub_key_bytes)
-    # pub_key = ECCipher.load_public_key_from_bytes(pub_key_bytes)
+def get_address_from_public_key_object(pub_key_string):
+    pub_key = get_public_key(pub_key_string)
     return ECCipher.get_address_from_public_key(pub_key)
 
+
+def get_public_key(public_key_string):
+    pub_key_bytes = Encoder.hex_to_bytes(public_key_string)
+    return ECCipher.create_public_key(pub_key_bytes)
 
 def create_invalid_response():
     return JsonResponse({"status": 0, "message": "invalid request"})
