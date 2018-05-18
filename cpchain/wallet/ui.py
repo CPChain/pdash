@@ -7,7 +7,7 @@ import string
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, 
                              QVBoxLayout, QGridLayout, QWidget, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel,
                              QWidget, QLineEdit, QSpacerItem, QSizePolicy, QTableWidget, QFormLayout, QComboBox, QTextEdit,
-                             QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox)
+                             QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
 from PyQt5.QtCore import Qt, QSize, QPoint, pyqtSignal
 from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont, QPainter
 
@@ -305,9 +305,13 @@ class PurchasedDownloadingTab(QScrollArea):
             checkbox_item = QTableWidgetItem()
             checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
             checkbox_item.setCheckState(Qt.Unchecked)
+            dling_progressbar = QProgressBar()
+            dling_progressbar.setMaximum(100)
+            dling_progressbar.setMinimum(0)
+            dling_progressbar.setValue(49)
             self.file_table.setItem(cur_row, 0, checkbox_item)
             self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["name"]))
-            self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["progress"]))
+            self.file_table.setCellWidget(cur_row, 2, dling_progressbar)
             self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["ordertime"]))
 
     def set_right_menu(self, func):
@@ -366,7 +370,7 @@ class PurchasedDownloadingTab(QScrollArea):
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             file_table.set_right_menu(right_menu)
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Progress', 'Size', 'Order Time'])
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Progress', 'Order Time'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.setSortingEnabled(True)
 
@@ -385,12 +389,18 @@ class PurchasedDownloadingTab(QScrollArea):
                 checkbox_item = QTableWidgetItem()
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 checkbox_item.setCheckState(Qt.Unchecked)
+                dling_progressbar = QProgressBar()
+                dling_progressbar.setMaximum(100)
+                dling_progressbar.setMinimum(0)
+                dling_progressbar.setValue(49)
                 self.file_table.setItem(cur_row, 0, checkbox_item)
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["name"]))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["progress"]))
+                self.file_table.setCellWidget(cur_row, 2, dling_progressbar)
+                #self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["progress"]))
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["ordertime"]))
                 self.check_record_list.append(False)
         create_file_table()    
+
         self.file_table.sortItems(2)
         # record rows that are clicked or checked
         def record_check(item):
@@ -1220,7 +1230,7 @@ class PopularTab(QScrollArea):
 
         self.hot_label = QLabel("Hot Industry")
         self.hot_label.setObjectName("hot_label")
-        self.hot_label.setFont(QFont("Arial", 13, QFont.Light))
+        self.hot_label.setFont(QFont("Arial", 13))
         self.hot_label.setMinimumHeight(2)
         self.hot_label.setMaximumHeight(25)
 
