@@ -1618,7 +1618,7 @@ class CloudTab(QScrollArea):
         self.search_bar = CloudTab.SearchBar(self)
         self.time_label = time_label = QLabel("Time")
     
-        self.row_number = 100
+        self.row_number = 6
 
 
         def create_file_table():
@@ -2238,8 +2238,8 @@ class MainWindow(QMainWindow):
         self.setWindowFlags(Qt.FramelessWindowHint)
 
         def set_geometry():
-            self.resize(1020, 710)  # resize before centering.
-            self.setMinimumSize(800, 800)
+            self.resize(1002, 710)  # resize before centering.
+            self.setMinimumSize(800, 500)
             center_pt = QDesktopWidget().availableGeometry().center()
             qrect = self.frameGeometry()
             qrect.moveCenter(center_pt)
