@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
-import sys, os
+import os
 import logging
 
 from twisted.internet import reactor, protocol, ssl, defer, _sslverify
 from twisted.protocols.basic import NetstringReceiver
-from twisted.python import log
 
 import treq
 
@@ -84,8 +83,6 @@ def proxy_reply_error(error):
 
 def start_client(sign_message):
 
-    log.startLogging(sys.stdout)
-
     host = config.proxy.server_host
     ctrl_port = config.proxy.server_ctrl_port
 
@@ -145,7 +142,11 @@ def handle_proxy_response(message):
 if __name__ == '__main__':
 
     from cpchain.account import Accounts
-    from cpchain.crypto import ECCipher
+    from cpchain.crypto import ECCipher # pylint: disable=no-name-in-module
+
+    import sys
+    from twisted.python import log as twisted_log
+    twisted_log.startLogging(sys.stdout)
 
     accounts = Accounts()
 
