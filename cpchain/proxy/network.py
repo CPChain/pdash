@@ -1,8 +1,7 @@
 import logging
 import time
 
-from hashlib import sha1
-from random import randint
+from random import randint, choice
 
 import socket
 
@@ -18,20 +17,13 @@ def entropy(length):
 def generate_tid():
     return entropy(20)
 
-def generate_peer_id():
-    h = sha1()
-    h.update(entropy(20).encode('utf-8'))
-    return h.digest()
 
 class PeerProtocol(protocol.DatagramProtocol):
     def __init__(self, peer_info=None, timeout=5):
-        self.peer_id = generate_peer_id()
-        self.addr = None
         self.peers = {}
         self.request = {}
         self.timeout = timeout
         self.peer_info = peer_info
-        self.peer_stat = None
 
     def tranaction_timeout(self, tid):
         self.request[tid][0].callback((False, tid))
@@ -82,26 +74,19 @@ class PeerProtocol(protocol.DatagramProtocol):
             logger.debug("receive wrong message %s from %s" % (str(msg), str(addr)))
             return
 
-
         if msg['type'] == 'bootstrap':
             peer_id = msg['peer_id']
             tid = msg['tid']
             peer_info = msg['peer_info']
-            peer_stat = msg['peer_stat']
 
-            if peer_id in self.peers:
-                logger.debug("duplicate bootstrap message")
-            else:
-                # welcome new peer
-                peer = {
-                    'addr': addr,
-                    'peer_info': peer_info,
-                    'ts': time.time(),
-                    'peer_stat': peer_stat
-                }
+            peer = {
+                'addr': addr,
+                'peer_info': peer_info,
+                'ts': time.time()
+            }
 
-                self.peers[peer_id] = peer
-                logger.debug("add peer %s" % str(peer['addr']))
+            self.peers[peer_id] = peer
+            logger.debug("add peer %s" % str(peer['addr']))
 
             response = {
                 'type': 'response',
@@ -120,27 +105,37 @@ class PeerProtocol(protocol.DatagramProtocol):
             }
             self.send_msg(response, addr)
 
-        elif msg['type'] == 'select_peer':
+        elif msg['type'] == 'pick_peer':
             tid = msg['tid']
 
-            bootnode_addr = tuple(msg['bootnode_addr'])
-            logger.debug("boot node addr: %s" % str(bootnode_addr))
+            pick_peer = None
 
-            # could select boot node itself
-            select_peer_stat = self.peer_stat
-            select_peer = (bootnode_addr[0], self.peer_info)
-
-            for peer_id in self.peers:
+            if self.peers:
+                peer_id = choice(list(self.peers.keys()))
                 peer = self.peers[peer_id]
-                peer_stat = peer['peer_stat']
-                if peer_stat < select_peer_stat:
-                    select_peer_stat = peer_stat
-                    select_peer = (peer['addr'][0], peer['peer_info'])
+                pick_peer = (peer['addr'][0], peer['peer_info'])
 
             response = {
                 'type': 'response',
                 'tid': tid,
-                'data': select_peer
+                'data': pick_peer
+            }
+
+            self.send_msg(response, addr)
+
+        elif msg['type'] == 'get_peer':
+            tid = msg['tid']
+            peer_id = msg['peer_id']
+
+            pick_peer = None
+            if peer_id in self.peers:
+                peer = self.peers[peer_id]
+                pick_peer = (peer['addr'][0], peer['peer_info'])
+
+            response = {
+                'type': 'response',
+                'tid': tid,
+                'data': pick_peer
             }
 
             self.send_msg(response, addr)
@@ -156,22 +151,33 @@ class PeerProtocol(protocol.DatagramProtocol):
         d.callback((True, data))
         del self.request[tid]
 
-    def select_peer(self, addr):
+    def pick_peer(self, addr):
         msg = {
-            'type': 'select_peer',
-            'tid': generate_tid(),
-            'bootnode_addr': addr
+            'type': 'pick_peer',
+            'tid': generate_tid()
         }
 
         return self.send_msg(msg, addr)
 
+    def get_peer(self, peer_id, addr):
+        msg = {
+            'type': 'get_peer',
+            'peer_id': peer_id,
+            'tid': generate_tid()
+        }
+
+        return self.send_msg(msg, addr)
+
+
     def bootstrap(self, addr):
+        if self.transport is None:
+            return reactor.callLater(1, self.bootstrap)
+
         msg = {
             'type': 'bootstrap',
             'tid': generate_tid(),
             'peer_id': self.peer_id,
-            'peer_info': self.peer_info,
-            'peer_stat': self.peer_stat
+            'peer_info': self.peer_info
             }
 
         return self.send_msg(msg, addr)
@@ -185,15 +191,17 @@ class PeerProtocol(protocol.DatagramProtocol):
 
         return self.send_msg(msg, addr)
 
-    def refresh_peer(self, result, peer):
-        success, data = result
-        if success:
-            peer['ts'] = time.time()
-        return result
 
     def refresh_peers(self):
         now = time.time()
         expired_peers = []
+
+        def refresh(result, peer):
+            success, _ = result
+            if success:
+                peer['ts'] = time.time()
+            return result
+
         for peer_id in self.peers:
             peer = self.peers[peer_id]
             ts = peer['ts']
@@ -202,7 +210,7 @@ class PeerProtocol(protocol.DatagramProtocol):
                 logger.debug('retire peer %s' %  str(peer['addr']))
             else:
                 addr = peer['addr']
-                self.ping(addr).addCallback(self.refresh_peer, peer)
+                self.ping(addr).addCallback(refresh, peer)
 
         for peer in expired_peers:
             self.peers.pop(peer)

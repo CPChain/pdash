@@ -1,27 +1,32 @@
 #!/usr/bin/env python3
 
 import sys, os
+import logging
 
-from twisted.internet import reactor, protocol, ssl, defer
+from twisted.internet import reactor, protocol, ssl, defer, _sslverify
 from twisted.protocols.basic import NetstringReceiver
 from twisted.python import log
 
-from cpchain import config, root_dir
+import treq
+
+from cpchain import config
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.message import message_sanity_check
-from cpchain.crypto import ECCipher, pub_key_der_to_addr
+from cpchain.crypto import ECCipher, pub_key_der_to_addr # pylint: disable=no-name-in-module
 
-from twisted.internet import _sslverify
-import treq
+logger = logging.getLogger(__name__)
 
 class SSLClientProtocol(NetstringReceiver):
     def __init__(self, factory):
         self.factory = factory
         self.sign_message = self.factory.sign_message
 
+        self.peer = None
+        self.reply_message = None
+
     def connectionMade(self):
         self.peer = str(self.transport.getPeer())
-        print("connect to server %s" % self.peer)
+        logger.debug("connect to server %s" % self.peer)
 
         string = self.sign_message.SerializeToString()
         self.sendString(string)
@@ -34,9 +39,9 @@ class SSLClientProtocol(NetstringReceiver):
             proxy_reply = message.proxy_reply
 
             if not proxy_reply.error and self.factory.need_download_file:
-                    d = download_file(proxy_reply.file_uuid)
-                    self.reply_message = message
-                    d.addBoth(self.download_finish)
+                d = download_file(proxy_reply.file_uuid)
+                self.reply_message = message
+                d.addBoth(self.download_finish)
             else:
                 self.factory.d.callback(message)
 
@@ -48,9 +53,9 @@ class SSLClientProtocol(NetstringReceiver):
         self.transport.loseConnection()
 
     def connectionLost(self, reason):
-        print("lost connection to client %s" % (self.peer))
+        logger.debug("lost connection to client %s" % (self.peer))
 
-    def download_finish(self, result):
+    def download_finish(self, _):
         self.factory.d.callback(self.reply_message)
 
 
@@ -59,6 +64,8 @@ class SSLClientFactory(protocol.ClientFactory):
     def __init__(self, sign_message):
         self.sign_message = sign_message
         self.need_download_file = False
+
+        self.d = None
 
     def buildProtocol(self, addr):
         return SSLClientProtocol(self)
@@ -87,7 +94,7 @@ def start_client(sign_message):
     message.ParseFromString(sign_message.data)
     valid = message_sanity_check(message)
     if not valid:
-        print("wrong message format")
+        logger.error("wrong message format")
         return
 
     d = defer.Deferred()
@@ -98,7 +105,7 @@ def start_client(sign_message):
         factory.need_download_file = True
 
     reactor.connectSSL(host, ctrl_port, factory,
-            ssl.ClientContextFactory())
+                       ssl.ClientContextFactory())
 
     return d
 
@@ -114,7 +121,7 @@ def download_file(file_uuid):
 
     file_path = os.path.join(file_dir, file_uuid)
 
-    _sslverify.platformTrust = lambda : None
+    _sslverify.platformTrust = lambda: None
     f = open(file_path, 'wb')
     d = treq.get(url)
     d.addCallback(treq.collect, f.write)
@@ -129,23 +136,31 @@ def handle_proxy_response(message):
     proxy_reply = message.proxy_reply
 
     if not proxy_reply.error:
-        print('file_uuid: %s' % proxy_reply.file_uuid)
-        print('AES_key: %s' % proxy_reply.AES_key.decode())
+        logger.debug('file_uuid: %s' % proxy_reply.file_uuid)
+        logger.debug('AES_key: %s' % proxy_reply.AES_key.decode())
     else:
-        print(proxy_reply.error)
+        logger.debug(proxy_reply.error)
 
+# Code below for testing purpose only, pls. ignore.
+# Will be removed in formal release.
 if __name__ == '__main__':
 
     test_type = 'buyer_data'
 
     buyer_private_key = None
-    buyer_private_key = b'\xa6\xf8_\xee\x1c\x85\xc5\x95\x8d@\x9e\xfa\x80\x7f\xb6\xe0\xb4u\x12\xb6\xdf\x00\xda4\x98\x8e\xaeR\x89~\xf6\xb5'
+    buyer_private_key = (
+        b'\xa6\xf8_\xee\x1c\x85\xc5\x95\x8d@\x9e\xfa\x80\x7f\xb6'
+        b'\xe0\xb4u\x12\xb6\xdf\x00\xda4\x98\x8e\xaeR\x89~\xf6\xb5'
+    )
     buyer_private_key, buyer_public_key = \
                 ECCipher.generate_key_pair(buyer_private_key)
 
 
     seller_private_key = None
-    seller_private_key = b'\xa6\xf8_\xee\x1c\x85\xc5\x95\x8d@\x9e\xfa\x80\x7f\xb6\xe0\xb4u\x12\xb6\xdf\x00\xda4\x98\x8e\xaeR\x89~\xf6\xb5'
+    seller_private_key = (
+        b'\xa6\xf8_\xee\x1c\x85\xc5\x95\x8d@\x9e\xfa\x80\x7f\xb6'
+        b'\xe0\xb4u\x12\xb6\xdf\x00\xda4\x98\x8e\xaeR\x89~\xf6\xb5'
+    )
     seller_private_key, seller_public_key = \
                 ECCipher.generate_key_pair(seller_private_key)
 
@@ -168,9 +183,9 @@ if __name__ == '__main__':
         sign_message.public_key = seller_public_key
         sign_message.data = message.SerializeToString()
         sign_message.signature = ECCipher.generate_signature(
-                                seller_private_key,
-                                sign_message.data
-                            )
+            seller_private_key,
+            sign_message.data
+            )
 
         d = start_client(sign_message)
 
@@ -190,9 +205,9 @@ if __name__ == '__main__':
         sign_message.public_key = buyer_public_key
         sign_message.data = message.SerializeToString()
         sign_message.signature = ECCipher.generate_signature(
-                                buyer_private_key,
-                                sign_message.data
-                            )
+            buyer_private_key,
+            sign_message.data
+            )
 
         d = start_client(sign_message)
         d.addBoth(handle_proxy_response)
@@ -207,9 +222,9 @@ if __name__ == '__main__':
         sign_message.public_key = seller_public_key
         sign_message.data = message.SerializeToString()
         sign_message.signature = ECCipher.generate_signature(
-                                seller_private_key,
-                                sign_message.data
-                            )
+            seller_private_key,
+            sign_message.data
+            )
 
         d = start_client(sign_message)
         d.addBoth(handle_proxy_response)

@@ -7,7 +7,7 @@ from cpchain.market.account.models import WalletUser, Token
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = WalletUser
-        fields = ('public_key', 'created')
+        fields = ('public_key', 'created', 'address')
 
 
 class UserSerializer(serializers.ModelSerializer):

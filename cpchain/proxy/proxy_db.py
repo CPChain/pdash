@@ -1,14 +1,16 @@
+import os
+
+from datetime import datetime, timedelta
+from uuid import uuid1 as uuid
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.dialects.mysql import BIGINT, BINARY, TIMESTAMP
 from sqlalchemy.orm import sessionmaker
-from datetime import datetime, timedelta
+
 from cpchain import config
 from cpchain.utils import join_with_rc
-
-import os
-from uuid import uuid1 as uuid
 
 Base = declarative_base()
 
@@ -42,6 +44,7 @@ class ProxyDB(object):
     def __init__(self, db=default_db):
         self.engine = create_engine(db, echo=False)
         Base.metadata.create_all(self.engine)
+        self.session = None
 
     def session_create(self):
         Session = sessionmaker(bind=self.engine)
@@ -49,22 +52,22 @@ class ProxyDB(object):
 
     def count(self, trade):
         count = self.session.query(Trade).filter(
-                    Trade.order_id == trade.order_id,
-                    Trade.buyer_addr ==  trade.buyer_addr,
-                    Trade.seller_addr == trade.seller_addr,
-                    Trade.market_hash == trade.market_hash).count()
+            Trade.order_id == trade.order_id,
+            Trade.buyer_addr == trade.buyer_addr,
+            Trade.seller_addr == trade.seller_addr,
+            Trade.market_hash == trade.market_hash).count()
         return count
 
     def query(self, trade):
         return self.session.query(Trade).filter(
-                    Trade.order_id == trade.order_id,
-                    Trade.buyer_addr ==  trade.buyer_addr,
-                    Trade.seller_addr == trade.seller_addr,
-                    Trade.market_hash == trade.market_hash).first()
+            Trade.order_id == trade.order_id,
+            Trade.buyer_addr == trade.buyer_addr,
+            Trade.seller_addr == trade.seller_addr,
+            Trade.market_hash == trade.market_hash).first()
 
     def query_file_uuid(self, uuid):
         return self.session.query(Trade).filter(
-                    Trade.file_uuid == uuid).first()
+            Trade.file_uuid == uuid).first()
 
     def insert(self, trade):
         trade.time_stamp = trade.time_stamp or datetime.now()
@@ -82,7 +85,7 @@ class ProxyDB(object):
     def reclaim(self):
         reclaim_period = datetime.now() - timedelta(days=7)
         for instance in self.session.query(Trade).filter(
-                        Trade.time_stamp < reclaim_period).all():
+                Trade.time_stamp < reclaim_period).all():
             self.delete(instance)
 
         self.session.commit()

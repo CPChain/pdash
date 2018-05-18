@@ -1,31 +1,19 @@
-from django.utils.http import unquote
 from django.db.models import Q
-from django.http import JsonResponse
+from django.utils.http import unquote
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from cpchain.market.comment.models import SummaryComment
-from cpchain.market.product.models import WalletMsgSequence, MyTag, MySeller
-from cpchain.market.product.serializers import *
 from cpchain.market.account.permissions import IsOwnerOrReadOnly, AlreadyLoginUser
+from cpchain.market.comment.models import SummaryComment
 from cpchain.market.market.utils import *
+from cpchain.market.product.models import WalletMsgSequence
+from cpchain.market.product.serializers import *
+from cpchain.market.transaction.models import ProductSaleStatus
 
 logger = logging.getLogger(__name__)
-
-PUBLIC_KEY = "public_key"
-VERIFY_CODE = "code"
-TIMEOUT = 1000
-
-
-def create_invalid_response():
-    return JsonResponse({"success": False, "message": "invalid request."})
-
-
-def create_success_response():
-    return JsonResponse({'status': 1, 'message': 'success'})
 
 
 class ProductPublishAPIViewSet(APIView):
@@ -347,8 +335,9 @@ class RecommendProductsAPIView(APIView):
             p['username'] = '' if not u else u.username
             # query average rating from SummaryComment table
             comment,_ = SummaryComment.objects.get_or_create(market_hash=p['msg_hash'])
+            sale_status,_ = ProductSaleStatus.objects.get_or_create(market_hash=p['msg_hash'])
             p['avg_rating'] = 1 if not comment else comment.avg_rating
-            p['sales_number'] = 0 if not comment else comment.sales_number
+            p['sales_number'] = 0 if not sale_status else sale_status.sales_number
             product_list.append(p)
 
         return JsonResponse({'status': 1, 'message': 'success', 'data': product_list})

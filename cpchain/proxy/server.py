@@ -1,30 +1,31 @@
 #!/usr/bin/env python3
 
-import sys, os, time
+import os, time
+import logging
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 
-from twisted.internet import reactor, threads, protocol, ssl
+from twisted.internet import threads, protocol
 from twisted.protocols.basic import NetstringReceiver
-from twisted.python import log
 
-from twisted.web.resource import Resource, NoResource, ForbiddenResource
-from twisted.web.server import Site
+from twisted.web.resource import Resource, ForbiddenResource
 from twisted.web.static import File
 
-from cpchain import config, root_dir
+from eth_utils import to_bytes
+
+from cpchain import config
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.message import message_sanity_check, sign_message_verify
-from cpchain.crypto import pub_key_der_to_addr, ECCipher
+from cpchain.crypto import pub_key_der_to_addr, ECCipher # pylint: disable=no-name-in-module
 
 from cpchain.storage import IPFSStorage
 from cpchain.proxy.proxy_db import Trade, ProxyDB
-from cpchain.chain.agents import ProxyAgent
+from cpchain.chain.agents import ProxyAgent # pylint: disable=no-name-in-module
 from cpchain.chain.utils import default_w3
 from cpchain.utils import join_with_root, join_with_rc, Encoder
 
-from eth_utils import to_bytes
+logger = logging.getLogger(__name__)
 
 server_root = join_with_rc(config.proxy.server_root)
 server_root = os.path.expanduser(server_root)
@@ -36,10 +37,13 @@ class SSLServerProtocol(NetstringReceiver):
         self.factory = factory
         self.proxy_db = factory.proxy_db
 
+        self.peer = None
+        self.trade = None
+
     def connectionMade(self):
         self.factory.numConnections += 1
         self.peer = str(self.transport.getPeer())
-        print("connect to client %s" % self.peer)
+        logger.debug("connect to client %s" % self.peer)
 
     def stringReceived(self, string):
         sign_message = SignMessage()
@@ -76,9 +80,9 @@ class SSLServerProtocol(NetstringReceiver):
             trade.AES_key = data.AES_key
 
             if pub_key_der_to_addr(public_key) != data.seller_addr:
-                print("pubkey seller addr")
-                print(pub_key_der_to_addr(public_key))
-                print(data.seller_addr)
+                logger.debug("pubkey seller addr")
+                logger.debug(pub_key_der_to_addr(public_key))
+                logger.debug(data.seller_addr)
                 error = "not seller's signature"
                 self.proxy_reply_error(error)
                 return
@@ -87,13 +91,15 @@ class SSLServerProtocol(NetstringReceiver):
             if storage.type == Message.Storage.IPFS:
                 ipfs = storage.ipfs
                 trade.file_hash = ipfs.file_hash
-                if(proxy_db.count(trade)):
+                if proxy_db.count(trade):
                     error = "trade record already in database"
                     self.proxy_reply_error(error)
                     return
                 else:
-                    file_path = os.path.join(server_root,
-                                    trade.file_hash.decode())
+                    file_path = os.path.join(
+                        server_root,
+                        trade.file_hash.decode()
+                        )
 
                     # seller sold the same file to another buyer
                     if os.path.isfile(file_path):
@@ -107,9 +113,10 @@ class SSLServerProtocol(NetstringReceiver):
                         return
                     else:
                         d = threads.deferToThread(
-                                        self.get_ipfs_file,
-                                        ipfs.gateway,
-                                        trade.file_hash)
+                            self.get_ipfs_file,
+                            ipfs.gateway,
+                            trade.file_hash
+                            )
 
                         d.addBoth(self.ipfs_callback)
 
@@ -133,19 +140,17 @@ class SSLServerProtocol(NetstringReceiver):
             if proxy_db.count(trade):
                 self.trade = proxy_db.query(trade)
                 self.proxy_reply_success()
-                return
             else:
                 error = "trade record not found in database"
                 self.proxy_reply_error(error)
-                return
 
     def proxy_claim_relay(self):
-        proxy_trans = ProxyAgent(default_web3, config.chain.core_contract)
+        proxy_trans = ProxyAgent(default_w3, config.chain.core_contract)
         private_key_file_path = join_with_root(config.wallet.private_key_file)
         password_path = join_with_root(config.wallet.private_key_password_file)
         with open(password_path) as f:
             password = f.read()
-        priv_key, pub_key = ECCipher.load_key_pair_from_keystore(private_key_file_path, password)
+        priv_key, _ = ECCipher.load_key_pair_from_keystore(private_key_file_path, password)
         priv_key_bytes = Encoder.str_to_base64_byte(priv_key)
         digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
         digest.update(ECCipher.generate_signature(priv_key_bytes, to_bytes(self.trade.order_id)))
@@ -183,7 +188,7 @@ class SSLServerProtocol(NetstringReceiver):
 
     def connectionLost(self, reason):
         self.factory.numConnections -= 1
-        print("lost connection to client %s" % self.peer)
+        logger.debug("lost connection to client %s" % self.peer)
 
     def proxy_reply_error(self, error):
         message = Message()
@@ -197,6 +202,8 @@ class SSLServerProtocol(NetstringReceiver):
 class SSLServerFactory(protocol.Factory):
     numConnections = 0
 
+    def __init__(self):
+        self.proxy_db = None
 
     def buildProtocol(self, addr):
         return SSLServerProtocol(self)
@@ -230,42 +237,5 @@ class FileServer(Resource):
             file_hash = trade.file_hash
             file_path = os.path.join(server_root, file_hash.decode())
             return File(file_path)
-        else:
-            return ForbiddenResource()
 
-
-def start_ssl_server():
-
-    log.startLogging(sys.stdout)
-
-    # control channel
-    factory = SSLServerFactory()
-    control_port = config.proxy.server_ctrl_port
-
-    server_key = os.path.expanduser(
-                    join_with_rc(config.proxy.server_key))
-    server_crt = os.path.expanduser(
-                    join_with_rc(config.proxy.server_crt))
-
-    if not os.path.isfile(server_key):
-        print("SSL key/cert file not found, run local self-test by default")
-        server_key = join_with_root(config.proxy.server_key)
-        server_crt = join_with_root(config.proxy.server_crt)
-
-    reactor.listenSSL(control_port, factory,
-            ssl.DefaultOpenSSLContextFactory(
-            server_key, server_crt))
-
-    # data channel
-    data_port = config.proxy.server_data_port
-    file_factory = Site(FileServer())
-    reactor.listenSSL(data_port, file_factory,
-            ssl.DefaultOpenSSLContextFactory(
-            server_key, server_crt))
-
-    reactor.run()
-
-
-
-if __name__ == '__main__':
-    start_ssl_server()
+        return ForbiddenResource()
