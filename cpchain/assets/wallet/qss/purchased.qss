@@ -13,6 +13,7 @@ QPushButton#purchased_dled_tab_btn{
     min-height: 30px;
     max-height: 30px;
     background: #3173d8;
+    margin-right: 0px;
 }
 
 QPushButton#purchased_dling_tab_btn{
@@ -24,6 +25,7 @@ QPushButton#purchased_dling_tab_btn{
     min-height: 30px;
     max-height: 30px;
     background: #ffffff;
+    margin-left: 0px;
 }
 
 
@@ -95,7 +97,7 @@ QPushButton#search_btn_sell {
 }
 
 
-QPushButton[c_flag = "1"]{
+/*QPushButton[c_flag = "1"]{
     padding-left: 14px;
     padding-right: 14px;
     border: 1px solid #3173d8; 
@@ -116,7 +118,7 @@ QPushButton[c_flag = "0"]{
     max-height: 30px;
     background: #ffffff;
 }
-
+*/
 
 
 
