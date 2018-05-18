@@ -48,6 +48,7 @@ def load_stylesheet(wid, name):
         wid.setStyleSheet(s.substitute(subs))
 
 
+
 class PurchasedTab(QScrollArea):
     def __init__(self, parent = None):
         super().__init__(parent)
@@ -752,7 +753,7 @@ class SellTab(QScrollArea):
                 print("Deleting files permanently from the cloud...")
                 self.update_table()
 
-    class Upload_Dialog(QDialog):
+    class UploadDialog(QDialog):
         def __init__(self, parent=None):
             super().__init__()
             self.parent = parent
@@ -831,6 +832,7 @@ class SellTab(QScrollArea):
                 QMessageBox.warning(self, "Warning", "Please select your files to upload first !")
                 return
             print("Uploading files to....")
+            QMessageBox.information(self, "Tips", "Log in successfully !")
 
     def handle_upload(self):
         # Maybe useful for buyer.
@@ -1611,7 +1613,7 @@ class CloudTab(QScrollArea):
         # row_selected = self.file_table.selectionModel().selectedRows()[0].row()
         # selected_fpath = self.file_table.item(row_selected, 2).text()
         print("Uploading local files....")
-        self.upload_dialog = CloudTab.Upload_Dialog(self)
+        self.upload_dialog = CloudTab.UploadDialog(self)
 
     #def handle_upload(self):
         # Maybe useful for buyer.
@@ -1773,6 +1775,74 @@ class Header(QFrame):
                 self.setLayout(main_layout)
             set_layout()
 
+    class LoginDialog(QDialog):
+        def __init__(self, parent=None):
+            super().__init__(parent)
+            self.parent = parent
+            self.setWindowTitle("Log In")
+
+            self.init_ui()
+
+        def init_ui(self):
+
+            def create_btns():
+                self.account1_btn = account1_btn = QRadioButton(self)
+                account1_btn.setText("Account 1")
+                account1_btn.setObjectName("account1_btn")
+                account1_btn.setChecked(True)
+                self.account2_btn = account2_btn = QRadioButton(self)
+                account2_btn.setText("Account 2")
+                account2_btn.setObjectName("account2_btn")
+
+                self.cancel_btn = cancel_btn = QPushButton("Cancel")
+                cancel_btn.setObjectName("cancel_btn")
+                self.login_btn = login_btn = QPushButton("Log in")
+                login_btn.setObjectName("login_btn")
+            create_btns()
+
+            def create_labels():
+                self.choice_label = choice_label = QLabel("Please select which account you would like to log in: ")
+                choice_label.setObjectName("choice_label")
+            create_labels()
+
+            def bind_slots():
+                self.cancel_btn.clicked.connect(self.handle_cancel)
+                self.login_btn.clicked.connect(self.handle_login)
+            bind_slots()
+
+            def set_layout():
+                self.main_layout = main_layout = QVBoxLayout()
+                main_layout.addSpacing(0)
+                main_layout.addWidget(self.choice_label)
+                main_layout.addSpacing(2)
+                main_layout.addWidget(self.account1_btn)
+                main_layout.addSpacing(1)
+                main_layout.addWidget(self.account2_btn)
+                self.confirm_layout = confirm_layout = QHBoxLayout()
+                confirm_layout.addSpacing(0)
+                confirm_layout.addWidget(self.cancel_btn)
+                confirm_layout.addSpacing(2)
+                confirm_layout.addWidget(self.login_btn)
+
+                main_layout.addLayout(self.confirm_layout)
+                self.setLayout(self.main_layout)
+            set_layout()
+
+            self.show()
+
+            print("Loading stylesheet of publish dialog....")
+
+        def handle_cancel(self):
+            self.account1_btn.setChecked(True)
+            self.account2_btn.setChecked(False)
+
+            self.close()
+
+        def handle_login(self):
+            print("check access......")
+            QMessageBox.information(self, "Tips", "Successful !")
+            self.close()
+
 
     def __init__(self, parent):
         super().__init__()
@@ -1819,6 +1889,7 @@ class Header(QFrame):
             self.profile_page_btn = QPushButton("", self)
             self.profile_page_btn.setObjectName("profile_page_btn")
             self.profile_page_btn.setCursor(QCursor(Qt.PointingHandCursor))
+            self.profile_page_btn.clicked.connect(self.login)
 
             self.profile_btn = QPushButton("", self)
             self.profile_btn.setObjectName("profile_btn")
@@ -1912,6 +1983,10 @@ class Header(QFrame):
         set_layout()
 
         load_stylesheet(self, "headertest.qss")
+
+    def login(self):
+        self.login_dialog = Header.LoginDialog(self)
+        print("")
 
     # drag support
     def mousePressEvent(self, event):
