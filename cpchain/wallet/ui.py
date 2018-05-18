@@ -123,7 +123,7 @@ class PurchasedDownloadedTab(QScrollArea):
                 main_layout = QHBoxLayout()
                 main_layout.addWidget(search_btn_cloud)
                 main_layout.addStretch()
-                main_layout.setContentsMargins(0, 0, 0, 0)
+                main_layout.setContentsMargins(5, 0, 0, 0)
                 self.setLayout(main_layout)
             set_layout()
 
