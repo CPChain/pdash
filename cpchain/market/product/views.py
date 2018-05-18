@@ -59,7 +59,8 @@ class ProductPublishAPIViewSet(APIView):
         logger.debug("owner_address:%s" % product.owner_address)
         logger.debug("product.signature:%s" % product.signature)
         logger.debug("signature_source:%s" % signature_source)
-        is_valid_sign = verify_signature(product.owner_address, product.signature, signature_source)
+
+        is_valid_sign = is_valid_signature(public_key,signature_source,product.signature)
         logger.debug("product.signature:%s" % str(product.signature))
         logger.debug("is_valid_signature:%s,signature_source:%s" % (is_valid_sign, signature_source))
 
