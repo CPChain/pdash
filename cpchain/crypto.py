@@ -243,6 +243,8 @@ class ECCipher:
         """
         if isinstance(message, str):
             message = message.encode(encoding="utf-8")
+        if isinstance(signature, str):
+            signature = Encoder.hex_to_bytes(signature)
         try:
             public_key.verify(signature, message, ec.ECDSA(hashes.SHA256()))
         except Exception:
@@ -340,9 +342,10 @@ class ECCipher:
     # cf. yellow paper
     # cf. http://tinyurl.com/y8q5g68u
     """
-
+    # ok
     @staticmethod
     def load_key_pair_from_keystore(key_path, password):
+        raise Exception("use load_key_pair pls")
         """
         load geth key pair from a keystore format file
 
@@ -361,8 +364,10 @@ class ECCipher:
 
         return pri_key_string, pub_key_string
 
+    # ok
     @staticmethod
     def _get_public_key_from_private_key_bytes(private_key_bytes):
+        raise Exception("do not use _get_public_key_from_private_key_bytes pls")
         """
         get public key string from private key bytes
         Args:
@@ -381,8 +386,10 @@ class ECCipher:
         logger.debug("pub_key_string:%s" % pub_key_string)
         return pub_key_string
 
+    # ok
     @staticmethod
     def _load_private_key_from_bytes(pri_key_bytes):
+        raise Exception("do not use _load_private_key_from_bytes pls")
         """
         load private key object from private key bytes
         Args:
@@ -400,6 +407,7 @@ class ECCipher:
     # TODO remove me
     @staticmethod
     def generate_key_pair(private_key_bytes=None, password=None):
+        raise Exception("do not use generate_key_pair pls")
         """
         generate private and public key tuple
 
@@ -434,6 +442,7 @@ class ECCipher:
 
     @staticmethod
     def generate_signature(pri_key_string_bytes, raw_data_bytes):
+        raise Exception("use create_signature pls")
         """
         generate signature
         Args:
@@ -453,6 +462,7 @@ class ECCipher:
 
     @staticmethod
     def generate_string_signature(pri_key_string, raw_data_string):
+        raise Exception("use create_signature pls")
         """
         sign string data with geth private key string
         Args:
@@ -476,6 +486,7 @@ class ECCipher:
 
     @staticmethod
     def verify_signature(public_key, signature, raw_data):
+        raise Exception("do not use verify_sign pls")
         """
         verify signature
         Args:

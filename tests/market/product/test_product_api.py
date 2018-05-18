@@ -1,6 +1,6 @@
 from django.utils.http import urlquote
 from tests.market.base_api_test import *
-
+from cpchain.market.market.utils import *
 
 class TestProductApi(BaseApiTest):
 
@@ -121,8 +121,9 @@ class TestProductApi(BaseApiTest):
         payload = {'owner_address': self.pub_key_string, 'title': title, 'description': description, 'price': price,
                    'tags': tags, 'start_date': start_date, 'end_date': end_date, 'file_md5': file_md5}
         signature_source = self.pub_key_string + title + description + str(price) + start_date + end_date + file_md5
-        signature = ECCipher.generate_string_signature(self.pri_key_string, signature_source)
-        payload['signature'] = signature
+        signature = sign(self.pri_key, signature_source)
+
+        payload['signature'] = signature.hex()
         print("publish product request:%s" % payload)
         header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
         publish_resp = requests.post(url, headers=header, json=payload)
