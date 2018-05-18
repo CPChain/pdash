@@ -20,7 +20,6 @@ class SSLClientProtocol(NetstringReceiver):
         self.sign_message = self.factory.sign_message
 
         self.peer = None
-        self.reply_message = None
 
     def connectionMade(self):
         self.peer = str(self.transport.getPeer())
@@ -33,37 +32,23 @@ class SSLClientProtocol(NetstringReceiver):
         message = Message()
         message.ParseFromString(string)
         valid = message_sanity_check(message)
-        if valid and message.type == Message.PROXY_REPLY:
-            proxy_reply = message.proxy_reply
-
-            if not proxy_reply.error and self.factory.need_download_file:
-                d = download_file(proxy_reply.file_uuid)
-                self.reply_message = message
-                d.addBoth(self.download_finish)
-            else:
-                self.factory.d.callback(message)
-
-        else:
+        if not valid or message.type != Message.PROXY_REPLY:
             # should never happen
             message = proxy_reply_error("wrong server response")
-            self.factory.d.callback(message)
+
+        self.factory.d.callback(message)
 
         self.transport.loseConnection()
 
     def connectionLost(self, reason):
         logger.debug("lost connection to client %s" % (self.peer))
 
-    def download_finish(self, _):
-        self.factory.d.callback(self.reply_message)
-
 
 class SSLClientFactory(protocol.ClientFactory):
 
     def __init__(self, sign_message):
         self.sign_message = sign_message
-        self.need_download_file = False
-
-        self.d = None
+        self.d = defer.Deferred()
 
     def buildProtocol(self, addr):
         return SSLClientProtocol(self)
@@ -81,10 +66,14 @@ def proxy_reply_error(error):
     return message
 
 
-def start_client(sign_message):
+def start_client(sign_message, addr=None):
 
-    host = config.proxy.server_host
-    ctrl_port = config.proxy.server_ctrl_port
+    if addr:
+        host = addr[0]
+        port = addr[1]
+    else:
+        host = config.proxy.server_host
+        port = config.proxy.server_ctrl_port
 
     message = Message()
     message.ParseFromString(sign_message.data)
@@ -93,17 +82,12 @@ def start_client(sign_message):
         logger.error("wrong message format")
         return
 
-    d = defer.Deferred()
     factory = SSLClientFactory(sign_message)
-    factory.d = d
 
-    if message.type == Message.BUYER_DATA:
-        factory.need_download_file = True
-
-    reactor.connectSSL(host, ctrl_port, factory,
+    reactor.connectSSL(host, port, factory,
                        ssl.ClientContextFactory())
 
-    return d
+    return factory.d
 
 
 def download_file(file_uuid):
