@@ -85,3 +85,8 @@ formatter = "simple"
 handlers = ["default"]
 level = "DEBUG"
 propagate = false
+
+[logging.loggers.__main__]
+handlers = ["default"]
+level = "DEBUG"
+propagate = false
