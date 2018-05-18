@@ -5,7 +5,7 @@ from twisted.internet.defer import inlineCallbacks
 
 from cpchain.crypto import ECCipher
 
-from cpchain.utils import config
+from cpchain.utils import config, Encoder
 
 from cpchain.wallet.fs import publish_file_update
 
@@ -44,7 +44,7 @@ class MarketClient:
         logger.debug('nonce: %s', self.nonce)
         signature = ECCipher.create_signature(self.account.private_key, self.nonce)
         header_confirm = {'Content-Type': 'application/json'}
-        data_confirm = {'public_key': self.account.pub_key, 'code': signature}
+        data_confirm = {'public_key': self.public_key, 'code': Encoder.bytes_to_hex(signature)}
         resp = yield treq.post(self.url + 'account/v1/confirm/', headers=header_confirm,
                                json=data_confirm,
                                persistent=False)
@@ -52,7 +52,7 @@ class MarketClient:
         logger.debug('login confirm: %s', confirm_info)
         self.token = confirm_info['message']
         logger.debug('token: %s', self.token)
-        return confirm_info['message']
+        return confirm_info['status']
 
 
     @inlineCallbacks
