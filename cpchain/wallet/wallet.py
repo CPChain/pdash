@@ -16,6 +16,7 @@ from twisted.internet.task import LoopingCall
 # from cpchain.wallet.ui import MainWindow
 from cpchain.wallet.chain import Broker
 from cpchain.wallet.net import MarketClient
+from cpchain.wallet import fs
 
 from cpchain.account import Accounts
 
@@ -49,11 +50,17 @@ class Wallet:
 
 def main():
     wallet = Wallet(reactor)
+
+    # pinfo = fs.get_file_list()[0]
+    # logger.debug("product id: %s", pinfo.id)
     wallet.market_client.login()
-    sys.exit(reactor.run())
+    # wallet.market_client.publish_product(pinfo.id, 'title', 'description', 123,
+    #                                      'tag', '2018-04-01 10:10:10',
+    #                                      '2018-04-01 10:10:10', '123456')
+
+    # d.addBoth(default_callback())
+    # sys.exit(reactor.run())
 
 
 if __name__ == '__main__':
     main()
-
-

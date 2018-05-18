@@ -2,6 +2,7 @@
 import sys, os
 import os.path as osp
 import string
+import logging
 
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, 
@@ -20,6 +21,8 @@ from twisted.internet.threads import deferToThread
 from twisted.internet.task import LoopingCall
 
 wallet = Wallet(reactor)
+
+logger = logging.getLogger(__name__) # pylint: disable=locally-disabled, invalid-name
 
 
 # utils
@@ -547,7 +550,20 @@ class PublishDialog(QDialog):
         if self.pinfo_title and self.pinfo_descrip and self.pinfo_tag and self.pinfo_price and self.pinfo_checkbox_state:
             print("Updating item info in wallet database and other relevant databases")
             print("Updating self.parent tab info: selling tab or cloud tab")
-            QMessageBox.information(self, "Tips", "Successful !")
+            product_info = self.parent.file_list[self.parent.cur_clicked]
+            logger.debug("product selected id: %s", product_info.id)
+            logger.debug("product info title: %s", self.pinfo_title)
+            d_publish = wallet.market_client.publish_product(product_info.id, self.pinfo_title,
+                                                             self.pinfo_descrip, self.pinfo_price,
+                                                             self.pinfo_tag, '2018-04-01 10:10:10',
+                                                             '2018-04-01 10:10:10', '123456')
+            def update_table(*args):
+                QMessageBox.information(self, "Tips", "Successful !")
+                self.parent.update_table()
+                self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
+
+            d_publish.addCallback(update_table)
+
             self.close()
         else:
             QMessageBox.warning(self, "Warning", "Please fill out the necessary selling information first!")
@@ -1481,7 +1497,7 @@ class CloudTab(QScrollArea):
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row].name))
                 self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(self.file_list[cur_row].size)))
                 #size
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row].name))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row].remote_type))
                 #remote_type
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(self.file_list[cur_row].is_published)))
                 self.check_record_list.append(False)
@@ -1854,11 +1870,11 @@ class Header(QFrame):
             def login_result(status):
                 if status == 1:
                     QMessageBox.information(self, "Tips", "Successful !")
-                elif status == 2:
+                elif status == 0:
                     QMessageBox.information(self, "Tips", "Failed !")
                 else:
                     QMessageBox.information(self, "Tips", "New Users !")
-                    # TODO: jump to userfile
+                    # TODO: jump to user profile page
             d_login.addCallback(login_result)
             self.close()
 

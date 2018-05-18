@@ -52,30 +52,31 @@ class MarketClient:
         logger.debug('login confirm: %s', confirm_info)
         self.token = confirm_info['message']
         logger.debug('token: %s', self.token)
+        if not confirm_info['status']:
+            logger.debug("login succeed")
         return confirm_info['status']
 
 
     @inlineCallbacks
     def publish_product(self, selected_id, title, description, price, tags, start_date, end_date,
                         file_md5):
+        logger.debug("start publish product")
         header = {'Content-Type': 'application/json'}
         header['MARKET-KEY'] = self.public_key
         header['MARKET-TOKEN'] = self.token
-        data = {'owner_address': self.account.pub_key, 'title': title, 'description': description,
+        data = {'owner_address': self.public_key, 'title': title, 'description': description,
                 'price': price, 'tags': tags, 'start_date': start_date, 'end_date': end_date,
                 'file_md5': file_md5}
-        signature_source = str(self.account.pub_key) + str(title) + str(description) + str(
+        signature_source = str(self.public_key) + str(title) + str(description) + str(
             price) + MarketClient.str_to_timestamp(start_date) + MarketClient.str_to_timestamp(
             end_date) + str(file_md5)
-        signature = ECCipher.create_signature(self.account.priv_key, signature_source)
-        data['signature'] = signature
-        resp = yield treq.post(self.url + 'product/publish/', headers=header, json=data)
+        signature = ECCipher.create_signature(self.account.private_key, signature_source)
+        data['signature'] = Encoder.bytes_to_hex(signature)
+        logger.debug("signature: %s", data['signature'])
+        resp = yield treq.post(self.url + 'product/v1/product/publish/', headers=header, json=data)
         confirm_info = yield treq.json_content(resp)
-        print(confirm_info)
-        print('publish succeed')
         self.message_hash = confirm_info['data']['market_hash']
         publish_file_update(self.message_hash, selected_id)
-        print(self.message_hash)
         return confirm_info['status']
 
 
