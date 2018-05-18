@@ -66,13 +66,16 @@ class PurchasedTab(QScrollArea):
 
         def dled_btn_clicked(item):
             self.purchased_main_tab.setCurrentIndex(0)
-            #self.tag_btn_list[i].setProperty("t_value", 1)
-        
+            self.purchased_dled_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8;  border-radius: 5px; color: #ffffff; min-height: 30px; max-height: 30px; background: #3173d8; }")
+            self.purchased_dling_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8;  border-radius: 5px; color: #3173d8; min-height: 30px; max-height: 30px; background: #ffffff; }")
+                   
         self.purchased_dled_tab_btn.clicked.connect(dled_btn_clicked)
 
         def dling_btn_clicked(item):
             self.purchased_main_tab.setCurrentIndex(1)
-        
+            self.purchased_dling_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8;  border-radius: 5px; color: #ffffff; min-height: 30px; max-height: 30px; background: #3173d8; }")
+            self.purchased_dled_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8;  border-radius: 5px; color: #3173d8; min-height: 30px; max-height: 30px; background: #ffffff; }")
+
         self.purchased_dling_tab_btn.clicked.connect(dling_btn_clicked)
 
 
@@ -105,7 +108,7 @@ class PurchasedDownloadedTab(QScrollArea):
         def init_ui(self):
             self.setObjectName("search_bar")
             self.setFixedSize(300, 25)
-            self.setTextMargins(3, 0, 20, 0)
+            self.setTextMargins(25, 0, 20, 0)
 
             self.search_btn_cloud = search_btn_cloud = QPushButton(self)
             search_btn_cloud.setObjectName("search_btn")
@@ -118,8 +121,8 @@ class PurchasedDownloadedTab(QScrollArea):
 
             def set_layout():
                 main_layout = QHBoxLayout()
-                main_layout.addStretch(1)
                 main_layout.addWidget(search_btn_cloud)
+                main_layout.addStretch()
                 main_layout.setContentsMargins(0, 0, 0, 0)
                 self.setLayout(main_layout)
             set_layout()
