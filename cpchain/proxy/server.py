@@ -16,8 +16,9 @@ from eth_utils import to_bytes
 
 from cpchain import config
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
-from cpchain.proxy.message import message_sanity_check, sign_message_verify
-from cpchain.crypto import pub_key_der_to_addr, ECCipher # pylint: disable=no-name-in-module
+from cpchain.proxy.message import message_sanity_check, \
+sign_message_verify, is_address_from_key
+from cpchain.crypto import ECCipher # pylint: disable=no-name-in-module
 
 from cpchain.storage import IPFSStorage
 from cpchain.proxy.proxy_db import Trade, ProxyDB
@@ -79,10 +80,7 @@ class SSLServerProtocol(NetstringReceiver):
             trade.market_hash = data.market_hash
             trade.AES_key = data.AES_key
 
-            if pub_key_der_to_addr(public_key) != data.seller_addr:
-                logger.debug("pubkey seller addr")
-                logger.debug(pub_key_der_to_addr(public_key))
-                logger.debug(data.seller_addr)
+            if not is_address_from_key(data.seller_addr, public_key):
                 error = "not seller's signature"
                 self.proxy_reply_error(error)
                 return
@@ -132,7 +130,7 @@ class SSLServerProtocol(NetstringReceiver):
             trade.buyer_addr = data.buyer_addr
             trade.market_hash = data.market_hash
 
-            if pub_key_der_to_addr(public_key) != data.buyer_addr:
+            if not is_address_from_key(data.buyer_addr, public_key):
                 error = "not buyer's signature"
                 self.proxy_reply_error(error)
                 return

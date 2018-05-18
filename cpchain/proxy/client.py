@@ -12,7 +12,6 @@ import treq
 from cpchain import config
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.message import message_sanity_check
-from cpchain.crypto import ECCipher, pub_key_der_to_addr # pylint: disable=no-name-in-module
 
 logger = logging.getLogger(__name__)
 
@@ -145,33 +144,37 @@ def handle_proxy_response(message):
 # Will be removed in formal release.
 if __name__ == '__main__':
 
+    from cpchain.account import Accounts
+    from cpchain.crypto import ECCipher
+
+    accounts = Accounts()
+
+    buyer_account = accounts[0]
+    seller_account = accounts[1]
+
+    buyer_private_key = buyer_account.private_key  #object type
+    buyer_public_key = ECCipher.serialize_public_key(
+        buyer_account.public_key)    # string type
+    buyer_addr = ECCipher.get_address_from_public_key(
+        buyer_account.public_key)  #string type
+
+    seller_private_key = seller_account.private_key
+    seller_public_key = ECCipher.serialize_public_key(
+        seller_account.public_key)   #string type
+    seller_addr = ECCipher.get_address_from_public_key(
+        seller_account.public_key)  #string type
+
+
     test_type = 'buyer_data'
-
-    buyer_private_key = None
-    buyer_private_key = (
-        b'\xa6\xf8_\xee\x1c\x85\xc5\x95\x8d@\x9e\xfa\x80\x7f\xb6'
-        b'\xe0\xb4u\x12\xb6\xdf\x00\xda4\x98\x8e\xaeR\x89~\xf6\xb5'
-    )
-    buyer_private_key, buyer_public_key = \
-                ECCipher.generate_key_pair(buyer_private_key)
-
-
-    seller_private_key = None
-    seller_private_key = (
-        b'\xa6\xf8_\xee\x1c\x85\xc5\x95\x8d@\x9e\xfa\x80\x7f\xb6'
-        b'\xe0\xb4u\x12\xb6\xdf\x00\xda4\x98\x8e\xaeR\x89~\xf6\xb5'
-    )
-    seller_private_key, seller_public_key = \
-                ECCipher.generate_key_pair(seller_private_key)
 
     if test_type == 'seller_data':
         message = Message()
         seller_data = message.seller_data
         message.type = Message.SELLER_DATA
         seller_data.order_id = 1
-        seller_data.seller_addr = pub_key_der_to_addr(seller_public_key)
-        seller_data.buyer_addr = pub_key_der_to_addr(buyer_public_key)
-        seller_data.market_hash = b'MARKET_HASH'
+        seller_data.seller_addr = seller_addr
+        seller_data.buyer_addr = buyer_addr
+        seller_data.market_hash = 'MARKET_HASH'
         seller_data.AES_key = b'AES_key'
         storage = seller_data.storage
         storage.type = Message.Storage.IPFS
@@ -182,7 +185,7 @@ if __name__ == '__main__':
         sign_message = SignMessage()
         sign_message.public_key = seller_public_key
         sign_message.data = message.SerializeToString()
-        sign_message.signature = ECCipher.generate_signature(
+        sign_message.signature = ECCipher.create_signature(
             seller_private_key,
             sign_message.data
             )
@@ -197,14 +200,14 @@ if __name__ == '__main__':
         buyer_data = message.buyer_data
         message.type = Message.BUYER_DATA
         buyer_data.order_id = 1
-        buyer_data.seller_addr = pub_key_der_to_addr(seller_public_key)
-        buyer_data.buyer_addr = pub_key_der_to_addr(buyer_public_key)
-        buyer_data.market_hash = b'MARKET_HASH'
+        buyer_data.seller_addr = seller_addr
+        buyer_data.buyer_addr = buyer_addr
+        buyer_data.market_hash = 'MARKET_HASH'
 
         sign_message = SignMessage()
         sign_message.public_key = buyer_public_key
         sign_message.data = message.SerializeToString()
-        sign_message.signature = ECCipher.generate_signature(
+        sign_message.signature = ECCipher.create_signature(
             buyer_private_key,
             sign_message.data
             )
@@ -221,7 +224,7 @@ if __name__ == '__main__':
         sign_message = SignMessage()
         sign_message.public_key = seller_public_key
         sign_message.data = message.SerializeToString()
-        sign_message.signature = ECCipher.generate_signature(
+        sign_message.signature = ECCipher.create_signature(
             seller_private_key,
             sign_message.data
             )
