@@ -1377,19 +1377,13 @@ class CloudTab(QScrollArea):
     def  update_table(self):
         #file_list = get_file_list()
         print("Updating file list......")
-        file_list = fs.get_file_list()
+        self.file_list = fs.get_file_list()
         # single element data structure (assumed); to be changed 
         # dict_exa = {"type": "mkv", "name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "published"}
         # for i in range(self.row_number):
         #     file_list.append(dict_exa)
-        print(len(file_list))
-        self.row_number = len(file_list)
-        file_list = []
-        # single element data structure (assumed); to be changed
-        dict_exa = {"type": "mkv", "name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "published"}
-        for i in range(self.row_number):
-            file_list.append(dict_exa)
-
+        print(len(self.file_list))
+        self.row_number = len(self.file_list)
         for cur_row in range(self.row_number):
             # if cur_row == len(file_list):
             #     break
@@ -1398,10 +1392,10 @@ class CloudTab(QScrollArea):
             checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
             checkbox_item.setCheckState(Qt.Unchecked)
             self.file_table.setItem(cur_row, 0, checkbox_item)
-            self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].name))
-            self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].size)))
-            self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].remote_type))
-            self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].is_published))
+            self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row].name))
+            self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(self.file_list[cur_row].size)))
+            self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row].remote_type))
+            self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(self.file_list[cur_row].is_published)))
 
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
@@ -1469,17 +1463,11 @@ class CloudTab(QScrollArea):
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.setSortingEnabled(True)
 
-            #file_list = get_file_list()
-            self.file_list = file_list = []
-            print("Getting file list.......")
-            dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
-            for i in range(self.row_number):
-                self.file_list.append(dict_exa)
+            self.file_list = fs.get_file_list()
 
-            file_list = fs.get_file_list()
             self.check_record_list = []
             self.checkbox_list = []
-            self.row_number = len(file_list)
+            self.row_number = len(self.file_list)
             print("init cloud table, row num: ")
             print(self.row_number)
 
@@ -1490,12 +1478,12 @@ class CloudTab(QScrollArea):
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 checkbox_item.setCheckState(Qt.Unchecked)
                 self.file_table.setItem(cur_row, 0, checkbox_item)
-                self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].name))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].size)))
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row].name))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(self.file_list[cur_row].size)))
                 #size
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].name))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row].name))
                 #remote_type
-                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].is_published))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(self.file_list[cur_row].is_published)))
                 self.check_record_list.append(False)
         create_file_table()    
         self.file_table.sortItems(2)
