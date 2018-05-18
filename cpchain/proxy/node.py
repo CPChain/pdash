@@ -194,5 +194,8 @@ if __name__ == '__main__':
         peer.get_peer(eth_addr=b'fake_eth_addr',
                       boot_nodes=('127.0.0.1', 8101)).addCallback(got_peer)
 
+    elif sys.argv[1] == 'service':
+        peer = Peer()
+        peer.start_service()
 
     reactor.run()
