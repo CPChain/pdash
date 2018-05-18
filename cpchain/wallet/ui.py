@@ -1853,8 +1853,18 @@ class Header(QFrame):
 
         def handle_login(self):
             print("check access......")
-            QMessageBox.information(self, "Tips", "Successful !")
+            d_login = wallet.market_client.login()
+            def login_result(status):
+                if status == 1:
+                    QMessageBox.information(self, "Tips", "Successful !")
+                elif status == 2:
+                    QMessageBox.information(self, "Tips", "Failed !")
+                else:
+                    QMessageBox.information(self, "Tips", "New Users !")
+                    # TODO: jump to userfile
+            d_login.addCallback(login_result)
             self.close()
+
 
 
     def __init__(self, parent):
