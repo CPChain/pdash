@@ -2,6 +2,7 @@
 import sys, os
 import os.path as osp
 import string
+import logging
 
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, 
@@ -23,6 +24,8 @@ wallet = Wallet(reactor)
 
 
 # utils
+logger = logging.getLogger(__name__)
+
 def get_icon(name):
     path = osp.join(root_dir, "cpchain/assets/wallet/icons", name)
     return QIcon(path)
@@ -330,7 +333,7 @@ class PurchasedDownloadingTab(QScrollArea):
         self.purchased_dling_pause_btn = purchased_dling_pause_btn = QPushButton("Pause")
         purchased_dling_pause_btn.setObjectName("purchased_dling_pause_btn")
 
-        self.purchased_dling_delete_btn.clicked.connect(self.handle_upload)
+        self.purchased_dling_delete_btn.clicked.connect(self.handle_purchased_delete)
         self.time_label = time_label = QLabel("Time")
         self.open_path = open_path = QLabel("Open file path...")
     
@@ -421,16 +424,15 @@ class PurchasedDownloadingTab(QScrollArea):
             self.setLayout(self.main_layout)
         set_layout()
 
-    def handle_delete(self):
+    def handle_purchased_delete(self):
+        # TODO: delete event
         for i in range(len(self.check_record_list)):
             if self.check_record_list[i] == True:
                 self.file_table.removeRow(i)
-                print("Deleting files permanently from the cloud...")
-                self.update_table()
-
-    def handle_delete_act(self):
-        self.file_table.removeRow(self.cur_clicked)
-        print("row {} has been removed...".format(self.cur_clicked))
+                #self.update_table()
+        logger.debug("Delete the corresponding row (i.e. self.cur_clicked) in TableWidget as before")
+        logger.debug("Cancel uploading from backend")
+        logger.debug("Uploading the table")
 
 
 class PublishDialog(QDialog):
@@ -592,7 +594,7 @@ class SellTab(QScrollArea):
                 self.setLayout(main_layout)
             set_layout()
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("selling_tab")
@@ -1854,6 +1856,7 @@ class Header(QFrame):
         def handle_login(self):
             print("check access......")
             d_login = wallet.market_client.login()
+
             def login_result(status):
                 if status == 1:
                     QMessageBox.information(self, "Tips", "Successful !")
