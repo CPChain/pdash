@@ -19,11 +19,18 @@ QLabel#price_label{
 }
 
 
-QLabel#hot_industry_1, QLabel#hot_industry_2, QLabel#hot_industry_3{
+QLabel#hot_industry_0, QLabel#hot_industry_1, QLabel#hot_industry_2{
     max-width: 230px;
     max-height: 110px;
     min-width: 200px;
     min-height: 90px;
+}
+
+QLabel#banner_label{
+    max-width: 740px;
+    max-height: 195px;
+    min-width: 370px;
+    min-height: 98px;
 }
 
 QLabel {
