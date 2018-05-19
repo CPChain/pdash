@@ -1500,9 +1500,7 @@ class PopularTab(QScrollArea):
             self.main_layout = QVBoxLayout(self)
 
             self.banner_layout = QHBoxLayout(self)
-            self.banner_layout.addStretch(1)
             self.banner_layout.addWidget(self.banner_label)
-            self.banner_layout.addStretch(1)
             self.main_layout.addLayout(self.banner_layout)
             self.main_layout.addSpacing(35)
             self.main_layout.addWidget(self.hot_label)
@@ -2262,7 +2260,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('CPChain Wallet')
         self.setObjectName("main_window")
         # no borders.  we make our own header panel.
-        self.setWindowFlags(Qt.FramelessWindowHint)
+        #self.setWindowFlags(Qt.FramelessWindowHint)
 
         def set_geometry():
             self.resize(1002, 710)  # resize before centering.
