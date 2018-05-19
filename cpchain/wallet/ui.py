@@ -348,33 +348,26 @@ class PurchasedDownloadedTab(QScrollArea):
         self.purchased_total_orders = 103
         self.num_file = 100
         self.cur_clicked = 0
-        self.purchased_total_orders_label = purchased_total_orders_label = QLabel("Total Orders: {}".format(self.purchased_total_orders))
-        purchased_total_orders_label.setObjectName("purchased_total_orders_label")
+
         self.purchased_dled_delete_btn = purchased_dled_delete_btn = QPushButton("Delete")
         purchased_dled_delete_btn.setObjectName("purchased_dled_delete_btn")
 
+        self.purchased_total_orders_label = purchased_total_orders_label = QLabel("Total Orders: ")
+        purchased_total_orders_label.setObjectName("purchased_total_orders_label")
+        self.total_orders_value = total_orders_value = QLabel("{}".format(self.purchased_total_orders))
+        self.total_orders_value.setObjectName("total_orders_value")
         self.purchased_dled_delete_btn.clicked.connect(self.handle_delete)
         self.search_bar = PurchasedDownloadedTab.SearchBar(self)
         self.time_label = time_label = QLabel("Time")
+        time_label.setObjectName("time_label")
         self.open_path = open_path = QLabel("Open file path...")
+        open_path.setObjectName("open_path")
     
         self.row_number = 100
 
 
         def create_file_table():
             self.file_table = file_table = TableWidget(self) 
-            # def right_menu():
-            #     self.purchased_right_menu = QMenu(file_table)
-            #     self.purchased_delete_act = QAction('Delete', self)
-            #     self.purchased_publish_act = QAction('Publish', self)
-
-            #     self.purchased_delete_act.triggered.connect(self.handle_delete_act)
-            #     self.purchased_publish_act.triggered.connect(self.handle_publish_act)
-
-            #     self.purchased_right_menu.addAction(self.purchased_delete_act)
-            #     self.purchased_right_menu.addAction(self.purchased_publish_act)
-
-            #     self.purchased_right_menu.exec_(QCursor.pos())
 
             file_table.horizontalHeader().setStretchLastSection(True)
             file_table.verticalHeader().setVisible(False)
@@ -430,6 +423,8 @@ class PurchasedDownloadedTab(QScrollArea):
             self.purchased_dled_upper_layout = QHBoxLayout(self)
             self.purchased_dled_upper_layout.addSpacing(0)
             self.purchased_dled_upper_layout.addWidget(self.purchased_total_orders_label)
+            self.purchased_dled_upper_layout.addSpacing(0)
+            self.purchased_dled_upper_layout.addWidget(self.total_orders_value)
             self.purchased_dled_upper_layout.addSpacing(10)
             self.purchased_dled_upper_layout.addWidget(self.search_bar)
             self.purchased_dled_upper_layout.addSpacing(10)
@@ -455,9 +450,7 @@ class PurchasedDownloadedTab(QScrollArea):
                 print("Deleting files permanently from the cloud...")
                 self.update_table()
 
-    # def handle_delete_act(self):
-    #     self.file_table.removeRow(self.cur_clicked)
-    #     print("row {} has been removed...".format(self.cur_clicked))
+
 
 
 class PurchasedDownloadingTab(QScrollArea):
@@ -505,8 +498,10 @@ class PurchasedDownloadingTab(QScrollArea):
         self.num_file = 100
         self.cur_clicked = 0
 
-        self.purchased_total_orders_label = purchased_total_orders_label = QLabel("Total Orders: {}".format(self.purchased_total_orders))
+        self.purchased_total_orders_label = purchased_total_orders_label = QLabel("Total Orders: ")
         purchased_total_orders_label.setObjectName("purchased_total_orders_label")
+        self.total_orders_value = total_orders_value = QLabel("{}".format(self.purchased_total_orders))
+        self.total_orders_value.setObjectName("total_orders_value")
         self.purchased_dling_delete_btn = purchased_dling_delete_btn = QPushButton("Delete")
         purchased_dling_delete_btn.setObjectName("purchased_dling_delete_btn")
         self.purchased_dling_start_btn = purchased_dling_start_btn = QPushButton("Start")
@@ -515,8 +510,8 @@ class PurchasedDownloadingTab(QScrollArea):
         purchased_dling_pause_btn.setObjectName("purchased_dling_pause_btn")
 
         self.purchased_dling_delete_btn.clicked.connect(self.handle_purchased_delete)
-        self.time_label = time_label = QLabel("Time")
         self.open_path = open_path = QLabel("Open file path...")
+        open_path.setObjectName("open_path")
     
         self.row_number = 100
 
@@ -595,6 +590,8 @@ class PurchasedDownloadingTab(QScrollArea):
             self.purchased_upper_layout = QHBoxLayout(self)
             self.purchased_upper_layout.addSpacing(0)
             self.purchased_upper_layout.addWidget(self.purchased_total_orders_label)
+            self.purchased_upper_layout.addSpacing(0)
+            self.purchased_upper_layout.addWidget(self.total_orders_value)
             self.purchased_upper_layout.addSpacing(10)         
             self.purchased_upper_layout.addWidget(self.open_path)
             self.purchased_upper_layout.addStretch(1)
@@ -832,12 +829,27 @@ class SellTab(QScrollArea):
         self.total_orders = 103
         self.total_sales = 1234
         self.cur_clicked = 0
-        self.sell_product_label = sell_product_label = QLabel("Products: {}".format(self.sell_product))
+
+        self.sell_product_label = sell_product_label = QLabel("Products:")
         sell_product_label.setObjectName("sell_product_label")
-        self.sell_orders_label = sell_orders_label = QLabel("Total Orders: {}".format(self.total_orders))
+        self.product_value = product_value = QLabel("{}".format(self.sell_product))
+        product_value.setObjectName("product_value")  
+
+        self.sell_orders_label = sell_orders_label = QLabel("Total Orders:")
         sell_orders_label.setObjectName("sell_orders_label")
-        self.total_sales_label = total_sales_label = QLabel("Total Sales: {}".format(self.total_sales))
+        self.order_value = order_value = QLabel("{}".format(self.total_orders))
+        order_value.setObjectName("order_value") 
+
+        self.total_sales_label = total_sales_label = QLabel("Total Sales($):")
         total_sales_label.setObjectName("total_sales_label")
+        self.sales_value = sales_value = QLabel("{}".format(self.total_sales))
+        sales_value.setObjectName("sales_value") 
+
+        self.time_rank_label = time_rank_label = QLabel("Time")
+        time_rank_label.setObjectName("time_rank_label")
+
+        self.tag_rank_label = tag_rank_label = QLabel("Tag")
+        tag_rank_label.setObjectName("tag_rank_label")        
 
         self.sell_delete_btn = sell_delete_btn = QPushButton("Delete")
         sell_delete_btn.setObjectName("sell_delete_btn")
@@ -914,19 +926,29 @@ class SellTab(QScrollArea):
             self.layout1 = QHBoxLayout(self)
             self.layout1.addSpacing(0)
             self.layout1.addWidget(self.sell_product_label)
+            self.layout1.addWidget(self.product_value)
             self.layout1.addSpacing(5)
             self.layout1.addWidget(self.sell_orders_label)
+            self.layout1.addWidget(self.order_value)
             self.layout1.addSpacing(5)
             self.layout1.addWidget(self.total_sales_label)
+            self.layout1.addWidget(self.sales_value)
             self.layout1.addStretch(1)
-            self.layout1.addWidget(self.sell_delete_btn)
-            self.layout1.addSpacing(5)
-            self.layout1.addWidget(self.sell_publish_btn)
-            self.layout1.addSpacing(5)
-
             self.main_layout.addLayout(self.layout1)
-            self.main_layout.addSpacing(2)
-            self.main_layout.addWidget(self.search_bar_sell)
+            
+            self.layout2 = QHBoxLayout(self)
+            self.layout2.addWidget(self.search_bar_sell)
+            self.layout2.addSpacing(10)
+            self.layout2.addWidget(self.time_rank_label)
+            self.layout2.addSpacing(10)
+            self.layout2.addWidget(self.tag_rank_label)
+            self.layout2.addStretch(1)
+            self.layout2.addWidget(self.sell_delete_btn)
+            self.layout2.addSpacing(5)
+            self.layout2.addWidget(self.sell_publish_btn)
+            self.layout2.addSpacing(5)
+            self.main_layout.addLayout(self.layout2)
+            
             self.main_layout.addSpacing(2)
             self.main_layout.addWidget(self.file_table)
             self.main_layout.addSpacing(2)
@@ -1541,7 +1563,7 @@ class CloudTab(QScrollArea):
 
         def init_ui(self):
             self.setObjectName("search_bar")
-            self.setFixedSize(300, 25)
+            #self.setFixedSize(300, 25)
             self.setTextMargins(25, 0, 20, 0)
 
             self.search_btn_cloud = search_btn_cloud = QPushButton(self)
@@ -1596,12 +1618,6 @@ class CloudTab(QScrollArea):
 
 
     def init_ui(self):
-        self.frame = QFrame()
-        self.frame.setObjectName("cloud_frame")
-        self.setWidget(self.frame)
-        self.setWidgetResizable(True)
-        self.frame.setMinimumWidth(500)
-        self.frame.setMaximumHeight(800)
 
         self.check_list = []
         self.num_file = 100
@@ -1618,9 +1634,13 @@ class CloudTab(QScrollArea):
         #upload_btn.clicked.connect(handle_upload)
         self.upload_btn.clicked.connect(self.handle_upload)
 
-
         self.search_bar = CloudTab.SearchBar(self)
-        self.time_label = time_label = QLabel("Time")
+
+        self.time_rank_label = time_rank_label = QLabel("Time")
+        time_rank_label.setObjectName("time_rank_label")
+
+        self.tag_rank_label = tag_rank_label = QLabel("Tag")
+        tag_rank_label.setObjectName("tag_rank_label")  
     
         self.row_number = 6
 
@@ -1693,20 +1713,20 @@ class CloudTab(QScrollArea):
             self.main_layout = main_layout = QVBoxLayout(self)
             main_layout.addSpacing(0)
             self.layout1 = QHBoxLayout(self)
-            self.layout1.addSpacing(0)
-            self.layout1.addWidget(self.total_label)
+            self.layout1.addWidget(self.search_bar)
+            self.layout1.addSpacing(10)
+            self.layout1.addWidget(self.time_rank_label)
+            self.layout1.addSpacing(10)
+            self.layout1.addWidget(self.tag_rank_label)
             self.layout1.addStretch(1)
             self.layout1.addWidget(self.delete_btn)
-            self.layout1.addSpacing(2)
+            self.layout1.addSpacing(5)
             self.layout1.addWidget(self.upload_btn)
-            self.layout1.addSpacing(2)
+            self.layout1.addSpacing(5)
 
             self.main_layout.addLayout(self.layout1)
             self.main_layout.addSpacing(2)
-            self.main_layout.addWidget(self.search_bar)
-            self.main_layout.addSpacing(2)
             self.main_layout.addWidget(self.file_table)
-            self.main_layout.addSpacing(2)
             self.setLayout(self.main_layout)
         set_layout()
         print("Loading stylesheet of cloud tab widget")
