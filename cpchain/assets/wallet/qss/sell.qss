@@ -86,7 +86,7 @@ QTableWidget {
     background: #ffffff;
     alternate-background-color: #f3f3f3;
     border: none;
-    border-top: 1px solid #555555;
+    border-top: 1px solid #c9c9c9;
     color: #676767;
 }
 
@@ -97,35 +97,9 @@ QTableWidget::item {
     color: #1c1c1c;
 }
 
-QTableWidget::item:selected {
-    background: #d8e1eb;
-}
-
-QTableWidget.QHeaderView::section {
-    color: #676767;
-    background-color: #f3f3f3
-    border: 1px solid #c9c9c9;
-}
-
-
-QTableWidget {
-    background: #fafafa;
-    alternate-background-color: #d9d9d9;
-    border: none;
-    border-top: 1px solid #555555;
-    color: #555555;
-}
-
-
-QTableWidget::item {
-    border: none;
-    outline: none;
-    outline-style: none;
-}
-
-QTableWidget::item:selected {
-    background: #006bcf;
-    color: #fefefe;
+QTableWidget::item:selected, QTableWidget::item:focus {
+    background: #3173d8;
+    color: #ffffff;
 }
 
 QScrollBar:vertical{

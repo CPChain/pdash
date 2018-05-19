@@ -1,3 +1,21 @@
+QTabWidget{
+    margin-right: 0, 0, 0, 0;
+}
+
+QLineEdit#search_bar{
+    /* border: 1px solid #724f61;    */
+    border-radius: 5px;
+    border: 1px solid #d7d7d7;
+    /* color: #0f0000; */
+    /* background: #5b4b19; */
+    /* background: #423611; */
+}
+
+QLineEdit#search_bar:hover {
+    border-radius: 5px;
+    border: 1px solid #3984f7;
+}
+
 QPushButton#search_btn {
     border: none;
     outline: none;
@@ -8,7 +26,8 @@ QPushButton#purchased_dled_tab_btn{
     padding-left: 14px;
     padding-right: 14px;
     border: 1px solid #3173d8; 
-    border-radius: 5px;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
     color: #ffffff;
     min-height: 30px;
     max-height: 30px;
@@ -20,7 +39,8 @@ QPushButton#purchased_dling_tab_btn{
     padding-left: 14px;
     padding-right: 14px;
     border: 1px solid #3173d8; 
-    border-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
     color: #3173d8;
     min-height: 30px;
     max-height: 30px;
@@ -56,30 +76,25 @@ QPushButton#purchased_dled_delete_btn:disabled, QPushButton#purchased_delete_btn
     color: #8cb8ea;
 }
 
+
 QTableWidget {
     background: #ffffff;
     alternate-background-color: #f3f3f3;
     border: none;
-    border-top: 1px solid #555555;
+    border-top: 1px solid #c9c9c9;
     color: #676767;
 }
 
 QTableWidget::item {
-    padding: 5px;
     border: none;
     outline: none;
     outline-style: none;
     color: #1c1c1c;
 }
 
-QTableWidget::item:selected {
-    background: #d8e1eb;
-}
-
-QTableWidget.QHeaderView::section {
-    color: #676767;
-    background-color: #f3f3f3
-    border: 1px solid #c9c9c9;
+QTableWidget::item:selected, QTableWidget::item:focus {
+    background: #3173d8;
+    color: #ffffff;
 }
 
 QLineEdit#search_bar{
@@ -98,8 +113,30 @@ QPushButton#search_btn_sell {
 }
 
 QProgressBar{
-    padding: 5px;
+    margin-top: 11px;
+    margin-bottom: 11px;
+    margin-right: 5px;
+    margin-left: 5px;
+    text-align: center;
+    background-color: #dddddd;
+    border: transparent;
+    border-radius: 10px;
 }
+
+QProgressBar::chunk{
+    border-radius: 10px;
+    background-color: #61cda8;
+}
+
+QProgressBar:focus{
+    background-color: #6f9bdf;
+}
+
+QQProgressBar::chunk:focus{
+    background-color: #ffffff;
+}
+
+
 
 /*QPushButton[c_flag = "1"]{
     padding-left: 14px;
