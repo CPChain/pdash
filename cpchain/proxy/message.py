@@ -46,8 +46,16 @@ def message_sanity_check(message):
 
 def sign_message_verify(sign_message):
 
-    return ECCipher.verify_signature(
-        sign_message.public_key,
+    public_key = ECCipher.create_public_key(sign_message.public_key)
+
+    return ECCipher.verify_sign(
+        public_key,
         sign_message.signature,
         sign_message.data
         )
+
+def is_address_from_key(addr, public_key):
+    public_key = ECCipher.create_public_key(public_key)
+    public_addr = ECCipher.get_address_from_public_key(public_key)
+
+    return addr == public_addr
