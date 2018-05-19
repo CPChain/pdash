@@ -136,6 +136,21 @@ QQProgressBar::chunk:focus{
     background-color: #ffffff;
 }
 
+QLabel#open_path{
+    color: #3173d8;
+    font-size: 12px;
+}
+
+QLabel#purchased_total_orders_label, QLabel#time_label{
+    color: #777777;
+    font-size: 12px;
+}
+
+QLabel#total_orders_value{
+    color: #1c1c1c;
+    font-size: 16px;
+}
+
 
 
 /*QPushButton[c_flag = "1"]{

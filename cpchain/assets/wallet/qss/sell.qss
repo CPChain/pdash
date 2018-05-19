@@ -1,3 +1,18 @@
+QLabel#sell_product_label, QLabel#sell_orders_label, QLabel#total_sales_label, QLabel#time_rank_label, QLabel#tag_rank_label{
+    color: #777777;
+    font-size: 12px;
+}
+
+QLabel#product_value, QLabel#order_value{
+    color: #1c1c1c;
+    font-size: 16px;
+}
+
+QLabel#sales_value{
+    color: #1c1c1c;
+    font-size: 18px;
+}
+
 QLineEdit#search_bar{
     /* border: 1px solid #724f61;    */
     border-radius: 5px;

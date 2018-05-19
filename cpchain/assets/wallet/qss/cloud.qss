@@ -1,5 +1,14 @@
+QLabel#time_rank_label, QLabel#tag_rank_label{
+    color: #777777;
+    font-size: 12px;
+}
+
 QLineEdit#search_bar{
     /* border: 1px solid #724f61;    */
+    min-height: 25px;
+    max-height: 25px;
+    min-width: 150px;
+    max-width: 300px;
     border-radius: 5px;
     border: 1px solid #d7d7d7;
     /* color: #0f0000; */
