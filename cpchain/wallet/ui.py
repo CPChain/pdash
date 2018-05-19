@@ -244,15 +244,15 @@ class PurchasedTab(QScrollArea):
 
         def dled_btn_clicked(item):
             self.purchased_main_tab.setCurrentIndex(0)
-            self.purchased_dled_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8;  border-radius: 5px; color: #ffffff; min-height: 30px; max-height: 30px; background: #3173d8; }")
-            self.purchased_dling_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8;  border-radius: 5px; color: #3173d8; min-height: 30px; max-height: 30px; background: #ffffff; }")
+            self.purchased_dled_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8; border-top-left-radius: 5px; border-bottom-left-radius: 5px; color: #ffffff; min-height: 30px; max-height: 30px; background: #3173d8; }")
+            self.purchased_dling_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8; border-top-right-radius: 5px; border-bottom-right-radius: 5px; color: #3173d8; min-height: 30px; max-height: 30px; background: #ffffff; }")
                    
         self.purchased_dled_tab_btn.clicked.connect(dled_btn_clicked)
 
         def dling_btn_clicked(item):
             self.purchased_main_tab.setCurrentIndex(1)
-            self.purchased_dling_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8;  border-radius: 5px; color: #ffffff; min-height: 30px; max-height: 30px; background: #3173d8; }")
-            self.purchased_dled_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8;  border-radius: 5px; color: #3173d8; min-height: 30px; max-height: 30px; background: #ffffff; }")
+            self.purchased_dling_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8; border-top-right-radius: 5px; border-bottom-right-radius: 5px; color: #ffffff; min-height: 30px; max-height: 30px; background: #3173d8; }")
+            self.purchased_dled_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8; border-top-left-radius: 5px; border-bottom-left-radius: 5px; color: #3173d8; min-height: 30px; max-height: 30px; background: #ffffff; }")
 
         self.purchased_dling_tab_btn.clicked.connect(dling_btn_clicked)
 
@@ -263,9 +263,9 @@ class PurchasedTab(QScrollArea):
             #add downloaded/downloading buttons for tab switch
             self.purchased_switch_layout = purchased_switch_layout = QHBoxLayout(self)
             self.purchased_switch_layout.setContentsMargins(0, 0, 0, 0) 
+            self.purchased_switch_layout.setSpacing(0)
             self.purchased_switch_layout.addStretch(1)
             self.purchased_switch_layout.addWidget(self.purchased_dled_tab_btn)
-            self.purchased_switch_layout.addSpacing(0)
             self.purchased_switch_layout.addWidget(self.purchased_dling_tab_btn)
             self.purchased_switch_layout.addStretch(1)
 
@@ -416,6 +416,7 @@ class PurchasedDownloadedTab(QScrollArea):
                 self.check_record_list.append(False)
         create_file_table()    
         self.file_table.sortItems(2)
+        self.file_table.horizontalHeader().setStyleSheet("QHeaderView::section{background: #f3f3f3; border: 1px solid #dcdcdc}")
         # record rows that are clicked or checked
         def record_check(item):
             self.cur_clicked = item.row()
@@ -483,6 +484,7 @@ class PurchasedDownloadingTab(QScrollArea):
             checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
             checkbox_item.setCheckState(Qt.Unchecked)
             dling_progressbar = QProgressBar()
+            #dling_progressbar.setFixedSize(150,8)
             dling_progressbar.setMaximum(100)
             dling_progressbar.setMinimum(0)
             dling_progressbar.setValue(49)
@@ -579,6 +581,7 @@ class PurchasedDownloadingTab(QScrollArea):
         create_file_table()    
 
         self.file_table.sortItems(2)
+        self.file_table.horizontalHeader().setStyleSheet("QHeaderView::section{background: #f3f3f3; border: 1px solid #dcdcdc}")
         # record rows that are clicked or checked
         def record_check(item):
             self.cur_clicked = item.row()
@@ -897,6 +900,7 @@ class SellTab(QScrollArea):
                 self.check_record_list.append(False)
         create_file_table()    
         self.file_table.sortItems(2)
+        self.file_table.horizontalHeader().setStyleSheet("QHeaderView::section{background: #f3f3f3; border: 1px solid #dcdcdc}")
         # record rows that are clicked or checked
         def record_check(item):
             self.cur_clicked = item.row()
@@ -1677,6 +1681,7 @@ class CloudTab(QScrollArea):
                 self.check_record_list.append(False)
         create_file_table()    
         self.file_table.sortItems(2)
+        self.file_table.horizontalHeader().setStyleSheet("QHeaderView::section{background: #f3f3f3; border: 1px solid #dcdcdc}")
         # record rows that are clicked or checked
         def record_check(item):
             self.cur_clicked = item.row()
@@ -2167,6 +2172,8 @@ class Header(QFrame):
             extra_layout.addSpacing(2)
 
             self.main_layout = main_layout = QHBoxLayout(self)
+            main_layout.setSpacing(0)
+            main_layout.setContentsMargins(0, 0, 0, 0)
             main_layout.addWidget(self.logo_label)
             main_layout.addSpacing(5)
             main_layout.addWidget(self.word_label)
@@ -2174,17 +2181,17 @@ class Header(QFrame):
             main_layout.addWidget(self.prev_btn)
             main_layout.addSpacing(0)
             main_layout.addWidget(self.nex_btn)
-            main_layout.addSpacing(2)
+            main_layout.addSpacing(28)
             main_layout.addWidget(self.search_bar)
             main_layout.addStretch(20)
             main_layout.addWidget(self.upload_btn)
-            main_layout.addSpacing(10)
+            main_layout.addSpacing(18)
             main_layout.addWidget(self.message_btn)
-            main_layout.addSpacing(10)
+            main_layout.addSpacing(18)
             main_layout.addWidget(self.download_btn)
-            main_layout.addSpacing(10)
+            main_layout.addSpacing(20)
             main_layout.addWidget(self.profile_page_btn)
-            main_layout.addSpacing(5)
+            main_layout.addSpacing(8)
             main_layout.addWidget(self.profile_btn)
 
             all_layout.addLayout(self.extra_layout)
