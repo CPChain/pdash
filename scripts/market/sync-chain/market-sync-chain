@@ -11,10 +11,10 @@ from cpchain.chain import utils, models
 from cpchain.utils import join_with_root, Encoder
 from cpchain.chain.agents import Agent, BuyerAgent
 from cpchain.crypto import RSACipher
-from cpchain.market.transaction.models import TransactionDetail, ProductSaleStatus
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "cpchain.market.market.settings")
 django.setup()
+from cpchain.market.transaction.models import TransactionDetail, ProductSaleStatus
 
 from rest_framework import serializers
 
@@ -61,7 +61,7 @@ class MarketAgent(Agent):
             order_id = event['args']['orderId']
             order = self.query_order(order_id)
             desc_hash = order[0]
-            product_sale_status, _ = ProductSaleStatus.objects.get_or_create(market_hash=desc_hash)
+            product_sale_status, _ = ProductSaleStatus.objects.get_or_create(market_hash=Encoder.bytes_to_base64_str(desc_hash))
             serializer = ProductSaleStatusSerializer(product_sale_status)
             updated_data = serializer.data
             updated_data['sales_number'] = updated_data['sales_number'] + 1
