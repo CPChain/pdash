@@ -3,18 +3,12 @@ QLabel {
 }
 
 QLineEdit#search_bar {
-    margin-left: 5px;
-    /* border: 1px solid #724f61;    */
-    border-radius: 10px;
-    /* color: #0f0000; */
-    color: #434343;
-    /* background: #5b4b19; */
-    /* background: #423611; */
-    background: #FCFCFC;
+    border-radius: 5px;
+    border-color: #d7d7d7;
 }
 
 QLineEdit#search_bar:pressed {
-    color: #434343;
+    border-color: #3984f7;
 }
 
 QPushButton#prev_btn {
@@ -38,8 +32,6 @@ QPushButton#nex_btn {
     padding: 5px 5px 5px 5px;
     margin: 0 0 0 0;
     color: #000000;
-    border-radius: 5px;
-    background: #29426b;
     border-image: url(${asset_dir}/icons/toward disabled.png); 
     /*border-top: 3px transparent;
     border-bottom: 3px transparent;
