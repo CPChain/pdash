@@ -754,6 +754,7 @@ class PublishDialog(QDialog):
             print("Updating self.parent tab info: selling tab or cloud tab")
             logger.debug("current row: %s", self.parent.cur_clicked)
             product_info = self.parent.file_list[self.parent.cur_clicked]
+            logger.debug('selected product name: %s', product_info.name)
             logger.debug("product selected id: %s", product_info.id)
             logger.debug("product info title: %s", self.pinfo_title)
             d_publish = wallet.market_client.publish_product(product_info.id, self.pinfo_title,
@@ -1617,7 +1618,7 @@ class CloudTab(QScrollArea):
 
         self.init_ui()
 
-    def  update_table(self):
+    def update_table(self):
         #file_list = get_file_list()
         print("Updating file list......")
         self.file_list = fs.get_file_list()
@@ -1627,7 +1628,10 @@ class CloudTab(QScrollArea):
         #     file_list.append(dict_exa)
         print(len(self.file_list))
         self.row_number = len(self.file_list)
+        self.file_table.setRowCount(self.row_number)
         for cur_row in range(self.row_number):
+            logger.debug('current file id: %s', self.file_list[cur_row].id)
+            logger.debug('current file name: %s', self.file_list[cur_row].name)
             # if cur_row == len(file_list):
             #     break
             print(str(cur_row) + " row")
@@ -1668,8 +1672,7 @@ class CloudTab(QScrollArea):
 
         self.tag_rank_label = tag_rank_label = QLabel("Tag")
         tag_rank_label.setObjectName("tag_rank_label")  
-    
-        self.row_number = 6
+
 
 
         def create_file_table():
@@ -1697,7 +1700,6 @@ class CloudTab(QScrollArea):
             # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
             file_table.setColumnCount(5)
-            file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Size', 'Remote Type', 'Published'])
@@ -1709,12 +1711,15 @@ class CloudTab(QScrollArea):
             self.check_record_list = []
             self.checkbox_list = []
             self.row_number = len(self.file_list)
+            file_table.setRowCount(self.row_number)
             print("init cloud table, row num: ")
             print(self.row_number)
 
             for cur_row in range(self.row_number):
                 # if cur_row == len(file_list):export PYTHONPATH=/home/cpchainpublic1/Documents/cpchain/
                 #     break
+                logger.debug('current file id: %s', self.file_list[cur_row].id)
+                logger.debug('current file name: %s', self.file_list[cur_row].name)
                 checkbox_item = QTableWidgetItem()
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 checkbox_item.setCheckState(Qt.Unchecked)

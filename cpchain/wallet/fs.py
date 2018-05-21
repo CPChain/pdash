@@ -92,6 +92,7 @@ def upload_file_ipfs(file_path):
                              remote_type="ipfs", remote_uri="/ipfs/" + file_name,
                              is_published=False, aes_key=this_key)
     add_file(new_file_info)
+    logger.debug('file id: %s', new_file_info.id)
     return file_hash
 
 
