@@ -27,6 +27,7 @@ class Peer:
     def __init__(self):
         self.service_port = None
         self.eth_addr = None
+        self.ip = None
 
     def start_service(self, ctrl_port=None, data_port=None):
 
@@ -60,6 +61,17 @@ class Peer:
         reactor.listenSSL(data_port, file_factory,
                           ssl.DefaultOpenSSLContextFactory(
                               server_key, server_crt))
+
+        ctrl_factory.data_port = data_port
+
+        def set_external_ip():
+            if self.ip is None:
+                # waiting for node bootstrap finish
+                reactor.callLater(1, set_external_ip)
+
+            ctrl_factory.ip = self.ip
+
+        set_external_ip()
 
     def join_centra_net(self, port=None, boot_node=None):
 
@@ -95,9 +107,9 @@ class Peer:
         if boot_nodes:
             loop.run_until_complete(peer.bootstrap(boot_nodes))
             addr = loop.run_until_complete(peer.protocol.stun(boot_nodes[0]))
-            ip = addr[1][0]
+            self.ip = addr[1][0]
             loop.run_until_complete(peer.set(self.eth_addr,
-                                             (ip, self.service_port)))
+                                             (self.ip, self.service_port)))
 
     def pick_peer(self, boot_node, port=None):
         port = port or 8150
