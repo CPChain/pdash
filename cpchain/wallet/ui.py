@@ -1030,6 +1030,7 @@ class SellTab(QScrollArea):
             self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
             self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["remote_type"]))
             self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
+            #self.file_table.setItem(cur_row, 6, QTableWidgetItem(str(self.file_list[cur_row].id)))
 
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
@@ -1102,11 +1103,11 @@ class SellTab(QScrollArea):
             file_table.setFocusPolicy(Qt.NoFocus) 
             # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
-            file_table.setColumnCount(7)
+            file_table.setColumnCount(8)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
 
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price ($)', 'Order', 'Sales', 'Rating', 'Update Time'])
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price ($)', 'Order', 'Sales', 'Rating', 'Update Time', 'ID'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.setSortingEnabled(True)
 
@@ -1132,6 +1133,7 @@ class SellTab(QScrollArea):
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["sales"]))
                 self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["rating"]))
                 self.file_table.setItem(cur_row, 6, QTableWidgetItem(file_list[cur_row]["updatetime"]))
+                #self.file_table.setItem(cur_row, 7, QTableWidgetItem(str(self.file_list[cur_row].id)))
                 self.check_record_list.append(False)
         create_file_table()    
         self.file_table.sortItems(2)
@@ -1785,30 +1787,31 @@ class CloudTab(QScrollArea):
         self.init_ui()
 
     def update_table(self):
-        #file_list = get_file_list()
         print("Updating file list......")
         self.file_list = fs.get_file_list()
-        # single element data structure (assumed); to be changed 
-        # dict_exa = {"type": "mkv", "name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "published"}
-        # for i in range(self.row_number):
-        #     file_list.append(dict_exa)
         print(len(self.file_list))
         self.row_number = len(self.file_list)
         self.file_table.setRowCount(self.row_number)
+        #self.file_table.clearContents()
         for cur_row in range(self.row_number):
             logger.debug('current file id: %s', self.file_list[cur_row].id)
             logger.debug('current file name: %s', self.file_list[cur_row].name)
-            # if cur_row == len(file_list):
-            #     break
+            logger.debug('current file name: %s', str(self.file_list[cur_row].size))          
+            logger.debug('current file name: %s', self.file_list[cur_row].remote_type)
+            logger.debug('current file name: %s', str(self.file_list[cur_row].is_published))           
+
             print(str(cur_row) + " row")
             checkbox_item = QTableWidgetItem()
             checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
             checkbox_item.setCheckState(Qt.Unchecked)
+            #self.file_table.insertRow(cur_row)
             self.file_table.setItem(cur_row, 0, checkbox_item)
             self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row].name))
             self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(self.file_list[cur_row].size)))
             self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row].remote_type))
+            #self.file_table.item(cur_row, 3).setText(self.file_list[cur_row].remote_type)
             self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(self.file_list[cur_row].is_published)))
+            self.file_table.setItem(cur_row, 5, QTableWidgetItem(str(self.file_list[cur_row].id)))
 
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
@@ -1865,10 +1868,10 @@ class CloudTab(QScrollArea):
             file_table.setFocusPolicy(Qt.NoFocus) 
             # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
-            file_table.setColumnCount(5)
+            file_table.setColumnCount(6)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             file_table.set_right_menu(right_menu)
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Size', 'Remote Type', 'Published'])
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Size', 'Remote Type', 'Published', 'ID'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.setSortingEnabled(True)
 
@@ -1896,6 +1899,7 @@ class CloudTab(QScrollArea):
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row].remote_type))
                 #remote_type
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(self.file_list[cur_row].is_published)))
+                self.file_table.setItem(cur_row, 5, QTableWidgetItem(str(self.file_list[cur_row].id)))
                 self.check_record_list.append(False)
         create_file_table()    
         self.file_table.sortItems(2)

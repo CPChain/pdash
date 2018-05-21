@@ -1754,14 +1754,10 @@ class CloudTab(QScrollArea):
 
         self.init_ui()
 
-    def  update_table(self):
+    def update_table(self):
         #file_list = get_file_list()
         print("Updating file list......")
         self.file_list = fs.get_file_list()
-        # single element data structure (assumed); to be changed 
-        # dict_exa = {"type": "mkv", "name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "published"}
-        # for i in range(self.row_number):
-        #     file_list.append(dict_exa)
         print(len(self.file_list))
         self.row_number = len(self.file_list)
         for cur_row in range(self.row_number):
