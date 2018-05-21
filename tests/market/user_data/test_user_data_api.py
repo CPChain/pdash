@@ -11,19 +11,6 @@ class TestUserDataApi(BaseApiTest):
         print(client_id)
         return client_id
 
-    def test_upload_user_data_api(self):
-        header = self.get_header()
-
-        client_id = self.get_long_id()
-        # ======== test save upload file info in wallet ========
-        self._save_upload_file_info(header=header, client_id=client_id)
-
-        # ======== test save buyer file info in wallet ========
-        self._save_buyer_file_info(header=header, order_id=client_id)
-
-        # ======== test pull user data in wallet ========
-        self._pull_user_data(header=header)
-
     def test_update_upload_file_info(self):
         header = self.get_header()
 
