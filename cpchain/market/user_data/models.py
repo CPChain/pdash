@@ -8,6 +8,7 @@ class UploadFileInfo(models.Model):
     """
     public_key = models.CharField(_('publicKey'), max_length=200)
 
+    client_id = models.IntegerField('client id',default=0)#public_key + client_id -->market_hash + is_published
     name = models.CharField('name', max_length=200, null=True)
     hashcode = models.CharField('hashcode', max_length=200, null=True)
     path = models.CharField('path', max_length=200, null=True)
@@ -25,7 +26,7 @@ class BuyerFileInfo(models.Model):
     The BuyerFileInfo model.
     """
     public_key = models.CharField(_('publicKey'), max_length=200)
-    order_id = models.IntegerField('generate by chain', null=False)
+    order_id = models.IntegerField('generate by chain', null=True)#* order_id -> is_downloaded
     market_hash = models.CharField('market_hash',max_length=256)
     file_uuid = models.CharField('file_uuid', max_length=32)
     file_title = models.CharField('file_title', max_length=256)
