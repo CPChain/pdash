@@ -65,6 +65,92 @@ def load_stylesheet(wid, name):
 
 
 #class PersonalHomePageTab(QScrollArea)
+
+class SecurityTab(QScrollArea):
+    def __init__(self, parent=None, item={}):
+        super().__init__(parent)
+        self.parent = parent
+        #for testing this Tab @rayhueng
+        self.setObjectName("cart_tab")
+        #self.setObjectName("securitypage")
+        self.init_ui()
+
+    def init_ui(self):
+        #Labels def
+        self.balance_label = balance_label = QLabel("Account Balance:")
+        balance_label.setObjectName("balance_label")
+        self.password_label = password_label = QLabel("Payment Password:")
+        password_label.setObjectName("password_label")
+        self.accountbinding_label = accountbinding_label = QLabel("Account Binding:")
+        accountbinding_label.setObjectName("accountbinding_label")
+        self.paylimit_label = paylimit_label = QLabel("Daily Payment Limit:")
+        paylimit_label.setObjectName("paylimit_label")
+
+        balance = 9999
+        self.balance_value = balance_value = QLabel("{} CPC".format(balance))
+        balance_label.setObjectName("balance_label")  
+
+        bindingaccout = str("Christopher Chak")
+        self.binding_label = binding_label = QLabel("{} Account".format(bindingaccout))
+        binding_label.setObjectName("binding_label")  
+
+        self.cpc_label = cpc_label = QLabel("CPC")
+        cpc_label.setObjectName("cpc_label")               
+
+        #TextEdit def
+        self.password_edit = password_edit = QLineEdit()
+        password_edit.setObjectName("password_edit")
+
+        self.paylimit_edit = paylimit_edit = QLineEdit()
+        paylimit_edit.setObjectName("paylimit_edit")
+
+        #Buttons and Tags
+        self.display_btn = display_btn = QPushButton("Display Balance")
+        self.display_btn.setObjectName("display_btn")
+        self.display_btn.clicked.connect(self.handle_display)
+        self.reset_btn = reset_btn = QPushButton("Reset Password")
+        self.reset_btn.setObjectName("reset_btn")    
+        self.reset_btn.clicked.connect(self.handle_reset)    
+
+        def set_layout():
+            self.security_layout = security_layout = QGridLayout(self)
+            #self.pinfo_top_layout.setSpacing(10)
+            self.security_layout.setContentsMargins(40, 40, 150, 300)
+            self.security_layout.addWidget(balance_label, 1, 1, 1, 1)
+
+            self.balance_layout = balance_layout = QVBoxLayout(self)
+            self.balance_layout.addStretch(1)
+            self.balance_layout.addWidget(balance_value)
+            self.balance_layout.addSpacing(10)
+            self.balance_layout.addWidget(display_btn)
+            self.balance_layout.addStretch(2)
+
+            self.security_layout.addLayout(balance_layout, 1, 3, 2, 4)   
+                     
+            self.security_layout.addWidget(password_label, 3, 1, 1, 1)
+            self.security_layout.addWidget(password_edit, 3, 3, 1, 5)
+            self.security_layout.addWidget(reset_btn, 4, 3, 1, 2)
+
+            self.security_layout.addWidget(accountbinding_label, 5, 1, 1, 1)
+            self.security_layout.addWidget(binding_label, 5, 3, 1, 2)
+            self.security_layout.addWidget(paylimit_label, 6, 1, 1, 1)
+            self.security_layout.addWidget(paylimit_edit, 6, 3, 1, 2)
+            self.security_layout.addWidget(cpc_label, 6, 5, 1, 2)           
+                       
+            self.setLayout(security_layout)
+        set_layout()
+        print("Loading stylesheet of cloud tab widget")
+        #load_stylesheet(self, "pinfo.qss")
+
+    def handle_display(self):
+        print("display balance")
+        pass
+
+    def handle_reset(self):
+        print("reset password")
+        pass
+
+
 class PeferenceTab(QScrollArea):
     def __init__(self, parent=None, item={}):
         super().__init__(parent)
@@ -264,8 +350,6 @@ class PersonalInfoPage(QScrollArea):
         #load_stylesheet(self, "pinfo.qss")
     def handle_submit(self):
         pass
-
-
 
 
 class CollectedTab(QScrollArea):
@@ -1030,7 +1114,7 @@ class SellTab(QScrollArea):
             self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
             self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["remote_type"]))
             self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
-            #self.file_table.setItem(cur_row, 6, QTableWidgetItem(str(self.file_list[cur_row].id)))
+            self.file_table.setItem(cur_row, 6, QTableWidgetItem(str(self.file_list[cur_row].id)))
 
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
@@ -2492,6 +2576,7 @@ class MainWindow(QMainWindow):
             # content_tabs.addTab(ProductInfoEdit(content_tabs), "")
             #content_tabs.addTab(PurchasedDownloadedTab(content_tabs), "") 
             #content_tabs.addTab(PurchasedDownloadingTab(content_tabs), "") 
+            content_tabs.addTab(SecurityTab(content_tabs), "") 
             content_tabs.addTab(PeferenceTab(content_tabs), "")
             content_tabs.addTab(PersonalInfoPage(content_tabs), "") 
             content_tabs.addTab(PurchasedTab(content_tabs), "")
