@@ -24,7 +24,6 @@ class MarketClient:
         #     password = f.read()
         self.token = ''
         self.nonce = ''
-        self.message_hash = ''
 
 
     @staticmethod
@@ -78,8 +77,8 @@ class MarketClient:
         confirm_info = yield treq.json_content(resp)
         print(confirm_info)
         logger.debug('market_hash: %s', confirm_info['data']['market_hash'])
-        self.message_hash = confirm_info['data']['market_hash']
-        publish_file_update(self.message_hash, selected_id)
+        market_hash = confirm_info['data']['market_hash']
+        publish_file_update(market_hash, selected_id)
         return confirm_info['status']
 
 
@@ -254,3 +253,4 @@ class MarketClient:
         resp = yield treq.get(url, headers=header)
         confirm_info = yield treq.json_content(resp)
         return confirm_info['status']
+

@@ -829,13 +829,14 @@ class PurchasedDownloadingTab(QScrollArea):
 
 
 class PublishDialog(QDialog):
-    def __init__(self, parent=None, item={}):
+    def __init__(self, parent=None, id=None):
         super().__init__(parent)
         self.parent = parent
         #for testing this Tab @rayhueng
         self.setObjectName("cart_tab")
         #self.setObjectName("product_info_tab")
         self.init_ui()
+        self.product_id = id
 
     def init_ui(self):
 
@@ -945,12 +946,13 @@ class PublishDialog(QDialog):
         if self.pinfo_title and self.pinfo_descrip and self.pinfo_tag and self.pinfo_price and self.pinfo_checkbox_state:
             print("Updating item info in wallet database and other relevant databases")
             print("Updating self.parent tab info: selling tab or cloud tab")
-            logger.debug("current row: %s", self.parent.cur_clicked)
-            product_info = self.parent.file_list[self.parent.cur_clicked]
-            logger.debug('selected product name: %s', product_info.name)
-            logger.debug("product selected id: %s", product_info.id)
+            # logger.debug("current row: %s", self.parent.cur_clicked)
+            # product_info = self.parent.file_list[self.parent.cur_clicked]
+            # logger.debug('selected product name: %s', product_info.name)
+            # logger.debug("product selected id: %s", product_info.id)
             logger.debug("product info title: %s", self.pinfo_title)
-            d_publish = wallet.market_client.publish_product(product_info.id, self.pinfo_title,
+            logger.debug("product info id: %s", self.product_id)
+            d_publish = wallet.market_client.publish_product(self.product_id, self.pinfo_title,
                                                              self.pinfo_descrip, self.pinfo_price,
                                                              self.pinfo_tag, '2018-04-01 10:10:10',
                                                              '2018-04-01 10:10:10', '123456')
@@ -2059,8 +2061,9 @@ class CloudTab(QScrollArea):
         print("row {} has been removed...".format(self.cur_clicked))
 
     def handle_publish_act(self):
-        item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
-        self.publish_dialog = PublishDialog(self, item)
+        # item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
+        product_id = self.file_table.item(self.cur_clicked, 5).text()
+        self.publish_dialog = PublishDialog(self, product_id)
         # self.file_list[self.cur_clicked]
         print("handle publish act....")
 
