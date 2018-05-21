@@ -20,7 +20,7 @@ class Agent:
         contract_interface = utils.read_contract_interface(bin_path, contract_name)
         self.contract = web3.eth.contract(address=utils.read_contract_address(contract_name),
                                           abi=contract_interface['abi'],
-                                          bytecode=contract_interface['bin'])
+                                          bytecode=contract_interface['evm']['bytecode']['object'])
 
     def query_order(self, order_id) -> models.OrderInfo:
         order_record = self.contract.call().orderRecords(order_id)

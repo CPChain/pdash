@@ -19,9 +19,9 @@ class Trade(Base):
 
     id = Column(Integer, primary_key=True)
     order_id = Column(BIGINT, nullable=False)
-    buyer_addr = Column(BINARY, nullable=False)
-    seller_addr = Column(BINARY, nullable=False)
-    market_hash = Column(BINARY, nullable=False)
+    buyer_addr = Column(String, nullable=False)
+    seller_addr = Column(String, nullable=False)
+    market_hash = Column(String, nullable=False)
     AES_key = Column(BINARY, nullable=False)
     file_hash = Column(BINARY, nullable=False)
     file_uuid = Column(String, nullable=False)

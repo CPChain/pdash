@@ -6,6 +6,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from cpchain.market.account.models import WalletUser
 from cpchain.market.account.permissions import IsOwnerOrReadOnly, AlreadyLoginUser
 from cpchain.market.comment.models import SummaryComment
 from cpchain.market.market.utils import *
@@ -69,10 +70,10 @@ class ProductPublishAPIViewSet(APIView):
             return create_invalid_response()
 
         # generate msg hash
-        msg_hash_source = product.get_msg_hash_source()
-        logger.debug("msg_hash_source:%s" % msg_hash_source)
-        product.msg_hash = generate_msg_hash(msg_hash_source)
-        logger.debug("msg_hash:%s" % product.msg_hash)
+        market_hash_source = product.get_msg_hash_source()
+        logger.debug("market_hash_source:%s" % market_hash_source)
+        product.msg_hash = generate_market_hash(market_hash_source)
+        logger.debug("market_hash:%s" % product.msg_hash)
         data['msg_hash'] = product.msg_hash
         data['seq'] = msg_seq.seq
 
@@ -241,7 +242,7 @@ class BaseProductStatusAPIViewSet(APIView):
         if public_key is None:
             return create_invalid_response()
         try:
-            product = Product.objects.get(owner_address=public_key, msg_hash=request.data['msg_hash'])
+            product = Product.objects.get(owner_address=public_key, msg_hash=request.data['market_hash'])
         except Product.DoesNotExist:
             return create_invalid_response()
         data = request.data
@@ -322,6 +323,41 @@ class RecommendProductsAPIView(APIView):
     permission_classes = (AllowAny,)
 
     def get(self, request):
+        # FIXME query current user following tags,query top 10 products with tags
+        queryset = Product.objects.filter(status=0)[0:10]
+        serializer = RecommendProductSerializer(queryset, many=True)
+        products = serializer.data
+
+        # fill username and rating for each product,return to client
+        product_list = []
+        for p in products:
+            pk = p['owner_address']
+            u = WalletUser.objects.get(public_key=pk)
+
+            p['username'] = '' if not u else u.username
+            # query average rating from SummaryComment table
+            comment,_ = SummaryComment.objects.get_or_create(market_hash=p['msg_hash'])
+            sale_status,_ = ProductSaleStatus.objects.get_or_create(market_hash=p['msg_hash'])
+            p['avg_rating'] = 1 if not comment else comment.avg_rating
+            p['sales_number'] = 0 if not sale_status else sale_status.sales_number
+            product_list.append(p)
+
+        return JsonResponse({'status': 1, 'message': 'success', 'data': product_list})
+
+
+class YouMayLikeProductsAPIView(APIView):
+    """
+    API endpoint that allows query recommend products.
+    """
+    queryset = Product.objects.all()
+    serializer_class = RecommendProductSerializer
+    permission_classes = (AlreadyLoginUser,)
+
+    def get(self, request):
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        token = self.request.META.get('MARKET-TOKEN')
+
+        logger.info("public_key:%s,token:%s",public_key,token)
         # FIXME query current user following tags,query top 10 products with tags
         queryset = Product.objects.filter(status=0)[0:10]
         serializer = RecommendProductSerializer(queryset, many=True)

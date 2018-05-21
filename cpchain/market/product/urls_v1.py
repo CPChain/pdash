@@ -35,6 +35,7 @@ urlpatterns = [
     url(r'^es_product/search/$', ESProductView.as_view(), name='es_product_search'),
 
     url(r'^recommend_product/list/$', RecommendProductsAPIView.as_view(), name='recommend_products'),
+    url(r'^you_may_like/list/$', YouMayLikeProductsAPIView.as_view(), name='you_may_like_products'),
     url(r'^sales_quantity/add/$', ProductSalesQuantityAddAPIView.as_view(), name='product_sales_quantity_add'),
 
 ]

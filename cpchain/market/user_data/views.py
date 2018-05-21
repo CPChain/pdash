@@ -1,14 +1,9 @@
 from rest_framework.views import APIView
-from cpchain.market.account.permissions import AlreadyLoginUser
-from cpchain.market.market.utils import *
-from cpchain.market.user_data.models import UploadFileInfo, BuyerFileInfo, UserInfoVersion, ProductTag, Bookmark
-from cpchain.market.user_data.serializers import UploadFileInfoSerializer, UserInfoVersionSerializer, \
-    BuyerFileInfoSerializer, ProductTagSerializer, BookmarkSerializer
-from rest_framework.views import APIView
 
 from cpchain.market.account.permissions import AlreadyLoginUser
 from cpchain.market.market.utils import *
 from cpchain.market.user_data.models import UploadFileInfo, BuyerFileInfo, UserInfoVersion, ProductTag, Bookmark
+from cpchain.market.user_data.serializers import BuyerFileInfoUpdateSerializer
 from cpchain.market.user_data.serializers import UploadFileInfoSerializer, UserInfoVersionSerializer, \
     BuyerFileInfoSerializer, ProductTagSerializer, BookmarkSerializer
 
@@ -30,7 +25,7 @@ def increase_data_version(public_key):
     return user_version.version
 
 
-class UploadFileInfoAPIView(APIView):
+class UploadFileInfoAddAPIView(APIView):
     """
     API endpoint that allows add UploadFileInfo.
     """
@@ -54,6 +49,43 @@ class UploadFileInfoAPIView(APIView):
             if serializer.is_valid(raise_exception=True):
                 user_version = increase_data_version(public_key)
                 serializer.save()
+                return JsonResponse({'status': 1, 'message': 'success', 'data': {'version': user_version}})
+        except:
+            logger.exception("save UploadFileInfo error")
+
+        return create_invalid_response()
+
+
+class UploadFileInfoUpdateAPIView(APIView):
+    """
+    API endpoint that allows add UploadFileInfo.
+    """
+    queryset = UploadFileInfo.objects.all()
+    serializer_class = UploadFileInfoSerializer
+    permission_classes = (AlreadyLoginUser,)
+
+    def post(self, request):
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        logger.info("public_key:%s" % public_key)
+
+        if public_key is None:
+            return create_invalid_response()
+
+        data = request.data
+        data['public_key'] = public_key
+        # public_key + client_id -->market_hash + is_published
+        try:
+            info = UploadFileInfo.objects.get(public_key=public_key, client_id=data['client_id'])
+        except:
+            logger.exception("get UploadFileInfo by public_key , client_id error")
+            return create_invalid_response()
+
+        # update profile
+        serializer = UploadFileInfoSerializer(info, data=data)
+        try:
+            if serializer.is_valid(raise_exception=True):
+                user_version = increase_data_version(public_key)
+                serializer.update(instance=info,validated_data=data)
                 return JsonResponse({'status': 1, 'message': 'success', 'data': {'version': user_version}})
         except:
             logger.exception("save UploadFileInfo error")
@@ -85,7 +117,7 @@ class PullUserInfoAPIView(APIView):
         return JsonResponse({'status': 1, 'message': 'success', 'data': all_data})
 
 
-class BuyerFileInfoAPIView(APIView):
+class BuyerFileInfoAddAPIView(APIView):
     """
     API endpoint that allows add BuyerFileInfo.
     """
@@ -110,6 +142,42 @@ class BuyerFileInfoAPIView(APIView):
             if serializer.is_valid(raise_exception=True):
                 user_version = increase_data_version(public_key)
                 serializer.save()
+                return JsonResponse({'status': 1, 'message': 'success', 'data': {'version': user_version}})
+        except:
+            logger.exception("save BuyerFileInfo error")
+
+        return create_invalid_response()
+
+
+class BuyerFileInfoUpdateAPIView(APIView):
+    """
+    API endpoint that allows add BuyerFileInfo.
+    """
+    queryset = BuyerFileInfo.objects.all()
+    serializer_class = BuyerFileInfoUpdateSerializer
+    permission_classes = (AlreadyLoginUser,)
+
+    def post(self, request):
+        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        logger.info("public_key:%s" % public_key)
+
+        if public_key is None:
+            return create_invalid_response()
+
+        data = request.data
+        logger.info("data:%s" % data)
+
+        try:
+            info = BuyerFileInfo.objects.get(order_id=data['order_id'])
+        except BuyerFileInfo.DoesNotExist:
+            return create_invalid_response()
+
+        # update profile
+        serializer = BuyerFileInfoUpdateSerializer(info, data=data)
+        try:
+            if serializer.is_valid(raise_exception=True):
+                user_version = increase_data_version(public_key)
+                serializer.update(instance=info,validated_data=data)
                 return JsonResponse({'status': 1, 'message': 'success', 'data': {'version': user_version}})
         except:
             logger.exception("save BuyerFileInfo error")
