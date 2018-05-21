@@ -47,6 +47,32 @@ class TestProductApi(BaseApiTest):
         # ======= query product via elasticsearch ========
         self.query_es_product()
 
+    def test_hide_or_show_es_product(self):
+
+        token = self.login_and_fetch_token()
+
+        market_hash = self.publish_product(token)
+
+        # ======= query product ========
+        keyword = "Medicine"
+        self.query_product(keyword=keyword)
+
+        # ======= query product via elasticsearch ========
+        self.query_es_product()
+
+        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
+
+        self.hide_product(header=header,market_hash=market_hash)
+
+        self.query_es_product()
+
+        self.show_product()
+
+        self.query_es_product()
+
+
+
+
     def login_and_fetch_token(self):
         header = {'Content-Type': 'application/json'}
         nonce = self._login_and_get_nonce(header)
@@ -102,7 +128,7 @@ class TestProductApi(BaseApiTest):
             print("title:%s" % p["title"])
 
     def query_es_product(self):
-        keyword = "testtile"
+        keyword = "Medicine"
         params = {"keyword": keyword}
         url = '%s/product/v1/es_product/search/' % HOST
         response = requests.get(url, params)
@@ -115,7 +141,7 @@ class TestProductApi(BaseApiTest):
             print("title:%s" % p["title"])
 
     def publish_product(self, token):
-        title = "Medicine big data from Mayo Clinic"
+        title = "Medicine big data from Mayo Clinic 222"
         description = "test12345654654654654"
         price = 15
         tags = "tag1,tag2"
@@ -137,6 +163,7 @@ class TestProductApi(BaseApiTest):
         parsed_json = json.loads(publish_resp.text)
         self.assertEqual(parsed_json['status'], 1)
         print("market_hash:%s" % parsed_json['data']["market_hash"])
+        return parsed_json['data']["market_hash"]
 
     def add_product_sales_quantity(self, token):
         url = '%s/product/v1/sales_quantity/add/' % HOST
@@ -271,3 +298,25 @@ class TestProductApi(BaseApiTest):
         self.assertGreaterEqual(len(parsed_json['data']), 1, "product number should be >= 1")
         for p in parsed_json['data']:
             print("tags:%s" % p["tags"])
+
+    def hide_product(self, header, market_hash):
+        payload = {"market_hash": market_hash}
+        url = '%s/product/v1/product/hide/' % HOST
+        response = requests.post(url, headers=header, json=payload)
+        self.assertEqual(response.status_code, 200)
+        parsed_json = json.loads(response.text)
+        self.assertGreaterEqual(parsed_json['status'], 1)
+        message = parsed_json['message']
+        print("message:%s" % message)
+        return message
+
+    def show_product(self, header, market_hash):
+        payload = {"market_hash": market_hash}
+        url = '%s/product/v1/product/show/' % HOST
+        response = requests.post(url, headers=header, json=payload)
+        self.assertEqual(response.status_code, 200)
+        parsed_json = json.loads(response.text)
+        self.assertGreaterEqual(parsed_json['status'], 1)
+        message = parsed_json['message']
+        print("message:%s" % message)
+        return message

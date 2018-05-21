@@ -44,7 +44,7 @@ def generate_signature(pri_key_string, raw_data, password=None):
     return sign(pri_key_string=pri_key_string, raw_data=raw_data, password=password)
 
 
-def generate_msg_hash(msg_hash_source):
+def generate_market_hash(msg_hash_source):
     return SHA256Hash.generate_hash(msg_hash_source)
 
 

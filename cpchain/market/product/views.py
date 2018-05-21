@@ -70,10 +70,10 @@ class ProductPublishAPIViewSet(APIView):
             return create_invalid_response()
 
         # generate msg hash
-        msg_hash_source = product.get_msg_hash_source()
-        logger.debug("msg_hash_source:%s" % msg_hash_source)
-        product.msg_hash = generate_msg_hash(msg_hash_source)
-        logger.debug("msg_hash:%s" % product.msg_hash)
+        market_hash_source = product.get_msg_hash_source()
+        logger.debug("market_hash_source:%s" % market_hash_source)
+        product.msg_hash = generate_market_hash(market_hash_source)
+        logger.debug("market_hash:%s" % product.msg_hash)
         data['msg_hash'] = product.msg_hash
         data['seq'] = msg_seq.seq
 
@@ -242,7 +242,7 @@ class BaseProductStatusAPIViewSet(APIView):
         if public_key is None:
             return create_invalid_response()
         try:
-            product = Product.objects.get(owner_address=public_key, msg_hash=request.data['msg_hash'])
+            product = Product.objects.get(owner_address=public_key, msg_hash=request.data['market_hash'])
         except Product.DoesNotExist:
             return create_invalid_response()
         data = request.data
