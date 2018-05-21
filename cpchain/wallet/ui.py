@@ -46,6 +46,7 @@ def load_stylesheet(wid, name):
         wid.setStyleSheet(s.substitute(subs))
 
 # widgets
+
 class CollectedTab(QScrollArea):
     class SearchBar(QLineEdit):
         def __init__(self, parent=None):
@@ -1313,10 +1314,11 @@ class HorizontalLine(QFrame):
 
 
 class Product(QScrollArea):
-    def __init__(self, parent=None, item={}):
+    def __init__(self, parent=None, item={}, mode=""):
         super().__init__(parent)
         self.parent = parent
         self.item = item
+        self.mode = mode
         self.init_ui()
 
     def init_ui(self):
@@ -1364,17 +1366,17 @@ class Product(QScrollArea):
             main_layout.addWidget(self.title_btn)
             main_layout.addSpacing(5)
 
-            self.sales_layout = QHBoxLayout(self)
-            self.sales_layout.addWidget(self.total_sale_label)
-            self.sales_layout.addStretch(1)
-            self.sales_layout.addWidget(self.seller_btn)
-            self.sales_layout.addSpacing(5)
-            self.sales_layout.addWidget(self.time_label)
-            self.sales_layout.addStretch(2)
-            
+            if self.mode != "simple":
+                self.sales_layout = QHBoxLayout(self)
+                self.sales_layout.addWidget(self.total_sale_label)
+                self.sales_layout.addStretch(1)
+                self.sales_layout.addWidget(self.seller_btn)
+                self.sales_layout.addSpacing(5)
+                self.sales_layout.addWidget(self.time_label)
+                self.sales_layout.addStretch(2)
+                self.main_layout.addLayout(self.sales_layout)
+                main_layout.addSpacing(10)
 
-            self.main_layout.addLayout(self.sales_layout)
-            main_layout.addSpacing(10)
             self.main_layout.addWidget(self.price_label)
 
             self.tag_layout = QHBoxLayout(self)
@@ -1390,7 +1392,7 @@ class Product(QScrollArea):
             #self.main_layout.addStretch(1)
             self.setLayout(self.main_layout)
         setlayout()
-        print("Loading stylesheet of item")
+        logger.debug("Loading stylesheet of item")
 
 
 class PopularTab(QScrollArea):
@@ -1981,18 +1983,14 @@ class Header(QFrame):
             self.setFixedSize(300, 25)
             self.setTextMargins(25, 0, 20, 0)
 
-            self.search_btn_cloud = search_btn_cloud = QPushButton(self)
-            search_btn_cloud.setObjectName("search_btn")
-            search_btn_cloud.setFixedSize(18, 18)
-            search_btn_cloud.setCursor(QCursor(Qt.PointingHandCursor))
-
-            def bind_slots():
-                print("Binding slots of clicked-search-btn......")
-            bind_slots()
+            self.search_product_btn = search_product_btn = QPushButton(self)
+            search_product_btn.setObjectName("search_btn")
+            search_product_btn.setFixedSize(18, 18)
+            search_product_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
             def set_layout():
                 main_layout = QHBoxLayout()
-                main_layout.addWidget(search_btn_cloud)
+                main_layout.addWidget(search_product_btn)
                 main_layout.addStretch()
                 main_layout.setContentsMargins(5, 0, 0, 0)
                 self.setLayout(main_layout)
