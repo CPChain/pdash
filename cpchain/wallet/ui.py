@@ -1,5 +1,17 @@
 #!/usr/bin/python3
-import sys, os
+from twisted.logger import globalLogBeginner, textFileLogObserver
+import sys
+globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
+
+from twisted.internet.defer import Deferred
+
+def raiseErr(what):
+    raise Exception(what)
+
+d = Deferred()
+d.addCallback(raiseErr)
+d.callback("hmmm")
+
 import os.path as osp
 import string
 import logging
