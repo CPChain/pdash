@@ -3,7 +3,7 @@
 import os
 import logging
 
-from twisted.internet import reactor, protocol, ssl, defer, _sslverify
+from twisted.internet import reactor, protocol, ssl, defer
 from twisted.protocols.basic import NetstringReceiver
 
 import treq
@@ -115,6 +115,30 @@ def start_client(sign_message, addr=None):
 
 def download_file(uri):
 
+    from twisted.web.iweb import IPolicyForHTTPS
+    from zope.interface import implementer
+    from treq import api
+
+    @implementer(IPolicyForHTTPS)
+    class NoVerifySSLContextFactory(object):
+        """Context that doesn't verify SSL connections"""
+        def creatorForNetloc(self, hostname, port): # pylint: disable=unused-argument
+            return ssl.CertificateOptions(verify=False)
+
+    def no_verify_agent(**kwargs):
+        reactor = api.default_reactor(kwargs.get('reactor'))
+        pool = api.default_pool(
+            reactor,
+            kwargs.get('pool'),
+            kwargs.get('persistent'))
+
+        no_verify_agent.agent = api.Agent(
+            reactor,
+            contextFactory=NoVerifySSLContextFactory(),
+            pool=pool
+        )
+        return no_verify_agent.agent
+
     file_dir = os.path.expanduser(config.wallet.download_dir)
     # create if not exists
     os.makedirs(file_dir, exist_ok=True)
@@ -122,9 +146,8 @@ def download_file(uri):
     file_name = os.path.basename(uri)
     file_path = os.path.join(file_dir, file_name)
 
-    _sslverify.platformTrust = lambda: None
     f = open(file_path, 'wb')
-    d = treq.get(uri)
+    d = treq.get(uri, agent=no_verify_agent())
     d.addCallback(treq.collect, f.write)
     d.addBoth(lambda _: f.close())
     return d
