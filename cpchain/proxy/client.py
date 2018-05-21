@@ -97,10 +97,10 @@ def start_client(sign_message, addr=None):
     def handle_proxy_response(proxy_reply):
 
         if not proxy_reply.error:
-            logger.debug('file_uuid: %s' % proxy_reply.file_uuid)
+            logger.debug('file_uri: %s' % proxy_reply.file_uri)
             logger.debug('AES_key: %s' % proxy_reply.AES_key.decode())
             if buyer_request:
-                return download_file(proxy_reply.file_uuid).addCallback(
+                return download_file(proxy_reply.file_uri).addCallback(
                     lambda _: d.callback(proxy_reply))
         else:
             logger.debug(proxy_reply.error)
@@ -112,20 +112,19 @@ def start_client(sign_message, addr=None):
     return d
 
 
-def download_file(file_uuid):
-    host = config.proxy.server_host
-    data_port = config.proxy.server_data_port
+
+def download_file(uri):
+
     file_dir = os.path.expanduser(config.wallet.download_dir)
     # create if not exists
     os.makedirs(file_dir, exist_ok=True)
 
-    url = "https://%s:%d/%s" % (host, data_port, file_uuid)
-
-    file_path = os.path.join(file_dir, file_uuid)
+    file_name = os.path.basename(uri)
+    file_path = os.path.join(file_dir, file_name)
 
     _sslverify.platformTrust = lambda: None
     f = open(file_path, 'wb')
-    d = treq.get(url)
+    d = treq.get(uri)
     d.addCallback(treq.collect, f.write)
     d.addBoth(lambda _: f.close())
     return d

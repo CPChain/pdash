@@ -166,7 +166,11 @@ class SSLServerProtocol(NetstringReceiver):
         message.type = Message.PROXY_REPLY
         proxy_reply = message.proxy_reply
         proxy_reply.AES_key = trade.AES_key
-        proxy_reply.file_uuid = trade.file_uuid
+        file_uri = "https://%s:%d/%s" % (
+            self.factory.ip,
+            self.factory.data_port,
+            trade.file_uuid)
+        proxy_reply.file_uri = file_uri
 
         string = message.SerializeToString()
         self.sendString(string)
