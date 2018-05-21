@@ -1,0 +1,14 @@
+QLineEdit#search_bar{
+    min-height: 25px;
+    max-height: 25px;
+    min-width: 150px;
+    max-width: 300px;
+    border-radius: 5px;
+    border: 1px solid #d7d7d7;
+}
+
+QLineEdit#search_bar:hover {
+    border-radius: 5px;
+    border: 1px solid #3984f7;
+}
+

@@ -105,14 +105,6 @@ class CollectedTab(QScrollArea):
             self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["price"]))
             self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
 
-    # def set_right_menu(self, func):
-    #     self.customContextMenuRequested[QPoint].connect(func)
-
-    # def handle_upload(self):
-    #         self.local_file = QFileDialog.getOpenFileName()[0]
-    # defered = threads.deferToThread(upload_file_ipfs, self.local_file)
-    # defered.addCallback(handle_callback_upload)
-
     def init_ui(self):
 
         self.check_list = []
@@ -130,18 +122,6 @@ class CollectedTab(QScrollArea):
 
         def create_file_table():
             self.file_table = file_table = TableWidget(self)
-            # def right_menu():
-            #     self.purchased_right_menu = QMenu(file_table)
-            #     self.purchased_delete_act = QAction('Delete', self)
-            #     self.purchased_publish_act = QAction('Publish', self)
-
-            #     self.purchased_delete_act.triggered.connect(self.handle_delete_act)
-            #     self.purchased_publish_act.triggered.connect(self.handle_publish_act)
-
-            #     self.purchased_right_menu.addAction(self.purchased_delete_act)
-            #     self.purchased_right_menu.addAction(self.purchased_publish_act)
-
-            #     self.purchased_right_menu.exec_(QCursor.pos())
 
             file_table.horizontalHeader().setStretchLastSection(True)
             file_table.verticalHeader().setVisible(False)
@@ -210,7 +190,7 @@ class CollectedTab(QScrollArea):
 
         set_layout()
         # print("Loading stylesheet of cloud tab widget")
-        # load_stylesheet(self, "cloud.qss")
+        load_stylesheet(self, "collection.qss")
 
     def handle_delete(self):
         for i in range(len(self.check_record_list)):
