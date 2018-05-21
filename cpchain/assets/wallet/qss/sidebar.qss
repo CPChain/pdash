@@ -41,6 +41,7 @@ QPushButton#close_wnd_btn::hover, QPushButton#minimize_wnd_btn::hover, QPushButt
 
 QListWidget {
     /*font-family: "DejaVu Sans Mono";*/
+    font-family: : Arial;
     font-size: 12pt; 
     /*font-weight: bold;*/  
     /*border: none;*/
@@ -48,8 +49,12 @@ QListWidget {
 }
 
 QListWidget::item  {
+    font-family: : Arial;
+    padding-left: 15px;
+    border-left: 3px solid #eeeeee;
     background: none;
     color: #1c1c1c; 
+    text-align: center; 
 }
 
 QListWidget::item:selected  {
