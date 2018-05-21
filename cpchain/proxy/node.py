@@ -111,8 +111,8 @@ class Peer:
             loop.run_until_complete(peer.bootstrap(boot_nodes))
             addr = loop.run_until_complete(peer.protocol.stun(boot_nodes[0]))
             self.ip = addr[1][0]
-            loop.run_until_complete(peer.set(self.eth_addr,
-                                             (self.ip, self.service_port)))
+            addr = '%s,%d' % (self.ip, self.service_port)
+            loop.run_until_complete(peer.set(self.eth_addr, addr))
 
     def pick_peer(self, boot_node, port=None):
         port = port or 8150
@@ -156,7 +156,7 @@ class Peer:
             peer.stop()
 
             if value:
-                return tuple(value)
+                return tuple(value.split(','))
         else:
             logger.error("wrong boot nodes")
 

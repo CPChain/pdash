@@ -72,8 +72,8 @@ def proxy_reply_error(error):
 def start_client(sign_message, addr=None):
 
     if addr:
-        host = addr[0]
-        port = addr[1]
+        host = str(addr[0])
+        port = int(addr[1])
     else:
         host = config.proxy.server_host
         port = config.proxy.server_ctrl_port
