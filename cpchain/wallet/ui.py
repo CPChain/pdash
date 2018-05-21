@@ -27,6 +27,7 @@ from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont, QPainter
 from cpchain import config, root_dir
 from cpchain.wallet.wallet import Wallet
 from cpchain.wallet import fs
+from cpchain.crypto import ECCipher
 
 from twisted.internet import threads, defer, reactor
 from twisted.internet.threads import deferToThread
@@ -751,6 +752,7 @@ class PublishDialog(QDialog):
         if self.pinfo_title and self.pinfo_descrip and self.pinfo_tag and self.pinfo_price and self.pinfo_checkbox_state:
             print("Updating item info in wallet database and other relevant databases")
             print("Updating self.parent tab info: selling tab or cloud tab")
+            logger.debug("current row: %s", self.parent.cur_clicked)
             product_info = self.parent.file_list[self.parent.cur_clicked]
             logger.debug("product selected id: %s", product_info.id)
             logger.debug("product info title: %s", self.pinfo_title)
@@ -2090,10 +2092,15 @@ class Header(QFrame):
 
         def handle_login(self):
             print("check access......")
-            d_login = wallet.market_client.login()
+            if self.account2_btn.isChecked():
+                wallet.accounts.set_default_account(1)
+                wallet.market_client.account = wallet.accounts.default_account
+                wallet.market_client.public_key = ECCipher.serialize_public_key(wallet.market_client.account.public_key)
 
+            d_login = wallet.market_client.login()
             def login_result(status):
                 if status == 1:
+                    logger.debug("login account: %s", wallet.market_client.public_key)
                     QMessageBox.information(self, "Tips", "Successful !")
                 elif status == 0:
                     QMessageBox.information(self, "Tips", "Failed !")

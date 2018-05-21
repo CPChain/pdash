@@ -52,7 +52,7 @@ class MarketClient:
         logger.debug('login confirm: %s', confirm_info)
         self.token = confirm_info['message']
         logger.debug('token: %s', self.token)
-        if not confirm_info['status']:
+        if confirm_info['status'] == 1:
             logger.debug("login succeed")
         return confirm_info['status']
 
@@ -64,6 +64,7 @@ class MarketClient:
         header = {'Content-Type': 'application/json'}
         header['MARKET-KEY'] = self.public_key
         header['MARKET-TOKEN'] = self.token
+        logger.debug('header token: %s', self.token)
         data = {'owner_address': self.public_key, 'title': title, 'description': description,
                 'price': price, 'tags': tags, 'start_date': start_date, 'end_date': end_date,
                 'file_md5': file_md5}
@@ -75,6 +76,8 @@ class MarketClient:
         logger.debug("signature: %s", data['signature'])
         resp = yield treq.post(self.url + 'product/v1/product/publish/', headers=header, json=data)
         confirm_info = yield treq.json_content(resp)
+        print(confirm_info)
+        logger.debug('market_hash: %s', confirm_info['data']['market_hash'])
         self.message_hash = confirm_info['data']['market_hash']
         publish_file_update(self.message_hash, selected_id)
         return confirm_info['status']
