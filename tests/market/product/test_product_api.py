@@ -34,6 +34,11 @@ class TestProductApi(BaseApiTest):
         keyword = "testtile"
         self.query_product(keyword=keyword)
 
+    def test_query_paged_product(self):
+        keyword = "publish"
+        # http://localhost:8000/api/v1/my_product_paged/search/?page=1&keyword=777
+        self.query_paged_product(keyword=keyword)
+
     def test_query_es_product(self):
 
         token = self.login_and_fetch_token()
@@ -126,6 +131,16 @@ class TestProductApi(BaseApiTest):
         parsed_json = json.loads(response.text)
         for p in parsed_json:
             print("title:%s" % p["title"])
+
+    def query_paged_product(self, keyword):
+        params = {"keyword": keyword, "page":1}
+        url = '%s/product/v1/product_paged/search/' % HOST
+        response = requests.get(url, params)
+        print("products:%s" % response)
+        print(response.text)
+        parsed_json = json.loads(response.text)
+        for p in parsed_json['results']:
+            print(p["title"])
 
     def query_es_product(self):
         keyword = "Medicine"
