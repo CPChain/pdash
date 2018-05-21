@@ -90,18 +90,24 @@ def start_client(sign_message, addr=None):
     reactor.connectSSL(host, port, factory,
                        ssl.ClientContextFactory())
 
+    buyer_request = message.type == Message.BUYER_DATA
+
+    d = defer.Deferred()
+
     def handle_proxy_response(proxy_reply):
 
         if not proxy_reply.error:
             logger.debug('file_uuid: %s' % proxy_reply.file_uuid)
             logger.debug('AES_key: %s' % proxy_reply.AES_key.decode())
+            if buyer_request:
+                return download_file(proxy_reply.file_uuid).addCallback(
+                    lambda _: d.callback(proxy_reply))
         else:
             logger.debug(proxy_reply.error)
 
-        return proxy_reply
+        d.callback(proxy_reply)
 
-    d = factory.d
-    d.addBoth(handle_proxy_response)
+    factory.d.addCallback(handle_proxy_response)
 
     return d
 
