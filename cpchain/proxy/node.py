@@ -3,9 +3,12 @@ import logging
 import os
 import asyncio
 
-from twisted.internet import asyncioreactor
-loop = asyncio.get_event_loop()
-asyncioreactor.install(eventloop=loop)
+if __name__ == '__main__':
+    from twisted.internet import asyncioreactor
+    loop = asyncio.get_event_loop()
+    asyncioreactor.install(eventloop=loop)
+else:
+    loop = asyncio.get_event_loop()
 
 from twisted.internet import reactor, ssl
 from twisted.web.server import Site
