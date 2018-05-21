@@ -46,6 +46,214 @@ def load_stylesheet(wid, name):
         wid.setStyleSheet(s.substitute(subs))
 
 # widgets
+
+
+
+#class PersonalHomePageTab(QScrollArea)
+class PeferenceTab(QScrollArea):
+    def __init__(self, parent=None, item={}):
+        super().__init__(parent)
+        self.parent = parent
+        #for testing this Tab @rayhueng
+        #self.setObjectName("cart_tab")
+        self.setObjectName("preferencepage")
+        self.init_ui()
+
+    def init_ui(self):
+
+        #Labels def
+        self.downloadpath_label = downloadpath_label = QLabel("Download Path:")
+        downloadpath_label.setObjectName("downloadpath_label")
+        self.tips_label = tips_label = QLabel("Send message in these conditions:")
+        tips_label.setObjectName("tips_label")
+        self.messageset_label = messageset_label = QLabel("Message Setting:")
+        messageset_label.setObjectName("messageset_label")
+        self.tag_label = tag_label = QLabel("Following Tags:")
+        tag_label.setObjectName("tag_label")
+        self.seller_label = seller_label = QLabel("Following Sellers:")
+        seller_label.setObjectName("seller_label")
+
+        #TextEdit def
+        self.downloadpath_edit = downloadpath_edit = QLineEdit()
+        downloadpath_edit.setObjectName("downloadpath_edit")
+
+        #Buttons and Tags
+        self.tag = ["tag1", "tag2", "tag3", "tag4"]
+        self.tag_num = 4
+        self.tag_btn_list = []
+        for i in range(self.tag_num):
+            self.tag_btn_list.append(QPushButton(self.tag[i], self))
+            self.tag_btn_list[i].setObjectName("tag_btn_{0}".format(i))
+            self.tag_btn_list[i].setProperty("t_value", 1)
+            self.tag_btn_list[i].setCursor(QCursor(Qt.PointingHandCursor))
+
+        #openpath button: open the download path in file browser on click
+        #handler self.handle_openpath
+        self.openpath_btn = openpath_btn = QPushButton(self)
+        self.openpath_btn.setObjectName("openpath_btn")
+        self.openpath_btn.setText("Open...")
+        self.openpath_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        self.openpath_btn.clicked.connect(self.handle_openpath)
+
+        #addtag button: open the page for adding a customized tag on click 
+        #handler self.handle_addtag       
+        self.addtag_btn = addtag_btn = QPushButton(self)
+        self.addtag_btn.setObjectName("addtag_btn")
+        self.addtag_btn.setText("Add...")
+        self.addtag_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        self.addtag_btn.clicked.connect(self.handle_addtag)
+
+        #three checkboxes
+        self.messageset_checkbox_1 = messageset_checkbox_1 = QCheckBox(self)
+        self.messageset_checkbox_1.setObjectName("messageset_checkbox_1")
+        self.messageset_checkbox_1.setText("New Order")
+
+        self.messageset_checkbox_2 = messageset_checkbox_2 = QCheckBox(self)
+        self.messageset_checkbox_2.setObjectName("messageset_checkbox_2")
+        self.messageset_checkbox_2.setText("Account spending")
+
+        self.messageset_checkbox_3 = messageset_checkbox_3 = QCheckBox(self)
+        self.messageset_checkbox_3.setObjectName("messageset_checkbox_3")
+        self.messageset_checkbox_3.setText("Download failed")
+
+        #widgets for following sellers
+        product_counter = 20
+        self.seller_avatar = seller_avatar = QLabel("ICONHERE")
+        seller_avatar.setObjectName("seller_avatar")       
+        self.seller_id = seller_id = QLabel("Christopher Chak")
+        seller_id.setObjectName("seller_avatar")  
+        self.seller_pcount = seller_pcount = QLabel("Products {}".format(product_counter))
+        seller_pcount.setObjectName("seller_pcount")                
+        self.unfollow_btn = unfollow_btn = QPushButton("Unfollow")
+        self.unfollow_btn.setObjectName("unfollow_btn")
+        self.unfollow_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        self.unfollow_btn.clicked.connect(self.handle_unfollow)
+
+        def set_layout():
+            self.pinfo_preference_layout = pinfo_preference_layout = QGridLayout(self)
+            #self.pinfo_top_layout.setSpacing(10)
+            self.pinfo_preference_layout.setContentsMargins(40, 40, 150, 100)
+            self.pinfo_preference_layout.addWidget(downloadpath_label, 1, 1, 1, 1)
+            self.pinfo_preference_layout.addWidget(downloadpath_edit, 1, 3, 1, 20)
+            self.pinfo_preference_layout.addWidget(openpath_btn, 2, 3, 1, 2)   
+                     
+            self.pinfo_preference_layout.addWidget(messageset_label, 3, 1, 1, 1)
+            self.pinfo_preference_layout.addWidget(tips_label, 3, 3, 1, 5)
+            self.pinfo_preference_layout.addWidget(messageset_checkbox_1, 4, 3, 1, 2)
+            self.pinfo_preference_layout.addWidget(messageset_checkbox_2, 5, 3, 1, 2)
+            self.pinfo_preference_layout.addWidget(messageset_checkbox_3, 6, 3, 1, 2)
+
+            #embeded layout for tag button
+            self.pinfo_preference_layout.addWidget(tag_label, 7, 1, 1, 1)
+            self.pinfo_tag_layout = pinfo_tag_layout = QHBoxLayout(self)
+            for i in range(self.tag_num): 
+                self.pinfo_tag_layout.addWidget(self.tag_btn_list[i])
+                self.pinfo_tag_layout.addSpacing(5)
+
+            self.pinfo_tag_layout.addStretch(1)
+            self.pinfo_preference_layout.addLayout(pinfo_tag_layout, 7, 3, 1, 10)
+            self.pinfo_preference_layout.addWidget(addtag_btn, 8, 3, 1, 2)
+
+            self.pinfo_preference_layout.addWidget(seller_label, 9, 1, 1, 1)
+            self.pinfo_preference_layout.addWidget(seller_avatar, 9, 3, 2, 2) 
+            self.pinfo_preference_layout.addWidget(seller_id, 9, 6, 1, 1) 
+            self.pinfo_preference_layout.addWidget(seller_pcount, 10, 6, 1, 1)
+            self.pinfo_preference_layout.addWidget(unfollow_btn, 9, 20, 2, 2)            
+                       
+            self.setLayout(pinfo_preference_layout)
+        set_layout()
+        print("Loading stylesheet of cloud tab widget")
+        #load_stylesheet(self, "pinfo.qss")
+
+    def handle_openpath(self):
+        pass
+
+    def handle_addtag(self):
+        pass
+
+    def handle_unfollow(self):
+        pass
+
+
+class PersonalInfoPage(QScrollArea):
+    def __init__(self, parent=None, item={}):
+        super().__init__(parent)
+        self.parent = parent
+        #for testing this Tab @rayhueng
+        self.setObjectName("PersonalInfoPage")
+        #self.setObjectName("cart_tab")
+        self.init_ui()
+
+    def init_ui(self):
+    #Labels def
+        self.avatar_label = avatar_label = QLabel("Avatar")
+        avatar_label.setObjectName("avatar_label")
+        self.avatar_icon = avatar_icon = QLabel("ICONHERE")
+        avatar_icon.setObjectName("avatar_icon")
+        self.username_label = username_label = QLabel("Username:")
+        username_label.setObjectName("username_label")
+        self.email_label = email_label = QLabel("Email:")
+        email_label.setObjectName("email_label")
+        self.gender_label = gender_label = QLabel("Gender:")
+        gender_label.setObjectName("gender_label")
+        self.phone_label = phone_label = QLabel("Mobile Phone")
+        phone_label.setObjectName("phone_label")
+
+        #TextEdit def
+        self.username_edit = username_edit = QLineEdit()
+        username_edit.setObjectName("username_edit")
+        self.email_edit = email_edit = QLineEdit()
+        email_edit.setObjectName("email_edit")
+        self.phone_edit = phone_edit = QLineEdit()
+        phone_edit.setObjectName("phone_edit")
+
+
+        #Buttons and Tags
+        self.avataripload_btn = avataripload_btn = QPushButton(self)
+        self.avataripload_btn.setObjectName("avataripload_btn")
+        self.avataripload_btn.setText("Upload/Save")
+        self.avataripload_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        self.avataripload_btn.clicked.connect(self.handle_submit)
+
+        self.gender_btn = gender_btn = QPushButton(self)
+        self.gender_btn.setObjectName("gender_btn")
+        self.gender_btn.setText("Male/Female")
+
+        self.submit_btn = submit_btn = QPushButton(self)
+        self.submit_btn.setObjectName("submit_btn")
+        self.submit_btn.setText("Submit")
+        self.submit_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        self.submit_btn.clicked.connect(self.handle_submit)
+
+
+        def set_layout():
+            self.pinfo_top_layout = pinfo_top_layout = QGridLayout(self)
+            #self.pinfo_top_layout.setSpacing(10)
+            self.pinfo_top_layout.setContentsMargins(40, 40, 300, 100)
+            self.pinfo_top_layout.addWidget(avatar_label, 1, 1, 1, 1)
+            self.pinfo_top_layout.addWidget(avatar_icon, 1, 3, 3, 3)
+            self.pinfo_top_layout.addWidget(avataripload_btn, 4, 3, 1, 1)
+
+            self.pinfo_top_layout.addWidget(username_label, 5, 1, 1, 1)
+            self.pinfo_top_layout.addWidget(username_edit, 5, 3, 1, 5)      
+            self.pinfo_top_layout.addWidget(email_label, 6, 1, 1, 1)
+            self.pinfo_top_layout.addWidget(email_edit, 6, 3, 1, 20)        
+            self.pinfo_top_layout.addWidget(gender_label, 7, 1, 1, 1)
+            self.pinfo_top_layout.addWidget(gender_btn, 7, 3, 1, 1)       
+            self.pinfo_top_layout.addWidget(phone_label, 8, 1, 1, 1)
+            self.pinfo_top_layout.addWidget(phone_edit, 8, 3, 1, 20)
+            self.pinfo_top_layout.addWidget(submit_btn, 10, 3, 1, 2)
+
+            self.setLayout(pinfo_top_layout)
+        set_layout()
+        #print("Loading stylesheet of cloud tab widget")
+        #load_stylesheet(self, "pinfo.qss")
+    def handle_submit(self):
+        pass
+
+
+
+
 class CollectedTab(QScrollArea):
     class SearchBar(QLineEdit):
         def __init__(self, parent=None):
@@ -58,10 +266,10 @@ class CollectedTab(QScrollArea):
             self.setFixedSize(300, 25)
             self.setTextMargins(25, 0, 20, 0)
 
-            self.search_btn_cloud = search_btn_cloud = QPushButton(self)
-            search_btn_cloud.setObjectName("search_btn")
-            search_btn_cloud.setFixedSize(18, 18)
-            search_btn_cloud.setCursor(QCursor(Qt.PointingHandCursor))
+            self.search_btn = search_btn = QPushButton(self)
+            search_btn.setObjectName("search_btn")
+            search_btn.setFixedSize(18, 18)
+            search_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
             def bind_slots():
                 print("Binding slots of clicked-search-btn......")
@@ -89,8 +297,7 @@ class CollectedTab(QScrollArea):
         print("Updating file list......")
         file_list = []
         # single element data structure (assumed); to be changed
-        dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "ordertime": "2018/2/4 08:30",
-                    "price": "36"}
+        dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "price": "200"}
         for i in range(self.row_number):
             file_list.append(dict_exa)
 
@@ -112,10 +319,13 @@ class CollectedTab(QScrollArea):
         self.num_file = 100
         self.cur_clicked = 0
 
-        self.purchased_dled_delete_btn = purchased_dled_delete_btn = QPushButton("Delete")
-        purchased_dled_delete_btn.setObjectName("purchased_dled_delete_btn")
+        self.uncollect_btn = uncollect_btn = QPushButton("Uncollect")
+        uncollect_btn.setObjectName("uncollect_btn")
 
-        self.purchased_dled_delete_btn.clicked.connect(self.handle_delete)
+        self.time_rank_label = time_rank_label = QLabel("Time")
+        time_rank_label.setObjectName("time_rank_label")
+
+        self.uncollect_btn.clicked.connect(self.handle_uncollect)
         self.search_bar = PurchasedDownloadedTab.SearchBar(self)
 
         self.row_number = 100
@@ -132,11 +342,11 @@ class CollectedTab(QScrollArea):
             file_table.setFocusPolicy(Qt.NoFocus)
             # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
-            file_table.setColumnCount(5)
+            file_table.setColumnCount(4)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             # file_table.set_right_menu(right_menu)
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price', 'Size', 'Order Time'])
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price', 'Size'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.setSortingEnabled(True)
 
@@ -164,6 +374,7 @@ class CollectedTab(QScrollArea):
 
         create_file_table()
         self.file_table.sortItems(2)
+        self.file_table.horizontalHeader().setStyleSheet("QHeaderView::section{background: #f3f3f3; border: 1px solid #dcdcdc}")
 
         # record rows that are clicked or checked
         def record_check(item):
@@ -176,13 +387,16 @@ class CollectedTab(QScrollArea):
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self)
             main_layout.addSpacing(0)
-            self.purchased_dled_upper_layout = QHBoxLayout(self)
-            self.purchased_dled_upper_layout.addSpacing(0)
-            self.purchased_dled_upper_layout.addWidget(self.search_bar)
-            self.purchased_dled_upper_layout.addSpacing(10)
-            self.purchased_dled_upper_layout.addWidget(self.purchased_dled_delete_btn)
-
-            self.main_layout.addLayout(self.purchased_dled_upper_layout)
+            self.collection_upper_layout = QHBoxLayout(self)
+            self.collection_upper_layout.addSpacing(5)
+            self.collection_upper_layout.addWidget(self.search_bar)
+            self.collection_upper_layout.addSpacing(5)
+            self.collection_upper_layout.addWidget(self.time_rank_label)
+            self.collection_upper_layout.addStretch(1)
+            self.collection_upper_layout.addWidget(self.uncollect_btn)
+            self.collection_upper_layout.addSpacing(10)
+            
+            self.main_layout.addLayout(self.collection_upper_layout)
             self.main_layout.addSpacing(2)
             self.main_layout.addWidget(self.file_table)
             self.main_layout.addSpacing(2)
@@ -192,11 +406,11 @@ class CollectedTab(QScrollArea):
         # print("Loading stylesheet of cloud tab widget")
         load_stylesheet(self, "collection.qss")
 
-    def handle_delete(self):
+    def handle_uncollect(self):
         for i in range(len(self.check_record_list)):
             if self.check_record_list[i] == True:
                 self.file_table.removeRow(i)
-                print("Deleting files permanently from the cloud...")
+                print("handle_uncollect files permanently from the collection...")
                 self.update_table()
 
 
@@ -1026,23 +1240,9 @@ class SellTab(QScrollArea):
             QMessageBox.information(self, "Tips", "Log in successfully !")
 
     def handle_upload(self):
-        # Maybe useful for buyer.
-        # row_selected = self.file_table.selectionModel().selectedRows()[0].row()
-        # selected_fpath = self.file_table.item(row_selected, 2).text()
         print("Uploading local files....")
         self.upload_dialog = CloudTab.UploadDialog(self)
 
-    #def handle_upload(self):
-        # Maybe useful for buyer.
-        # row_selected = self.file_table.selectionModel().selectedRows()[0].row()
-        # selected_fpath = self.file_table.item(row_selected, 2).text()
-        #self.local_file = QFileDialog.getOpenFileName()[0]
-        #print("Uploading local files....")
-        # defered = threads.deferToThread(upload_file_ipfs, self.local_file)
-        # def handle_callback_upload(x):
-        #     print("in handle_callback_upload" + x)
-        #     self.update_table()
-        # defered.addCallback(handle_callback_upload)
 
     def handle_delete_act(self):
         self.file_table.removeRow(self.cur_clicked)
@@ -1177,19 +1377,6 @@ class FollowingSellTab(QScrollArea):
         d_promotion.addCallback(get_promotion)
 
         def set_layout():
-            # self.follow_all_layout = QVBoxLayout(self)
-
-            # self.follow_rank_layout = QHBoxLayout(self)
-            # self.follow_rank_layout.addWidget(self.follow_rank_btn)
-            # self.follow_rank_layout.addSpacing(10)
-            # self.follow_rank_layout.addWidget(self.follow_time_btn)
-            # self.follow_rank_layout.addSpacing(10)
-            # self.follow_rank_layout.addWidget(self.follow_price_btn)
-            # self.follow_rank_layout.addSpacing(10)
-            # self.follow_rank_layout.addWidget(self.follow_sales_btn)
-            # self.follow_rank_layout.addSpacing(10)
-            # self.follow_rank_layout.addWidget(self.follow_filter_btn)
-            # self.follow_rank_layout.addStretch(1)
 
             self.follow_main_layout = QHBoxLayout(self)
 
@@ -2261,8 +2448,10 @@ class MainWindow(QMainWindow):
             content_tabs.addTab(FollowingTab(content_tabs), "")
             content_tabs.addTab(SellTab(content_tabs), "")
             # content_tabs.addTab(ProductInfoEdit(content_tabs), "")
-            content_tabs.addTab(PurchasedDownloadedTab(content_tabs), "") 
-            content_tabs.addTab(PurchasedDownloadingTab(content_tabs), "") 
+            #content_tabs.addTab(PurchasedDownloadedTab(content_tabs), "") 
+            #content_tabs.addTab(PurchasedDownloadingTab(content_tabs), "") 
+            content_tabs.addTab(PeferenceTab(content_tabs), "")
+            content_tabs.addTab(PersonalInfoPage(content_tabs), "") 
             content_tabs.addTab(PurchasedTab(content_tabs), "")
             content_tabs.addTab(CollectedTab(content_tabs), "")
             print("Adding tabs(shopping cart tab, etc.) to content_tabs")
