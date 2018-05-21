@@ -66,7 +66,7 @@ class TestProductApi(BaseApiTest):
 
         self.query_es_product()
 
-        self.show_product()
+        self.show_product(header=header,market_hash=market_hash)
 
         self.query_es_product()
 
