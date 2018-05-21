@@ -61,6 +61,194 @@ def load_stylesheet(wid, name):
         wid.setStyleSheet(s.substitute(subs))
 
 # widgets
+class SearchProductTab(QScrollArea):
+    def __init__(self, parent=None, key_words=""):
+        super().__init__(parent)
+        self.parent = parent
+        self.key_words = key_words
+        self.setObjectName("search_tab")
+        self.init_ui()
+
+    def init_ui(self):
+        self.frame = QFrame()
+        self.frame.setObjectName("search_frame")
+        self.setWidget(self.frame)
+        self.setWidgetResizable(True)
+        self.frame.setMinimumWidth(500)
+        # self.frame.setMaximumHeight(800)
+
+        self.search_item_num = 4
+        self.search_promo_num = 4
+
+        self.item_lists = []
+        self.promo_lists = []
+
+        # TODO: Search for products by self.key_words and return them from the backend
+        def get_products(item={}, key_words=""):
+            for i in range(self.search_item_num):
+                self.item_lists.append(Product(self, item))
+
+        self.item = {"title": "Medical data from NHIS", "none": "none"}
+        get_products(self.item)
+
+        # TODO: Get promotion products based on products returned above or the keywords provided
+        def get_promotion(item={}, key_words=""):
+            for i in range(self.search_promo_num):
+                self.promo_lists.append(Product(self, item, "simple"))
+        get_promotion(self.item)
+
+
+
+        def create_labels():
+            self.num_label = QLabel("100")
+            self.num_label.setObjectName("num_label")
+
+            self.res_label = QLabel("results")
+            self.res_label.setObjectName("res_label")
+
+            self.time_label = QLabel("Time")
+            self.time_label.setObjectName("time_label")
+
+            self.sales_label = QLabel("Sales")
+            self.sales_label.setObjectName("sales_label")
+
+            self.price_label = QLabel("Price")
+            self.price_label.setObjectName("price_label")
+
+            self.region_label = QLabel("Region")
+            self.region_label.setObjectName("region_label")
+
+            self.line_label = QLabel("-")
+            self.line_label.setObjectName("line_label")
+
+            self.may_like_label = QLabel("You may like")
+            self.may_like_label.setObjectName("may_like_label")
+
+        create_labels()
+
+        def create_btns():
+            self.time_btn = QPushButton(self)
+            self.time_btn.setObjectName("time_btn")
+            self.time_btn.setText("t")
+
+            self.sales_btn = QPushButton(self)
+            self.sales_btn.setObjectName("sales_btn")
+            self.time_btn.setText("s")
+
+            self.price_btn = QPushButton(self)
+            self.price_btn.setObjectName("price_btn")
+            self.price_btn.setText("p")
+
+            self.region_btn = QPushButton(self)
+            self.region_btn.setObjectName("region_btn")
+
+        create_btns()
+
+        def bind_slots():
+            logger.debug("binding slots of btns....")
+
+        bind_slots()
+
+        def create_popmenu():
+            self.region_menu = region_menu = QMenu('Region', self)
+            self.shanghai_act = QAction('China', self)
+            self.london_act = QAction('London', self)
+            self.paris_act = QAction('Paris', self)
+            self.more_act = QAction('More', self)
+
+            region_menu.addAction(self.shanghai_act)
+            region_menu.addAction(self.london_act)
+            region_menu.addAction(self.paris_act)
+            region_menu.addAction(self.more_act)
+
+        create_popmenu()
+
+        self.region_btn.setMenu(self.region_menu)
+
+
+        def create_edits():
+            self.price_edit_from = QLineEdit()
+            self.price_edit_from.setObjectName("price_edit_from")
+
+            self.price_edit_to = QLineEdit()
+            self.price_edit_to.setObjectName("price_edit_to")
+
+        create_edits()
+
+        self.hline = HorizontalLine(self, 2)
+
+        def set_layout():
+            self.main_layout = main_layout = QVBoxLayout(self)
+            main_layout.addSpacing(0)
+
+            self.stat_layout = QHBoxLayout()
+            self.stat_layout.addSpacing(0)
+            self.stat_layout.addWidget(self.num_label)
+            self.stat_layout.addSpacing(0)
+            self.stat_layout.addWidget(self.res_label)
+            self.stat_layout.addSpacing(0)
+
+            self.main_layout.addLayout(self.stat_layout)
+            self.main_layout.addSpacing(0)
+            self.main_layout.addWidget(self.may_like_label)
+            self.main_layout.addSpacing(0)
+            self.main_layout.addWidget(self.hline)
+            self.main_layout.addSpacing(0)
+
+            self.content_layout = QHBoxLayout(self)
+            self.content_layout.addSpacing(0)
+
+            self.product_layout = QVBoxLayout(self)
+            self.product_layout.addSpacing(0)
+
+            self.promotion_layout = QVBoxLayout(self)
+            self.promotion_layout.addSpacing(0)
+
+            self.sort_layout = QHBoxLayout(self)
+            self.sort_layout.addSpacing(0)
+            self.sort_layout.addWidget(self.time_label)
+            self.sort_layout.addSpacing(0)
+            self.sort_layout.addWidget(self.time_btn)
+            self.sort_layout.addSpacing(0)
+            self.sort_layout.addWidget(self.sales_label)
+            self.sort_layout.addSpacing(0)
+            self.sort_layout.addWidget(self.sales_btn)
+            self.sort_layout.addSpacing(0)
+            self.sort_layout.addWidget(self.price_label)
+            self.sort_layout.addSpacing(0)
+            self.sort_layout.addWidget(self.price_btn)
+            self.sort_layout.addSpacing(0)
+            self.sort_layout.addWidget(self.price_edit_from)
+            self.sort_layout.addSpacing(0)
+            self.sort_layout.addWidget(self.line_label)
+            self.sort_layout.addSpacing(0)
+            self.sort_layout.addWidget(self.price_edit_to)
+            self.sort_layout.addSpacing(0)
+            self.sort_layout.addWidget(self.region_label)
+            self.sort_layout.addSpacing(0)
+            self.sort_layout.addWidget(self.region_btn)
+
+            self.product_layout.addLayout(self.sort_layout)
+            self.product_layout.addSpacing(0)
+
+            for i in range(self.search_item_num):
+                self.product_layout.addWidget(self.item_lists[i])
+                self.product_layout.addSpacing(0)
+
+            for i in range(self.search_promo_num):
+                self.promotion_layout.addWidget(self.promo_lists[i])
+                self.promotion_layout.addSpacing(0)
+
+            self.content_layout.addLayout(self.product_layout, 1)
+            self.content_layout.addLayout(self.promotion_layout, 2)
+
+            self.main_layout.addLayout(self.content_layout)
+
+            self.setLayout(self.main_layout)
+
+        set_layout()
+        # TODO: Loading stylesheet
+        logger.debug("loading stylesheet...")
 
 
 
@@ -2187,6 +2375,17 @@ class Header(QFrame):
             search_product_btn.setObjectName("search_btn")
             search_product_btn.setFixedSize(18, 18)
             search_product_btn.setCursor(QCursor(Qt.PointingHandCursor))
+
+            def search_product():
+                self.key_words = str(self.text())
+                if bool(self.key_words):
+                    self.search_product_tab = SearchProductTab(self.parent.parent.content_tabs, self.key_words)
+                    self.parent.parent.content_tabs.addTab(self.search_product_tab, "")
+                    self.cur_index = self.parent.parent.content_tabs.count() - 1
+                    logger.debug(self.cur_index)
+                    self.parent.parent.content_tabs.setCurrentIndex(self.cur_index)
+
+            self.search_product_btn.clicked.connect(search_product)
 
             def set_layout():
                 main_layout = QHBoxLayout()
