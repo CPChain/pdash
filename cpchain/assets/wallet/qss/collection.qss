@@ -1,0 +1,69 @@
+QLineEdit#search_bar{
+    min-height: 25px;
+    max-height: 25px;
+    min-width: 200px;
+    max-width: 300px;
+    border-radius: 5px;
+    border: 1px solid #d7d7d7;
+}
+
+QLineEdit#search_bar:hover {
+    border-radius: 5px;
+    border: 1px solid #3984f7;
+}
+
+QLabel#time_rank_label{
+    color: #777777;
+    font-size: 12px;
+}
+
+QPushButton#uncollect_btn{
+    padding-left: 14px;
+    padding-right: 14px;
+    border: 1px solid #3173d8; 
+    border-radius: 5px;
+    color: #3173d8;
+    min-height: 30px;
+    max-height: 30px;
+    background: #ffffff;
+}
+
+QPushButton#uncollect_btn:hover{
+    border: 1px solid #3984f7; 
+    color: #3984f6;
+}
+
+QPushButton#uncollect_btn:pressed{
+    border: 1px solid #2e6dcd; 
+    color: #2e6dcd;
+    background: #e5ecf4;
+}
+
+QPushbutton#uncollect_btn:disabled{
+    border: 1px solid #8cb8ea; 
+    color: #8cb8ea;
+}
+
+QPushButton#search_btn {
+    border-image: url(${asset_dir}/icons/search_btn.png); 
+}
+
+QTableWidget {
+    background: #ffffff;
+    alternate-background-color: #f3f3f3;
+    border: none;
+    border-top: 1px solid #c9c9c9;
+    color: #676767;
+}
+
+QTableWidget::item {
+    border: none;
+    outline: none;
+    outline-style: none;
+    color: #1c1c1c;
+}
+
+QTableWidget::item:selected, QTableWidget::item:focus {
+    background: #3173d8;
+    color: #ffffff;
+}

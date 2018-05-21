@@ -1,17 +1,5 @@
 #!/usr/bin/python3
-from twisted.logger import globalLogBeginner, textFileLogObserver
-import sys
-globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
-
-from twisted.internet.defer import Deferred
-
-def raiseErr(what):
-    raise Exception(what)
-
-d = Deferred()
-d.addCallback(raiseErr)
-d.callback("hmmm")
-
+import sys, os
 import os.path as osp
 import string
 import logging
@@ -27,15 +15,12 @@ from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont, QPainter
 from cpchain import config, root_dir
 from cpchain.wallet.wallet import Wallet
 from cpchain.wallet import fs
-from cpchain.crypto import ECCipher
 
 from twisted.internet import threads, defer, reactor
 from twisted.internet.threads import deferToThread
 from twisted.internet.task import LoopingCall
 
 wallet = Wallet(reactor)
-
-logger = logging.getLogger(__name__) # pylint: disable=locally-disabled, invalid-name
 
 
 # utils
@@ -264,6 +249,9 @@ class PersonalInfoPage(QScrollArea):
         #load_stylesheet(self, "pinfo.qss")
     def handle_submit(self):
         pass
+
+
+
 
 class CollectedTab(QScrollArea):
     class SearchBar(QLineEdit):
@@ -942,22 +930,7 @@ class PublishDialog(QDialog):
         if self.pinfo_title and self.pinfo_descrip and self.pinfo_tag and self.pinfo_price and self.pinfo_checkbox_state:
             print("Updating item info in wallet database and other relevant databases")
             print("Updating self.parent tab info: selling tab or cloud tab")
-            logger.debug("current row: %s", self.parent.cur_clicked)
-            product_info = self.parent.file_list[self.parent.cur_clicked]
-            logger.debug('selected product name: %s', product_info.name)
-            logger.debug("product selected id: %s", product_info.id)
-            logger.debug("product info title: %s", self.pinfo_title)
-            d_publish = wallet.market_client.publish_product(product_info.id, self.pinfo_title,
-                                                             self.pinfo_descrip, self.pinfo_price,
-                                                             self.pinfo_tag, '2018-04-01 10:10:10',
-                                                             '2018-04-01 10:10:10', '123456')
-            def update_table(*args):
-                QMessageBox.information(self, "Tips", "Successful !")
-                self.parent.update_table()
-                self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
-
-            d_publish.addCallback(update_table)
-
+            QMessageBox.information(self, "Tips", "Successful !")
             self.close()
         else:
             QMessageBox.warning(self, "Warning", "Please fill out the necessary selling information first!")
@@ -1027,7 +1000,6 @@ class SellTab(QScrollArea):
             self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
             self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["remote_type"]))
             self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
-            #self.file_table.setItem(cur_row, 6, QTableWidgetItem(str(self.file_list[cur_row].id)))
 
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
@@ -1100,11 +1072,11 @@ class SellTab(QScrollArea):
             file_table.setFocusPolicy(Qt.NoFocus) 
             # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
-            file_table.setColumnCount(8)
+            file_table.setColumnCount(7)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
 
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price ($)', 'Order', 'Sales', 'Rating', 'Update Time', 'ID'])
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price ($)', 'Order', 'Sales', 'Rating', 'Update Time'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.setSortingEnabled(True)
 
@@ -1130,7 +1102,6 @@ class SellTab(QScrollArea):
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["sales"]))
                 self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["rating"]))
                 self.file_table.setItem(cur_row, 6, QTableWidgetItem(file_list[cur_row]["updatetime"]))
-                #self.file_table.setItem(cur_row, 7, QTableWidgetItem(str(self.file_list[cur_row].id)))
                 self.check_record_list.append(False)
         create_file_table()    
         self.file_table.sortItems(2)
@@ -1508,11 +1479,10 @@ class HorizontalLine(QFrame):
 
 
 class Product(QScrollArea):
-    def __init__(self, parent=None, item={}, mode=""):
+    def __init__(self, parent=None, item={}):
         super().__init__(parent)
         self.parent = parent
         self.item = item
-        self.mode = mode
         self.init_ui()
 
     def init_ui(self):
@@ -1560,17 +1530,17 @@ class Product(QScrollArea):
             main_layout.addWidget(self.title_btn)
             main_layout.addSpacing(5)
 
-            if self.mode != "simple":
-                self.sales_layout = QHBoxLayout(self)
-                self.sales_layout.addWidget(self.total_sale_label)
-                self.sales_layout.addStretch(1)
-                self.sales_layout.addWidget(self.seller_btn)
-                self.sales_layout.addSpacing(5)
-                self.sales_layout.addWidget(self.time_label)
-                self.sales_layout.addStretch(2)
-                self.main_layout.addLayout(self.sales_layout)
-                main_layout.addSpacing(10)
+            self.sales_layout = QHBoxLayout(self)
+            self.sales_layout.addWidget(self.total_sale_label)
+            self.sales_layout.addStretch(1)
+            self.sales_layout.addWidget(self.seller_btn)
+            self.sales_layout.addSpacing(5)
+            self.sales_layout.addWidget(self.time_label)
+            self.sales_layout.addStretch(2)
+            
 
+            self.main_layout.addLayout(self.sales_layout)
+            main_layout.addSpacing(10)
             self.main_layout.addWidget(self.price_label)
 
             self.tag_layout = QHBoxLayout(self)
@@ -1586,7 +1556,7 @@ class Product(QScrollArea):
             #self.main_layout.addStretch(1)
             self.setLayout(self.main_layout)
         setlayout()
-        logger.debug("Loading stylesheet of item")
+        print("Loading stylesheet of item")
 
 
 class PopularTab(QScrollArea):
@@ -1785,31 +1755,23 @@ class CloudTab(QScrollArea):
         self.init_ui()
 
     def update_table(self):
+        #file_list = get_file_list()
         print("Updating file list......")
         self.file_list = fs.get_file_list()
         print(len(self.file_list))
         self.row_number = len(self.file_list)
-        self.file_table.setRowCount(self.row_number)
-        #self.file_table.clearContents()
         for cur_row in range(self.row_number):
-            logger.debug('current file id: %s', self.file_list[cur_row].id)
-            logger.debug('current file name: %s', self.file_list[cur_row].name)
-            logger.debug('current file name: %s', str(self.file_list[cur_row].size))          
-            logger.debug('current file name: %s', self.file_list[cur_row].remote_type)
-            logger.debug('current file name: %s', str(self.file_list[cur_row].is_published))           
-
+            # if cur_row == len(file_list):
+            #     break
             print(str(cur_row) + " row")
             checkbox_item = QTableWidgetItem()
             checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
             checkbox_item.setCheckState(Qt.Unchecked)
-            #self.file_table.insertRow(cur_row)
             self.file_table.setItem(cur_row, 0, checkbox_item)
             self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row].name))
             self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(self.file_list[cur_row].size)))
             self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row].remote_type))
-            #self.file_table.item(cur_row, 3).setText(self.file_list[cur_row].remote_type)
             self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(self.file_list[cur_row].is_published)))
-            self.file_table.setItem(cur_row, 5, QTableWidgetItem(str(self.file_list[cur_row].id)))
 
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
@@ -1839,7 +1801,8 @@ class CloudTab(QScrollArea):
 
         self.tag_rank_label = tag_rank_label = QLabel("Tag")
         tag_rank_label.setObjectName("tag_rank_label")  
-
+    
+        self.row_number = 6
 
 
         def create_file_table():
@@ -1866,10 +1829,11 @@ class CloudTab(QScrollArea):
             file_table.setFocusPolicy(Qt.NoFocus) 
             # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
-            file_table.setColumnCount(6)
+            file_table.setColumnCount(5)
+            file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             file_table.set_right_menu(right_menu)
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Size', 'Remote Type', 'Published', 'ID'])
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Size', 'Remote Type', 'Published'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.setSortingEnabled(True)
 
@@ -1878,15 +1842,12 @@ class CloudTab(QScrollArea):
             self.check_record_list = []
             self.checkbox_list = []
             self.row_number = len(self.file_list)
-            file_table.setRowCount(self.row_number)
             print("init cloud table, row num: ")
             print(self.row_number)
 
             for cur_row in range(self.row_number):
                 # if cur_row == len(file_list):export PYTHONPATH=/home/cpchainpublic1/Documents/cpchain/
                 #     break
-                logger.debug('current file id: %s', self.file_list[cur_row].id)
-                logger.debug('current file name: %s', self.file_list[cur_row].name)
                 checkbox_item = QTableWidgetItem()
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 checkbox_item.setCheckState(Qt.Unchecked)
@@ -1894,10 +1855,9 @@ class CloudTab(QScrollArea):
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row].name))
                 self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(self.file_list[cur_row].size)))
                 #size
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row].remote_type))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row].name))
                 #remote_type
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(self.file_list[cur_row].is_published)))
-                self.file_table.setItem(cur_row, 5, QTableWidgetItem(str(self.file_list[cur_row].id)))
                 self.check_record_list.append(False)
         create_file_table()    
         self.file_table.sortItems(2)
@@ -2183,14 +2143,18 @@ class Header(QFrame):
             self.setFixedSize(300, 25)
             self.setTextMargins(25, 0, 20, 0)
 
-            self.search_product_btn = search_product_btn = QPushButton(self)
-            search_product_btn.setObjectName("search_btn")
-            search_product_btn.setFixedSize(18, 18)
-            search_product_btn.setCursor(QCursor(Qt.PointingHandCursor))
+            self.search_btn_cloud = search_btn_cloud = QPushButton(self)
+            search_btn_cloud.setObjectName("search_btn")
+            search_btn_cloud.setFixedSize(18, 18)
+            search_btn_cloud.setCursor(QCursor(Qt.PointingHandCursor))
+
+            def bind_slots():
+                print("Binding slots of clicked-search-btn......")
+            bind_slots()
 
             def set_layout():
                 main_layout = QHBoxLayout()
-                main_layout.addWidget(search_product_btn)
+                main_layout.addWidget(search_btn_cloud)
                 main_layout.addStretch()
                 main_layout.setContentsMargins(5, 0, 0, 0)
                 self.setLayout(main_layout)
@@ -2261,21 +2225,16 @@ class Header(QFrame):
 
         def handle_login(self):
             print("check access......")
-            if self.account2_btn.isChecked():
-                wallet.accounts.set_default_account(1)
-                wallet.market_client.account = wallet.accounts.default_account
-                wallet.market_client.public_key = ECCipher.serialize_public_key(wallet.market_client.account.public_key)
-
             d_login = wallet.market_client.login()
+
             def login_result(status):
                 if status == 1:
-                    logger.debug("login account: %s", wallet.market_client.public_key)
                     QMessageBox.information(self, "Tips", "Successful !")
-                elif status == 0:
+                elif status == 2:
                     QMessageBox.information(self, "Tips", "Failed !")
                 else:
                     QMessageBox.information(self, "Tips", "New Users !")
-                    # TODO: jump to user profile page
+                    # TODO: jump to userfile
             d_login.addCallback(login_result)
             self.close()
 
