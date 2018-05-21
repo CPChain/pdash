@@ -8,15 +8,15 @@ import django
 
 from cpchain import config
 from cpchain.chain import utils, models
-from cpchain.utils import join_with_root, Encoder
+from cpchain.utils import join_with_root, join_with_rc, Encoder
 from cpchain.chain.agents import Agent, BuyerAgent
 from cpchain.crypto import RSACipher
-from cpchain.market.transaction.models import TransactionDetail, ProductSaleStatus
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "cpchain.market.market.settings")
 django.setup()
 
 from rest_framework import serializers
+from cpchain.market.transaction.models import TransactionDetail, ProductSaleStatus
 
 
 logger = logging.getLogger(__name__)
@@ -32,7 +32,16 @@ class ProductSaleStatusSerializer(serializers.ModelSerializer):
         fields = ('market_hash', 'sales_number')
 
 class MarketSyncChainBlockNumberRecorder:
-    recorder_path = './market_sync_chain_block_number_recorder.toml'
+
+    recorder_path = '.market_sync_chain_block_number_recorder.toml'
+    recorder_path = join_with_rc(recorder_path)
+    empty_record = {
+        'sales_num_block_number': 0,
+        'transaction_detail_block_number': 0,
+    }
+    if not os.path.exists(recorder_path):
+        with open(recorder_path, 'w') as f:
+            toml.dump(empty_record, f)
 
     @staticmethod
     def load_record(recorder_path=None):
@@ -61,7 +70,7 @@ class MarketAgent(Agent):
             order_id = event['args']['orderId']
             order = self.query_order(order_id)
             desc_hash = order[0]
-            product_sale_status, _ = ProductSaleStatus.objects.get_or_create(market_hash=desc_hash)
+            product_sale_status, _ = ProductSaleStatus.objects.get_or_create(market_hash=Encoder.bytes_to_base64_str(desc_hash))
             serializer = ProductSaleStatusSerializer(product_sale_status)
             updated_data = serializer.data
             updated_data['sales_number'] = updated_data['sales_number'] + 1
@@ -85,7 +94,9 @@ class MarketAgent(Agent):
             buyer_address = order[2]
             seller_address = order[3]
             transaction_detail, _ = TransactionDetail.objects.get_or_create(
-                market_hash=desc_hash, buyer_address=buyer_address, seller_address=seller_address)
+                market_hash=Encoder.bytes_to_base64_str(desc_hash),
+                buyer_address=buyer_address,
+                seller_address=seller_address)
             serializer = TransactionDetailSerializer(transaction_detail)
             logger.debug('updated transaction detail: %s' % str(serializer.data))
         if order_event_list:

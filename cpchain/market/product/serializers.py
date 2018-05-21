@@ -1,7 +1,8 @@
 from django.utils import timezone
 from rest_framework import serializers
-from .models import Product, WalletUser, SalesQuantity, MySeller, MyTag
+
 from rest_framework_elasticsearch.es_serializer import ElasticModelSerializer
+from .models import Product, SalesQuantity, MySeller, MyTag
 from .search_indexes import ProductIndex
 
 
@@ -12,7 +13,6 @@ class RecommendProductSerializer(serializers.ModelSerializer):
             'id', 'owner_address', 'title', 'description', 'tags', 'price',
             'created', 'seq', 'file_md5',
             'signature', 'msg_hash')
-
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -62,7 +62,7 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
 class ProductSalesQuantitySerializer(serializers.ModelSerializer):
     class Meta:
         model = SalesQuantity
-        fields = ('quantity','market_hash')
+        fields = ('quantity', 'market_hash')
 
     def update(self, instance, validated_data):
         instance.quantity += 1
@@ -73,13 +73,13 @@ class ProductSalesQuantitySerializer(serializers.ModelSerializer):
 class MyTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyTag
-        fields = ('public_key','tag')
+        fields = ('public_key', 'tag')
 
 
 class MySellerSerializer(serializers.ModelSerializer):
     class Meta:
         model = MySeller
-        fields = ('public_key','seller_public_key')
+        fields = ('public_key', 'seller_public_key')
 
 
 class ElasticProductSerializer(ElasticModelSerializer):
@@ -89,4 +89,3 @@ class ElasticProductSerializer(ElasticModelSerializer):
         fields = ('pk', 'owner_address', 'title', 'description', 'tags', 'price',
                   'created', 'start_date', 'end_date', 'seq', 'file_md5',
                   'signature', 'msg_hash', 'status')
-
