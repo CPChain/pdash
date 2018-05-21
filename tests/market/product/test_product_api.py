@@ -2,11 +2,24 @@ from django.utils.http import urlquote
 from tests.market.base_api_test import *
 from cpchain.market.market.utils import *
 
+
 class TestProductApi(BaseApiTest):
 
     def test_query_recommend_products(self):
         url = '%s/product/v1/recommend_product/list/' % HOST
         response = requests.get(url)
+        print("products:%s" % response)
+        print(response.text)
+        parsed_json = json.loads(response.text)
+        for p in parsed_json['data']:
+            print("title:%s" % p["title"])
+            print("sales_number:", p['sales_number'])
+
+    def test_query_you_may_like_product(self):
+        token = self.login_and_fetch_token()
+        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
+        url = '%s/product/v1/you_may_like/list/' % HOST
+        response = requests.get(url, headers=header)
         print("products:%s" % response)
         print(response.text)
         parsed_json = json.loads(response.text)
@@ -23,10 +36,7 @@ class TestProductApi(BaseApiTest):
 
     def test_query_es_product(self):
 
-        header = {'Content-Type': 'application/json'}
-        nonce = self._login_and_get_nonce(header)
-
-        token = self._generate_nonce_signature_and_get_token(header, nonce)
+        token = self.login_and_fetch_token()
 
         self.publish_product(token)
 
@@ -37,22 +47,21 @@ class TestProductApi(BaseApiTest):
         # ======= query product via elasticsearch ========
         self.query_es_product()
 
-    def test_add_product_sales_quantity(self):
-
+    def login_and_fetch_token(self):
         header = {'Content-Type': 'application/json'}
         nonce = self._login_and_get_nonce(header)
-
         token = self._generate_nonce_signature_and_get_token(header, nonce)
+        return token
+
+    def test_add_product_sales_quantity(self):
+
+        token = self.login_and_fetch_token()
 
         self.add_product_sales_quantity(token)
 
     def test_subscribe_tag_and_search_product(self):
 
-        header = {'Content-Type': 'application/json'}
-        nonce = self._login_and_get_nonce(header)
-
-        # ======= generate nonce signature and confirm =======
-        token = self._generate_nonce_signature_and_get_token(header, nonce)
+        token = self.login_and_fetch_token()
 
         # # ======= publish product ========
         self.publish_product(token)
@@ -68,11 +77,7 @@ class TestProductApi(BaseApiTest):
 
     def test_subscribe_seller_and_search_product(self):
 
-        header = {'Content-Type': 'application/json'}
-        nonce = self._login_and_get_nonce(header)
-
-        # ======= generate nonce signature and confirm =======
-        token = self._generate_nonce_signature_and_get_token(header, nonce)
+        token = self.login_and_fetch_token()
 
         # ======= publish product ========
         self.publish_product(token)
@@ -238,9 +243,7 @@ class TestProductApi(BaseApiTest):
             print("tag:%s" % p["tag"])
 
     def test_query_product_by_seller(self):
-        header = {'Content-Type': 'application/json'}
-        nonce = self._login_and_get_nonce(header)
-        token = self._generate_nonce_signature_and_get_token(header, nonce)
+        token = self.login_and_fetch_token()
 
         self.publish_product(token)
 
@@ -255,9 +258,7 @@ class TestProductApi(BaseApiTest):
             print("tags:%s" % p["tags"])
 
     def test_query_product_by_tag(self):
-        header = {'Content-Type': 'application/json'}
-        nonce = self._login_and_get_nonce(header)
-        token = self._generate_nonce_signature_and_get_token(header, nonce)
+        token = self.login_and_fetch_token()
 
         self.publish_product(token)
 

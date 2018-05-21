@@ -3,6 +3,7 @@ from django.db import models
 # Create your models here.
 from cpchain.market.account.models import WalletUser
 from .search_indexes import ProductIndex
+from elasticsearch.helpers import bulk
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -56,6 +57,11 @@ class Product(models.Model):
         obj.save(using=es_client)
         return obj.to_dict(include_meta=True)
 
+    @staticmethod
+    def bulk_indexing():
+        from cpchain.market.market.es_client import es_client
+        ProductIndex.init()
+        bulk(client=es_client, actions=(p.indexing() for p in Product.objects.all().iterator()))
 
 class WalletMsgSequence(models.Model):
     """
