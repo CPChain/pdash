@@ -1,5 +1,17 @@
 #!/usr/bin/python3
-import sys, os
+from twisted.logger import globalLogBeginner, textFileLogObserver
+import sys
+globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
+
+from twisted.internet.defer import Deferred
+
+def raiseErr(what):
+    raise Exception(what)
+
+d = Deferred()
+d.addCallback(raiseErr)
+d.callback("hmmm")
+
 import os.path as osp
 import string
 import logging
@@ -15,12 +27,15 @@ from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont, QPainter
 from cpchain import config, root_dir
 from cpchain.wallet.wallet import Wallet
 from cpchain.wallet import fs
+from cpchain.crypto import ECCipher
 
 from twisted.internet import threads, defer, reactor
 from twisted.internet.threads import deferToThread
 from twisted.internet.task import LoopingCall
 
 wallet = Wallet(reactor)
+
+logger = logging.getLogger(__name__) # pylint: disable=locally-disabled, invalid-name
 
 
 # utils
@@ -930,7 +945,22 @@ class PublishDialog(QDialog):
         if self.pinfo_title and self.pinfo_descrip and self.pinfo_tag and self.pinfo_price and self.pinfo_checkbox_state:
             print("Updating item info in wallet database and other relevant databases")
             print("Updating self.parent tab info: selling tab or cloud tab")
-            QMessageBox.information(self, "Tips", "Successful !")
+            logger.debug("current row: %s", self.parent.cur_clicked)
+            product_info = self.parent.file_list[self.parent.cur_clicked]
+            logger.debug('selected product name: %s', product_info.name)
+            logger.debug("product selected id: %s", product_info.id)
+            logger.debug("product info title: %s", self.pinfo_title)
+            d_publish = wallet.market_client.publish_product(product_info.id, self.pinfo_title,
+                                                             self.pinfo_descrip, self.pinfo_price,
+                                                             self.pinfo_tag, '2018-04-01 10:10:10',
+                                                             '2018-04-01 10:10:10', '123456')
+            def update_table(*args):
+                QMessageBox.information(self, "Tips", "Successful !")
+                self.parent.update_table()
+                self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
+
+            d_publish.addCallback(update_table)
+
             self.close()
         else:
             QMessageBox.warning(self, "Warning", "Please fill out the necessary selling information first!")
@@ -1754,7 +1784,7 @@ class CloudTab(QScrollArea):
 
         self.init_ui()
 
-    def  update_table(self):
+    def update_table(self):
         #file_list = get_file_list()
         print("Updating file list......")
         self.file_list = fs.get_file_list()
@@ -1764,7 +1794,10 @@ class CloudTab(QScrollArea):
         #     file_list.append(dict_exa)
         print(len(self.file_list))
         self.row_number = len(self.file_list)
+        self.file_table.setRowCount(self.row_number)
         for cur_row in range(self.row_number):
+            logger.debug('current file id: %s', self.file_list[cur_row].id)
+            logger.debug('current file name: %s', self.file_list[cur_row].name)
             # if cur_row == len(file_list):
             #     break
             print(str(cur_row) + " row")
@@ -1805,8 +1838,7 @@ class CloudTab(QScrollArea):
 
         self.tag_rank_label = tag_rank_label = QLabel("Tag")
         tag_rank_label.setObjectName("tag_rank_label")  
-    
-        self.row_number = 6
+
 
 
         def create_file_table():
@@ -1834,7 +1866,6 @@ class CloudTab(QScrollArea):
             # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
             file_table.setColumnCount(5)
-            file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Size', 'Remote Type', 'Published'])
@@ -1846,12 +1877,15 @@ class CloudTab(QScrollArea):
             self.check_record_list = []
             self.checkbox_list = []
             self.row_number = len(self.file_list)
+            file_table.setRowCount(self.row_number)
             print("init cloud table, row num: ")
             print(self.row_number)
 
             for cur_row in range(self.row_number):
                 # if cur_row == len(file_list):export PYTHONPATH=/home/cpchainpublic1/Documents/cpchain/
                 #     break
+                logger.debug('current file id: %s', self.file_list[cur_row].id)
+                logger.debug('current file name: %s', self.file_list[cur_row].name)
                 checkbox_item = QTableWidgetItem()
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 checkbox_item.setCheckState(Qt.Unchecked)
@@ -1859,7 +1893,7 @@ class CloudTab(QScrollArea):
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row].name))
                 self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(self.file_list[cur_row].size)))
                 #size
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row].name))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row].remote_type))
                 #remote_type
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(self.file_list[cur_row].is_published)))
                 self.check_record_list.append(False)
@@ -2229,16 +2263,21 @@ class Header(QFrame):
 
         def handle_login(self):
             print("check access......")
-            d_login = wallet.market_client.login()
+            if self.account2_btn.isChecked():
+                wallet.accounts.set_default_account(1)
+                wallet.market_client.account = wallet.accounts.default_account
+                wallet.market_client.public_key = ECCipher.serialize_public_key(wallet.market_client.account.public_key)
 
+            d_login = wallet.market_client.login()
             def login_result(status):
                 if status == 1:
+                    logger.debug("login account: %s", wallet.market_client.public_key)
                     QMessageBox.information(self, "Tips", "Successful !")
-                elif status == 2:
+                elif status == 0:
                     QMessageBox.information(self, "Tips", "Failed !")
                 else:
                     QMessageBox.information(self, "Tips", "New Users !")
-                    # TODO: jump to userfile
+                    # TODO: jump to user profile page
             d_login.addCallback(login_result)
             self.close()
 
