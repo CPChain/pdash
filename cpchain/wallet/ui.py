@@ -61,9 +61,135 @@ def load_stylesheet(wid, name):
         wid.setStyleSheet(s.substitute(subs))
 
 # widgets
-class TagHPTab(QScrollArea)
 
+class PersonalProfileTab(QScrollArea):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+        self.setObjectName("personalprofile_tab")
+        self.init_ui()   
 
+    def init_ui(self):
+
+        def add_content_tabs():
+            self.profile_tabs = profile_tabs = QTabWidget(self)
+            profile_tabs.setObjectName("profile_tabs")
+            #follow_tabs.tabBar().hide()
+            profile_tabs.addTab(PersonalInfoPage(profile_tabs), "Personal Information")
+            profile_tabs.addTab(PeferenceTab(profile_tabs), "Preference")
+            profile_tabs.addTab(SecurityTab(profile_tabs), "Account Security")            
+        add_content_tabs()
+
+        def set_layout():
+            self.follow_main_layout = follow_main_layout = QHBoxLayout()
+            #self.follow_main_layout.setSpacing(0)
+            #self.follow_main_layout.setContentsMargins(0, 0, 0, 0) 
+            #self.follow_main_layout.addSpacing(0)
+            #follow_main_layout.addWidget(self.follow_tag_btn)
+            follow_main_layout.addWidget(self.profile_tabs)
+            self.setLayout(self.follow_main_layout)
+            #self.main_layout.addLayout(self.content_layout)
+
+            #wid = QWidget(self)
+            #wid.setLayout(self.main_layout)
+            #self.setCentralWidget(wid)
+        set_layout()
+        load_stylesheet(self, "personalprofile.qss")
+        #print("Loading stylesheet of following tab widget")
+
+class TagHPTab(QScrollArea):
+    def __init__(self, parent=None, key_words=""):
+        super().__init__(parent)
+        self.parent = parent
+        self.key_words = key_words
+        self.setObjectName("cart_tab")
+        #self.setObjectName("tagHP_tab")
+        self.init_ui()
+
+    def init_ui(self):
+
+        self.search_item_num = 4
+        self.search_promo_num = 4
+
+        self.item_lists = []
+        self.promo_lists = []
+
+        # TODO: Search for products by self.key_words and return them from the backend
+        def get_products(item={}, key_words=""):
+            for i in range(self.search_item_num):
+                self.item_lists.append(Product(self, item))
+
+        self.item = {"title": "Medical data from NHIS", "none": "none"}
+        get_products(self.item)
+
+        # TODO: Get promotion products based on products returned above or the keywords provided
+        def get_promotion(item={}, key_words=""):
+            for i in range(self.search_promo_num):
+                self.promo_lists.append(Product(self, item, "simple"))
+        get_promotion(self.item)
+
+        def create_labels():
+            self.tag_header = QLabel("Long Tag")
+            self.tag_header.setObjectName("tag_header")
+
+            self.followthis_label = QPushButton("Follow this tag")
+            self.followthis_label.setObjectName("followthis_label")
+
+            self.related_label = QLabel("Related Tags")
+            self.related_label.setObjectName("related_label")
+
+            self.may_like_label = QLabel("You may like")
+            self.may_like_label.setObjectName("may_like_label")
+
+        create_labels()
+
+        def bind_slots():
+            logger.debug("binding slots of btns....")
+
+        bind_slots()
+
+        self.hline = HorizontalLine(self, 2)
+
+        def set_layout():
+            self.main_layout = main_layout = QHBoxLayout(self)
+            main_layout.addSpacing(0)
+
+            self.content_layout = QVBoxLayout(self)
+            self.stat_layout = QHBoxLayout()
+            self.stat_layout.addSpacing(0)
+            self.stat_layout.addWidget(self.tag_header)
+            self.stat_layout.addStretch(1)
+            self.stat_layout.addWidget(self.followthis_label)
+            self.stat_layout.addSpacing(0)
+
+            self.content_layout.addLayout(self.stat_layout)
+            self.content_layout.addWidget(self.hline)
+            for i in range(self.search_item_num):
+                self.content_layout.addWidget(self.item_lists[i])
+                self.content_layout.addSpacing(0)
+
+            self.content_layout.addStretch(1)
+
+            self.promotion_layout = QVBoxLayout(self)
+            self.promotion_layout.addWidget(self.related_label)
+            self.promotion_layout.addWidget(self.hline)
+            self.promotion_layout.addWidget(self.may_like_label)
+
+            for i in range(self.search_promo_num):
+                self.promotion_layout.addWidget(self.promo_lists[i])
+                self.promotion_layout.addSpacing(0)
+
+            self.main_layout.addLayout(self.content_layout, 2)
+            self.main_layout.addLayout(self.promotion_layout, 1)
+
+            self.main_layout.addLayout(self.content_layout)
+
+            self.setLayout(self.main_layout)
+
+        set_layout()
+        # TODO: Loading stylesheet
+        logger.debug("loading stylesheet...")
+        #load_stylesheet(self, "searchproduct.qss")
 
 class SellerHPTab(QScrollArea):
     class SearchBar(QLineEdit):
@@ -99,8 +225,8 @@ class SellerHPTab(QScrollArea):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
-        # self.setObjectName("sellerHP_tab")
-        self.setObjectName("cart_tab")
+        self.setObjectName("sellerHP_tab")
+        #self.setObjectName("cart_tab")
         self.init_ui()
 
     def init_ui(self):
@@ -195,7 +321,6 @@ class SellerHPTab(QScrollArea):
             self.main_layout.addLayout(self.seller_layout, 2)
             self.setLayout(self.main_layout)
         set_layout()
-
 
 
 class Seller(QScrollArea):
@@ -687,9 +812,6 @@ class SearchProductTab(QScrollArea):
         logger.debug("loading stylesheet...")
         #load_stylesheet(self, "searchproduct.qss")
 
-
-
-
 #class PersonalHomePageTab(QScrollArea)
 
 class SecurityTab(QScrollArea):
@@ -726,6 +848,7 @@ class SecurityTab(QScrollArea):
         #TextEdit def
         self.password_edit = password_edit = QLineEdit()
         password_edit.setObjectName("password_edit")
+        password_edit.setEchoMode(QLineEdit.Password)
 
         self.paylimit_edit = paylimit_edit = QLineEdit()
         paylimit_edit.setObjectName("paylimit_edit")
@@ -766,7 +889,7 @@ class SecurityTab(QScrollArea):
             self.setLayout(security_layout)
         set_layout()
         print("Loading stylesheet of cloud tab widget")
-        #load_stylesheet(self, "pinfo.qss")
+        load_stylesheet(self, "security.qss")
 
     def handle_display(self):
         print("display balance")
@@ -847,7 +970,7 @@ class PeferenceTab(QScrollArea):
         self.seller_avatar = seller_avatar = QLabel("ICONHERE")
         seller_avatar.setObjectName("seller_avatar")       
         self.seller_id = seller_id = QLabel("Christopher Chak")
-        seller_id.setObjectName("seller_avatar")  
+        seller_id.setObjectName("seller_id")  
         self.seller_pcount = seller_pcount = QLabel("Products {}".format(product_counter))
         seller_pcount.setObjectName("seller_pcount")                
         self.unfollow_btn = unfollow_btn = QPushButton("Unfollow")
@@ -860,7 +983,7 @@ class PeferenceTab(QScrollArea):
             #self.pinfo_top_layout.setSpacing(10)
             self.pinfo_preference_layout.setContentsMargins(40, 40, 150, 100)
             self.pinfo_preference_layout.addWidget(downloadpath_label, 1, 1, 1, 1)
-            self.pinfo_preference_layout.addWidget(downloadpath_edit, 1, 3, 1, 20)
+            self.pinfo_preference_layout.addWidget(downloadpath_edit, 1, 3, 1, 10)
             self.pinfo_preference_layout.addWidget(openpath_btn, 2, 3, 1, 2)   
                      
             self.pinfo_preference_layout.addWidget(messageset_label, 3, 1, 1, 1)
@@ -889,7 +1012,7 @@ class PeferenceTab(QScrollArea):
             self.setLayout(pinfo_preference_layout)
         set_layout()
         print("Loading stylesheet of cloud tab widget")
-        #load_stylesheet(self, "pinfo.qss")
+        load_stylesheet(self, "preference.qss")
 
     def handle_openpath(self):
         pass
@@ -943,13 +1066,31 @@ class PersonalInfoPage(QScrollArea):
 
         self.gender_btn = gender_btn = QPushButton(self)
         self.gender_btn.setObjectName("gender_btn")
-        self.gender_btn.setText("Male/Female")
+        #self.gender_btn.setText("Male/Female")
 
         self.submit_btn = submit_btn = QPushButton(self)
         self.submit_btn.setObjectName("submit_btn")
         self.submit_btn.setText("Submit")
         self.submit_btn.setCursor(QCursor(Qt.PointingHandCursor))
         self.submit_btn.clicked.connect(self.handle_submit)
+
+        def create_popmenu():
+        
+            self.gender_menu = gender_menu = QMenu('Gender', self)
+            self.male_act = QAction('Male', self)
+            self.male_act.triggered.connect(self.set_male_act)
+            self.female_act = QAction('Female', self)
+            self.female_act.triggered.connect(self.set_female_act)            
+            self.others_act = QAction('Other', self)
+            self.others_act.triggered.connect(self.set_other_act)             
+
+            gender_menu.addAction(self.male_act)
+            gender_menu.addAction(self.female_act)
+            gender_menu.addAction(self.others_act)
+
+        create_popmenu()
+
+        self.gender_btn.setMenu(self.gender_menu)
 
 
         def set_layout():
@@ -973,7 +1114,17 @@ class PersonalInfoPage(QScrollArea):
             self.setLayout(pinfo_top_layout)
         set_layout()
         #print("Loading stylesheet of cloud tab widget")
-        #load_stylesheet(self, "pinfo.qss")
+        load_stylesheet(self, "personalinfotab.qss")
+
+    def set_male_act(self):
+        self.gender_btn.setText("Male")
+
+    def set_female_act(self):
+        self.gender_btn.setText("Female")    
+
+    def set_other_act(self):
+        self.gender_btn.setText("Other") 
+
     def handle_submit(self):
         pass
 
@@ -3001,13 +3152,11 @@ class Header(QFrame):
             d_login.addCallback(login_result)
             self.close()
 
-
-
     def __init__(self, parent):
         super().__init__()
         self.parent = parent
+        self.content_tabs = parent.content_tabs
         self.init_ui()
-
 
     def init_ui(self):
         def create_logos():
@@ -3078,6 +3227,7 @@ class Header(QFrame):
             def create_popmenu():
                 self.profile_menu = profile_menu = QMenu('Profile', self)
                 profile_view_act = QAction('Profile', self)
+                profile_view_act.triggered.connect(self.profile_view_act_triggered)
                 pro_setting_act = QAction('Profile Settins', self)
                 acc_setting_act = QAction('Account Settings', self)
                 bill_man_act = QAction('Bill Management', self)
@@ -3167,10 +3317,16 @@ class Header(QFrame):
         except AttributeError:
             pass
 
-
     def mouseReleaseEvent(self, event):
         if event.buttons() == Qt.LeftButton:
             self.m_drag = False
+
+    def profile_view_act_triggered(self):
+        print("open personal profile")
+        wid = self.content_tabs.findChild(QWidget, "personalprofile_tab")
+        self.content_tabs.setCurrentWidget(wid)
+
+
 
 
 class MainWindow(QMainWindow):
@@ -3208,6 +3364,8 @@ class MainWindow(QMainWindow):
             # content_tabs.addTab(ProductInfoEdit(content_tabs), "")
             #content_tabs.addTab(PurchasedDownloadedTab(content_tabs), "") 
             #content_tabs.addTab(PurchasedDownloadingTab(content_tabs), "")
+            content_tabs.addTab(PersonalProfileTab(content_tabs), "")
+            content_tabs.addTab(TagHPTab(content_tabs), "")
             content_tabs.addTab(SellerHPTab(content_tabs), "") 
             content_tabs.addTab(ProductDetailTab(content_tabs), "") 
             content_tabs.addTab(SearchProductTab(content_tabs), "")
