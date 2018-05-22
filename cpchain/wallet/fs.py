@@ -93,7 +93,7 @@ def upload_file_ipfs(file_path):
                              is_published=False, aes_key=this_key)
     add_file(new_file_info)
     logger.debug('file id: %s', new_file_info.id)
-    return file_hash
+    return new_file_info
 
 
 def download_file_ipfs(fhash, file_path):

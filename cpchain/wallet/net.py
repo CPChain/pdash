@@ -79,7 +79,7 @@ class MarketClient:
         logger.debug('market_hash: %s', confirm_info['data']['market_hash'])
         market_hash = confirm_info['data']['market_hash']
         publish_file_update(market_hash, selected_id)
-        return confirm_info['status']
+        return market_hash
 
 
     # @inlineCallbacks
@@ -254,3 +254,36 @@ class MarketClient:
         confirm_info = yield treq.json_content(resp)
         return confirm_info['status']
 
+
+    @inlineCallbacks
+    def upload_file_info(self, hashcode, path, size, product_id, remote_type, remote_uri, aes_key, name):
+        logger.debug("upload file info to market")
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        data = {"public_key": self.public_key,
+                   "hashcode": hashcode, "path": path, "size": size, "client_id": product_id,
+                   "remote_type": remote_type, "remote_uri": remote_uri, "is_published": "False",
+                   "aes_key": 'encrypted-aes-key', "market_hash": "hash", "name": name}
+        url = self.url + 'user_data/v1/uploaded_file/add/'
+        logger.debug('upload file info payload: %s', data)
+        logger.debug('upload file info url: %s', url)
+        resp = yield treq.post(url, headers=header, json=data)
+        confirm_info = yield treq.json_content(resp)
+        logger.debug('upload file info to market: %s', confirm_info)
+        return confirm_info['status']
+
+
+    @inlineCallbacks
+    def update_file_info(self, product_id, market_hash):
+        logger.debug("update file info in market")
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        data = {"client_id": product_id, "market_hash": market_hash, "is_published": True}
+        url = self.url + 'user_data/v1/uploaded_file/update/'
+        logger.debug('upload file info payload: %s', data)
+        logger.debug('upload file info url: %s', url)
+        logger.debug('product id: %s', product_id)
+        resp = yield treq.post(url, headers=header, json=data)
+        confirm_info = yield treq.json_content(resp)
+        logger.debug('upload file info to market confirm: %s', confirm_info)
+        return confirm_info['status']

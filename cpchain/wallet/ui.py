@@ -27,7 +27,7 @@ from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont, QPainter
 from cpchain import config, root_dir
 from cpchain.wallet.wallet import Wallet
 from cpchain.wallet import fs
-from cpchain.crypto import ECCipher
+from cpchain.crypto import ECCipher, RSACipher, Encoder
 
 from twisted.internet import threads, defer, reactor
 from twisted.internet.threads import deferToThread
@@ -956,13 +956,14 @@ class PublishDialog(QDialog):
                                                              self.pinfo_descrip, self.pinfo_price,
                                                              self.pinfo_tag, '2018-04-01 10:10:10',
                                                              '2018-04-01 10:10:10', '123456')
-            def update_table(*args):
-                QMessageBox.information(self, "Tips", "Successful !")
-                self.parent.update_table()
-                self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
-
+            def update_table(market_hash):
+                d = wallet.market_client.update_file_info(self.product_id, market_hash)
+                def handle_update_file():
+                    QMessageBox.information(self, "Tips", "Successful !")
+                    self.parent.update_table()
+                    self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
+                d.addCallback(handle_update_file)
             d_publish.addCallback(update_table)
-
             self.close()
         else:
             QMessageBox.warning(self, "Warning", "Please fill out the necessary selling information first!")
@@ -2033,9 +2034,26 @@ class CloudTab(QScrollArea):
             print("Uploading files to....")
             self.close()
 
-        def handle_ok_callback(self, file_hash):
-            print("upload succeed: " + file_hash)
+        def handle_ok_callback(self, file_info):
             self.parent.update_table()
+            hashcode = file_info.hashcode
+            path = file_info.path
+            size = file_info.size
+            product_id = file_info.id
+            remote_type = file_info.remote_type
+            remote_uri = file_info.remote_uri
+            name = file_info.name
+            logger.debug('encrypt aes key')
+            encrypted_key = RSACipher.encrypt(file_info.aes_key)
+            encrypted_key = Encoder.bytes_to_base64_str(encrypted_key)
+            d = wallet.market_client.upload_file_info(hashcode, path, size, product_id, remote_type, remote_uri, encrypted_key, name)
+            def handle_upload_resp(status):
+                if status == 1:
+                    logger.debug('upload file info to market succeed')
+                else:
+                    logger.debug('upload file info to market failed')
+            d.addCallback(handle_upload_resp)
+
 
     def handle_upload(self):
         # Maybe useful for buyer.
@@ -2346,7 +2364,7 @@ class Header(QFrame):
             self.minimize_btn.clicked.connect(self.parent.showMinimized)
 
 
-            self.maximize_btn = QPushButton("□", self)
+            self.maximize_btn = QPushButton("-", self)
             self.maximize_btn.setObjectName("maxmize_btn")
             self.maximize_btn.setFixedSize(10, 10)
             def toggle_maximization():
