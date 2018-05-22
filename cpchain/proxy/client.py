@@ -3,7 +3,7 @@
 import os
 import logging
 
-from twisted.internet import reactor, protocol, ssl, defer, _sslverify
+from twisted.internet import reactor, protocol, ssl, defer
 from twisted.protocols.basic import NetstringReceiver
 
 import treq
@@ -20,7 +20,6 @@ class SSLClientProtocol(NetstringReceiver):
         self.sign_message = self.factory.sign_message
 
         self.peer = None
-        self.reply_message = None
 
     def connectionMade(self):
         self.peer = str(self.transport.getPeer())
@@ -33,44 +32,33 @@ class SSLClientProtocol(NetstringReceiver):
         message = Message()
         message.ParseFromString(string)
         valid = message_sanity_check(message)
-        if valid and message.type == Message.PROXY_REPLY:
+
+        if not valid or message.type != Message.PROXY_REPLY:
+            # should never happen
+            proxy_reply = proxy_reply_error("wrong server response")
+        else:
             proxy_reply = message.proxy_reply
 
-            if not proxy_reply.error and self.factory.need_download_file:
-                d = download_file(proxy_reply.file_uuid)
-                self.reply_message = message
-                d.addBoth(self.download_finish)
-            else:
-                self.factory.d.callback(message)
-
-        else:
-            # should never happen
-            message = proxy_reply_error("wrong server response")
-            self.factory.d.callback(message)
+        self.factory.d.callback(proxy_reply)
 
         self.transport.loseConnection()
 
     def connectionLost(self, reason):
         logger.debug("lost connection to client %s" % (self.peer))
 
-    def download_finish(self, _):
-        self.factory.d.callback(self.reply_message)
-
 
 class SSLClientFactory(protocol.ClientFactory):
 
     def __init__(self, sign_message):
         self.sign_message = sign_message
-        self.need_download_file = False
-
-        self.d = None
+        self.d = defer.Deferred()
 
     def buildProtocol(self, addr):
         return SSLClientProtocol(self)
 
     def clientConnectionFailed(self, connector, reason):
-        message = proxy_reply_error("connection failed")
-        self.d.callback(message)
+        proxy_reply = proxy_reply_error("connection failed")
+        self.d.callback(proxy_reply)
 
 
 def proxy_reply_error(error):
@@ -78,13 +66,17 @@ def proxy_reply_error(error):
     message.type = Message.PROXY_REPLY
     proxy_reply = message.proxy_reply
     proxy_reply.error = error
-    return message
+    return proxy_reply
 
 
-def start_client(sign_message):
+def start_client(sign_message, addr=None):
 
-    host = config.proxy.server_host
-    ctrl_port = config.proxy.server_ctrl_port
+    if addr:
+        host = addr[0]
+        port = addr[1]
+    else:
+        host = config.proxy.server_host
+        port = config.proxy.server_ctrl_port
 
     message = Message()
     message.ParseFromString(sign_message.data)
@@ -93,49 +85,73 @@ def start_client(sign_message):
         logger.error("wrong message format")
         return
 
-    d = defer.Deferred()
     factory = SSLClientFactory(sign_message)
-    factory.d = d
 
-    if message.type == Message.BUYER_DATA:
-        factory.need_download_file = True
-
-    reactor.connectSSL(host, ctrl_port, factory,
+    reactor.connectSSL(host, port, factory,
                        ssl.ClientContextFactory())
+
+    buyer_request = message.type == Message.BUYER_DATA
+
+    d = defer.Deferred()
+
+    def handle_proxy_response(proxy_reply):
+
+        if not proxy_reply.error:
+            logger.debug('file_uri: %s' % proxy_reply.file_uri)
+            logger.debug('AES_key: %s' % proxy_reply.AES_key.decode())
+            if buyer_request:
+                return download_file(proxy_reply.file_uri).addCallback(
+                    lambda _: d.callback(proxy_reply))
+        else:
+            logger.debug(proxy_reply.error)
+
+        d.callback(proxy_reply)
+
+    factory.d.addCallback(handle_proxy_response)
 
     return d
 
 
-def download_file(file_uuid):
-    host = config.proxy.server_host
-    data_port = config.proxy.server_data_port
+
+def download_file(uri):
+
+    from twisted.web.iweb import IPolicyForHTTPS
+    from zope.interface import implementer
+    from treq import api
+
+    @implementer(IPolicyForHTTPS)
+    class NoVerifySSLContextFactory(object):
+        """Context that doesn't verify SSL connections"""
+        def creatorForNetloc(self, hostname, port): # pylint: disable=unused-argument
+            return ssl.CertificateOptions(verify=False)
+
+    def no_verify_agent(**kwargs):
+        reactor = api.default_reactor(kwargs.get('reactor'))
+        pool = api.default_pool(
+            reactor,
+            kwargs.get('pool'),
+            kwargs.get('persistent'))
+
+        no_verify_agent.agent = api.Agent(
+            reactor,
+            contextFactory=NoVerifySSLContextFactory(),
+            pool=pool
+        )
+        return no_verify_agent.agent
+
     file_dir = os.path.expanduser(config.wallet.download_dir)
     # create if not exists
     os.makedirs(file_dir, exist_ok=True)
 
-    url = "https://%s:%d/%s" % (host, data_port, file_uuid)
+    file_name = os.path.basename(uri)
+    file_path = os.path.join(file_dir, file_name)
 
-    file_path = os.path.join(file_dir, file_uuid)
-
-    _sslverify.platformTrust = lambda: None
     f = open(file_path, 'wb')
-    d = treq.get(url)
+    d = treq.get(uri, agent=no_verify_agent())
     d.addCallback(treq.collect, f.write)
     d.addBoth(lambda _: f.close())
     return d
 
-
-def handle_proxy_response(message):
-
-    assert message.type == Message.PROXY_REPLY
-
-    proxy_reply = message.proxy_reply
-
-    if not proxy_reply.error:
-        logger.debug('file_uuid: %s' % proxy_reply.file_uuid)
-        logger.debug('AES_key: %s' % proxy_reply.AES_key.decode())
-    else:
-        logger.debug(proxy_reply.error)
 
 # Code below for testing purpose only, pls. ignore.
 # Will be removed in formal release.
@@ -192,8 +208,6 @@ if __name__ == '__main__':
             )
 
         d = start_client(sign_message)
-
-        d.addBoth(handle_proxy_response)
         d.addBoth(lambda _: reactor.stop())
 
     elif test_type == 'buyer_data':
@@ -214,7 +228,6 @@ if __name__ == '__main__':
             )
 
         d = start_client(sign_message)
-        d.addBoth(handle_proxy_response)
         d.addBoth(lambda _: reactor.stop())
 
     elif test_type == 'proxy_reply':
@@ -231,7 +244,6 @@ if __name__ == '__main__':
             )
 
         d = start_client(sign_message)
-        d.addBoth(handle_proxy_response)
         d.addBoth(lambda _: reactor.stop())
 
     reactor.run()

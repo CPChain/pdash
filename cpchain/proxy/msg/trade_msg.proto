@@ -50,7 +50,7 @@ message Message {
 	message ProxyReply {
 		string error = 1;
 		bytes AES_key = 2;
-		string file_uuid = 3;
+		string file_uri = 3;
 	}
 
 	MessageType type = 1;
