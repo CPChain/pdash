@@ -15,17 +15,16 @@ class ESProductView(es_views.ListElasticAPIView):
         es_filters.ElasticOrderingFilter,
     )
     es_ordering_fields = (
-        "created_at",
-        ("title.raw", "title")
+        "created",
     )
     es_filter_fields = (
-        es_filters.ESFieldFilter('tags', 'tags'),
-        es_filters.ESFieldFilter('status', 'status')
+        es_filters.ESFieldFilter('tag', 'tags'),
+        es_filters.ESFieldFilter('status', 'status'),
+        es_filters.ESFieldFilter('seller', 'owner_address'),
+        es_filters.ESFieldFilter('pid', 'market_hash')
     )
     es_search_fields = (
-        'owner_address',
-        'tags',
         'title',
         'description',
-        'market_hash',
+        'tags',
     )

@@ -56,8 +56,7 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
         """
         instance.status = validated_data.get('status', instance.status)
         instance.save()
-        # change status in ElasticSearch
-        instance.indexing()
+        instance.update_index()
         return instance
 
 
