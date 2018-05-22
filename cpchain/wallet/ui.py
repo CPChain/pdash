@@ -958,10 +958,11 @@ class PublishDialog(QDialog):
                                                              '2018-04-01 10:10:10', '123456')
             def update_table(market_hash):
                 d = wallet.market_client.update_file_info(self.product_id, market_hash)
-                def handle_update_file():
-                    QMessageBox.information(self, "Tips", "Successful !")
-                    self.parent.update_table()
-                    self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
+                def handle_update_file(status):
+                    if status == 1:
+                        QMessageBox.information(self, "Tips", "Successful !")
+                        self.parent.update_table()
+                        self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
                 d.addCallback(handle_update_file)
             d_publish.addCallback(update_table)
             self.close()
