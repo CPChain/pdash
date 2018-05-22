@@ -61,11 +61,447 @@ def load_stylesheet(wid, name):
         wid.setStyleSheet(s.substitute(subs))
 
 # widgets
+class TagHPTab(QScrollArea)
+
+
+
+class SellerHPTab(QScrollArea):
+    class SearchBar(QLineEdit):
+        def __init__(self, parent=None):
+            super().__init__(parent)
+            self.parent = parent
+            self.init_ui()
+
+        def init_ui(self):
+            self.setObjectName("search_bar")
+            self.setFixedSize(300, 25)
+            self.setTextMargins(25, 0, 20, 0)
+
+            self.search_btn = search_btn = QPushButton(self)
+            search_btn.setObjectName("search_btn")
+            search_btn.setFixedSize(18, 18)
+            search_btn.setCursor(QCursor(Qt.PointingHandCursor))
+
+            def bind_slots():
+                print("Binding slots of clicked-search-btn......")
+
+            bind_slots()
+
+            def set_layout():
+                main_layout = QHBoxLayout()
+                main_layout.addWidget(search_btn)
+                main_layout.addStretch()
+                main_layout.setContentsMargins(5, 0, 0, 0)
+                self.setLayout(main_layout)
+
+            set_layout()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+        # self.setObjectName("sellerHP_tab")
+        self.setObjectName("cart_tab")
+        self.init_ui()
+
+    def init_ui(self):
+        def create_labels():
+
+            self.time_label = QLabel("Time")
+            self.time_label.setObjectName("time_label")
+
+            self.price_label = QLabel("Price")
+            self.price_label.setObjectName("price_label")
+
+        create_labels()
+
+        def create_btns():
+
+            self.time_btn = QPushButton(self)
+            self.time_btn.setObjectName("time_btn")
+            self.time_btn.setText("t")
+
+            self.price_btn = QPushButton(self)
+            self.price_btn.setObjectName("price_btn")
+            self.price_btn.setText("p")
+
+            self.message_btn = QPushButton(self)
+            self.message_btn.setObjectName("message_btn")
+            self.message_btn.setText("Message")
+
+            self.follow_btn = QPushButton(self)
+            self.follow_btn.setObjectName("follow_btn")
+            self.follow_btn.setText("Follow")
+
+        create_btns()
+
+        self.seller_list = []
+        self.seller_promote_number = 3
+        self.item_lists = []
+        self.item_num = 4
+        self.search_bar = SellerHPTab.SearchBar(self)
+    
+
+        def get_this_seller():
+            self.this_seller = Seller(self)
+
+        get_this_seller()
+
+        def get_seller_list():
+            for i in range(self.seller_promote_number):
+                self.seller_list.append(Seller(self))
+
+        get_seller_list()
+        self.sellerid = {"name": "Chak", "sales": "2020"}
+
+        def get_products(item={}, key_words=""):
+            for i in range(self.item_num):
+                self.item_lists.append(Product(self, item))
+
+        self.item = {"title": "Medical data from NHIS", "none": "none"}
+        get_products(self.item)
+
+        def set_layout():
+            self.main_layout = main_layout = QHBoxLayout(self)
+            main_layout.addSpacing(0)
+
+            self.content_layout = content_layout = QVBoxLayout(self)
+            self.search_layout = search_layout = QHBoxLayout(self)
+            self.search_layout.addWidget(self.search_bar)
+            self.search_layout.addSpacing(10)
+            self.search_layout.addWidget(self.time_label)
+            self.search_layout.addSpacing(0)
+            self.search_layout.addWidget(self.time_btn)
+            self.search_layout.addSpacing(0)
+            self.search_layout.addWidget(self.price_label)
+            self.search_layout.addSpacing(0)
+            self.search_layout.addWidget(self.price_btn)
+
+            self.content_layout.addLayout(self.search_layout)
+
+            for i in range(self.item_num):
+                self.content_layout.addWidget(self.item_lists[i])
+                self.content_layout.addSpacing(0)
+
+            self.seller_layout = seller_layout = QVBoxLayout(self)   
+            self.seller_layout.addWidget(self.this_seller)
+            self.seller_layout.addWidget(self.message_btn)
+            self.seller_layout.addWidget(self.follow_btn)
+
+            for i in range(self.seller_promote_number):
+                self.seller_layout.addWidget(self.seller_list[i])
+                self.seller_layout.addSpacing(0)
+
+            self.main_layout.addLayout(self.content_layout, 1)
+            self.main_layout.addLayout(self.seller_layout, 2)
+            self.setLayout(self.main_layout)
+        set_layout()
+
+
+
+class Seller(QScrollArea):
+    def __init__(self, parent=None, sellerid={}, mode=""):
+        super().__init__(parent)
+        self.parent = parent
+        self.sellerid = sellerid
+        self.mode = mode
+        self.init_ui()
+
+    def init_ui(self):
+        #self.frame.setMinimumWidth(500)
+        self.setMinimumHeight(200)
+        self.setMaximumHeight(500)
+        self.setMinimumHeight(120)
+        self.setMaximumHeight(120)
+        self.seller_name = QPushButton("Christopher Chak")
+        self.seller_name.setObjectName("seller_name")
+        self.seller_name.setCursor(QCursor(Qt.PointingHandCursor))
+
+        self.seller_avatar = seller_avatar = QLabel("ICONHERE")
+        self.seller_avatar.setObjectName("seller_avatar")
+
+        seller_product_value = 20
+        seller_sales_volume = 3455
+        self.product_label = product_label = QLabel("Products {}".format(seller_product_value))
+        self.sales_volume = sales_volume = QLabel("Sales Volume {}".format(seller_sales_volume))
+
+
+        def bind_slots():
+            print("Binding slots of buttons......")
+        bind_slots()
+
+        def setlayout():
+            self.main_layout = main_layout = QGridLayout(self)
+            self.main_layout.setSpacing(5)
+            self.main_layout.addWidget(self.seller_avatar, 1, 1 , 2, 3)
+            self.main_layout.addWidget(self.seller_name, 1, 3, 1, 1)
+            self.main_layout.addWidget(self.product_label, 2, 3, 1, 1)
+            self.main_layout.addWidget(self.sales_volume, 3, 3, 1, 1)   
+            self.setLayout(self.main_layout)
+        setlayout()
+        logger.debug("Loading stylesheet of item")
+
+
+class BuyNowDialog(QDialog):
+    def __init__(self, parent=None, item={}):
+        super().__init__(parent)
+        self.parent = parent
+        #for testing this Tab @rayhueng
+        #self.setObjectName("cart_tab")
+        self.setObjectName("buynowdialog")
+        self.init_ui()
+
+    def init_ui(self):
+
+        #Labels def
+        self.needtopay_label = needtopay_label = QLabel("You need to pay:")
+        needtopay_label.setObjectName("needtopay_label")
+        self.account_label = account_label = QLabel("Account:")
+        account_label.setObjectName("account_label")
+        self.password_label = password_label = QLabel("Payment password:")
+        password_label.setObjectName("password_label")
+
+        price_to_pay = 15
+        accout_balance = 15000
+        self.price_value = price_value = QLabel("${}".format(price_to_pay))
+        price_value.setObjectName("price_value")
+        self.account_value = account_value = QLabel("${}".format(accout_balance))
+        account_value.setObjectName("account_value")       
+
+
+        try_time_left = 3
+        self.hint_label = hint_label = QLabel("Wrong password. You can try {} times.".format(try_time_left))
+
+        #TextEdit def
+        self.password_input = password_input = QLineEdit()
+        password_input.setObjectName("password_input")
+
+        #Buttons and Tags
+        self.cancel_btn = cancel_btn = QPushButton(self)
+        self.cancel_btn.setObjectName("cancel_btn")
+        self.cancel_btn.setText("Cancel")
+        self.cancel_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        self.cancel_btn.clicked.connect(self.handle_cancel)
+
+        self.confirm_btn = confirm_btn = QPushButton(self)
+        self.confirm_btn.setObjectName("confirm_btn")
+        self.confirm_btn.setText("OK")
+        self.confirm_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        self.confirm_btn.clicked.connect(self.handle_confirm)
+
+        def set_layout():
+            self.pinfo_top_layout = pinfo_top_layout = QGridLayout(self)
+            #self.pinfo_top_layout.setSpacing(10)
+            self.pinfo_top_layout.setContentsMargins(40, 40, 150, 100)
+            self.pinfo_top_layout.addWidget(self.needtopay_label, 1, 1, 1, 1)
+            self.pinfo_top_layout.addWidget(self.price_value, 1, 3, 1, 1)
+            self.pinfo_top_layout.addWidget(self.account_label, 2, 1, 1, 1)
+            self.pinfo_top_layout.addWidget(self.account_value, 2, 3, 1, 1)
+            self.pinfo_top_layout.addWidget(self.password_label, 3, 1, 1, 1)
+            self.pinfo_top_layout.addWidget(self.password_input, 3, 3, 1, 5)
+            self.pinfo_top_layout.addWidget(self.hint_label, 4, 3, 1, 3) 
+            
+            self.btn_layout = btn_layout = QHBoxLayout(self)
+            self.btn_layout.addStretch(1)
+            self.btn_layout.addWidget(self.cancel_btn)
+            self.btn_layout.addSpacing(10)
+            self.btn_layout.addWidget(self.confirm_btn)
+            self.btn_layout.addSpacing(5)
+            self.pinfo_top_layout.addLayout(self.btn_layout, 5, 1, 3, 5)
+
+            self.setLayout(pinfo_top_layout)
+        set_layout()
+        #print("Loading stylesheet of cloud tab widget")
+        #load_stylesheet(self, "buynowdialog.qss")
+        self.show()
+
+    def handle_confirm(self):
+        print("handle the confirm of payment")
+    
+
+    def handle_cancel(self):
+        print("exiting the current dialog")
+        self.close()
+
+
+class ProductDetailTab(QScrollArea):
+    def __init__(self, parent=None, product_uid="", key_words=""):
+        super().__init__(parent)
+        self.parent = parent
+        self.product_uid = product_uid
+        self.key_words = key_words
+        #self.setObjectName("cart_tab")
+        self.setObjectName("productdetail_tab")
+        self.init_ui()
+
+    def init_ui(self):
+        self.frame = QFrame()
+        self.frame.setObjectName("productdetail_frame")
+        self.setWidget(self.frame)
+        self.setWidgetResizable(True)
+        self.frame.setMinimumWidth(500)
+        # self.frame.setMaximumHeight(800)
+
+        self.search_item_num = 1
+        self.search_promo_num = 4
+
+        self.item_lists = []
+        self.promo_lists = []
+
+        #TODO: Search for products by self.key_words and return them from the backend
+        # def get_products(item={}, key_words=""):
+        #     for i in range(self.search_item_num):
+        #          self.item_lists.append(Product(self, item))
+        # get_products(self.item)
+
+        self.item = {"title": "Medical data from NHIS", "none": "none"}
+        
+
+        # TODO: Get promotion products based on products returned above or the keywords provided
+        def get_promotion(item={}, key_words=""):
+            for i in range(self.search_promo_num):
+                self.promo_lists.append(Product(self, item))
+        get_promotion(self.item)
+
+        def create_labels():
+
+            self.title_label = title_label = QLabel("Title of the Product Title of the Product Title of the Product")
+            self.title_label.setObjectName("title_label")
+
+            self.seller_avatar = QLabel("ICONHERE")
+            self.seller_avatar.setObjectName("seller_avatar")
+
+            self.seller_name = QLabel("Christopher Chak")
+            self.seller_name.setObjectName("seller_name")
+
+            self.date_label = QLabel("May 4, 2018")
+            self.date_label.setObjectName("date_label")
+
+            self.sales_label = QLabel("Sales: 356")
+            self.sales_label.setObjectName("sales_label")
+
+            self.size_label = QLabel("Size: 20 Mb")
+            self.size_label.setObjectName("size_label")
+
+            self.description_label = QLabel("Description")
+            self.description_label.setObjectName("description_label")
+
+            self.may_like_label = QLabel("You may like")
+            self.may_like_label.setObjectName("may_like_label")
+
+            des_text = "In 2012, OWSLA launched a monthly subscription, The Nest, with benefits including early access to OWSLA releases.[12] In 2013, Bromance Records partners up with OWSLA to create an American branch titled BromanceUS with releases from Gesaffelstein, Illangelo, Brodinski and LOUISAHHH!!!.[13] A year later, OWSLA launched the Nestivus Charity Campaign, a series of holiday initiatives with all proceeds going to the international music nonprofit, Bridges for Music."
+
+            self.descriptiondetail = QLabel(str(des_text))
+            self.descriptiondetail.setObjectName("descriptiondetail")
+            self.descriptiondetail.setWordWrap(True)
+            self.descriptiondetail.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+
+            self.price_label = QLabel("$15")
+            self.price_label.setObjectName("price_label")
+
+        create_labels()
+
+        def create_btns():
+
+            self.tag = ["tag1", "tag2", "tag3", "tag4"]
+            self.tag_num = 4
+            self.tag_btn_list = []
+            for i in range(self.tag_num):
+                self.tag_btn_list.append(QPushButton(self.tag[i], self))
+                self.tag_btn_list[i].setObjectName("tag_btn_{0}".format(i))
+                self.tag_btn_list[i].setProperty("t_value", 1)
+                self.tag_btn_list[i].setCursor(QCursor(Qt.PointingHandCursor))
+
+            self.collect_btn = QPushButton(self)
+            self.collect_btn.setObjectName("collect_btn")
+            self.collect_btn.setText("Collect")
+            self.collect_btn.clicked.connect(self.handle_collect)
+
+            self.buynow_btn = QPushButton(self)
+            self.buynow_btn.setObjectName("buynow_btn")
+            self.buynow_btn.setText("Buy Now")
+            self.collect_btn.clicked.connect(self.handle_buynow)
+
+        create_btns()
+
+        def bind_slots():
+            logger.debug("binding slots of btns....")
+
+        bind_slots()
+
+        self.hline = HorizontalLine(self, 2)
+
+        def set_layout():
+
+            # self.main_layout = main_layout = QVBoxLayout(self)
+            # main_layout.addSpacing(0)
+
+            self.content_layout = QHBoxLayout(self)
+            self.content_layout.addSpacing(0)
+
+            self.product_layout = QGridLayout(self)
+
+            self.product_layout.addWidget(self.title_label, 1, 1, 2, 10)
+            self.product_layout.addWidget(self.seller_avatar, 3, 1, 1, 2)
+            #self.product_layout.addWidget(self.may_like_label, 3, 5, 1, 2) 
+            self.product_layout.addWidget(self.date_label, 3, 3, 1, 2)                      
+            self.product_layout.addWidget(self.size_label, 4, 1, 1, 2)
+            self.product_layout.addWidget(self.sales_label, 4, 3, 1, 2)
+
+            self.tag_layout = tag_layout = QHBoxLayout(self)
+            for i in range(self.tag_num): 
+                self.tag_layout.addWidget(self.tag_btn_list[i])
+                self.tag_layout.addSpacing(5)
+
+            self.product_layout.addLayout(self.tag_layout, 5, 1, 1, 10)
+            self.product_layout.addWidget(self.description_label, 6, 1, 1, 2)
+            self.product_layout.addWidget(self.descriptiondetail, 7, 1, 3, 10)
+
+            self.product_layout.addWidget(self.price_label, 9, 1, 1, 2)
+            self.product_layout.addWidget(self.collect_btn, 10, 1, 1, 2)
+            self.product_layout.addWidget(self.buynow_btn, 10, 3, 1, 2)  
+
+            self.promotion_layout = QVBoxLayout(self)
+            self.promotion_layout.addSpacing(0)
+            self.promotion_layout.addWidget(self.may_like_label)
+            self.promotion_layout.addSpacing(0)
+            self.promotion_layout.addWidget(self.hline)
+            self.promotion_layout.addSpacing(0)
+            for i in range(self.search_promo_num):
+                self.promotion_layout.addWidget(self.promo_lists[i])
+                self.promotion_layout.addSpacing(0)
+
+            self.promotion_layout.addStretch(1)
+
+            self.content_layout.addLayout(self.product_layout, 1)
+            self.content_layout.addLayout(self.promotion_layout, 2)
+
+            # self.main_layout.addWidget(self.may_like_label)
+            # self.main_layout.addLayout(self.product_layout)
+
+            self.setLayout(self.product_layout)
+
+        set_layout()
+        # TODO: Loading stylesheet
+        logger.debug("loading stylesheet...")
+        #load_stylesheet(self, "searchproduct.qss")
+    
+    def handle_collect(self):
+        print("please handle collect here")
+        pass
+
+    def handle_buynow(self):
+        item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
+        self.buynow_dialog = BuyNowDialog(self, item)
+        print("please handle buynow here")
+
+
+
 class SearchProductTab(QScrollArea):
     def __init__(self, parent=None, key_words=""):
         super().__init__(parent)
         self.parent = parent
         self.key_words = key_words
+        #self.setObjectName("cart_tab")
         self.setObjectName("search_tab")
         self.init_ui()
 
@@ -249,6 +685,8 @@ class SearchProductTab(QScrollArea):
         set_layout()
         # TODO: Loading stylesheet
         logger.debug("loading stylesheet...")
+        #load_stylesheet(self, "searchproduct.qss")
+
 
 
 
@@ -259,8 +697,8 @@ class SecurityTab(QScrollArea):
         super().__init__(parent)
         self.parent = parent
         #for testing this Tab @rayhueng
-        self.setObjectName("cart_tab")
-        #self.setObjectName("securitypage")
+        #self.setObjectName("cart_tab")
+        self.setObjectName("securitypage")
         self.init_ui()
 
     def init_ui(self):
@@ -539,10 +977,7 @@ class PersonalInfoPage(QScrollArea):
     def handle_submit(self):
         pass
 
-<<<<<<< HEAD
 
-=======
->>>>>>> b17996cbae9460664c9d3d44da25c010ea6fc4ec
 class CollectedTab(QScrollArea):
     class SearchBar(QLineEdit):
         def __init__(self, parent=None):
@@ -1244,8 +1679,6 @@ class PublishDialog(QDialog):
         print("exiting the current dialog")
         self.close()
         # will be changed next according to calling tab (cloud tab or selling tab)
-
-
 
 
 class SellTab(QScrollArea):
@@ -2774,7 +3207,10 @@ class MainWindow(QMainWindow):
             content_tabs.addTab(SellTab(content_tabs), "")
             # content_tabs.addTab(ProductInfoEdit(content_tabs), "")
             #content_tabs.addTab(PurchasedDownloadedTab(content_tabs), "") 
-            #content_tabs.addTab(PurchasedDownloadingTab(content_tabs), "") 
+            #content_tabs.addTab(PurchasedDownloadingTab(content_tabs), "")
+            content_tabs.addTab(SellerHPTab(content_tabs), "") 
+            content_tabs.addTab(ProductDetailTab(content_tabs), "") 
+            content_tabs.addTab(SearchProductTab(content_tabs), "")
             content_tabs.addTab(SecurityTab(content_tabs), "") 
             content_tabs.addTab(PeferenceTab(content_tabs), "")
             content_tabs.addTab(PersonalInfoPage(content_tabs), "") 
