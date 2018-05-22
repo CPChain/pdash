@@ -73,7 +73,7 @@ class MarketClient:
         signature = ECCipher.create_signature(self.account.private_key, signature_source)
         data['signature'] = Encoder.bytes_to_hex(signature)
         logger.debug("signature: %s", data['signature'])
-        resp = yield treq.post(self.url + 'product/v1/product/publish/', headers=header, json=data)
+        resp = yield treq.post(self.url + 'product/v1/product/publish/', headers=header, json=data, persistent=False)
         confirm_info = yield treq.json_content(resp)
         print(confirm_info)
         logger.debug('market_hash: %s', confirm_info['data']['market_hash'])
@@ -267,7 +267,7 @@ class MarketClient:
         url = self.url + 'user_data/v1/uploaded_file/add/'
         logger.debug('upload file info payload: %s', data)
         logger.debug('upload file info url: %s', url)
-        resp = yield treq.post(url, headers=header, json=data)
+        resp = yield treq.post(url, headers=header, json=data, persistent=False)
         confirm_info = yield treq.json_content(resp)
         logger.debug('upload file info to market: %s', confirm_info)
         return confirm_info['status']
@@ -283,7 +283,7 @@ class MarketClient:
         logger.debug('upload file info payload: %s', data)
         logger.debug('upload file info url: %s', url)
         logger.debug('product id: %s', product_id)
-        resp = yield treq.post(url, headers=header, json=data)
+        resp = yield treq.post(url, headers=header, json=data, persistent=False)
         confirm_info = yield treq.json_content(resp)
         logger.debug('upload file info to market confirm: %s', confirm_info)
         return confirm_info['status']

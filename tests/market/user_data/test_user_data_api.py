@@ -11,32 +11,6 @@ class TestUserDataApi(BaseApiTest):
         print(client_id)
         return client_id
 
-    def test_upload_user_data_api(self):
-        header = self.get_header()
-
-        client_id = self.get_long_id()
-        # ======== test save upload file info in wallet ========
-        self._save_upload_file_info(header=header, client_id=client_id)
-
-        # ======== test save buyer file info in wallet ========
-        self._save_buyer_file_info(header=header, order_id=client_id)
-
-        # ======== test pull user data in wallet ========
-        self._pull_user_data(header=header)
-
-    def test_upload_user_data_api_1(self):
-        header = self.get_header()
-
-        client_id = self.get_long_id()
-        # ======== test save upload file info in wallet ========
-        self._save_upload_file_info_1(header=header, client_id=client_id)
-
-        # ======== test save buyer file info in wallet ========
-        # self._save_buyer_file_info(header=header, order_id=client_id)
-
-        # ======== test pull user data in wallet ========
-        # self._pull_user_data(header=header)
-
     def test_update_upload_file_info(self):
         header = self.get_header()
 
@@ -113,25 +87,6 @@ class TestUserDataApi(BaseApiTest):
                    "remote_type": "1", "remote_uri": "remote_uri", "is_published": "True",
                    "aes_key": "aes_key", "market_hash": "market_hash", "name": "nnnn"}
         url = '%s/user_data/v1/uploaded_file/add/' % HOST
-        print(payload)
-        print(url)
-        print(header)
-        response = requests.post(url, headers=header, json=payload)
-        self.assertEqual(response.status_code, 200)
-        parsed_json = json.loads(response.text)
-        print(response.text)
-        self.assertEqual(parsed_json['status'], 1)
-        message = parsed_json['message']
-        print("message:%s" % message)
-
-    def _save_upload_file_info_1(self, header, client_id):
-        print("======== save upload file info in wallet ========")
-
-        payload = {'public_key': '045112dce947fa30ee22e6828edf87e5af0d84dc4e83d74b3bb07797fecfce7284bb814be76bb23fe0a14d94e7ef127d90b2c8462bd890382791a42233dc390a71', 'hashcode': 'QmQEGQYJiBTEGeZ1bka2tSaMDNBNVgk7khabgTi339zZz8', 'path': '/Users/swliu/cpchain/cpchain/wallet/chain.py', 'size': 11010, 'client_id': 1, 'remote_type': 'ipfs', 'remote_uri': '/ipfs/chain.py', 'is_published': 'False', 'aes_key': 'XI=', 'market_hash': 'hash', 'name': 'chain.py'}
-        url = '%s/user_data/v1/uploaded_file/add/' % HOST
-        print(payload)
-        print(url)
-        print(header)
         response = requests.post(url, headers=header, json=payload)
         self.assertEqual(response.status_code, 200)
         parsed_json = json.loads(response.text)
