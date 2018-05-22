@@ -136,16 +136,16 @@ class RSACipher:
         )
         return public_bytes
 
-    # @staticmethod
-    # def encrypt(data_bytes):
-    #     return RSACipher.load_private_key().public_key().encrypt(
-    #         data_bytes,
-    #         padding.OAEP(
-    #             mgf=padding.MGF1(algorithm=hashes.SHA256()),
-    #             algorithm=hashes.SHA256(),
-    #             label=None
-    #         )
-    #     )
+    @staticmethod
+    def encrypt(data_bytes):
+        return RSACipher.load_private_key().public_key().encrypt(
+            data_bytes,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
 
     @staticmethod
     def decrypt(data_bytes):

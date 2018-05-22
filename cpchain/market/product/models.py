@@ -43,7 +43,7 @@ class Product(models.Model):
             title=self.title,
             description=self.description,
             price=self.price,
-            tags=self.tags,
+            tags=self.tags.split(','),
             start_date=self.start_date,
             end_date=self.end_date,
             market_hash=self.msg_hash,
@@ -56,6 +56,13 @@ class Product(models.Model):
         from cpchain.market.market.es_client import es_client
         obj.save(using=es_client)
         return obj.to_dict(include_meta=True)
+
+    def update_index(self):
+        prod = ProductIndex.get(id=self.msg_hash, ignore=404)
+        if prod:
+            prod.update(status=self.status)
+        return True
+
 
     @staticmethod
     def bulk_indexing():
