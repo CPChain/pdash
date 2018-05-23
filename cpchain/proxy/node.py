@@ -19,6 +19,7 @@ from kademlia.network import Server
 from cpchain import config
 from cpchain.proxy.network import PeerProtocol
 from cpchain.proxy.server import SSLServerFactory, FileServer
+from cpchain.proxy.client import start_client
 from cpchain.utils import join_with_rc, join_with_root
 
 logger = logging.getLogger(__name__)
@@ -235,6 +236,33 @@ class Peer:
         else:
             logger.error("wrong boot nodes")
 
+
+def start_proxy_request(sign_message, boot_node, proxy_id=None):
+
+    d = defer.Deferred()
+
+    def start_client_done(proxy_reply):
+        d.callback(proxy_reply)
+
+    def get_proxy_done(addr):
+        start_client(sign_message, addr).addCallback(start_client_done)
+
+    def get_proxy(boot_node, proxy_id=None):
+        if proxy_id is None:
+            # pick a proxy from tracker
+            return Peer().pick_peer(
+                boot_node=boot_node
+                )
+
+        # find the (ip, port) for given proxy
+        return Peer().get_peer(
+            eth_addr=proxy_id,
+            boot_nodes=boot_node
+        )
+
+    get_proxy(boot_node, proxy_id).addCallback(get_proxy_done)
+
+    return d
 
 
 # Code below for testing purpose only, pls. ignore.
