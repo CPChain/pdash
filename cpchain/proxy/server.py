@@ -18,11 +18,11 @@ from cpchain import config
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.message import message_sanity_check, \
 sign_message_verify, is_address_from_key
-# from cpchain.crypto import ECCipher # pylint: disable=no-name-in-module
+# from cpchain.crypto import ECCipher
 
 from cpchain.storage import IPFSStorage
 from cpchain.proxy.db import Trade, ProxyDB
-# from cpchain.chain.agents import ProxyAgent # pylint: disable=no-name-in-module
+# from cpchain.chain.agents import ProxyAgent
 # from cpchain.chain.utils import default_w3
 # from cpchain.utils import join_with_root, join_with_rc, Encoder
 from cpchain.utils import join_with_rc

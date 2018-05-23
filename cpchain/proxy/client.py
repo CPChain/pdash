@@ -158,7 +158,7 @@ def download_file(uri):
 if __name__ == '__main__':
 
     from cpchain.account import Accounts
-    from cpchain.crypto import ECCipher # pylint: disable=no-name-in-module
+    from cpchain.crypto import ECCipher
 
     import sys
     from twisted.python import log as twisted_log
