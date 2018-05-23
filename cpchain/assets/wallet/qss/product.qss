@@ -1,38 +1,17 @@
-QFrame#follow_tag_frame, QFrame#follow_sell_frame {
-    border: none;
-    outline: none; 
-    background: #fafafa;
-}
-
-QScrollArea{
-    border: none;
-    outline: none; 
-    background: #fafafa;
-}
-
-QTabWidget::pane {
-  border-top: 1px solid #e5e5e5;
-  top:-1px; 
-} 
-
-QTabBar::tab {
-  background: #fafafa; 
-  border: 1px solid #fafafa; 
-  border-bottom: 1px solid #555555;
-  padding: 15px;
-  text-align: left;
-} 
-
-QTabBar::tab:selected { 
-  background: #e5e5e5; 
-  margin-bottom: -1px; 
-  border-bottom: 4px solid #555555;
-}
-
 QScrollArea.Product {
     background: transparent;
 }
 
+QScrollArea {
+    border: none;
+    outline: none;
+}
+
+QFrame#search_frame {
+    background: #fafafa;
+    border: none;
+    outline: none;
+}
 
 QLabel#total_sale_label {
     color: #555555;
@@ -44,6 +23,9 @@ QFrame.HorizontalLine {
 
 QLabel#price_label{
     color: #006bcf;
+    /*font-family: "Arieal Regular";*/
+    font: bold 14px;
+    /*background: #006bcf;*/
 }
 
 QPushButton#title_btn {
@@ -70,7 +52,7 @@ QPushButton#seller_btn {
     background: none;
 }
 
-
+/* Specifying QSS for each tag*/
 QPushButton[t_value = "1"] {
     padding-left: 5px;
     padding-right: 5px;
@@ -90,5 +72,3 @@ QPushButton[t_value = "1"]:pressed{
     border: 1px solid #cfe3f5;
     color: #006bcf;
 }
-
-
