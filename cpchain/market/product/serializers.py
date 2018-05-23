@@ -56,6 +56,7 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
         """
         instance.status = validated_data.get('status', instance.status)
         instance.save()
+        instance.update_index()
         return instance
 
 

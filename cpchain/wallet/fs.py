@@ -1,5 +1,6 @@
 import tempfile
 import os
+import logging
 
 from cpchain.wallet.db import session, FileInfo, osp, create_engine, sessionmaker, BuyerFileInfo
 from cpchain.crypto import AESCipher, RSACipher
@@ -7,6 +8,7 @@ from cpchain.utils import Encoder, join_with_rc
 from cpchain.storage import IPFSStorage
 from cpchain import root_dir, config
 
+logger = logging.getLogger(__name__)  # pylint: disable=locally-disabled, invalid-name
 
 def get_file_list():
     """This returns a list of files.
@@ -42,7 +44,7 @@ def publish_file_update(market_hash, selected_id):
     engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
     Session = sessionmaker(bind=engine)
     session = Session()
-    session.query(FileInfo).filter(FileInfo.id == selected_id + 1). \
+    session.query(FileInfo).filter(FileInfo.id == selected_id). \
         update({FileInfo.market_hash: market_hash, FileInfo.is_published: True}, synchronize_session=False)
     session.commit()
 
@@ -77,20 +79,21 @@ def decrypt_file(file_in_path, file_out_path):
 def upload_file_ipfs(file_path):
     with tempfile.TemporaryDirectory() as tmpdirname:
         encrypted_path = os.path.join(tmpdirname, 'encrypted.txt')
-        print("before encrypt")
+        logger.debug("start to encrypt")
         this_key = encrypt_file(file_path, encrypted_path)
-        print("after encrypt")
+        logger.debug("encrypt completed")
         ipfs_client = IPFSStorage()
         ipfs_client.connect()
         file_hash = ipfs_client.upload_file(encrypted_path)
     file_name = list(os.path.split(file_path))[-1]
     file_size = os.path.getsize(file_path)
-    print("before database")
+    logger.debug('start to write data into database')
     new_file_info = FileInfo(hashcode=str(file_hash), name=file_name, path=file_path, size=file_size,
                              remote_type="ipfs", remote_uri="/ipfs/" + file_name,
                              is_published=False, aes_key=this_key)
     add_file(new_file_info)
-    return file_hash
+    logger.debug('file id: %s', new_file_info.id)
+    return new_file_info
 
 
 def download_file_ipfs(fhash, file_path):

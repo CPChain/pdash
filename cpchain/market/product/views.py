@@ -70,10 +70,10 @@ class ProductPublishAPIViewSet(APIView):
             return create_invalid_response()
 
         # generate msg hash
-        msg_hash_source = product.get_msg_hash_source()
-        logger.debug("msg_hash_source:%s" % msg_hash_source)
-        product.msg_hash = generate_msg_hash(msg_hash_source)
-        logger.debug("msg_hash:%s" % product.msg_hash)
+        market_hash_source = product.get_msg_hash_source()
+        logger.debug("market_hash_source:%s" % market_hash_source)
+        product.msg_hash = generate_market_hash(market_hash_source)
+        logger.debug("market_hash:%s" % product.msg_hash)
         data['msg_hash'] = product.msg_hash
         data['seq'] = msg_seq.seq
 
@@ -143,28 +143,28 @@ class MyProductPagedSearchAPIViewSet(APIView):
         return pg.get_paginated_response(serializer.data)
 
 
-class ProductSearchAPIViewSet(APIView):
-    """
-    API endpoint that allows query products.
-    """
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    permission_classes = (AllowAny,)
-
-    def get(self, request):
-        params = request.query_params
-        keyword = params.get('keyword')
-        if keyword is not None:
-            logger.debug("keyword is %s" % keyword)
-            queryset = Product.objects.filter(status=0).filter(
-                Q(title__contains=keyword) | Q(description__contains=keyword) |
-                Q(tags__contains=keyword) | Q(msg_hash=keyword)
-            )
-        else:
-            queryset = Product.objects.filter(status=0)
-
-        serializer = ProductSerializer(queryset, many=True)
-        return Response(data=serializer.data)
+# class ProductSearchAPIViewSet(APIView):
+#     """
+#     API endpoint that allows query products.
+#     """
+#     queryset = Product.objects.all()
+#     serializer_class = ProductSerializer
+#     permission_classes = (AllowAny,)
+#
+#     def get(self, request):
+#         params = request.query_params
+#         keyword = params.get('keyword')
+#         if keyword is not None:
+#             logger.debug("keyword is %s" % keyword)
+#             queryset = Product.objects.filter(status=0).filter(
+#                 Q(title__contains=keyword) | Q(description__contains=keyword) |
+#                 Q(tags__contains=keyword) | Q(msg_hash=keyword)
+#             )
+#         else:
+#             queryset = Product.objects.filter(status=0)
+#
+#         serializer = ProductSerializer(queryset, many=True)
+#         return Response(data=serializer.data)
 
 
 class ProductSearchByTagAPIView(APIView):
@@ -201,28 +201,28 @@ class ProductSearchBySellerAPIView(APIView):
         return JsonResponse({'status': 1, 'message': 'success', 'data': serializer.data})
 
 
-class ProductPagedSearchAPIViewSet(APIView):
-    """
-    API endpoint that allows query products.
-    """
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    permission_classes = (AllowAny,)
-
-    def get(self, request):
-        params = request.query_params
-        keyword = params.get('keyword')
-        if keyword is not None:
-            logger.debug("keyword is %s" % keyword)
-            queryset = Product.objects.filter(status=0).filter(
-                Q(title__contains=keyword) | Q(description__contains=keyword) | Q(tags__contains=keyword))
-        else:
-            queryset = Product.objects.filter(status=0)
-
-        pg = PageNumberPagination()
-        page_set = pg.paginate_queryset(queryset=queryset, request=request, view=self)
-        serializer = ProductSerializer(page_set, many=True)
-        return pg.get_paginated_response(serializer.data)
+# class ProductPagedSearchAPIViewSet(APIView):
+#     """
+#     API endpoint that allows query products.
+#     """
+#     queryset = Product.objects.all()
+#     serializer_class = ProductSerializer
+#     permission_classes = (AllowAny,)
+#
+#     def get(self, request):
+#         params = request.query_params
+#         keyword = params.get('keyword')
+#         if keyword is not None:
+#             logger.debug("keyword is %s" % keyword)
+#             queryset = Product.objects.filter(status=0).filter(
+#                 Q(title__contains=keyword) | Q(description__contains=keyword) | Q(tags__contains=keyword))
+#         else:
+#             queryset = Product.objects.filter(status=0)
+#
+#         pg = PageNumberPagination()
+#         page_set = pg.paginate_queryset(queryset=queryset, request=request, view=self)
+#         serializer = ProductSerializer(page_set, many=True)
+#         return pg.get_paginated_response(serializer.data)
 
 
 class BaseProductStatusAPIViewSet(APIView):
@@ -242,7 +242,7 @@ class BaseProductStatusAPIViewSet(APIView):
         if public_key is None:
             return create_invalid_response()
         try:
-            product = Product.objects.get(owner_address=public_key, msg_hash=request.data['msg_hash'])
+            product = Product.objects.get(owner_address=public_key, msg_hash=request.data['market_hash'])
         except Product.DoesNotExist:
             return create_invalid_response()
         data = request.data

@@ -1,0 +1,21 @@
+[
+  {
+    "model": "transaction.transactiondetail",
+    "pk": 1,
+    "fields": {
+      "seller_address": "selleraddress",
+      "market_hash": "market_hash",
+      "buyer_address": "buyeraddress",
+      "created": "2018-12-10T10:10:10Z"
+    }
+  },
+  {
+    "model": "transaction.productsalestatus",
+    "pk": 1,
+    "fields": {
+      "market_hash": "market_hash",
+      "sales_number": 123,
+      "updated": "2018-12-10T10:10:10Z"
+    }
+  }
+]

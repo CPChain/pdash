@@ -1,7 +1,9 @@
 from django.db import models
 
+STATUS_CHOICES = ((1, 'Enable'), (0, 'Disable'))
 
 class Carousel(models.Model):
+
     """
     The Carousel model.
     """
@@ -9,7 +11,7 @@ class Carousel(models.Model):
     image = models.CharField("image url", max_length=256)
     link = models.CharField("link address", max_length=256)
     index = models.IntegerField("sort by index", default=0)
-    status = models.IntegerField(default=1)
+    status = models.IntegerField(choices=STATUS_CHOICES, default=1)
 
     def __str__(self):
         return self.name
@@ -22,7 +24,7 @@ class HotTag(models.Model):
     image = models.CharField("image url", max_length=256)
     tag = models.CharField("tag", max_length=256)
     index = models.IntegerField("sort by index", default=0)
-    status = models.IntegerField(default=1)
+    status = models.IntegerField(choices=STATUS_CHOICES, default=1)
 
     def __str__(self):
         return self.name
@@ -37,7 +39,7 @@ class Promotion(models.Model):
     image = models.CharField("image url", max_length=256)
     link = models.CharField("link address", max_length=256)
     index = models.IntegerField("sort by index", default=0)
-    status = models.IntegerField(default=1)
+    status = models.IntegerField(choices=STATUS_CHOICES, default=1)
 
     def __str__(self):
         return self.name
