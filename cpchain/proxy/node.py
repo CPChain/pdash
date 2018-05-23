@@ -34,8 +34,8 @@ class KadServer(Server):
         loop = asyncio.get_event_loop()
         listen = loop.create_datagram_endpoint(self._create_protocol,
                                                local_addr=(interface, port))
-        log.info("Node %i listening on %s:%i",
-                 self.node.long_id, interface, port)
+        logger.info("Node %i listening on %s:%i",
+                    self.node.long_id, interface, port)
 
         d = defer.Deferred()
 
@@ -241,13 +241,6 @@ class Peer:
 # Will be removed in formal release.
 if __name__ == '__main__':
     import sys
-
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    log = logging.getLogger('kademlia')
-    log.addHandler(handler)
-    log.setLevel(logging.DEBUG)
 
     from twisted.python import log as twisted_log # pylint: disable=ungrouped-imports
     twisted_log.startLogging(sys.stdout)

@@ -90,3 +90,8 @@ propagate = false
 handlers = ["default"]
 level = "DEBUG"
 propagate = false
+
+[logging.loggers.kademlia]
+handlers = ["default"]
+level = "DEBUG"
+propagate = false
