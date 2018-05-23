@@ -1,10 +1,14 @@
-from django.db import models
+import logging
 
-# Create your models here.
+from django.db import models
 from cpchain.market.account.models import WalletUser
+from cpchain.market.comment.models import SummaryComment
+from cpchain.market.transaction.models import ProductSaleStatus
 from .search_indexes import ProductIndex
 from elasticsearch.helpers import bulk
 from django.utils.translation import ugettext_lazy as _
+
+logger = logging.getLogger(__name__)
 
 
 class Product(models.Model):
@@ -37,7 +41,7 @@ class Product(models.Model):
         return self.get_signature_source() + str(self.seq) + self.signature
 
     def indexing(self):
-
+        logger.debug("index %r" % self)
         ProductIndex.init()
         obj = ProductIndex(
             meta={'id': self.msg_hash},
@@ -54,9 +58,22 @@ class Product(models.Model):
             owner_address=self.owner_address,
             signature=self.signature,
         )
+        obj = Product.fill_attr(obj)
         from cpchain.market.market.es_client import es_client
         obj.save(using=es_client)
         return obj.to_dict(include_meta=True)
+
+    def fill_attr(item):
+        pk = item.owner_address
+        u = WalletUser.objects.get(public_key=pk)
+
+        comment, _ = SummaryComment.objects.get_or_create(market_hash=item.market_hash)
+        sale_status, _ = ProductSaleStatus.objects.get_or_create(market_hash=item.market_hash)
+
+        item.username = '' if not u else u.username
+        item.avg_rating = 1 if not comment else comment.avg_rating
+        item.sales_number = 0 if not sale_status else sale_status.sales_number
+        return item
 
     def update_index_status(self):
         prod = ProductIndex.get(id=self.msg_hash, ignore=404)
@@ -64,6 +81,9 @@ class Product(models.Model):
             prod.update(status=self.status)
 
         return True
+
+    def __str__(self):
+        return self.owner_address + "," + str(self.seq) + "," + self.msg_hash
 
 
     @staticmethod
