@@ -57,7 +57,7 @@ class ProductCommentAddAPIView(APIView):
                 buyer_address=buyer_address).filter(
                 market_hash=market_hash).exists()
             if not exists_transaction:
-                logger.info('invalid comment request from %s' % public_key)
+                logger.info('no tx,invalid comment request from %s' % public_key)
                 return create_invalid_response()
 
             serializer = CommentSerializer(data=data)

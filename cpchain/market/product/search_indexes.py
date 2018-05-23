@@ -20,13 +20,6 @@ class ProductIndex(DocType):
     avg_rating = Float()
     sales_number = Integer()
 
-    # p['username'] = '' if not u else u.username
-    # # query average rating from SummaryComment table
-    # comment, _ = SummaryComment.objects.get_or_create(market_hash=p['msg_hash'])
-    # sale_status, _ = ProductSaleStatus.objects.get_or_create(market_hash=p['msg_hash'])
-    # p['avg_rating'] = 1 if not comment else comment.avg_rating
-    # p['sales_number'] = 0 if not sale_status else sale_status.sales_number
-
     class Meta:
         index = 'market'
 

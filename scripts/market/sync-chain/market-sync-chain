@@ -8,6 +8,7 @@ import django
 
 from cpchain import config
 from cpchain.chain import utils, models
+from cpchain.market.product.models import Product
 from cpchain.utils import join_with_root, join_with_rc, Encoder
 from cpchain.chain.agents import Agent, BuyerAgent
 from cpchain.crypto import RSACipher
@@ -60,6 +61,7 @@ class MarketSyncChainBlockNumberRecorder:
 class MarketAgent(Agent):
 
     def update_sales_num_to_db(self):
+        product_id_list = []
         record = MarketSyncChainBlockNumberRecorder.load_record()
         fromBlock = record.get('sales_num_block_number', 0)
         toBlock = 'latest'
@@ -70,7 +72,9 @@ class MarketAgent(Agent):
             order_id = event['args']['orderId']
             order = self.query_order(order_id)
             desc_hash = order[0]
-            product_sale_status, _ = ProductSaleStatus.objects.get_or_create(market_hash=Encoder.bytes_to_base64_str(desc_hash))
+            product_id = Encoder.bytes_to_base64_str(desc_hash)
+            product_id_list.append(product_id)
+            product_sale_status, _ = ProductSaleStatus.objects.get_or_create(market_hash=product_id)
             serializer = ProductSaleStatusSerializer(product_sale_status)
             updated_data = serializer.data
             updated_data['sales_number'] = updated_data['sales_number'] + 1
@@ -79,6 +83,7 @@ class MarketAgent(Agent):
         if order_event_list:
             record['sales_num_block_number'] = order_event_list[-1]['blockNumber'] + 1
         MarketSyncChainBlockNumberRecorder.dump_record(record)
+        return product_id_list
 
     def update_transaction_detail_to_db(self):
         record = MarketSyncChainBlockNumberRecorder.load_record()
@@ -163,5 +168,13 @@ if __name__ == '__main__':
         contract_name = config.chain.contract_name
 
         magent = MarketAgent(w3, bin_path, contract_name)
-        magent.update_sales_num_to_db()
+        product_id_list = magent.update_sales_num_to_db()
         magent.update_transaction_detail_to_db()
+        # sync data to elasticsearch
+        for p in product_id_list:
+            try:
+                product = Product.objects.get(msg_hash=p)
+                product.indexing()
+            except:
+                logger.exception("index product failed")
+                pass
