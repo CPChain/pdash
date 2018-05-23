@@ -9,7 +9,7 @@ from twisted.protocols.basic import NetstringReceiver
 import treq
 
 from cpchain import config
-from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
+from cpchain.proxy.msg.trade_msg_pb2 import Message
 from cpchain.proxy.message import message_sanity_check
 
 logger = logging.getLogger(__name__)
@@ -151,99 +151,3 @@ def download_file(uri):
     d.addCallback(treq.collect, f.write)
     d.addBoth(lambda _: f.close())
     return d
-
-
-# Code below for testing purpose only, pls. ignore.
-# Will be removed in formal release.
-if __name__ == '__main__':
-
-    from cpchain.account import Accounts
-    from cpchain.crypto import ECCipher
-
-    import sys
-    from twisted.python import log as twisted_log
-    twisted_log.startLogging(sys.stdout)
-
-    accounts = Accounts()
-
-    buyer_account = accounts[0]
-    seller_account = accounts[1]
-
-    buyer_private_key = buyer_account.private_key  #object type
-    buyer_public_key = ECCipher.serialize_public_key(
-        buyer_account.public_key)    # string type
-    buyer_addr = ECCipher.get_address_from_public_key(
-        buyer_account.public_key)  #string type
-
-    seller_private_key = seller_account.private_key
-    seller_public_key = ECCipher.serialize_public_key(
-        seller_account.public_key)   #string type
-    seller_addr = ECCipher.get_address_from_public_key(
-        seller_account.public_key)  #string type
-
-
-    test_type = 'buyer_data'
-
-    if test_type == 'seller_data':
-        message = Message()
-        seller_data = message.seller_data
-        message.type = Message.SELLER_DATA
-        seller_data.order_id = 1
-        seller_data.seller_addr = seller_addr
-        seller_data.buyer_addr = buyer_addr
-        seller_data.market_hash = 'MARKET_HASH'
-        seller_data.AES_key = b'AES_key'
-        storage = seller_data.storage
-        storage.type = Message.Storage.IPFS
-        ipfs = storage.ipfs
-        ipfs.file_hash = b'QmT4kFS5gxzQZJwiDJQ66JLVGPpyTCF912bywYkpgyaPsD'
-        ipfs.gateway = "192.168.0.132:5001"
-
-        sign_message = SignMessage()
-        sign_message.public_key = seller_public_key
-        sign_message.data = message.SerializeToString()
-        sign_message.signature = ECCipher.create_signature(
-            seller_private_key,
-            sign_message.data
-            )
-
-        d = start_client(sign_message)
-        d.addBoth(lambda _: reactor.stop())
-
-    elif test_type == 'buyer_data':
-        message = Message()
-        buyer_data = message.buyer_data
-        message.type = Message.BUYER_DATA
-        buyer_data.order_id = 1
-        buyer_data.seller_addr = seller_addr
-        buyer_data.buyer_addr = buyer_addr
-        buyer_data.market_hash = 'MARKET_HASH'
-
-        sign_message = SignMessage()
-        sign_message.public_key = buyer_public_key
-        sign_message.data = message.SerializeToString()
-        sign_message.signature = ECCipher.create_signature(
-            buyer_private_key,
-            sign_message.data
-            )
-
-        d = start_client(sign_message)
-        d.addBoth(lambda _: reactor.stop())
-
-    elif test_type == 'proxy_reply':
-        message = Message()
-        message.type = Message.PROXY_REPLY
-        proxy_reply = message.proxy_reply
-        proxy_reply.error = "error"
-        sign_message = SignMessage()
-        sign_message.public_key = seller_public_key
-        sign_message.data = message.SerializeToString()
-        sign_message.signature = ECCipher.create_signature(
-            seller_private_key,
-            sign_message.data
-            )
-
-        d = start_client(sign_message)
-        d.addBoth(lambda _: reactor.stop())
-
-    reactor.run()
