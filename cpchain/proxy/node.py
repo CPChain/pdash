@@ -3,14 +3,9 @@ import logging
 import os
 import asyncio
 
-if __name__ == '__main__':
-    from twisted.internet import asyncioreactor
-    loop = asyncio.get_event_loop()
-    asyncioreactor.install(eventloop=loop)
-else:
-    loop = asyncio.get_event_loop()
+from cpchain.utils import reactor # pylint: disable=wrong-import-order,ungrouped-imports
 
-from twisted.internet import reactor, ssl, defer
+from twisted.internet import ssl, defer
 from twisted.web.server import Site
 from twisted.internet.task import LoopingCall
 
@@ -24,6 +19,8 @@ from cpchain.proxy.client import start_client
 from cpchain.proxy.account import get_proxy_id
 
 logger = logging.getLogger(__name__)
+
+loop = asyncio.get_event_loop()
 
 
 class KadServer(Server):
