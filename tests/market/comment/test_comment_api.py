@@ -1,5 +1,13 @@
 from tests.market.base_api_test import *
 from cpchain.market.market.utils import *
+import os
+import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "cpchain.market.market.settings")
+django.setup()
+
+
+from cpchain.market.transaction.models import TransactionDetail
 
 class TestCommentApi(BaseApiTest):
 
@@ -23,9 +31,12 @@ class TestCommentApi(BaseApiTest):
         token, market_hash = self.get_token_market_hash()
         self.add_comment_failed(token,market_hash)
 
-    # def test_add_comment_success(self):
-    #     token, market_hash = self.get_token_market_hash()
-    #     self.add_comment_success(token,market_hash)
+    def test_add_comment_success(self):
+        token, market_hash = self.get_token_market_hash()
+        # create TransactionDetail
+        TransactionDetail.objects.create(seller_address=self.address_2, market_hash=market_hash,
+                                         buyer_address=self.address)
+        self.add_comment_success(token,market_hash)
 
     def test_query_summary_comment(self):
         token, market_hash = self.get_token_market_hash()

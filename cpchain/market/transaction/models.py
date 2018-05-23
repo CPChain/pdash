@@ -5,7 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 class TransactionDetail(models.Model):
     """
     The ProductTransaction model.We can know who has buy which product.
-    TODO read Transaction info from chain,write into db
+    read Transaction info from chain,write into db
     """
     seller_address = models.CharField(_("seller_address"), max_length=200, null=True)
     market_hash = models.CharField(_("market hash"), max_length=256,null=True)
