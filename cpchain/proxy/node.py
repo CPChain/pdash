@@ -3,15 +3,18 @@ import logging
 import os
 import asyncio
 
-from twisted.internet import asyncioreactor
-loop = asyncio.get_event_loop()
-asyncioreactor.install(eventloop=loop)
+if __name__ == '__main__':
+    from twisted.internet import asyncioreactor
+    loop = asyncio.get_event_loop()
+    asyncioreactor.install(eventloop=loop)
+else:
+    loop = asyncio.get_event_loop()
 
-from twisted.internet import reactor, ssl
+from twisted.internet import reactor, ssl, defer
 from twisted.web.server import Site
 from twisted.internet.task import LoopingCall
 
-from kademlia.network import Server as KadServer
+from kademlia.network import Server
 
 from cpchain import config
 from cpchain.proxy.network import PeerProtocol
@@ -19,6 +22,33 @@ from cpchain.proxy.server import SSLServerFactory, FileServer
 from cpchain.utils import join_with_rc, join_with_root
 
 logger = logging.getLogger(__name__)
+
+
+class KadServer(Server):
+    def listen(self, port, interface='0.0.0.0'):
+        """
+        Start listening on the given port.
+
+        Provide interface="::" to accept ipv6 address
+        """
+        loop = asyncio.get_event_loop()
+        listen = loop.create_datagram_endpoint(self._create_protocol,
+                                               local_addr=(interface, port))
+        log.info("Node %i listening on %s:%i",
+                 self.node.long_id, interface, port)
+
+        d = defer.Deferred()
+
+        def create_endpoint_done(future):
+            self.transport, self.protocol = future.result() # pylint: disable=attribute-defined-outside-init
+            self.refresh_table()
+            d.callback(True)
+
+        future = asyncio.ensure_future(listen)
+        future.add_done_callback(create_endpoint_done)
+
+        return d
+
 
 def get_eth_addr():
     return b'fake_eth_addr'
@@ -102,14 +132,45 @@ class Peer:
         port = (port or config.proxy.server_dht_port)
 
         peer = KadServer()
-        peer.listen(port)
 
         if boot_nodes:
-            loop.run_until_complete(peer.bootstrap(boot_nodes))
-            addr = loop.run_until_complete(peer.protocol.stun(boot_nodes[0]))
-            self.ip = addr[1][0]
-            loop.run_until_complete(peer.set(self.eth_addr,
-                                             (self.ip, self.service_port)))
+
+            d = defer.Deferred()
+
+            def set_key_done(_):
+                d.callback(True)
+
+            def stun_done(future):
+                addr = future.result()
+                self.ip = addr[1][0]
+                addr = '%s,%d' % (self.ip, self.service_port)
+                asyncio.ensure_future(
+                    peer.set(
+                        self.eth_addr,
+                        addr
+                        )
+                    ).add_done_callback(set_key_done)
+
+            def bootstrap_done(_):
+                asyncio.ensure_future(
+                    peer.protocol.stun(
+                        boot_nodes[0]
+                        )
+                    ).add_done_callback(stun_done)
+
+            def listen_done(_):
+                asyncio.ensure_future(
+                    peer.bootstrap(
+                        boot_nodes
+                        )
+                    ).add_done_callback(bootstrap_done)
+
+            peer.listen(port).addCallback(listen_done)
+
+            return d
+
+        return peer.listen(port)
+
 
     def pick_peer(self, boot_node, port=None):
         port = port or 8150
@@ -147,13 +208,30 @@ class Peer:
             port = port or 8250
 
             peer = KadServer()
-            peer.listen(port)
-            loop.run_until_complete(peer.bootstrap(boot_nodes))
-            value = loop.run_until_complete(peer.get(eth_addr))
-            peer.stop()
 
-            if value:
-                return tuple(value)
+            d = defer.Deferred()
+
+            def get_key_done(future):
+                value = future.result()
+                peer.stop()
+                d.callback(tuple(value.split(',')))
+
+            def bootstrap_done(_):
+                asyncio.ensure_future(
+                    peer.get(eth_addr)
+                    ).add_done_callback(get_key_done)
+
+            def listen_done(_):
+                asyncio.ensure_future(
+                    peer.bootstrap(
+                        boot_nodes
+                        )
+                    ).add_done_callback(bootstrap_done)
+
+            peer.listen(port).addCallback(listen_done)
+
+            return d
+
         else:
             logger.error("wrong boot nodes")
 
@@ -171,7 +249,7 @@ if __name__ == '__main__':
     log.addHandler(handler)
     log.setLevel(logging.DEBUG)
 
-    from twisted.python import log as twisted_log
+    from twisted.python import log as twisted_log # pylint: disable=ungrouped-imports
     twisted_log.startLogging(sys.stdout)
 
     if sys.argv[1] == 'tracker':
@@ -182,8 +260,13 @@ if __name__ == '__main__':
     elif sys.argv[1] == 'peer':
         peer = Peer()
         peer.start_service()
-        peer.join_centra_net(boot_node=('127.0.0.1', 8101))
-        peer.join_decentra_net(boot_nodes=[('127.0.0.1', 8201)])
+        peer.join_centra_net(
+            boot_node=('127.0.0.1', 8101)
+            )
+
+        peer.join_decentra_net(
+            boot_nodes=[('127.0.0.1', 8201)]
+            )
 
     elif sys.argv[1] == 'pick_peer':
         def found_peer(peer):
@@ -191,20 +274,30 @@ if __name__ == '__main__':
             reactor.stop()
 
         peer = Peer()
-        peer.pick_peer(boot_node=('127.0.0.1', 8101)).addCallback(found_peer)
+        peer.pick_peer(
+            boot_node=('127.0.0.1', 8101)
+            ).addCallback(found_peer)
 
     elif sys.argv[1] == 'get_peer':
         peer = Peer()
-        result = peer.get_peer(eth_addr=b'fake_eth_addr',
-                               boot_nodes=[('127.0.0.1', 8201)])
-        logger.debug(result)
 
+        count = 0
         def got_peer(peer):
+            global count  # pylint: disable=global-statement
             logger.debug(peer)
-            reactor.stop()
+            count += 1
+            if count == 2:
+                reactor.stop()
 
-        peer.get_peer(eth_addr=b'fake_eth_addr',
-                      boot_nodes=('127.0.0.1', 8101)).addCallback(got_peer)
+        peer.get_peer(
+            eth_addr=b'fake_eth_addr',
+            boot_nodes=('127.0.0.1', 8101)
+            ).addCallback(got_peer)
+
+        peer.get_peer(
+            eth_addr=b'fake_eth_addr',
+            boot_nodes=[('127.0.0.1', 8201)]
+            ).addCallback(got_peer)
 
     elif sys.argv[1] == 'service':
         peer = Peer()
