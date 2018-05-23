@@ -17,10 +17,11 @@ from twisted.internet.task import LoopingCall
 from kademlia.network import Server
 
 from cpchain import config
+from cpchain.utils import join_with_rc, join_with_root
 from cpchain.proxy.network import PeerProtocol
 from cpchain.proxy.server import SSLServerFactory, FileServer
 from cpchain.proxy.client import start_client
-from cpchain.utils import join_with_rc, join_with_root
+from cpchain.proxy.account import get_proxy_id
 
 logger = logging.getLogger(__name__)
 
@@ -50,19 +51,15 @@ class KadServer(Server):
 
         return d
 
-
-def get_eth_addr():
-    return b'fake_eth_addr'
-
 class Peer:
     def __init__(self):
         self.service_port = None
-        self.eth_addr = None
+        self.peer_id = None
         self.ip = None
 
     def start_service(self, ctrl_port=None, data_port=None):
 
-        self.eth_addr = get_eth_addr()
+        self.peer_id = get_proxy_id()
 
         server_key = os.path.expanduser(
             join_with_rc(config.proxy.server_key))
@@ -118,7 +115,7 @@ class Peer:
             protocol.refresh_peers()
 
         if boot_node:
-            protocol.peer_id = self.eth_addr
+            protocol.peer_id = self.peer_id
             protocol.peer_info = self.service_port
             protocol.bootstrap(boot_node)
         else:
@@ -147,7 +144,7 @@ class Peer:
                 addr = '%s,%d' % (self.ip, self.service_port)
                 asyncio.ensure_future(
                     peer.set(
-                        self.eth_addr,
+                        self.peer_id,
                         addr
                         )
                     ).add_done_callback(set_key_done)
@@ -188,7 +185,7 @@ class Peer:
         d.addBoth(pick_peer_done)
         return d
 
-    def get_peer(self, eth_addr, boot_nodes, port=None):
+    def get_peer(self, peer_id, boot_nodes, port=None):
 
         if isinstance(boot_nodes, tuple):
             port = port or 8150
@@ -201,7 +198,7 @@ class Peer:
                 if success and data:
                     return tuple(data)
 
-            d = protocol.get_peer(eth_addr, boot_nodes)
+            d = protocol.get_peer(peer_id, boot_nodes)
             d.addBoth(get_peer_done)
             return d
 
@@ -219,7 +216,7 @@ class Peer:
 
             def bootstrap_done(_):
                 asyncio.ensure_future(
-                    peer.get(eth_addr)
+                    peer.get(peer_id)
                     ).add_done_callback(get_key_done)
 
             def listen_done(_):
@@ -256,7 +253,7 @@ def start_proxy_request(sign_message, boot_node, proxy_id=None):
 
         # find the (ip, port) for given proxy
         return Peer().get_peer(
-            eth_addr=proxy_id,
+            peer_id=proxy_id,
             boot_nodes=boot_node
         )
 
