@@ -37,6 +37,7 @@ class Product(models.Model):
         return self.get_signature_source() + str(self.seq) + self.signature
 
     def indexing(self):
+
         ProductIndex.init()
         obj = ProductIndex(
             meta={'id': self.msg_hash},
@@ -57,10 +58,11 @@ class Product(models.Model):
         obj.save(using=es_client)
         return obj.to_dict(include_meta=True)
 
-    def update_index(self):
+    def update_index_status(self):
         prod = ProductIndex.get(id=self.msg_hash, ignore=404)
         if prod:
             prod.update(status=self.status)
+
         return True
 
 
