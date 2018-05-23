@@ -49,12 +49,12 @@ config = _get_config()
 def _install_reactor():
     reactor_qual_name = "twisted.internet.reactor"
     if reactor_qual_name not in sys.modules:
-        if config.mode == "proxy":
+        if config.core.mode == "proxy":
             import asyncio
             from twisted.internet import asyncioreactor
             loop = asyncio.get_event_loop()
             asyncioreactor.install(eventloop=loop)
-        elif config.mode == "wallet":
+        elif config.core.mode == "wallet":
             # TODO, add qmuash support
             pass
 
