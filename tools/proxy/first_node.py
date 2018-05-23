@@ -1,14 +1,7 @@
-# pylint: disable=wrong-import-position
 import sys
 import logging
-import asyncio
 
-from twisted.internet import asyncioreactor
-loop = asyncio.get_event_loop()
-asyncioreactor.install(eventloop=loop)
-
-from twisted.internet import reactor
-
+from cpchain.utils import reactor
 from cpchain.proxy.node import Peer
 
 logger = logging.getLogger(__name__)
