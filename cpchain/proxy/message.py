@@ -1,5 +1,5 @@
 from cpchain.proxy.msg.trade_msg_pb2 import Message
-from cpchain.crypto import ECCipher # pylint: disable=no-name-in-module
+from cpchain.crypto import ECCipher
 
 def message_sanity_check(message):
 
