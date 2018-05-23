@@ -28,6 +28,9 @@ class BaseApiTest(unittest.TestCase):
         self.pub_key_string = ECCipher.serialize_public_key(self.pub_key)
         self.pub_key_string2 = ECCipher.serialize_public_key(self.pub_key_2)
 
+        self.address = ECCipher.get_address_from_public_key(self.pub_key)
+        self.address_2 = ECCipher.get_address_from_public_key(self.pub_key_2)
+
     def _login_and_get_nonce(self, header):
         return self.__login_and_get_nonce(header, self.pub_key_string)
 
