@@ -16,6 +16,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from cpchain.market.main.models import Carousel, HotTag, Promotion
+
+admin.site.register(Carousel)
+admin.site.register(HotTag)
+admin.site.register(Promotion)
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('account/v1/', include('account.urls_v1')),
