@@ -9,7 +9,6 @@ from cryptography.hazmat.primitives import hashes
 
 root_dir = osp.abspath(osp.join(osp.dirname(osp.abspath(__file__)), '../'))
 
-
 class Config:
     def __init__(self, conf):
         self.conf = conf
@@ -44,6 +43,24 @@ def _get_config():
 
 
 config = _get_config()
+
+
+# twisted reactor
+def _install_reactor():
+    reactor_qual_name = "twisted.internet.reactor"
+    if reactor_qual_name not in sys.modules:
+        if config.mode == "proxy":
+            import asyncio
+            from twisted.internet import asyncioreactor
+            loop = asyncio.get_event_loop()
+            asyncioreactor.install(eventloop=loop)
+        elif config.mode == "wallet":
+            # TODO, add qmuash support
+            pass
+
+    return sys.modules.get(reactor_qual_name)
+
+reactor = _install_reactor()
 
 
 def join_with_root(path):
