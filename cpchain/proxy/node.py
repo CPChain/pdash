@@ -1,9 +1,6 @@
-# pylint: disable=wrong-import-position
 import logging
 import os
 import asyncio
-
-from cpchain.utils import reactor # pylint: disable=wrong-import-order,ungrouped-imports
 
 from twisted.internet import ssl, defer
 from twisted.web.server import Site
@@ -12,6 +9,7 @@ from twisted.internet.task import LoopingCall
 from kademlia.network import Server
 
 from cpchain import config
+from cpchain.utils import reactor
 from cpchain.utils import join_with_rc, join_with_root
 from cpchain.proxy.network import PeerProtocol
 from cpchain.proxy.server import SSLServerFactory, FileServer
