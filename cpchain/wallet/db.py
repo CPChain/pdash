@@ -38,6 +38,16 @@ class FileInfo(Base):
         return "<FileInfo(path='%s', remote_uri='%s')>" % (self.path, self.remote_uri)
 
 
+class FileInfoVersion(Base):
+    __tablename__ = 'fileinfoversion'
+    id = Column(Integer, primary_key=True)
+    version = Column(Integer, default=0)
+    public_key = Column(String)
+
+    def __repr__(self):
+        return "<FileInfoVersion(version='%s')>" % self.version
+
+
 class BuyerFileInfo(Base):
     __tablename__ = 'buyerfileinfo'
     id = Column(Integer, primary_key=True)

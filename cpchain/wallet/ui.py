@@ -3,15 +3,6 @@ from twisted.logger import globalLogBeginner, textFileLogObserver
 import sys
 globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
 
-from twisted.internet.defer import Deferred
-
-def raiseErr(what):
-    raise Exception(what)
-
-d = Deferred()
-d.addCallback(raiseErr)
-d.callback("hmmm")
-
 import os.path as osp
 import string
 import logging
@@ -36,10 +27,6 @@ from twisted.internet.task import LoopingCall
 wallet = Wallet(reactor)
 
 logger = logging.getLogger(__name__) # pylint: disable=locally-disabled, invalid-name
-
-
-# utils
-logger = logging.getLogger(__name__)
 
 def get_icon(name):
     path = osp.join(root_dir, "cpchain/assets/wallet/icons", name)
@@ -2738,7 +2725,7 @@ class CloudTab(QScrollArea):
     def update_table(self):
         print("Updating file list......")
         self.file_list = fs.get_file_list()
-        print(len(self.file_list))
+        logger.debug(len(self.file_list))
         self.row_number = len(self.file_list)
         self.file_table.setRowCount(self.row_number)
         #self.file_table.clearContents()
@@ -2965,23 +2952,6 @@ class CloudTab(QScrollArea):
             self.show()
 
             print("Loading stylesheet of publish dialog....")
-
-        def choose_file(self):
-            self.file_choice = QFileDialog.getOpenFileName()[0]
-
-        def handle_cancel(self):
-            self.file_choice = ""
-            self.ipfs_btn.setChecked(True)
-            self.s3_btn.setChecked(False)
-
-            self.close()
-
-        def handle_ok(self):
-            if self.file_choice == "":
-                QMessageBox.warning(self, "Warning", "Please select your files to upload first !")
-                return
-            print("Uploading files to....")
-            QMessageBox.information(self, "Tips", "Log in successfully !")
 
         def choose_file(self):
             self.file_choice = QFileDialog.getOpenFileName()[0]
