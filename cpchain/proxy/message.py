@@ -23,7 +23,8 @@ def message_sanity_check(message):
                         return True
                 elif storage.type == Message.Storage.S3:
                     if storage.s3 and \
-                        storage.s3.uri:
+                        storage.s3.bucket and \
+                        storage.s3.key:
                         return True
     elif message.type == Message.BUYER_DATA and \
         message.buyer_data:

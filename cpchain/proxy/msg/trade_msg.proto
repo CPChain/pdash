@@ -23,7 +23,8 @@ message Message {
 		}
 
 		message S3_Storage {
-			string uri = 1;
+			string bucket = 1;
+			string key = 2;
 		}
 
 		StorageType type = 1;
