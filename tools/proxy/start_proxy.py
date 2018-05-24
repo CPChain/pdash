@@ -16,12 +16,12 @@ if len(sys.argv) != 3:
 log.startLogging(sys.stdout)
 
 (addr, port) = sys.argv[1].split(':')
-boot_node = (str(addr), int(port))
+tracker = (str(addr), int(port))
 
 peer = Peer()
 peer.start_service()
 peer.join_centra_net(
-    boot_node=boot_node
+    tracker=tracker
     )
 
 (addr, port) = sys.argv[2].split(':')
