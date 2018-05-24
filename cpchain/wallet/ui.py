@@ -76,7 +76,7 @@ class PersonalProfileTab(QScrollArea):
             profile_tabs.setObjectName("profile_tabs")
             #follow_tabs.tabBar().hide()
             profile_tabs.addTab(PersonalInfoPage(profile_tabs), "Personal Information")
-            profile_tabs.addTab(PeferenceTab(profile_tabs), "Preference")
+            profile_tabs.addTab(PreferenceTab(profile_tabs), "Preference")
             profile_tabs.addTab(SecurityTab(profile_tabs), "Account Security")            
         add_content_tabs()
 
@@ -389,6 +389,7 @@ class BuyNowDialog(QDialog):
     def __init__(self, parent=None, item={}):
         super().__init__(parent)
         self.parent = parent
+        self.resize(300, 180)
         #for testing this Tab @rayhueng
         #self.setObjectName("cart_tab")
         self.setObjectName("buynowdialog")
@@ -418,6 +419,7 @@ class BuyNowDialog(QDialog):
         #TextEdit def
         self.password_input = password_input = QLineEdit()
         password_input.setObjectName("password_input")
+        password_input.setEchoMode(QLineEdit.Password)
 
         #Buttons and Tags
         self.cancel_btn = cancel_btn = QPushButton(self)
@@ -428,14 +430,14 @@ class BuyNowDialog(QDialog):
 
         self.confirm_btn = confirm_btn = QPushButton(self)
         self.confirm_btn.setObjectName("confirm_btn")
-        self.confirm_btn.setText("OK")
+        self.confirm_btn.setText("Confirm")
         self.confirm_btn.setCursor(QCursor(Qt.PointingHandCursor))
         self.confirm_btn.clicked.connect(self.handle_confirm)
 
         def set_layout():
             self.pinfo_top_layout = pinfo_top_layout = QGridLayout(self)
             #self.pinfo_top_layout.setSpacing(10)
-            self.pinfo_top_layout.setContentsMargins(40, 40, 150, 100)
+            self.pinfo_top_layout.setContentsMargins(40, 40, 10, 10)
             self.pinfo_top_layout.addWidget(self.needtopay_label, 1, 1, 1, 1)
             self.pinfo_top_layout.addWidget(self.price_value, 1, 3, 1, 1)
             self.pinfo_top_layout.addWidget(self.account_label, 2, 1, 1, 1)
@@ -455,12 +457,12 @@ class BuyNowDialog(QDialog):
             self.setLayout(pinfo_top_layout)
         set_layout()
         #print("Loading stylesheet of cloud tab widget")
-        #load_stylesheet(self, "buynowdialog.qss")
+        load_stylesheet(self, "buynowdialog.qss")
         self.show()
 
     def handle_confirm(self):
         print("handle the confirm of payment")
-    
+        self.close()
 
     def handle_cancel(self):
         print("exiting the current dialog")
@@ -478,14 +480,14 @@ class ProductDetailTab(QScrollArea):
         self.init_ui()
 
     def init_ui(self):
-        self.frame = QFrame()
-        self.frame.setObjectName("productdetail_frame")
-        self.setWidget(self.frame)
-        self.setWidgetResizable(True)
-        self.frame.setMinimumWidth(500)
+        # self.frame = QFrame()
+        # self.frame.setObjectName("productdetail_frame")
+        # self.setWidget(self.frame)
+        # self.setWidgetResizable(True)
+        # self.frame.setMinimumWidth(500)
         # self.frame.setMaximumHeight(800)
 
-        self.hline_1 = HorizontalLine(self, 2)
+        # self.hline_1 = HorizontalLine(self, 2)
 
         self.search_item_num = 1
         self.search_promo_num = 4
@@ -515,7 +517,7 @@ class ProductDetailTab(QScrollArea):
             self.title_label.setWordWrap(True)
             self.title_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
 
-            self.seller_avatar = QLabel("ICONHERE")
+            self.seller_avatar = QLabel("")
             self.seller_avatar.setObjectName("seller_avatar")
 
             self.seller_name = QLabel("Christopher Chak")
@@ -559,7 +561,7 @@ class ProductDetailTab(QScrollArea):
             self.buyer_comment.setWordWrap(True)
             self.buyer_comment.setAlignment(Qt.AlignTop | Qt.AlignLeft)              
 
-            des_text = "In 2012, OWSLA launched a monthly subscription, The Nest, with benefits including early access to OWSLA releases.[12] In 2013, Bromance Records partners up with OWSLA to create an American branch titled BromanceUS with releases from Gesaffelstein, Illangelo, Brodinski and LOUISAHHH!!!.[13] A year later, OWSLA launched the Nestivus Charity Campaign, a series of holiday initiatives with all proceeds going to the international music nonprofit, Bridges for Music."
+            des_text = "In 2012, OWSLA launched a monthly subscription, The Nest, with benefits including early access to OWSLA releases.[12] In 2013, Bromance Records partners up with OWSLA to create an American branch titled BromanceUS with releases from Gesaffelstein, Illangelo."
 
             self.descriptiondetail = QLabel(str(des_text))
             self.descriptiondetail.setObjectName("descriptiondetail")
@@ -602,12 +604,16 @@ class ProductDetailTab(QScrollArea):
 
         create_btns()
 
+        self.frame = QFrame()
+        self.frame.setObjectName("rating_frame")
+
         def bind_slots():
             logger.debug("binding slots of btns....")
 
         bind_slots()
 
-        self.hline = HorizontalLine(self, 2)
+        self.hline_1 = HorizontalLine(self, 2)
+        self.hline_2 = HorizontalLine(self, 2)
 
         def set_layout():
 
@@ -637,18 +643,23 @@ class ProductDetailTab(QScrollArea):
             self.product_layout.addLayout(self.tag_layout, 5, 1, 1, 10)
             self.product_layout.addWidget(self.description_label, 6, 1, 1, 2)
             self.product_layout.addWidget(self.descriptiondetail, 7, 1, 3, 10)
-
             self.product_layout.addWidget(self.price_label, 9, 1, 1, 2)
-            self.product_layout.addWidget(self.collect_btn, 10, 1, 1, 2)
-            self.product_layout.addWidget(self.buynow_btn, 10, 3, 1, 2)  
 
+            self.btn_layout = QHBoxLayout(self)
+            self.btn_layout.addWidget(self.collect_btn)
+            self.btn_layout.addSpacing(12)
+            self.btn_layout.addWidget(self.buynow_btn)
+            self.product_layout.addLayout(self.btn_layout, 10, 1, 1, 6)
+
+            self.rating_all = QVBoxLayout(self)
             self.rating_layout = QHBoxLayout(self)
             self.rating_layout.addWidget(self.rating_label)
             self.rating_layout.addStretch(1)
             self.rating_layout.addWidget(self.average_score)   
 
-            self.product_layout.addLayout(self.rating_layout, 12, 1, 1, 10)
-            self.product_layout.addWidget(self.hline, 13, 1, 1, 10)   
+            self.rating_all.addLayout(self.rating_layout)
+            self.rating_all.addWidget(self.hline_1)
+            self.product_layout.addLayout(self.rating_all, 12, 1, 1, 10) 
 
             self.comment_layout = QVBoxLayout(self)
             self.buyer_layout = QHBoxLayout(self)
@@ -657,6 +668,7 @@ class ProductDetailTab(QScrollArea):
             self.buyer_layout.addSpacing(10)
             self.buyer_layout.addWidget(self.data_label)
             self.buyer_layout.addStretch(1)
+            self.buyer_layout.addWidget(self.buyer_rating)
 
             self.comment_layout.addLayout(self.buyer_layout)
             self.comment_layout.addWidget(self.buyer_comment)
@@ -666,7 +678,7 @@ class ProductDetailTab(QScrollArea):
             self.promotion_layout.addSpacing(0)
             self.promotion_layout.addWidget(self.may_like_label)
             self.promotion_layout.addSpacing(0)
-            self.promotion_layout.addWidget(self.hline)
+            self.promotion_layout.addWidget(self.hline_2)
             self.promotion_layout.addSpacing(0)
             for i in range(self.search_promo_num):
                 self.promotion_layout.addWidget(self.promo_lists[i])
@@ -982,7 +994,7 @@ class SecurityTab(QScrollArea):
         pass
 
 
-class PeferenceTab(QScrollArea):
+class PreferenceTab(QScrollArea):
     def __init__(self, parent=None, item={}):
         super().__init__(parent)
         self.parent = parent
@@ -1020,6 +1032,17 @@ class PeferenceTab(QScrollArea):
 
         #openpath button: open the download path in file browser on click
         #handler self.handle_openpath
+
+        self.seller_list = []
+        self.seller_follow_number = 2
+
+        def get_seller_list():
+            for i in range(self.seller_follow_number):
+                self.seller_list.append(Seller(self))
+
+        get_seller_list()
+
+        self.sellerid = {"name": "Chak", "sales": "2020"}
         self.openpath_btn = openpath_btn = QPushButton(self)
         self.openpath_btn.setObjectName("openpath_btn")
         self.openpath_btn.setText("Open...")
@@ -1060,6 +1083,7 @@ class PeferenceTab(QScrollArea):
         self.unfollow_btn.setCursor(QCursor(Qt.PointingHandCursor))
         self.unfollow_btn.clicked.connect(self.handle_unfollow)
 
+
         def set_layout():
             self.pinfo_preference_layout = pinfo_preference_layout = QGridLayout(self)
             #self.pinfo_top_layout.setSpacing(10)
@@ -1086,10 +1110,19 @@ class PeferenceTab(QScrollArea):
             self.pinfo_preference_layout.addWidget(addtag_btn, 8, 3, 1, 2)
 
             self.pinfo_preference_layout.addWidget(seller_label, 9, 1, 1, 1)
-            self.pinfo_preference_layout.addWidget(seller_avatar, 9, 3, 2, 2) 
-            self.pinfo_preference_layout.addWidget(seller_id, 9, 6, 1, 1) 
-            self.pinfo_preference_layout.addWidget(seller_pcount, 10, 6, 1, 1)
-            self.pinfo_preference_layout.addWidget(unfollow_btn, 9, 20, 2, 2)            
+
+            self.seller_layout = seller_layout = QVBoxLayout(self)   
+
+            for i in range(self.seller_follow_number):
+                self.seller_layout.addWidget(self.seller_list[i])
+                self.seller_layout.addSpacing(0)
+
+            self.pinfo_preference_layout.addLayout(seller_layout, 9, 3, 5, 6) 
+            # self.pinfo_preference_layout.addWidget(seller_avatar, 9, 3, 2, 2) 
+            # self.pinfo_preference_layout.addWidget(seller_id, 9, 6, 1, 1) 
+            # self.pinfo_preference_layout.addWidget(seller_pcount, 10, 6, 1, 1)
+            
+            # self.pinfo_preference_layout.addWidget(unfollow_btn, 9, 20, 2, 2)            
                        
             self.setLayout(pinfo_preference_layout)
         set_layout()
@@ -1775,9 +1808,10 @@ class PublishDialog(QDialog):
     def __init__(self, parent=None, item={}):
         super().__init__(parent)
         self.parent = parent
+        self.resize(300, 400)
         #for testing this Tab @rayhueng
-        self.setObjectName("cart_tab")
-        #self.setObjectName("product_info_tab")
+        #self.setObjectName("cart_tab")
+        self.setObjectName("publish_dialog")
         self.init_ui()
 
     def init_ui(self):
@@ -1835,7 +1869,7 @@ class PublishDialog(QDialog):
         def set_layout():
             self.pinfo_top_layout = pinfo_top_layout = QGridLayout(self)
             #self.pinfo_top_layout.setSpacing(10)
-            self.pinfo_top_layout.setContentsMargins(40, 40, 150, 100)
+            self.pinfo_top_layout.setContentsMargins(40, 40, 100, 40)
             self.pinfo_top_layout.addWidget(pinfo_title_label, 1, 1, 1, 1)
             self.pinfo_top_layout.addWidget(pinfo_title_edit, 1, 3, 1, 20)
             self.pinfo_top_layout.addWidget(pinfo_descrip_label, 2, 1, 1, 1)
@@ -1875,8 +1909,7 @@ class PublishDialog(QDialog):
             self.setLayout(pinfo_top_layout)
         set_layout()
         print("Loading stylesheet of cloud tab widget")
-        load_stylesheet(self, "pinfo.qss")
-
+        load_stylesheet(self, "publishdialog.qss")
         self.show()
 
     def handle_publish(self):
@@ -2023,7 +2056,7 @@ class SellTab(QScrollArea):
         self.sell_publish_btn = sell_publish_btn = QPushButton("Publish")
         sell_publish_btn.setObjectName("sell_publish_btn")
         #please define the handler of publish event
-        #self.sell_publish_btn.clicked.connect(self.handle_publish)
+        self.sell_publish_btn.clicked.connect(self.handle_publish)
 
 
         self.search_bar_sell = SellTab.SearchBar(self)
@@ -2130,98 +2163,16 @@ class SellTab(QScrollArea):
                 print("Deleting files permanently from the cloud...")
                 self.update_table()
 
-    class UploadDialog(QDialog):
-        def __init__(self, parent=None):
-            super().__init__()
-            self.parent = parent
-            self.setWindowTitle("Publish your products")
-            self.cloud_choice = {"ipfs": False, "s3": False}
-            self.file_choice = ""
-
-            self.init_ui()
-
-        def init_ui(self):
-
-            def create_btns():
-                self.ipfs_btn = ipfs_btn = QRadioButton(self)
-                ipfs_btn.setText("IPFS")
-                ipfs_btn.setObjectName("ipfs_btn")
-                ipfs_btn.setChecked(True)
-                self.s3_btn = s3_btn = QRadioButton(self)
-                s3_btn.setText("Amazon S3")
-                s3_btn.setObjectName("s3_btn")
-                self.file_choose_btn = file_choose_btn = QPushButton("Open File")
-                file_choose_btn.setObjectName("file_choose_btn")
-
-                self.cancel_btn = cancel_btn = QPushButton("Cancel")
-                cancel_btn.setObjectName("cancel_btn")
-                self.ok_btn = ok_btn = QPushButton("OK")
-                ok_btn.setObjectName("ok_btn")
-            create_btns()
-
-            def create_labels():
-                self.choice_label = choice_label = QLabel("Please select where you want to upload your data from one of the below two services: ")
-                choice_label.setObjectName("choice_label")
-            create_labels()
-
-            def bind_slots():
-                self.file_choose_btn.clicked.connect(self.choose_file)
-                self.cancel_btn.clicked.connect(self.handle_cancel)
-                self.ok_btn.clicked.connect(self.handle_ok)
-            bind_slots()
-
-            def set_layout():
-                self.main_layout = main_layout = QVBoxLayout()
-                main_layout.addSpacing(0)
-                main_layout.addWidget(self.choice_label)
-                main_layout.addSpacing(2)
-                main_layout.addWidget(self.file_choose_btn)
-                main_layout.addSpacing(1)
-                main_layout.addWidget(self.ipfs_btn)
-                main_layout.addSpacing(1)
-                main_layout.addWidget(self.s3_btn)
-                self.confirm_layout = confirm_layout = QHBoxLayout()
-                confirm_layout.addSpacing(0)
-                confirm_layout.addWidget(self.ok_btn)
-                confirm_layout.addSpacing(2)
-                confirm_layout.addWidget(self.cancel_btn)
-
-                main_layout.addLayout(self.confirm_layout)
-                self.setLayout(self.main_layout)
-            set_layout()
-
-            self.show()
-
-            print("Loading stylesheet of publish dialog....")
-
-        def choose_file(self):
-            self.file_choice = QFileDialog.getOpenFileName()[0]
-
-        def handle_cancel(self):
-            self.file_choice = ""
-            self.ipfs_btn.setChecked(True)
-            self.s3_btn.setChecked(False)
-
-            self.close()
-
-        def handle_ok(self):
-            if self.file_choice == "":
-                QMessageBox.warning(self, "Warning", "Please select your files to upload first !")
-                return
-            print("Uploading files to....")
-            QMessageBox.information(self, "Tips", "Log in successfully !")
-
-    def handle_upload(self):
-        print("Uploading local files....")
-        self.upload_dialog = CloudTab.UploadDialog(self)
-
-
     def handle_delete_act(self):
         self.file_table.removeRow(self.cur_clicked)
         print("row {} has been removed...".format(self.cur_clicked))
 
-    def handle_publish_act(self):
+    def handle_publish(self):
+        item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
+        self.publish_dialog = PublishDialog(self, item)
+        # self.file_list[self.cur_clicked]
         print("handle publish act....")
+
         
 
 class FollowingTagTab(QScrollArea):
@@ -2621,6 +2572,7 @@ class PopularTab(QScrollArea):
             self.hot_industry_label = []
             for i in range(config.wallet.hot_industry_num):
                 hot_industry = QLabel(self)
+                # hot_industry = QPushButton(self)
                 hot_industry.setObjectName('hot_industry_' + str(i))
                 self.hot_industry_label.append(hot_industry)
                 print('create label' + str(i))
@@ -2634,6 +2586,8 @@ class PopularTab(QScrollArea):
                 path = osp.join(root_dir, hot_industry[i]['image'])
                 print(path)
                 self.hot_industry_label[i].setStyleSheet("border-image: url({0}); color: #fefefe".format(path))
+                # self.hot_industry_label[i].clicked.connect(self.handld_hotindustry_clicked)
+                # self.hot_industry_label[i].setCursor(QCursor(Qt.PointingHandCursor))
                 # pixmap = QPixmap(path)
                 # pixmap = pixmap.scaled(230, 136)
                 # self.hot_industry_label[i].setPixmap(pixmap)
@@ -2733,6 +2687,11 @@ class PopularTab(QScrollArea):
             self.main_layout.addLayout(self.bottom_layout)
         load_stylesheet(self, "popular.qss")
         print("Loading stylesheet of cloud tab widget")
+
+    def handld_hotindustry_clicked(self):
+        wid = main_wnd.content_tabs.findChild(QWidget, "tagHP_tab")
+        main_wnd.content_tabs.setCurrentWidget(wid)
+
 
 
 class CloudTab(QScrollArea):
@@ -2930,10 +2889,10 @@ class CloudTab(QScrollArea):
         def __init__(self, parent=None):
             super().__init__()
             self.parent = parent
+            self.resize(500, 180)
             self.setWindowTitle("Publish your products")
             self.cloud_choice = {"ipfs": False, "s3": False}
             self.file_choice = ""
-
             self.init_ui()
 
         def init_ui(self):
@@ -2958,6 +2917,7 @@ class CloudTab(QScrollArea):
             def create_labels():
                 self.choice_label = choice_label = QLabel("Please select where you want to upload your data from one of the below two services: ")
                 choice_label.setObjectName("choice_label")
+                self.choice_label.setWordWrap(True)
             create_labels()
 
             def bind_slots():
@@ -2967,28 +2927,56 @@ class CloudTab(QScrollArea):
             bind_slots()
 
             def set_layout():
-                self.main_layout = main_layout = QVBoxLayout()
+                self.main_layout = main_layout = QVBoxLayout(self)
                 main_layout.addSpacing(0)
                 main_layout.addWidget(self.choice_label)
-                main_layout.addSpacing(2)
-                main_layout.addWidget(self.file_choose_btn)
-                main_layout.addSpacing(1)
-                main_layout.addWidget(self.ipfs_btn)
-                main_layout.addSpacing(1)
-                main_layout.addWidget(self.s3_btn)
-                self.confirm_layout = confirm_layout = QHBoxLayout()
-                confirm_layout.addSpacing(0)
-                confirm_layout.addWidget(self.ok_btn)
-                confirm_layout.addSpacing(2)
-                confirm_layout.addWidget(self.cancel_btn)
+                main_layout.addSpacing(0)
 
+                self.choosebtn_layout = choosebtn_layout = QHBoxLayout(self)
+                choosebtn_layout.addStretch(1)
+                choosebtn_layout.addWidget(self.ipfs_btn)
+                choosebtn_layout.addSpacing(10)
+                choosebtn_layout.addWidget(self.s3_btn)
+                choosebtn_layout.addSpacing(10)
+                choosebtn_layout.addWidget(self.file_choose_btn)
+                choosebtn_layout.addStretch(1)
+
+                main_layout.addLayout(self.choosebtn_layout)
+
+                self.confirm_layout = confirm_layout = QHBoxLayout()
+                confirm_layout.addStretch(1)
+                confirm_layout.addWidget(self.ok_btn)
+                confirm_layout.addSpacing(20)
+                confirm_layout.addWidget(self.cancel_btn)
+                confirm_layout.addStretch(1)
+
+                main_layout.addSpacing(10)
                 main_layout.addLayout(self.confirm_layout)
+                main_layout.addSpacing(5)
                 self.setLayout(self.main_layout)
             set_layout()
+            load_stylesheet(self, "uploaddialog.qss")
 
             self.show()
 
             print("Loading stylesheet of publish dialog....")
+
+        def choose_file(self):
+            self.file_choice = QFileDialog.getOpenFileName()[0]
+
+        def handle_cancel(self):
+            self.file_choice = ""
+            self.ipfs_btn.setChecked(True)
+            self.s3_btn.setChecked(False)
+
+            self.close()
+
+        def handle_ok(self):
+            if self.file_choice == "":
+                QMessageBox.warning(self, "Warning", "Please select your files to upload first !")
+                return
+            print("Uploading files to....")
+            QMessageBox.information(self, "Tips", "Log in successfully !")
 
         def choose_file(self):
             self.file_choice = QFileDialog.getOpenFileName()[0]
@@ -3509,7 +3497,7 @@ class MainWindow(QMainWindow):
             content_tabs.addTab(ProductDetailTab(content_tabs), "") 
             content_tabs.addTab(SearchProductTab(content_tabs), "")
             content_tabs.addTab(SecurityTab(content_tabs), "") 
-            content_tabs.addTab(PeferenceTab(content_tabs), "")
+            content_tabs.addTab(PreferenceTab(content_tabs), "")
             content_tabs.addTab(PersonalInfoPage(content_tabs), "") 
             content_tabs.addTab(PurchasedTab(content_tabs), "")
             content_tabs.addTab(CollectedTab(content_tabs), "")

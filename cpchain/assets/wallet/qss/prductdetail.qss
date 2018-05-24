@@ -21,6 +21,11 @@ QLabel#seller_avatar{
     max-width: 40px;
 }
 
+QLabel#price_label{
+	color: #006bcf;
+	font: bold 20px;
+}
+
 QPushButton#collect_btn{
     padding-left: 14px;
     padding-right: 14px;
@@ -100,5 +105,25 @@ QPushButton[t_value = "1"]:pressed{
     color: #006bcf;
 }
 
+/*QFrame.HorizontalLine {
+    color: #555555;
+}*/
 
+QLabel#buyer_name{
+	border: none;
+	background: none;
+	color: #006bcf;
+}
+
+QLabel#buyer_avatar{
+    border-image: url(${asset_dir}/icons/avatar.jpeg); 
+ 	min-height: 70px;
+    max-height: 70px;
+    min-width: 70px;
+    max-width: 70px;
+}
+
+QLabel#average_score, QLabel#buyer_rating {
+	font: bold 20px;
+}
 
