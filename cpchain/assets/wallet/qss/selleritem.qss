@@ -1,0 +1,17 @@
+QLabel#seller_avatar{
+    border-image: url(${asset_dir}/icons/avatar.jpeg); 
+ 	min-height: 70px;
+    max-height: 70px;
+    min-width: 70px;
+    max-width: 70px;
+}
+
+QPushButton#seller_name{
+	border: none;
+	background: none;
+	color: #006bcf;
+}
+
+QFrame.HorizontalLine {
+    color: #e5e5e5;
+}

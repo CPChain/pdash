@@ -1,0 +1,37 @@
+QScrollArea.Product {
+    background: transparent;
+}
+
+QScrollArea {
+    border: none;
+    outline: none;
+}
+
+QFrame#search_frame {
+    background: #fafafa;
+    border: none;
+    outline: none;
+}
+
+QLabel#num_label, QLabel#may_like_label{
+    color: #1c1c1c;
+    font-size: 16px;
+}
+
+QLabel#res_label, QLabel#time_label, QLabel#sales_label, QLabel#price_label, QLabel#region_label, QLabel#line_label{
+    color: #777777;
+    font-size: 12px;
+}
+
+QFrame.HorizontalLine {
+    color: #e5e5e5;
+}
+
+QPushButton#time_btn, QPushButton#sales_btn, QPushButton#price_btn{
+	border: none;
+	background: none;
+	max-height: 20px;
+	min-height: 10px;
+	max-width: 20px;
+	min-width: 10px;
+}
