@@ -1,3 +1,7 @@
+QDialog{
+    background: #fafafa;
+}
+
 QPushButton#pinfo_cancel_btn{
     padding-left: 14px;
     padding-right: 14px;
@@ -53,4 +57,33 @@ QPushButton#pinfo_publish_btn:pressed{
 QPushbutton#pinfo_publish_btn:disabled{
     border: 1px solid #8cb8ea; 
     background: #98b9eb;
+}
+
+QPushButton[t_value = "1"] {
+    padding-left: 5px;
+    padding-right: 5px;
+    min-height: 21px; 
+    min-width: 50px;  
+    max-width: 50px; 
+    max-height: 21px;
+    border: 1px solid #dddddd;
+    border-radius: 5px;
+    background: #edf3f9;
+    color: #555555;
+    text-align: center;
+}
+
+QPushButton[t_value = "1"]:hover{
+    border: 1px solid #3173d8;
+}
+
+QPushButton[t_value = "1"]:checked{
+    color: #3173d8;
+    border: 1px solid #3173d8;
+}
+
+QPushButton[t_value = "1"]:checked:hover{
+    color: #3173d8;
+    border: 1px solid #3173d8;
+    background: #ebf3ff;
 }

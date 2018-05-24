@@ -13,6 +13,23 @@ QFrame#productdetail_frame {
     outline: none;
 }
 
+QLabel#title_label{
+	font: bold 20px;
+	/*font-family: "Arial"*/
+}
+
+QLabel#description_label, QLabel#date_label, QLabel#sales_label ,QLabel#size_label{
+	font: 14px;
+	color: #777777;
+}
+
+
+
+QLabel#descriptiondetail{
+	color: #222222;
+	font: 14px;
+}
+
 QLabel#seller_avatar{
     border-image: url(${asset_dir}/icons/avatar.jpeg); 
  	min-height: 40px;
@@ -105,9 +122,9 @@ QPushButton[t_value = "1"]:pressed{
     color: #006bcf;
 }
 
-/*QFrame.HorizontalLine {
-    color: #555555;
-}*/
+QFrame.HorizontalLine {
+    border: 2px #555555;
+}
 
 QLabel#buyer_name{
 	border: none;

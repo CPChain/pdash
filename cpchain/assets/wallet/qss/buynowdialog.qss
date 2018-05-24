@@ -3,6 +3,10 @@ QLabel#price_value{
 	font: bold 20px;
 }
 
+QDialog{
+    background: #fafafa;
+}
+
 QLabel#account_value{
 	color: #006bcf;
 	font: 15px;

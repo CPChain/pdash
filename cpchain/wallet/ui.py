@@ -625,6 +625,7 @@ class ProductDetailTab(QScrollArea):
 
             self.product_layout = QGridLayout(self)
             self.product_layout.setSpacing(10)
+            self.product_layout.setContentsMargins(30, 50, 10, 10)
 
             self.product_layout.addWidget(self.title_label, 1, 1, 1, 10)
             self.product_layout.addWidget(self.seller_avatar, 2, 1, 1, 1)
@@ -675,9 +676,10 @@ class ProductDetailTab(QScrollArea):
             self.product_layout.addLayout(self.comment_layout, 14, 1, 3, 10)    
 
             self.promotion_layout = QVBoxLayout(self)
+            self.promotion_layout.setContentsMargins(20, 25, 10, 10)
             self.promotion_layout.addSpacing(0)
             self.promotion_layout.addWidget(self.may_like_label)
-            self.promotion_layout.addSpacing(0)
+            self.promotion_layout.addSpacing(5)
             self.promotion_layout.addWidget(self.hline_2)
             self.promotion_layout.addSpacing(0)
             for i in range(self.search_promo_num):
@@ -836,6 +838,7 @@ class SearchProductTab(QScrollArea):
         def set_layout():
             self.main_layout = main_layout = QHBoxLayout(self)
             main_layout.addSpacing(0)
+            main_layout.setContentsMargins(10, 20, 10, 10)
 
             self.stat_layout = QHBoxLayout()
             self.stat_layout.addSpacing(0)
@@ -873,6 +876,7 @@ class SearchProductTab(QScrollArea):
             self.sort_layout.addWidget(self.region_label)
             self.sort_layout.addSpacing(0)
             self.sort_layout.addWidget(self.region_btn)
+            self.sort_layout.addStretch(1)
 
             self.product_layout.addLayout(self.stat_layout)
             self.product_layout.addSpacing(0)
