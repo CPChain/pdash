@@ -726,6 +726,17 @@ class SearchProductTab(QScrollArea):
         self.item_lists = []
         self.promo_lists = []
 
+        def query_product():
+            if self.key_words[0]=='[' and self.key_words[-1]==']':
+                tag = self.key_words[1:-1]
+                d = wallet.market_client.query_by_tag(tag)
+            else:
+                d = wallet.market_client.query_product(self.key_words)
+            def get_item(item_list):
+                self.item_lists = item_list
+            d.addCallback(get_item)
+        query_product()
+
         # TODO: Search for products by self.key_words and return them from the backend
         def get_products(item={}, key_words=""):
             for i in range(self.search_item_num):
@@ -2412,7 +2423,7 @@ class Product(QScrollArea):
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumHeight(200)
         self.setMaximumHeight(500)
-        self.title_btn = QPushButton(self.item['title'])
+        self.title_btn = QPushButton("Medicine big data from Mayo Clinic")
         self.setMinimumHeight(120)
         self.setMaximumHeight(120)
         self.title_btn = QPushButton("Medicine big data from Mayo Clinic")
@@ -2504,6 +2515,112 @@ class Product(QScrollArea):
         wid = main_wnd.content_tabs.findChild(QWidget, "tagHP_tab")
         main_wnd.content_tabs.setCurrentWidget(wid)
 
+
+class Product2(QScrollArea):
+    def __init__(self, parent=None, item={}, mode=""):
+        super().__init__(parent)
+        self.parent = parent
+        # self.content_tabs = parent.parent.content_tabs
+        self.item = item
+        self.mode = mode
+        self.init_ui()
+
+    def init_ui(self):
+        #self.frame.setMinimumWidth(500)
+        self.setContentsMargins(0, 0, 0, 0)
+        self.setMinimumHeight(200)
+        self.setMaximumHeight(500)
+        self.title_btn = QPushButton(self.item["title"])
+        self.setMinimumHeight(120)
+        self.setMaximumHeight(120)
+        self.title_btn = QPushButton("Medicine big data from Mayo Clinic")
+        self.title_btn.setObjectName("title_btn")
+        self.title_btn.clicked.connect(self.title_clicked_act)
+        self.title_btn.setCursor(QCursor(Qt.PointingHandCursor))
+
+        self.seller_btn = QPushButton("Barack Obama")
+        self.seller_btn.setObjectName("seller_btn")
+        self.seller_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        self.seller_btn.clicked.connect(self.seller_clicked_act)
+
+        self.time_label = QLabel("May 4, 2018")
+        self.time_label.setObjectName("time_label")
+        self.total_sale_label = QLabel("128 sales")
+        self.total_sale_label.setObjectName("total_sale_label")
+        self.price_label = QLabel("$18")
+        self.price_label.setObjectName("price_label")
+        # self.price_label.setFont(QFont(15, QFont.Bold))
+
+        self.gap_line = HorizontalLine(self, 2)
+        self.gap_line.setObjectName("gap_line")
+
+        self.tag = ["tag1", "tag2", "tag3", "tag4"]
+        self.tag_num = 4
+        self.tag_btn_list = []
+
+        for i in range(self.tag_num):
+            self.tag_btn_list.append(QPushButton(self.tag[i], self))
+            self.tag_btn_list[i].setObjectName("tag_btn_{0}".format(i))
+            self.tag_btn_list[i].setProperty("t_value", 1)
+            self.tag_btn_list[i].setCursor(QCursor(Qt.PointingHandCursor))
+            self.tag_btn_list[i].clicked.connect(self.tag_clicked_act)
+
+        def bind_slots():
+            print("Binding slots of buttons......")
+        bind_slots()
+
+        def setlayout():
+            self.main_layout = main_layout = QVBoxLayout(self)
+            main_layout.addSpacing(0)
+            main_layout.addWidget(self.title_btn)
+            main_layout.addSpacing(5)
+
+            if self.mode != "simple":
+                self.sales_layout = QHBoxLayout(self)
+                self.sales_layout.addWidget(self.total_sale_label)
+                self.sales_layout.addStretch(1)
+                self.sales_layout.addWidget(self.seller_btn)
+                self.sales_layout.addSpacing(5)
+                self.sales_layout.addWidget(self.time_label)
+                self.sales_layout.addStretch(2)
+                self.main_layout.addLayout(self.sales_layout)
+                main_layout.addSpacing(10)
+
+            self.main_layout.addWidget(self.price_label)
+
+            self.tag_layout = QHBoxLayout(self)
+            self.tag_layout.addSpacing(1)
+            for i in range(self.tag_num):
+                self.tag_layout.addWidget(self.tag_btn_list[i])
+                self.tag_layout.addSpacing(5)
+
+            self.tag_layout.addStretch(1)
+            self.main_layout.addLayout(self.tag_layout)
+            self.main_layout.addSpacing(5)
+            self.main_layout.addWidget(self.gap_line)
+            self.main_layout.addSpacing(0)
+            #self.main_layout.addStretch(1)
+            self.setLayout(self.main_layout)
+        setlayout()
+        load_stylesheet(self, "product.qss")
+        logger.debug("Loading stylesheet of item")
+
+    def title_clicked_act(self):
+        # wid = self.parent.parent.findChild(QWidget, "productdetail_tab")
+        # self.parent.parent.content_tabs.setCurrentWidget(wid)
+        print("title_clicked_act")
+        wid = main_wnd.content_tabs.findChild(QWidget, "productdetail_tab")
+        main_wnd.content_tabs.setCurrentWidget(wid)
+
+    def seller_clicked_act(self):
+        print("seller_clicked_act")
+        wid = main_wnd.content_tabs.findChild(QWidget, "sellerHP_tab")
+        main_wnd.content_tabs.setCurrentWidget(wid)
+
+    def tag_clicked_act(self):
+        print("tag_clicked_act")
+        wid = main_wnd.content_tabs.findChild(QWidget, "tagHP_tab")
+        main_wnd.content_tabs.setCurrentWidget(wid)
 
 
 class PopularTab(QScrollArea):

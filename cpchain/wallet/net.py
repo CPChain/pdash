@@ -93,16 +93,25 @@ class MarketClient:
     #         print('publish failed')
 
 
-    # @inlineCallbacks
-    # def query_product(self, keyword):
-    #     header = {'Content-Type': 'application/json'}
-    #     url = self.url + 'product/search/?keyword=' + str(keyword)
-    #     resp = yield treq.get(url=url, headers=header)
-    #     logger.debug("response: %s", resp)
-    #     confirm_info = yield treq.json_content(resp)
-    #     print('product info: ')
-    #     print(confirm_info)
-    #     return confirm_info
+    @inlineCallbacks
+    def query_product(self, keyword):
+        header = {'Content-Type': 'application/json'}
+        url = self.url + 'product/v1/es_product/search/?keyword=' + str(keyword)
+        resp = yield treq.get(url=url, headers=header)
+        confirm_info = yield treq.json_content(resp)
+        logger.debug("query product confirm info: %s", confirm_info)
+        return confirm_info['results']
+
+
+    @inlineCallbacks
+    def query_by_tag(self, tag):
+        url = self.url + 'product/v1/es_product/search/?status=0&tag=' + str(tag)
+        header = header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        resp = yield treq.get(url, headers=header)
+        confirm_info = yield treq.json_content(resp)
+        logger.debug('query by tag confirm info: %s', confirm_info)
+        return confirm_info['results']
 
 
     # @inlineCallbacks
