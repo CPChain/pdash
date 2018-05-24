@@ -18,8 +18,6 @@ from cpchain.proxy.account import get_proxy_id, sign_proxy_data, derive_proxy_da
 
 logger = logging.getLogger(__name__)
 
-loop = asyncio.get_event_loop()
-
 
 class KadServer(Server):
     def listen(self, port, interface='0.0.0.0'):
