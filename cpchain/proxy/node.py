@@ -14,11 +14,9 @@ from cpchain.utils import join_with_rc, join_with_root
 from cpchain.proxy.network import PeerProtocol
 from cpchain.proxy.server import SSLServerFactory, FileServer
 from cpchain.proxy.client import start_client
-from cpchain.proxy.account import get_proxy_id
+from cpchain.proxy.account import get_proxy_id, sign_proxy_data, derive_proxy_data
 
 logger = logging.getLogger(__name__)
-
-loop = asyncio.get_event_loop()
 
 
 class KadServer(Server):
@@ -96,9 +94,9 @@ class Peer:
 
         set_external_ip()
 
-    def join_centra_net(self, port=None, boot_node=None):
+    def join_centra_net(self, port=None, tracker=None):
 
-        if boot_node and not self.service_port:
+        if tracker and not self.service_port:
             logger.error("proxy service not started")
             return
 
@@ -109,10 +107,10 @@ class Peer:
         def refresh():
             protocol.refresh_peers()
 
-        if boot_node:
+        if tracker:
             protocol.peer_id = self.peer_id
             protocol.peer_info = self.service_port
-            protocol.bootstrap(boot_node)
+            protocol.bootstrap(tracker)
         else:
             LoopingCall(refresh).start(5)
 
@@ -137,10 +135,11 @@ class Peer:
                 addr = future.result()
                 self.ip = addr[1][0]
                 addr = '%s,%d' % (self.ip, self.service_port)
+
                 asyncio.ensure_future(
                     peer.set(
                         self.peer_id,
-                        addr
+                        sign_proxy_data(addr)
                         )
                     ).add_done_callback(set_key_done)
 
@@ -165,7 +164,7 @@ class Peer:
         return peer.listen(port)
 
 
-    def pick_peer(self, boot_node, port=None):
+    def pick_peer(self, tracker, port=None):
         port = port or 8150
         protocol = PeerProtocol()
         reactor.listenUDP(port, protocol)
@@ -176,13 +175,13 @@ class Peer:
             if success and data:
                 return tuple(data)
 
-        d = protocol.pick_peer(boot_node)
+        d = protocol.pick_peer(tracker)
         d.addBoth(pick_peer_done)
         return d
 
-    def get_peer(self, peer_id, boot_nodes, port=None):
+    def get_peer(self, peer_id, tracker=None, boot_nodes=None, port=None):
 
-        if isinstance(boot_nodes, tuple):
+        if isinstance(tracker, tuple):
             port = port or 8150
             protocol = PeerProtocol()
             reactor.listenUDP(port, protocol)
@@ -193,7 +192,7 @@ class Peer:
                 if success and data:
                     return tuple(data)
 
-            d = protocol.get_peer(peer_id, boot_nodes)
+            d = protocol.get_peer(peer_id, tracker)
             d.addBoth(get_peer_done)
             return d
 
@@ -207,7 +206,8 @@ class Peer:
             def get_key_done(future):
                 value = future.result()
                 peer.stop()
-                d.callback(tuple(value.split(',')))
+                addr = derive_proxy_data(value)
+                d.callback(tuple(addr.split(',')))
 
             def bootstrap_done(_):
                 asyncio.ensure_future(
@@ -226,10 +226,10 @@ class Peer:
             return d
 
         else:
-            logger.error("wrong boot nodes")
+            logger.error("wrong tracker/boot nodes")
 
 
-def start_proxy_request(sign_message, boot_node, proxy_id=None):
+def start_proxy_request(sign_message, tracker=None, boot_nodes=None, proxy_id=None):
 
     d = defer.Deferred()
 
@@ -239,19 +239,20 @@ def start_proxy_request(sign_message, boot_node, proxy_id=None):
     def get_proxy_done(addr):
         start_client(sign_message, addr).addCallback(start_client_done)
 
-    def get_proxy(boot_node, proxy_id=None):
+    def get_proxy(tracker, boot_nodes, proxy_id):
         if proxy_id is None:
             # pick a proxy from tracker
             return Peer().pick_peer(
-                boot_node=boot_node
+                tracker=tracker
                 )
 
         # find the (ip, port) for given proxy
         return Peer().get_peer(
             peer_id=proxy_id,
-            boot_nodes=boot_node
+            tracker=tracker,
+            boot_nodes=boot_nodes
         )
 
-    get_proxy(boot_node, proxy_id).addCallback(get_proxy_done)
+    get_proxy(tracker, boot_nodes, proxy_id).addCallback(get_proxy_done)
 
     return d
