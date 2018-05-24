@@ -1847,6 +1847,7 @@ class PublishDialog(QDialog):
             self.tag_btn_list[i].setObjectName("tag_btn_{0}".format(i))
             #ser property t_value = 1 for the convience of specifying QSS
             self.tag_btn_list[i].setProperty("t_value", 1)
+            self.tag_btn_list[i].setCheckable(True)
             self.tag_btn_list[i].setCursor(QCursor(Qt.PointingHandCursor))
 
         self.pinfo_cancel_btn = pinfo_cancel_btn = QPushButton(self)
