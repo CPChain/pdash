@@ -8,4 +8,4 @@ python3 manage.py dumpdata --format=json transaction > fixtures/init_transaction
 
 
 load data:
-python manage.py loaddata --format=json fixtures/*.json
+python3 manage.py loaddata --format=json fixtures/*.json

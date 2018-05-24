@@ -33,24 +33,24 @@ message Message {
 
 	message SellerData {
 		uint64 order_id = 1;
-		bytes seller_addr = 2;
-		bytes buyer_addr = 3;
-		bytes market_hash = 4;
+		string seller_addr = 2;
+		string buyer_addr = 3;
+		string market_hash = 4;
 		bytes AES_key = 5;
 		Storage storage = 6;
 	}
 
 	message BuyerData{
 		uint64 order_id = 1;
-		bytes seller_addr = 2;
-		bytes buyer_addr = 3;
-		bytes market_hash = 4;
+		string seller_addr = 2;
+		string buyer_addr = 3;
+		string market_hash = 4;
 	}
 
 	message ProxyReply {
 		string error = 1;
 		bytes AES_key = 2;
-		string file_uuid = 3;
+		string file_uri = 3;
 	}
 
 	MessageType type = 1;
@@ -60,7 +60,7 @@ message Message {
 }
 
 message SignMessage {
-	bytes public_key = 1;
+	string public_key = 1;
 	bytes data = 2;
 	bytes signature = 3;
 }

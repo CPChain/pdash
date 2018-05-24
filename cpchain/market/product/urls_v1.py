@@ -23,18 +23,19 @@ urlpatterns = [
     url(r'^my_product/search/$', MyProductSearchAPIViewSet.as_view(), name='my_product_search'),
     url(r'^my_product_paged/search/$', MyProductPagedSearchAPIViewSet.as_view(), name='my_product_paged_search'),
 
-    url(r'^search_by_tag/$', ProductSearchByTagAPIView.as_view(), name='search_by_tag'),
-    url(r'^search_by_seller/$', ProductSearchBySellerAPIView.as_view(), name='search_by_seller'),
+    # url(r'^search_by_tag/$', ProductSearchByTagAPIView.as_view(), name='search_by_tag'),
+    # url(r'^search_by_seller/$', ProductSearchBySellerAPIView.as_view(), name='search_by_seller'),
 
     url(r'^product/show/$', ProductShowAPIViewSet.as_view(), name='product_show'),
     url(r'^product/hide/$', ProductHideAPIViewSet.as_view(), name='product_hide'),
     url(r'^product/publish/$', ProductPublishAPIViewSet.as_view(), name='product_publish'),
-    url(r'^product/search/$', ProductSearchAPIViewSet.as_view(), name='product_search'),
-    url(r'^product_paged/search/$', ProductPagedSearchAPIViewSet.as_view(), name='product_paged_search'),
+    # url(r'^product/search/$', ProductSearchAPIViewSet.as_view(), name='product_search'),
+    # url(r'^product_paged/search/$', ProductPagedSearchAPIViewSet.as_view(), name='product_paged_search'),
 
     url(r'^es_product/search/$', ESProductView.as_view(), name='es_product_search'),
 
     url(r'^recommend_product/list/$', RecommendProductsAPIView.as_view(), name='recommend_products'),
+    url(r'^you_may_like/list/$', YouMayLikeProductsAPIView.as_view(), name='you_may_like_products'),
     url(r'^sales_quantity/add/$', ProductSalesQuantityAddAPIView.as_view(), name='product_sales_quantity_add'),
 
 ]

@@ -2,6 +2,7 @@ from django.utils.http import urlquote
 from tests.market.base_api_test import *
 from cpchain.market.market.utils import *
 
+
 class TestProductApi(BaseApiTest):
 
     def test_query_recommend_products(self):
@@ -14,45 +15,115 @@ class TestProductApi(BaseApiTest):
             print("title:%s" % p["title"])
             print("sales_number:", p['sales_number'])
 
-    def test_query_from_db(self):
-        keyword = "z7JI8DccklHodvexTCDmLxdviNtKhhRJU8bvv4vKoTc="
-        self.query_product(keyword=keyword)
+    def test_query_you_may_like_product(self):
+        token = self.login_and_fetch_token()
+        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
+        url = '%s/product/v1/you_may_like/list/' % HOST
+        response = requests.get(url, headers=header)
+        print("products:%s" % response)
+        print(response.text)
+        parsed_json = json.loads(response.text)
+        for p in parsed_json['data']:
+            print("title:%s" % p["title"])
+            print("sales_number:", p['sales_number'])
 
-        keyword = "testtile"
-        self.query_product(keyword=keyword)
+    # # TODO remove me
+    # def test_query_from_db(self):
+    #     keyword = "z7JI8DccklHodvexTCDmLxdviNtKhhRJU8bvv4vKoTc="
+    #     self.query_product(keyword=keyword)
+    #
+    #     keyword = "testtile"
+    #     self.query_product(keyword=keyword)
 
-    def test_query_es_product(self):
+    # # TODO remove me
+    # def test_query_paged_product(self):
+    #     keyword = "publish"
+    #     self.query_paged_product(keyword=keyword)
 
-        header = {'Content-Type': 'application/json'}
-        nonce = self._login_and_get_nonce(header)
+    def test_query_es_by_search(self):
 
-        token = self._generate_nonce_signature_and_get_token(header, nonce)
+        token = self.login_and_fetch_token()
 
         self.publish_product(token)
 
+        # ======= query product via elasticsearch ========
+        self.query_es_product()
+
+    def test_query_es_by_tag(self):
+        url = '%s/product/v1/es_product/search/?status=0&tag=tag1' % HOST
+        response = requests.get(url)
+        print("products:%s" % response)
+        print(response.text)
+        parsed_json = json.loads(response.text)
+
+        result = parsed_json['results']
+        for p in result:
+            print("title:%s" % p["title"])
+
+    def test_query_es_by_seller(self):
+        url = '%s/product/v1/es_product/search/?status=0&seller=045cfdf7cc44281ece607c85adbc2a2c17682e476a5b5f4ead5461a92aa078ffb46173d1949f4ea3e2d16658f6cf8eb92bab0f33811291bd79bdeca60d5a053a80' % HOST
+        response = requests.get(url)
+        print("products:%s" % response)
+        print(response.text)
+        parsed_json = json.loads(response.text)
+
+        result = parsed_json['results']
+        for p in result:
+            print("title:%s" % p["title"])
+
+    def test_query_es_by_market_hash(self):
+        url = '%s/product/v1/es_product/search/?status=0&pid=1xrqb9w9AUQguQE4Cds1q3VQQPojVUPNfwE2G19qVNo=' % HOST
+        response = requests.get(url)
+        print("products:%s" % response)
+        print(response.text)
+        parsed_json = json.loads(response.text)
+
+        result = parsed_json['results']
+        for p in result:
+            print("title:%s" % p["title"])
+
+
+    def test_hide_or_show_es_product(self):
+
+        token = self.login_and_fetch_token()
+
+        market_hash = self.publish_product(token)
+
         # ======= query product ========
-        keyword = "testtile"
+        keyword = "Medicine"
         self.query_product(keyword=keyword)
 
         # ======= query product via elasticsearch ========
         self.query_es_product()
 
-    def test_add_product_sales_quantity(self):
+        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
 
+        self.hide_product(header=header,market_hash=market_hash)
+
+        self.query_es_product()
+
+        self.show_product(header=header,market_hash=market_hash)
+
+        self.query_es_product()
+
+
+
+
+    def login_and_fetch_token(self):
         header = {'Content-Type': 'application/json'}
         nonce = self._login_and_get_nonce(header)
-
         token = self._generate_nonce_signature_and_get_token(header, nonce)
+        return token
+
+    def test_add_product_sales_quantity(self):
+
+        token = self.login_and_fetch_token()
 
         self.add_product_sales_quantity(token)
 
     def test_subscribe_tag_and_search_product(self):
 
-        header = {'Content-Type': 'application/json'}
-        nonce = self._login_and_get_nonce(header)
-
-        # ======= generate nonce signature and confirm =======
-        token = self._generate_nonce_signature_and_get_token(header, nonce)
+        token = self.login_and_fetch_token()
 
         # # ======= publish product ========
         self.publish_product(token)
@@ -68,11 +139,7 @@ class TestProductApi(BaseApiTest):
 
     def test_subscribe_seller_and_search_product(self):
 
-        header = {'Content-Type': 'application/json'}
-        nonce = self._login_and_get_nonce(header)
-
-        # ======= generate nonce signature and confirm =======
-        token = self._generate_nonce_signature_and_get_token(header, nonce)
+        token = self.login_and_fetch_token()
 
         # ======= publish product ========
         self.publish_product(token)
@@ -87,18 +154,30 @@ class TestProductApi(BaseApiTest):
         self.unsubscribe_seller(token)
 
     def query_product(self, keyword):
-        params = {"keyword": keyword}
-        url = '%s/product/v1/product/search/' % HOST
-        response = requests.get(url, params)
-        print("products:%s" % response)
-        print(response.text)
-        parsed_json = json.loads(response.text)
-        for p in parsed_json:
-            print("title:%s" % p["title"])
+        # params = {"keyword": keyword}
+        # url = '%s/product/v1/product/search/' % HOST
+        # response = requests.get(url, params)
+        # print("products:%s" % response)
+        # print(response.text)
+        # parsed_json = json.loads(response.text)
+        # for p in parsed_json:
+        #     print("title:%s" % p["title"])
+        pass
+
+    def query_paged_product(self, keyword):
+        pass
+        # params = {"keyword": keyword, "page":1}
+        # url = '%s/product/v1/product_paged/search/' % HOST
+        # response = requests.get(url, params)
+        # print("products:%s" % response)
+        # print(response.text)
+        # parsed_json = json.loads(response.text)
+        # for p in parsed_json['results']:
+        #     print(p["title"])
 
     def query_es_product(self):
-        keyword = "testtile"
-        params = {"keyword": keyword}
+        keyword = "Medicine"
+        params = {"search": keyword,"status":0}
         url = '%s/product/v1/es_product/search/' % HOST
         response = requests.get(url, params)
         print("products:%s" % response)
@@ -110,7 +189,7 @@ class TestProductApi(BaseApiTest):
             print("title:%s" % p["title"])
 
     def publish_product(self, token):
-        title = "Medicine big data from Mayo Clinic"
+        title = "Medicine big data from Mayo Clinic 222"
         description = "test12345654654654654"
         price = 15
         tags = "tag1,tag2"
@@ -132,6 +211,7 @@ class TestProductApi(BaseApiTest):
         parsed_json = json.loads(publish_resp.text)
         self.assertEqual(parsed_json['status'], 1)
         print("market_hash:%s" % parsed_json['data']["market_hash"])
+        return parsed_json['data']["market_hash"]
 
     def add_product_sales_quantity(self, token):
         url = '%s/product/v1/sales_quantity/add/' % HOST
@@ -238,9 +318,7 @@ class TestProductApi(BaseApiTest):
             print("tag:%s" % p["tag"])
 
     def test_query_product_by_seller(self):
-        header = {'Content-Type': 'application/json'}
-        nonce = self._login_and_get_nonce(header)
-        token = self._generate_nonce_signature_and_get_token(header, nonce)
+        token = self.login_and_fetch_token()
 
         self.publish_product(token)
 
@@ -255,9 +333,7 @@ class TestProductApi(BaseApiTest):
             print("tags:%s" % p["tags"])
 
     def test_query_product_by_tag(self):
-        header = {'Content-Type': 'application/json'}
-        nonce = self._login_and_get_nonce(header)
-        token = self._generate_nonce_signature_and_get_token(header, nonce)
+        token = self.login_and_fetch_token()
 
         self.publish_product(token)
 
@@ -270,3 +346,25 @@ class TestProductApi(BaseApiTest):
         self.assertGreaterEqual(len(parsed_json['data']), 1, "product number should be >= 1")
         for p in parsed_json['data']:
             print("tags:%s" % p["tags"])
+
+    def hide_product(self, header, market_hash):
+        payload = {"market_hash": market_hash}
+        url = '%s/product/v1/product/hide/' % HOST
+        response = requests.post(url, headers=header, json=payload)
+        self.assertEqual(response.status_code, 200)
+        parsed_json = json.loads(response.text)
+        self.assertGreaterEqual(parsed_json['status'], 1)
+        message = parsed_json['message']
+        print("message:%s" % message)
+        return message
+
+    def show_product(self, header, market_hash):
+        payload = {"market_hash": market_hash}
+        url = '%s/product/v1/product/show/' % HOST
+        response = requests.post(url, headers=header, json=payload)
+        self.assertEqual(response.status_code, 200)
+        parsed_json = json.loads(response.text)
+        self.assertGreaterEqual(parsed_json['status'], 1)
+        message = parsed_json['message']
+        print("message:%s" % message)
+        return message

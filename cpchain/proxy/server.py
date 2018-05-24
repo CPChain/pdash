@@ -3,8 +3,8 @@
 import os, time
 import logging
 
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
+# from cryptography.hazmat.backends import default_backend
+# from cryptography.hazmat.primitives import hashes
 
 from twisted.internet import threads, protocol
 from twisted.protocols.basic import NetstringReceiver
@@ -12,18 +12,20 @@ from twisted.protocols.basic import NetstringReceiver
 from twisted.web.resource import Resource, ForbiddenResource
 from twisted.web.static import File
 
-from eth_utils import to_bytes
+# from eth_utils import to_bytes
 
 from cpchain import config
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
-from cpchain.proxy.message import message_sanity_check, sign_message_verify
-from cpchain.crypto import pub_key_der_to_addr, ECCipher # pylint: disable=no-name-in-module
+from cpchain.proxy.message import message_sanity_check, \
+sign_message_verify, is_address_from_key
+# from cpchain.crypto import ECCipher
 
 from cpchain.storage import IPFSStorage
-from cpchain.proxy.proxy_db import Trade, ProxyDB
-from cpchain.chain.agents import ProxyAgent # pylint: disable=no-name-in-module
-from cpchain.chain.utils import default_w3
-from cpchain.utils import join_with_root, join_with_rc, Encoder
+from cpchain.proxy.db import Trade, ProxyDB
+# from cpchain.chain.agents import ProxyAgent
+# from cpchain.chain.utils import default_w3
+# from cpchain.utils import join_with_root, join_with_rc, Encoder
+from cpchain.utils import join_with_rc
 
 logger = logging.getLogger(__name__)
 
@@ -79,10 +81,7 @@ class SSLServerProtocol(NetstringReceiver):
             trade.market_hash = data.market_hash
             trade.AES_key = data.AES_key
 
-            if pub_key_der_to_addr(public_key) != data.seller_addr:
-                logger.debug("pubkey seller addr")
-                logger.debug(pub_key_der_to_addr(public_key))
-                logger.debug(data.seller_addr)
+            if not is_address_from_key(data.seller_addr, public_key):
                 error = "not seller's signature"
                 self.proxy_reply_error(error)
                 return
@@ -132,7 +131,7 @@ class SSLServerProtocol(NetstringReceiver):
             trade.buyer_addr = data.buyer_addr
             trade.market_hash = data.market_hash
 
-            if pub_key_der_to_addr(public_key) != data.buyer_addr:
+            if not is_address_from_key(data.buyer_addr, public_key):
                 error = "not buyer's signature"
                 self.proxy_reply_error(error)
                 return
@@ -145,18 +144,21 @@ class SSLServerProtocol(NetstringReceiver):
                 self.proxy_reply_error(error)
 
     def proxy_claim_relay(self):
-        proxy_trans = ProxyAgent(default_w3, config.chain.core_contract)
-        private_key_file_path = join_with_root(config.wallet.private_key_file)
-        password_path = join_with_root(config.wallet.private_key_password_file)
-        with open(password_path) as f:
-            password = f.read()
-        priv_key, _ = ECCipher.load_key_pair_from_keystore(private_key_file_path, password)
-        priv_key_bytes = Encoder.str_to_base64_byte(priv_key)
-        digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
-        digest.update(ECCipher.generate_signature(priv_key_bytes, to_bytes(self.trade.order_id)))
-        deliver_hash = digest.finalize()
-        tx_hash = proxy_trans.claim_relay(self.trade.order_id, deliver_hash)
-        return tx_hash
+        pass
+
+    # TODO: Some thing changed since last merge, need to update accordingly
+    #     proxy_trans = ProxyAgent(default_w3, config.chain.core_contract)
+    #     private_key_file_path = join_with_root(config.wallet.private_key_file)
+    #     password_path = join_with_root(config.wallet.private_key_password_file)
+    #     with open(password_path) as f:
+    #         password = f.read()
+    #     priv_key, _ = ECCipher.load_key_pair_from_keystore(private_key_file_path, password)
+    #     priv_key_bytes = Encoder.str_to_base64_byte(priv_key)
+    #     digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
+    #     digest.update(ECCipher.generate_signature(priv_key_bytes, to_bytes(self.trade.order_id)))
+    #     deliver_hash = digest.finalize()
+    #     tx_hash = proxy_trans.claim_relay(self.trade.order_id, deliver_hash)
+    #     return tx_hash
 
     def proxy_reply_success(self):
         trade = self.trade
@@ -164,7 +166,11 @@ class SSLServerProtocol(NetstringReceiver):
         message.type = Message.PROXY_REPLY
         proxy_reply = message.proxy_reply
         proxy_reply.AES_key = trade.AES_key
-        proxy_reply.file_uuid = trade.file_uuid
+        file_uri = "https://%s:%d/%s" % (
+            self.factory.ip,
+            self.factory.data_port,
+            trade.file_uuid)
+        proxy_reply.file_uri = file_uri
 
         string = message.SerializeToString()
         self.sendString(string)

@@ -3,15 +3,6 @@ from twisted.logger import globalLogBeginner, textFileLogObserver
 import sys
 globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
 
-from twisted.internet.defer import Deferred
-
-def raiseErr(what):
-    raise Exception(what)
-
-d = Deferred()
-d.addCallback(raiseErr)
-d.callback("hmmm")
-
 import os.path as osp
 import string
 import logging
@@ -27,7 +18,7 @@ from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont, QPainter
 from cpchain import config, root_dir
 from cpchain.wallet.wallet import Wallet
 from cpchain.wallet import fs
-from cpchain.crypto import ECCipher
+from cpchain.crypto import ECCipher, RSACipher, Encoder
 
 from twisted.internet import threads, defer, reactor
 from twisted.internet.threads import deferToThread
@@ -36,10 +27,6 @@ from twisted.internet.task import LoopingCall
 wallet = Wallet(reactor)
 
 logger = logging.getLogger(__name__) # pylint: disable=locally-disabled, invalid-name
-
-
-# utils
-logger = logging.getLogger(__name__)
 
 def get_icon(name):
     path = osp.join(root_dir, "cpchain/assets/wallet/icons", name)
@@ -1809,7 +1796,7 @@ class PurchasedDownloadingTab(QScrollArea):
 
 
 class PublishDialog(QDialog):
-    def __init__(self, parent=None, item={}):
+    def __init__(self, parent=None, id=None):
         super().__init__(parent)
         self.parent = parent
         self.resize(300, 400)
@@ -1817,6 +1804,7 @@ class PublishDialog(QDialog):
         #self.setObjectName("cart_tab")
         self.setObjectName("publish_dialog")
         self.init_ui()
+        self.product_id = id
 
     def init_ui(self):
 
@@ -1926,22 +1914,25 @@ class PublishDialog(QDialog):
         if self.pinfo_title and self.pinfo_descrip and self.pinfo_tag and self.pinfo_price and self.pinfo_checkbox_state:
             print("Updating item info in wallet database and other relevant databases")
             print("Updating self.parent tab info: selling tab or cloud tab")
-            logger.debug("current row: %s", self.parent.cur_clicked)
-            product_info = self.parent.file_list[self.parent.cur_clicked]
-            logger.debug('selected product name: %s', product_info.name)
-            logger.debug("product selected id: %s", product_info.id)
+            # logger.debug("current row: %s", self.parent.cur_clicked)
+            # product_info = self.parent.file_list[self.parent.cur_clicked]
+            # logger.debug('selected product name: %s', product_info.name)
+            # logger.debug("product selected id: %s", product_info.id)
             logger.debug("product info title: %s", self.pinfo_title)
-            d_publish = wallet.market_client.publish_product(product_info.id, self.pinfo_title,
+            logger.debug("product info id: %s", self.product_id)
+            d_publish = wallet.market_client.publish_product(self.product_id, self.pinfo_title,
                                                              self.pinfo_descrip, self.pinfo_price,
                                                              self.pinfo_tag, '2018-04-01 10:10:10',
                                                              '2018-04-01 10:10:10', '123456')
-            def update_table(*args):
-                QMessageBox.information(self, "Tips", "Successful !")
-                self.parent.update_table()
-                self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
-
+            def update_table(market_hash):
+                d = wallet.market_client.update_file_info(self.product_id, market_hash)
+                def handle_update_file(status):
+                    if status == 1:
+                        QMessageBox.information(self, "Tips", "Successful !")
+                        self.parent.update_table()
+                        self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
+                d.addCallback(handle_update_file)
             d_publish.addCallback(update_table)
-
             self.close()
         else:
             QMessageBox.warning(self, "Warning", "Please fill out the necessary selling information first!")
@@ -2738,7 +2729,7 @@ class CloudTab(QScrollArea):
     def update_table(self):
         print("Updating file list......")
         self.file_list = fs.get_file_list()
-        print(len(self.file_list))
+        logger.debug(len(self.file_list))
         self.row_number = len(self.file_list)
         self.file_table.setRowCount(self.row_number)
         #self.file_table.clearContents()
@@ -2980,23 +2971,6 @@ class CloudTab(QScrollArea):
             if self.file_choice == "":
                 QMessageBox.warning(self, "Warning", "Please select your files to upload first !")
                 return
-            print("Uploading files to....")
-            QMessageBox.information(self, "Tips", "Log in successfully !")
-
-        def choose_file(self):
-            self.file_choice = QFileDialog.getOpenFileName()[0]
-
-        def handle_cancel(self):
-            self.file_choice = ""
-            self.ipfs_btn.setChecked(True)
-            self.s3_btn.setChecked(False)
-
-            self.close()
-
-        def handle_ok(self):
-            if self.file_choice == "":
-                QMessageBox.warning(self, "Warning", "Please select your files to upload first !")
-                return
             else:
                 if self.ipfs_btn.isChecked():
                     print("start uploading")
@@ -3009,9 +2983,26 @@ class CloudTab(QScrollArea):
             print("Uploading files to....")
             self.close()
 
-        def handle_ok_callback(self, file_hash):
-            print("upload succeed: " + file_hash)
+        def handle_ok_callback(self, file_info):
             self.parent.update_table()
+            hashcode = file_info.hashcode
+            path = file_info.path
+            size = file_info.size
+            product_id = file_info.id
+            remote_type = file_info.remote_type
+            remote_uri = file_info.remote_uri
+            name = file_info.name
+            logger.debug('encrypt aes key')
+            encrypted_key = RSACipher.encrypt(file_info.aes_key)
+            encrypted_key = Encoder.bytes_to_base64_str(encrypted_key)
+            d = wallet.market_client.upload_file_info(hashcode, path, size, product_id, remote_type, remote_uri, encrypted_key, name)
+            def handle_upload_resp(status):
+                if status == 1:
+                    logger.debug('upload file info to market succeed')
+                else:
+                    logger.debug('upload file info to market failed')
+            d.addCallback(handle_upload_resp)
+
 
     def handle_upload(self):
         # Maybe useful for buyer.
@@ -3037,8 +3028,9 @@ class CloudTab(QScrollArea):
         print("row {} has been removed...".format(self.cur_clicked))
 
     def handle_publish_act(self):
-        item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
-        self.publish_dialog = PublishDialog(self, item)
+        # item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
+        product_id = self.file_table.item(self.cur_clicked, 5).text()
+        self.publish_dialog = PublishDialog(self, product_id)
         # self.file_list[self.cur_clicked]
         print("handle publish act....")
 
@@ -3330,7 +3322,7 @@ class Header(QFrame):
             self.minimize_btn.clicked.connect(self.parent.showMinimized)
 
 
-            self.maximize_btn = QPushButton("□", self)
+            self.maximize_btn = QPushButton("-", self)
             self.maximize_btn.setObjectName("maxmize_btn")
             self.maximize_btn.setFixedSize(10, 10)
             def toggle_maximization():

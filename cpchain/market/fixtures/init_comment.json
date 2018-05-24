@@ -27,7 +27,6 @@
     "fields": {
       "market_hash": "0NrQMH0VoZfoSjitjFn484Q/SNTvmcbR4t 5z8XntWg=",
       "avg_rating": 1,
-      "sales_number": 0,
       "updated": "2018-05-15T09:17:05.599Z"
     }
   },
@@ -37,7 +36,6 @@
     "fields": {
       "market_hash": "fcnfsaTCF2AJotNBPO+Rdq3Fhr4GuKTetKGAxW1CwsA=",
       "avg_rating": 1,
-      "sales_number": 0,
       "updated": "2018-05-15T09:17:17.053Z"
     }
   },
@@ -47,7 +45,6 @@
     "fields": {
       "market_hash": "+meezqfTm883531K8Tmqk+Jo0q8JT75yOmrFU8WQep0=",
       "avg_rating": 1,
-      "sales_number": 0,
       "updated": "2018-05-15T09:17:17.059Z"
     }
   },
@@ -57,7 +54,6 @@
     "fields": {
       "market_hash": "0NrQMH0VoZfoSjitjFn484Q/SNTvmcbR4t+5z8XntWg=",
       "avg_rating": 1,
-      "sales_number": 0,
       "updated": "2018-05-15T09:17:17.070Z"
     }
   },
@@ -67,7 +63,6 @@
     "fields": {
       "market_hash": "qdPeDEJplYZpHSA2kEwVQSEGUuYym6tJFfIl+6FmLmc=",
       "avg_rating": 1,
-      "sales_number": 0,
       "updated": "2018-05-15T09:17:17.074Z"
     }
   },
@@ -77,7 +72,6 @@
     "fields": {
       "market_hash": "ZnkqEgp9/CjAnUmeylL8a+IkMDcQI28JQPX9wgXtcs4=",
       "avg_rating": 1,
-      "sales_number": 0,
       "updated": "2018-05-15T09:17:17.079Z"
     }
   },
@@ -87,7 +81,6 @@
     "fields": {
       "market_hash": "QhaMIKL4rnS+PTc7e6hPuyFLjiK+WJanYAribOXi4jY=",
       "avg_rating": 1,
-      "sales_number": 0,
       "updated": "2018-05-15T09:17:17.083Z"
     }
   }

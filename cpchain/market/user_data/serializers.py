@@ -11,7 +11,7 @@ class UploadFileInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = UploadFileInfo
         fields = (
-            'id','public_key', 'name', 'hashcode', 'path', 'size',
+            'id','public_key', 'name', 'hashcode', 'path', 'size', 'client_id',
             'remote_type', 'remote_uri', 'is_published', 'aes_key', 'market_hash',
             'created')
 
@@ -26,9 +26,16 @@ class UploadFileInfoSerializer(serializers.ModelSerializer):
             is_published=validated_data['is_published'],
             aes_key=validated_data['aes_key'],
             market_hash=validated_data['market_hash'],
+            client_id=validated_data['client_id'],
         )
         file_info.save()
         return file_info
+
+    def update(self, instance, validated_data):
+        instance.market_hash = validated_data['market_hash']
+        instance.is_published = validated_data['is_published']
+        instance.save()
+        return instance
 
 
 class BuyerFileInfoSerializer(serializers.ModelSerializer):
@@ -51,6 +58,22 @@ class BuyerFileInfoSerializer(serializers.ModelSerializer):
         )
         file_info.save()
         return file_info
+
+    def update(self, instance, validated_data):
+        instance.is_downloaded = validated_data['is_downloaded']
+        instance.save()
+        return instance
+
+
+class BuyerFileInfoUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BuyerFileInfo
+        fields = ('order_id', 'is_downloaded')
+
+    def update(self, instance, validated_data):
+        instance.is_downloaded = validated_data['is_downloaded']
+        instance.save()
+        return instance
 
 
 class UserInfoVersionSerializer(serializers.ModelSerializer):

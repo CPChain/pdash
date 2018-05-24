@@ -1,4 +1,4 @@
-from elasticsearch_dsl import DocType, Integer, Text, Keyword, Date
+from elasticsearch_dsl import DocType, Integer, Text, Keyword, Date, Float
 
 
 class ProductIndex(DocType):
@@ -15,6 +15,10 @@ class ProductIndex(DocType):
     end_date = Date()
     status = Integer()
     msg_hash = Keyword()
+
+    username = Text()
+    avg_rating = Float()
+    sales_number = Integer()
 
     class Meta:
         index = 'market'

@@ -9,6 +9,8 @@ from twisted.internet import reactor, protocol, defer
 
 import msgpack
 
+from cpchain.proxy.account import sign_proxy_data, derive_proxy_data
+
 logger = logging.getLogger(__name__)
 
 def entropy(length):
@@ -78,21 +80,33 @@ class PeerProtocol(protocol.DatagramProtocol):
             peer_id = msg['peer_id']
             tid = msg['tid']
             peer_info = msg['peer_info']
+            sign_tid = msg['sign_tid']
 
-            peer = {
-                'addr': addr,
-                'peer_info': peer_info,
-                'ts': time.time()
-            }
+            if tid != derive_proxy_data(sign_tid):
+                error = 'wrong signature'
+                logger.debug(error)
+                response = {
+                    'type': 'response',
+                    'tid': tid,
+                    'data': error
+                }
 
-            self.peers[peer_id] = peer
-            logger.debug("add peer %s" % str(peer['addr']))
+            else:
+                peer = {
+                    'addr': addr,
+                    'peer_info': peer_info,
+                    'ts': time.time()
+                }
 
-            response = {
-                'type': 'response',
-                'tid': tid,
-                'data': "bootstrap"
-            }
+                self.peers[peer_id] = peer
+                logger.debug("add peer %s" % str(peer['addr']))
+
+                response = {
+                    'type': 'response',
+                    'tid': tid,
+                    'data': "bootstrap"
+                }
+
             self.send_msg(response, addr)
 
         elif msg['type'] == 'ping':
@@ -173,11 +187,13 @@ class PeerProtocol(protocol.DatagramProtocol):
         if self.transport is None:
             return reactor.callLater(1, self.bootstrap)
 
+        tid = generate_tid()
         msg = {
             'type': 'bootstrap',
-            'tid': generate_tid(),
+            'tid': tid,
             'peer_id': self.peer_id,
-            'peer_info': self.peer_info
+            'peer_info': self.peer_info,
+            'sign_tid': sign_proxy_data(tid)
             }
 
         return self.send_msg(msg, addr)
