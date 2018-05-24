@@ -14,7 +14,7 @@ from cpchain.utils import join_with_rc, join_with_root
 from cpchain.proxy.network import PeerProtocol
 from cpchain.proxy.server import SSLServerFactory, FileServer
 from cpchain.proxy.client import start_client
-from cpchain.proxy.account import get_proxy_id
+from cpchain.proxy.account import get_proxy_id, sign_proxy_data, derive_proxy_data
 
 logger = logging.getLogger(__name__)
 
@@ -137,10 +137,11 @@ class Peer:
                 addr = future.result()
                 self.ip = addr[1][0]
                 addr = '%s,%d' % (self.ip, self.service_port)
+
                 asyncio.ensure_future(
                     peer.set(
                         self.peer_id,
-                        addr
+                        sign_proxy_data(addr)
                         )
                     ).add_done_callback(set_key_done)
 
@@ -207,7 +208,8 @@ class Peer:
             def get_key_done(future):
                 value = future.result()
                 peer.stop()
-                d.callback(tuple(value.split(',')))
+                addr = derive_proxy_data(value)
+                d.callback(tuple(addr.split(',')))
 
             def bootstrap_done(_):
                 asyncio.ensure_future(
