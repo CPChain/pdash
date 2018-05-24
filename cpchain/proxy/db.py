@@ -52,18 +52,14 @@ class ProxyDB(object):
 
     def count(self, trade):
         count = self.session.query(Trade).filter(
-            Trade.order_id == trade.order_id,
-            Trade.buyer_addr == trade.buyer_addr,
-            Trade.seller_addr == trade.seller_addr,
-            Trade.market_hash == trade.market_hash).count()
+            Trade.order_id == trade.order_id
+            ).count()
         return count
 
     def query(self, trade):
         return self.session.query(Trade).filter(
-            Trade.order_id == trade.order_id,
-            Trade.buyer_addr == trade.buyer_addr,
-            Trade.seller_addr == trade.seller_addr,
-            Trade.market_hash == trade.market_hash).first()
+            Trade.order_id == trade.order_id
+            ).first()
 
     def query_file_uuid(self, uuid):
         return self.session.query(Trade).filter(
