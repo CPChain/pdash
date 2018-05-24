@@ -6,13 +6,13 @@ cd "$(dirname $0)"
 market_pkgs="
 djangorestframework==3.7.3
 django-rest-elasticsearch==0.4
-elasticsearch_dsl==6.1.0
 django==2.0.3
 psycopg2
 toml==0.9.4
 eth-keyfile
 cryptography
 web3
+apscheduler
 "
 
 chain_pkgs="
