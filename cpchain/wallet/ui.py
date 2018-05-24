@@ -485,6 +485,8 @@ class ProductDetailTab(QScrollArea):
         self.frame.setMinimumWidth(500)
         # self.frame.setMaximumHeight(800)
 
+        self.hline_1 = HorizontalLine(self, 2)
+
         self.search_item_num = 1
         self.search_promo_num = 4
 
@@ -528,11 +530,34 @@ class ProductDetailTab(QScrollArea):
             self.size_label = QLabel("Size: 20 Mb")
             self.size_label.setObjectName("size_label")
 
-            self.description_label = QLabel("Description")
+            self.description_label = QLabel("Description:")
             self.description_label.setObjectName("description_label")
+
+            self.rating_label = QLabel("Rating")
+            self.rating_label.setObjectName("rating_label")
+
+            self.average_score = QLabel("4.5")
+            self.average_score.setObjectName("average_score")
 
             self.may_like_label = QLabel("You may like")
             self.may_like_label.setObjectName("may_like_label")
+
+            self.buyer_avatar = QLabel("")
+            self.buyer_avatar.setObjectName("buyer_avatar")
+
+            self.buyer_name = QLabel("Ross Geller")
+            self.buyer_name.setObjectName("buyer_name") 
+            
+            self.data_label = QLabel("May 4, 2018")
+            self.data_label.setObjectName("data_label")   
+
+            self.buyer_rating = QLabel("4.5")
+            self.buyer_rating.setObjectName("buyer_rating")   
+    
+            self.buyer_comment = QLabel("Lorem ipsim dolor sit amet, consectetur adipiscing elit. Aenean euismod bibendum laoreet.")
+            self.buyer_comment.setObjectName("buyer_comment")    
+            self.buyer_comment.setWordWrap(True)
+            self.buyer_comment.setAlignment(Qt.AlignTop | Qt.AlignLeft)              
 
             des_text = "In 2012, OWSLA launched a monthly subscription, The Nest, with benefits including early access to OWSLA releases.[12] In 2013, Bromance Records partners up with OWSLA to create an American branch titled BromanceUS with releases from Gesaffelstein, Illangelo, Brodinski and LOUISAHHH!!!.[13] A year later, OWSLA launched the Nestivus Charity Campaign, a series of holiday initiatives with all proceeds going to the international music nonprofit, Bridges for Music."
 
@@ -616,6 +641,26 @@ class ProductDetailTab(QScrollArea):
             self.product_layout.addWidget(self.price_label, 9, 1, 1, 2)
             self.product_layout.addWidget(self.collect_btn, 10, 1, 1, 2)
             self.product_layout.addWidget(self.buynow_btn, 10, 3, 1, 2)  
+
+            self.rating_layout = QHBoxLayout(self)
+            self.rating_layout.addWidget(self.rating_label)
+            self.rating_layout.addStretch(1)
+            self.rating_layout.addWidget(self.average_score)   
+
+            self.product_layout.addLayout(self.rating_layout, 12, 1, 1, 10)
+            self.product_layout.addWidget(self.hline, 13, 1, 1, 10)   
+
+            self.comment_layout = QVBoxLayout(self)
+            self.buyer_layout = QHBoxLayout(self)
+            self.buyer_layout.addWidget(self.buyer_avatar)
+            self.buyer_layout.addWidget(self.buyer_name)
+            self.buyer_layout.addSpacing(10)
+            self.buyer_layout.addWidget(self.data_label)
+            self.buyer_layout.addStretch(1)
+
+            self.comment_layout.addLayout(self.buyer_layout)
+            self.comment_layout.addWidget(self.buyer_comment)
+            self.product_layout.addLayout(self.comment_layout, 14, 1, 3, 10)    
 
             self.promotion_layout = QVBoxLayout(self)
             self.promotion_layout.addSpacing(0)
@@ -2195,9 +2240,10 @@ class FollowingTagTab(QScrollArea):
         #self.frame.setMaximumHeight(800) 
 
         self.follow_item_num = 4
-        self.follow_promo_num = 2
+        self.promo_num_max = 3
 
         self.item_lists = []
+        self.promo_lists = []
 
         def get_items(products):
             print("Getting items from backend......")
@@ -2209,14 +2255,15 @@ class FollowingTagTab(QScrollArea):
         d_products.addCallback(get_items)
 
         self.promo_label = QLabel(self)
+        self.item = {"title": "Medical data from NHIS", "none": "none"}
 
-        def get_promotion(promotion):
-            print("Getting promotion images from backend.....")
-            self.promo_label.setObjectName("promo_label")
-            path = osp.join(root_dir, promotion[0]['image'])
-            pixmap = QPixmap(path)
-            pixmap = pixmap.scaled(250, 123)
-            self.promo_label.setPixmap(pixmap)
+        # TODO: Get promotion products based on products returned above or the keywords provided
+        
+        def get_promotion(item={}, key_words=""):
+            for i in range(self.promo_num_max):
+                self.promo_lists.append(Product(self, item, "simple"))
+        get_promotion(self.item)
+
 
         d_promotion = wallet.market_client.query_promotion()
         d_promotion.addCallback(get_promotion)
@@ -2234,13 +2281,22 @@ class FollowingTagTab(QScrollArea):
                 self.follow_tag_product_layout.addWidget(self.item_lists[i])
                 self.follow_tag_product_layout.addSpacing(0)
 
-            self.follow_tag_promotion_layout.addWidget(self.promo_label)
-            self.follow_tag_promotion_layout.addStretch(5)
+            self.follow_tag_promotion_layout.addStretch(1)
+
+            self.promo_layout = QVBoxLayout(self)
+            self.promo_layout.setContentsMargins(0, 0, 0, 0)
+            self.promo_layout.addSpacing(0)            
+
+            for i in range(self.promo_num_max):
+                self.promo_layout.addWidget(self.promo_lists[i])
+                self.promo_layout.addSpacing(0)
+
+            self.promo_layout.addStretch(1)
                     
-            self.follow_main_layout.addLayout(self.follow_tag_product_layout)
+            self.follow_main_layout.addLayout(self.follow_tag_product_layout, 2)
             self.follow_main_layout.addSpacing(1)
             #self.bottom_layout.setStretchFactor(recom_layout,4)
-            self.follow_main_layout.addLayout(self.follow_tag_promotion_layout)
+            self.follow_main_layout.addLayout(self.promo_layout, 1)
 
             self.setLayout(self.follow_main_layout)
         load_stylesheet(self, "followingtag.qss")
@@ -2262,22 +2318,10 @@ class FollowingSellTab(QScrollArea):
         # self.frame.setMaximumHeight(800)
 
         self.follow_item_num = 5
+        self.promo_num_max = 4
 
         self.item_lists = []
-
-        # def create_btns():
-        #     self.follow_rank_btn = QPushButton("Rank", self)
-        #     self.follow_time_btn = QPushButton("Time", self)
-        #     self.follow_price_btn = QPushButton("Price", self)
-        #     self.follow_sales_btn = QPushButton("Sales", self)
-        #     self.follow_filter_btn = QPushButton("Filter", self)
-
-        #     self.follow_rank_btn.setObjectName("follow_rank_btn")
-        #     self.follow_time_btn.setObjectName("follow_time_btn")
-        #     self.follow_price_btn.setObjectName("follow_price_btn")
-        #     self.follow_sales_btn.setObjectName("follow_sales_btn")
-        #     self.follow_filter_btn.setObjectName("follow_filter_btn")
-        # create_btns()
+        self.promo_lists = []
 
         self.header_horline = HorizontalLine(self, 2)
         self.header_horline.setObjectName("header_horline")
@@ -2292,14 +2336,14 @@ class FollowingSellTab(QScrollArea):
         d_products.addCallback(get_items)
 
         self.promo_label = QLabel(self)
+        self.item = {"title": "Medical data from NHIS", "none": "none"}
 
-        def get_promotion(promotion):
-            print("Getting promotion images from backend.....")
-            self.promo_label.setObjectName("promo_label")
-            path = osp.join(root_dir, promotion[0]['image'])
-            pixmap = QPixmap(path)
-            pixmap = pixmap.scaled(250, 123)
-            self.promo_label.setPixmap(pixmap)
+        # TODO: Get promotion products based on products returned above or the keywords provided
+        
+        def get_promotion(item={}, key_words=""):
+            for i in range(self.promo_num_max):
+                self.promo_lists.append(Product(self, item, "simple"))
+        get_promotion(self.item)
 
         d_promotion = wallet.market_client.query_promotion()
         d_promotion.addCallback(get_promotion)
@@ -2308,30 +2352,32 @@ class FollowingSellTab(QScrollArea):
 
             self.follow_main_layout = QHBoxLayout(self)
 
-            self.follow_tag_product_layout = QVBoxLayout(self)
+            self.follow_tag_product_layout=QVBoxLayout(self)
             self.follow_tag_product_layout.addSpacing(0)
 
-            self.follow_tag_promotion_layout = QVBoxLayout(self)
-            self.follow_tag_promotion_layout.setContentsMargins(0, 0, 0, 0)
-            self.follow_tag_promotion_layout.setSpacing(0)
+            self.follow_tag_promotion_layout=QVBoxLayout(self)
             self.follow_tag_promotion_layout.addSpacing(0)
 
             for i in range(self.follow_item_num):
                 self.follow_tag_product_layout.addWidget(self.item_lists[i])
-                self.follow_tag_product_layout.addSpacing(1)
+                self.follow_tag_product_layout.addSpacing(0)
 
-            self.follow_tag_promotion_layout.addWidget(self.promo_label)
-            self.follow_tag_promotion_layout.addStretch(5)
+            self.follow_tag_promotion_layout.addStretch(1)
 
-            self.follow_main_layout.addLayout(self.follow_tag_product_layout)
+            self.promo_layout = QVBoxLayout(self)
+            self.promo_layout.setContentsMargins(0, 0, 0, 0)
+            self.promo_layout.addSpacing(0)            
+
+            for i in range(self.promo_num_max):
+                self.promo_layout.addWidget(self.promo_lists[i])
+                self.promo_layout.addSpacing(0)
+
+            self.promo_layout.addStretch(1)
+                    
+            self.follow_main_layout.addLayout(self.follow_tag_product_layout, 2)
             self.follow_main_layout.addSpacing(1)
-            self.follow_main_layout.addLayout(self.follow_tag_promotion_layout)
-
-            # self.follow_all_layout.addLayout(self.follow_rank_layout)
-            # self.follow_all_layout.addWidget(self.header_horline)
-            # self.follow_all_layout.addLayout(self.follow_main_layout)
-
-            self.setLayout(self.follow_main_layout)
+            #self.bottom_layout.setStretchFactor(recom_layout,4)
+            self.follow_main_layout.addLayout(self.promo_layout, 1)
 
 class FollowingTab(QScrollArea):
 
