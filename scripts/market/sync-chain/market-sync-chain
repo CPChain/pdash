@@ -2,9 +2,17 @@
 import os
 import sys
 import logging
+import time
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "cpchain.market.market.settings")
+
+import django
+
+django.setup()
+from datetime import datetime
 
 import toml
-import django
+from apscheduler.schedulers.blocking import BlockingScheduler
 
 from cpchain import config
 from cpchain.chain import utils, models
@@ -13,27 +21,25 @@ from cpchain.utils import join_with_root, join_with_rc, Encoder
 from cpchain.chain.agents import Agent, BuyerAgent
 from cpchain.crypto import RSACipher
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "cpchain.market.market.settings")
-django.setup()
-
 from rest_framework import serializers
 from cpchain.market.transaction.models import TransactionDetail, ProductSaleStatus
 
-
 logger = logging.getLogger(__name__)
+
 
 class TransactionDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = TransactionDetail
         fields = ('seller_address', 'market_hash', 'buyer_address')
 
+
 class ProductSaleStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductSaleStatus
         fields = ('market_hash', 'sales_number')
 
-class MarketSyncChainBlockNumberRecorder:
 
+class MarketSyncChainBlockNumberRecorder:
     recorder_path = '.market_sync_chain_block_number_recorder.toml'
     recorder_path = join_with_rc(recorder_path)
     empty_record = {
@@ -108,8 +114,8 @@ class MarketAgent(Agent):
             record['transaction_detail_block_number'] = order_event_list[-1]['blockNumber'] + 1
         MarketSyncChainBlockNumberRecorder.dump_record(record)
 
-def testMarketAgent():
 
+def testMarketAgent():
     w3 = utils.default_w3
     bin_path = join_with_root(config.chain.contract_bin_path)
     contract_name = config.chain.contract_name
@@ -157,24 +163,38 @@ def testMarketAgent():
     magent.update_transaction_detail_to_db()
 
 
-if __name__ == '__main__':
+def sync_from_chain():
+    logger.info('run at:%s' % datetime.now())
+    w3 = utils.default_w3
+    bin_path = join_with_root(config.chain.contract_bin_path)
+    contract_name = config.chain.contract_name
 
+    magent = MarketAgent(w3, bin_path, contract_name)
+    product_id_list = magent.update_sales_num_to_db()
+    magent.update_transaction_detail_to_db()
+    # sync data to elasticsearch
+    for p in product_id_list:
+        try:
+            product = Product.objects.get(msg_hash=p)
+            product.indexing()
+        except:
+            logger.exception("index product failed")
+            pass
+
+    # time.sleep(10)
+
+
+if __name__ == '__main__':
     if len(sys.argv) == 2 and sys.argv[1] == 'test':
         testMarketAgent()
-
     else:
-        w3 = utils.default_w3
-        bin_path = join_with_root(config.chain.contract_bin_path)
-        contract_name = config.chain.contract_name
 
-        magent = MarketAgent(w3, bin_path, contract_name)
-        product_id_list = magent.update_sales_num_to_db()
-        magent.update_transaction_detail_to_db()
-        # sync data to elasticsearch
-        for p in product_id_list:
-            try:
-                product = Product.objects.get(msg_hash=p)
-                product.indexing()
-            except:
-                logger.exception("index product failed")
-                pass
+        scheduler = BlockingScheduler()
+        scheduler.add_executor('processpool')
+        scheduler.add_job(sync_from_chain, 'interval', seconds=10)
+        print('Press Ctrl+{0} to exit'.format('Break' if os.name == 'nt' else 'C'))
+
+        try:
+            scheduler.start()
+        except (KeyboardInterrupt, SystemExit):
+            pass
