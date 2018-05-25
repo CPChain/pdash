@@ -18,7 +18,7 @@ message Message {
 		}
 
 		message IPFS_Storage {
-			bytes file_hash = 1;
+			string file_hash = 1;
 			string gateway = 2;
 		}
 

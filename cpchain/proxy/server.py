@@ -97,11 +97,11 @@ class SSLServerProtocol(NetstringReceiver):
             storage = data.storage
             if storage.type == Message.Storage.IPFS:
                 ipfs = storage.ipfs
-                trade.file_hash = ipfs.file_hash
+                trade.file_name = ipfs.file_hash
 
                 file_path = os.path.join(
                     server_root,
-                    trade.file_hash.decode()
+                    trade.file_name
                     )
 
                 # seller sold the same file to another buyer
@@ -116,11 +116,11 @@ class SSLServerProtocol(NetstringReceiver):
 
                 def download_ipfs_file():
                     host, port = ipfs.gateway.strip().split(':')
-                    file_hash = trade.file_hash
+                    file_name = trade.file_name
                     ipfs_storage = IPFSStorage()
                     return ipfs_storage.connect(host, port) and \
                             ipfs_storage.download_file(
-                                file_hash, server_root)
+                                file_name, server_root)
 
                 d = threads.deferToThread(
                     download_ipfs_file
@@ -135,7 +135,7 @@ class SSLServerProtocol(NetstringReceiver):
 
                 # use order id as the local file name to avoid conflict
                 file_name = str(trade.order_id)
-                trade.file_hash = file_name.encode('utf-8')
+                trade.file_name = file_name
                 file_path = os.path.join(server_root, file_name)
 
                 def download_s3_file():
@@ -256,8 +256,8 @@ class FileServer(Resource):
         trade = Trade()
         trade = self.proxy_db.query_file_uuid(uuid)
         if trade:
-            file_hash = trade.file_hash
-            file_path = os.path.join(server_root, file_hash.decode())
+            file_name = trade.file_name
+            file_path = os.path.join(server_root, file_name)
             return File(file_path)
 
         return ForbiddenResource()

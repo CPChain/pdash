@@ -23,17 +23,17 @@ class Trade(Base):
     seller_addr = Column(String, nullable=False)
     market_hash = Column(String, nullable=False)
     AES_key = Column(BINARY, nullable=False)
-    file_hash = Column(BINARY, nullable=False)
+    file_name = Column(String, nullable=False)
     file_uuid = Column(String, nullable=False)
     time_stamp = Column(TIMESTAMP, nullable=False)
 
     def __repr__(self):
         return "<Trade(order_id= '%d', buyer_addr='%s', \
             seller_addr='%s', market_hash='%s', AES_key='%s', \
-            file_hash='%s', file_uuid='%s' time_stamp='%s')>" % (
+            file_name='%s', file_uuid='%s' time_stamp='%s')>" % (
                 self.order_id, self.buyer_addr,
                 self.seller_addr, self.market_hash,
-                self.AES_key, self.file_hash,
+                self.AES_key, self.file_name,
                 self.file_uuid, self.time_stamp)
 
 class ProxyDB(object):
