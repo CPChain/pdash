@@ -9,10 +9,6 @@ from cpchain.market.user_data.serializers import UploadFileInfoSerializer, UserI
 
 logger = logging.getLogger(__name__)
 
-PUBLIC_KEY = "public_key"
-VERIFY_CODE = "code"
-TIMEOUT = 1000
-
 
 def increase_data_version(public_key):
     try:
@@ -33,27 +29,20 @@ class UploadFileInfoAddAPIView(APIView):
     serializer_class = UploadFileInfoSerializer
     permission_classes = (AlreadyLoginUser,)
 
+    @ExceptionHandler
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         logger.info("public_key:%s" % public_key)
-
-        if public_key is None:
-            return create_invalid_response()
 
         data = request.data
         data['public_key'] = public_key
         logger.info("data:%s" % data)
         serializer = UploadFileInfoSerializer(data=data)
 
-        try:
-            if serializer.is_valid(raise_exception=True):
-                user_version = increase_data_version(public_key)
-                serializer.save()
-                return JsonResponse({'status': 1, 'message': 'success', 'data': {'version': user_version}})
-        except:
-            logger.exception("save UploadFileInfo error")
-
-        return create_invalid_response()
+        if serializer.is_valid(raise_exception=True):
+            user_version = increase_data_version(public_key)
+            serializer.save()
+            return create_success_data_response({'version': user_version})
 
 
 class UploadFileInfoUpdateAPIView(APIView):
@@ -64,33 +53,22 @@ class UploadFileInfoUpdateAPIView(APIView):
     serializer_class = UploadFileInfoSerializer
     permission_classes = (AlreadyLoginUser,)
 
+    @ExceptionHandler
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         logger.info("public_key:%s" % public_key)
 
-        if public_key is None:
-            return create_invalid_response()
-
         data = request.data
         data['public_key'] = public_key
         # public_key + client_id -->market_hash + is_published
-        try:
-            info = UploadFileInfo.objects.get(public_key=public_key, client_id=data['client_id'])
-        except:
-            logger.exception("get UploadFileInfo by public_key , client_id error")
-            return create_invalid_response()
+        info = UploadFileInfo.objects.get(public_key=public_key, client_id=data['client_id'])
 
         # update profile
         serializer = UploadFileInfoSerializer(info, data=data)
-        try:
-            if serializer.is_valid(raise_exception=True):
-                user_version = increase_data_version(public_key)
-                serializer.update(instance=info,validated_data=data)
-                return JsonResponse({'status': 1, 'message': 'success', 'data': {'version': user_version}})
-        except:
-            logger.exception("save UploadFileInfo error")
-
-        return create_invalid_response()
+        if serializer.is_valid(raise_exception=True):
+            user_version = increase_data_version(public_key)
+            serializer.update(instance=info, validated_data=data)
+            return create_success_data_response({'version': user_version})
 
 
 class PullUserInfoAPIView(APIView):
@@ -101,6 +79,7 @@ class PullUserInfoAPIView(APIView):
     serializer_class = UploadFileInfoSerializer
     permission_classes = (AlreadyLoginUser,)
 
+    @ExceptionHandler
     def get(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         logger.info("public_key:%s" % public_key)
@@ -114,7 +93,7 @@ class PullUserInfoAPIView(APIView):
         upload_file_list = upload_file_serializer.data
         buyer_file_list = buyer_file_serializer.data
         all_data = {"public_key": public_key, "upload_files": upload_file_list, "buyer_files": buyer_file_list}
-        return JsonResponse({'status': 1, 'message': 'success', 'data': all_data})
+        return create_success_data_response(all_data)
 
 
 class BuyerFileInfoAddAPIView(APIView):
@@ -125,28 +104,20 @@ class BuyerFileInfoAddAPIView(APIView):
     serializer_class = BuyerFileInfoSerializer
     permission_classes = (AlreadyLoginUser,)
 
+    @ExceptionHandler
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         logger.info("public_key:%s" % public_key)
-
-        if public_key is None:
-            return create_invalid_response()
 
         data = request.data
         data['public_key'] = public_key
         logger.info("data:%s" % data)
 
         serializer = BuyerFileInfoSerializer(data=data)
-
-        try:
-            if serializer.is_valid(raise_exception=True):
-                user_version = increase_data_version(public_key)
-                serializer.save()
-                return JsonResponse({'status': 1, 'message': 'success', 'data': {'version': user_version}})
-        except:
-            logger.exception("save BuyerFileInfo error")
-
-        return create_invalid_response()
+        if serializer.is_valid(raise_exception=True):
+            user_version = increase_data_version(public_key)
+            serializer.save()
+            return create_success_data_response({'version': user_version})
 
 
 class BuyerFileInfoUpdateAPIView(APIView):
@@ -157,32 +128,22 @@ class BuyerFileInfoUpdateAPIView(APIView):
     serializer_class = BuyerFileInfoUpdateSerializer
     permission_classes = (AlreadyLoginUser,)
 
+    @ExceptionHandler
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         logger.info("public_key:%s" % public_key)
 
-        if public_key is None:
-            return create_invalid_response()
-
         data = request.data
         logger.info("data:%s" % data)
 
-        try:
-            info = BuyerFileInfo.objects.get(order_id=data['order_id'])
-        except BuyerFileInfo.DoesNotExist:
-            return create_invalid_response()
+        info = BuyerFileInfo.objects.get(order_id=data['order_id'])
 
         # update profile
         serializer = BuyerFileInfoUpdateSerializer(info, data=data)
-        try:
-            if serializer.is_valid(raise_exception=True):
-                user_version = increase_data_version(public_key)
-                serializer.update(instance=info,validated_data=data)
-                return JsonResponse({'status': 1, 'message': 'success', 'data': {'version': user_version}})
-        except:
-            logger.exception("save BuyerFileInfo error")
-
-        return create_invalid_response()
+        if serializer.is_valid(raise_exception=True):
+            user_version = increase_data_version(public_key)
+            serializer.update(instance=info, validated_data=data)
+            return create_success_data_response({'version': user_version})
 
 
 class UserInfoVersionAPIView(APIView):
@@ -193,8 +154,8 @@ class UserInfoVersionAPIView(APIView):
     serializer_class = UserInfoVersionSerializer
     permission_classes = (AlreadyLoginUser,)
 
+    @ExceptionHandler
     def get(self, request):
-
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         logger.info("public_key:%s" % public_key)
         params = request.query_params
@@ -203,10 +164,10 @@ class UserInfoVersionAPIView(APIView):
 
         try:
             user_version = UserInfoVersion.objects.get(public_key=public_key)
-            return JsonResponse({'status': 1, 'message': 'success', 'data': {'version': user_version.version}})
+            return create_success_data_response({'version': user_version.version})
         except UserInfoVersion.DoesNotExist:
             logger.info("user version not found for %s" % public_key)
-            return JsonResponse({'status': 1, 'message': 'success', 'data': {'version': 0}})
+            return create_success_data_response({'version': 0})
 
 
 class ProductTagSearchAPIView(APIView):
@@ -217,18 +178,13 @@ class ProductTagSearchAPIView(APIView):
     serializer_class = ProductTagSerializer
     permission_classes = (AlreadyLoginUser,)
 
+    @ExceptionHandler
     def get(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         logger.info("public_key:%s" % public_key)
-
-        try:
-            tag_queryset = ProductTag.objects.all()
-            tag_serializer = ProductTagSerializer(tag_queryset, many=True)
-            tag_list = tag_serializer.data
-            return JsonResponse({'status': 1, 'message': 'success', 'data': {'tags': tag_list}})
-        except:
-            logger.exception("ProductTag not found for %s" % public_key)
-            return create_invalid_response()
+        tag_queryset = ProductTag.objects.all()
+        tag_serializer = ProductTagSerializer(tag_queryset, many=True)
+        return create_success_data_response({'tags': tag_serializer.data})
 
 
 class ProductTagAddAPIView(APIView):
@@ -239,19 +195,15 @@ class ProductTagAddAPIView(APIView):
     serializer_class = ProductTagSerializer
     permission_classes = (AlreadyLoginUser,)
 
+    @ExceptionHandler
     def post(self, request):
         data = request.data
         logger.info("data:%s" % data)
 
-        try:
-            serializer = ProductTagSerializer(data=data)
-            if serializer.is_valid(raise_exception=True):
-                serializer.save()
-                return JsonResponse({'status': 1, 'message': 'success'})
-        except:
-            logger.exception("save ProductTag error")
-
-        return create_invalid_response()
+        serializer = ProductTagSerializer(data=data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return create_success_response()
 
 
 class BookmarkSearchAPIView(APIView):
@@ -262,18 +214,15 @@ class BookmarkSearchAPIView(APIView):
     serializer_class = BookmarkSerializer
     permission_classes = (AlreadyLoginUser,)
 
+    @ExceptionHandler
     def get(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         logger.info("public_key:%s" % public_key)
 
-        try:
-            bookmark_queryset = Bookmark.objects.filter(public_key=public_key)
-            bookmark_serializer = BookmarkSerializer(bookmark_queryset, many=True)
-            bookmark_list = bookmark_serializer.data
-            return JsonResponse({'status': 1, 'message': 'success', 'data': {'bookmarks': bookmark_list}})
-        except:
-            logger.info("bookmark not found for %s" % public_key)
-            return create_invalid_response()
+        bookmark_queryset = Bookmark.objects.filter(public_key=public_key)
+        bookmark_serializer = BookmarkSerializer(bookmark_queryset, many=True)
+        bookmark_list = bookmark_serializer.data
+        return create_success_data_response({'bookmarks': bookmark_list})
 
 
 class BookmarkAddAPIView(APIView):
@@ -284,15 +233,11 @@ class BookmarkAddAPIView(APIView):
     serializer_class = BookmarkSerializer
     permission_classes = (AlreadyLoginUser,)
 
+    @ExceptionHandler
     def post(self, request):
         data = request.data
         logger.info("data:%s" % data)
-        try:
-            serializer = BookmarkSerializer(data=data)
-            if serializer.is_valid(raise_exception=True):
-                serializer.save()
-                return JsonResponse({'status': 1, 'message': 'success','data':{'bookmark':serializer.data}})
-        except:
-            logger.exception("save Bookmark error")
-
-        return create_invalid_response()
+        serializer = BookmarkSerializer(data=data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return create_success_data_response({'bookmark': serializer.data})

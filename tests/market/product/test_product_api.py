@@ -317,35 +317,35 @@ class TestProductApi(BaseApiTest):
         for p in parsed_json['data']:
             print("tag:%s" % p["tag"])
 
-    def test_query_product_by_seller(self):
-        token = self.login_and_fetch_token()
-
-        self.publish_product(token)
-
-        url = '%s/product/v1/search_by_seller/?seller=%s' % (HOST, urlquote(self.pub_key_string))
-        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
-        response = requests.get(url, headers=header)
-        print("products:%s" % response)
-        print(response.text)
-        parsed_json = json.loads(response.text)
-        self.assertGreaterEqual(len(parsed_json['data']), 1, "product number should be >= 1")
-        for p in parsed_json['data']:
-            print("tags:%s" % p["tags"])
-
-    def test_query_product_by_tag(self):
-        token = self.login_and_fetch_token()
-
-        self.publish_product(token)
-
-        url = '%s/product/v1/search_by_tag/?tag=%s' % (HOST, 'tag1')
-        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
-        response = requests.get(url, headers=header)
-        print("products:%s" % response)
-        print(response.text)
-        parsed_json = json.loads(response.text)
-        self.assertGreaterEqual(len(parsed_json['data']), 1, "product number should be >= 1")
-        for p in parsed_json['data']:
-            print("tags:%s" % p["tags"])
+    # def test_query_product_by_seller(self):
+    #     token = self.login_and_fetch_token()
+    #
+    #     self.publish_product(token)
+    #
+    #     url = '%s/product/v1/search_by_seller/?seller=%s' % (HOST, urlquote(self.pub_key_string))
+    #     header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
+    #     response = requests.get(url, headers=header)
+    #     print("products:%s" % response)
+    #     print(response.text)
+    #     parsed_json = json.loads(response.text)
+    #     self.assertGreaterEqual(len(parsed_json['data']), 1, "product number should be >= 1")
+    #     for p in parsed_json['data']:
+    #         print("tags:%s" % p["tags"])
+    #
+    # def test_query_product_by_tag(self):
+    #     token = self.login_and_fetch_token()
+    #
+    #     self.publish_product(token)
+    #
+    #     url = '%s/product/v1/search_by_tag/?tag=%s' % (HOST, 'tag1')
+    #     header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
+    #     response = requests.get(url, headers=header)
+    #     print("products:%s" % response)
+    #     print(response.text)
+    #     parsed_json = json.loads(response.text)
+    #     self.assertGreaterEqual(len(parsed_json['data']), 1, "product number should be >= 1")
+    #     for p in parsed_json['data']:
+    #         print("tags:%s" % p["tags"])
 
     def hide_product(self, header, market_hash):
         payload = {"market_hash": market_hash}
