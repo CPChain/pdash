@@ -2528,29 +2528,29 @@ class Product2(QScrollArea):
         self.setMaximumHeight(500)
         self.setMinimumHeight(120)
         self.setMaximumHeight(120)
-        self.title_btn = QPushButton("Medicine big data from Mayo Clinic")
+        self.title_btn = QPushButton(self.item['title'])
         self.title_btn.setObjectName("title_btn")
         self.title_btn.clicked.connect(self.title_clicked_act)
         self.title_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
-        self.seller_btn = QPushButton("Barack Obama")
+        self.seller_btn = QPushButton(self.item['username'])
         self.seller_btn.setObjectName("seller_btn")
         self.seller_btn.setCursor(QCursor(Qt.PointingHandCursor))
         self.seller_btn.clicked.connect(self.seller_clicked_act)
 
-        self.time_label = QLabel("May 4, 2018")
+        self.time_label = QLabel(self.item['created'])
         self.time_label.setObjectName("time_label")
-        self.total_sale_label = QLabel("128 sales")
+        self.total_sale_label = QLabel(str(self.item['sales_number']))
         self.total_sale_label.setObjectName("total_sale_label")
-        self.price_label = QLabel("$18")
+        self.price_label = QLabel('$'+str(self.item['price']))
         self.price_label.setObjectName("price_label")
         # self.price_label.setFont(QFont(15, QFont.Bold))
 
         self.gap_line = HorizontalLine(self, 2)
         self.gap_line.setObjectName("gap_line")
 
-        self.tag = ["tag1", "tag2", "tag3", "tag4"]
-        self.tag_num = 4
+        self.tag = self.item['tags'].split(',')
+        self.tag_num = len(self.tag)
         self.tag_btn_list = []
 
         for i in range(self.tag_num):
