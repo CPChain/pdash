@@ -36,7 +36,8 @@ def generate_random_str(randomlength=16):
 def is_valid_signature(public_key_string, raw_data, signature):
     public_key_bytes = Encoder.hex_to_bytes(public_key_string)
     public_key = ECCipher.create_public_key(public_key_bytes)
-    logger.debug("is_valid_verify_code public_key:" + public_key_string + ",raw_data:" + raw_data + ",signature:" + signature)
+    logger.debug(
+        "is_valid_verify_code public_key:" + public_key_string + ",raw_data:" + raw_data + ",signature:" + signature)
     return verify_signature(public_key, signature, raw_data)
 
 
@@ -66,9 +67,35 @@ def get_public_key(public_key_string):
     pub_key_bytes = Encoder.hex_to_bytes(public_key_string)
     return ECCipher.create_public_key(pub_key_bytes)
 
-def create_invalid_response():
-    return JsonResponse({"status": 0, "message": "invalid request"})
+
+def create_invalid_response(status=0, message="invalid request"):
+    return JsonResponse({"status": status, "message": message})
 
 
 def create_success_response():
     return JsonResponse({"status": 1, "message": "success"})
+
+
+def create_success_data_response(data):
+    return JsonResponse({"status": 1, "message": "success", "data": data})
+
+
+def create_login_success_data_response(data):
+    return JsonResponse({"status": 1, "message": data})
+
+
+class ExceptionHandler(object):
+
+    def __init__(self, func):
+        self.func = func
+
+    def __get__(self, obj, type=None):
+        return self.__class__(self.func.__get__(obj, type))
+
+    def __call__(self, *args, **kwargs):
+        try:
+            ret_val = self.func(*args, **kwargs)
+        except:
+            logger.exception("global exception handle in view:")
+            return create_invalid_response()
+        return ret_val

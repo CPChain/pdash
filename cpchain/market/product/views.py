@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from cpchain.market.account.models import WalletUser
-from cpchain.market.account.permissions import IsOwnerOrReadOnly, AlreadyLoginUser
+from cpchain.market.account.permissions import AlreadyLoginUser
 from cpchain.market.comment.models import SummaryComment
 from cpchain.market.market.utils import *
 from cpchain.market.product.models import WalletMsgSequence
@@ -23,14 +23,11 @@ class ProductPublishAPIViewSet(APIView):
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = (IsOwnerOrReadOnly,)
+    permission_classes = (AlreadyLoginUser,)
 
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         logger.info("public_key:%s" % public_key)
-
-        if public_key is None:
-            return create_invalid_response()
 
         data = request.data
         try:
@@ -78,16 +75,10 @@ class ProductPublishAPIViewSet(APIView):
         data['seq'] = msg_seq.seq
 
         serializer = ProductSerializer(data=data)
-
-        try:
-            if serializer.is_valid(raise_exception=True):
-                msg_seq.save()
-                serializer.save(owner=WalletUser.objects.get(public_key=public_key))
-                return JsonResponse({'status': 1, 'message': 'success', 'data': {'market_hash': product.msg_hash}})
-        except Exception:
-            logger.exception("save product error")
-
-        return create_invalid_response()
+        if serializer.is_valid(raise_exception=True):
+            msg_seq.save()
+            serializer.save(owner=WalletUser.objects.get(public_key=public_key))
+            return create_success_data_response({'market_hash': product.msg_hash})
 
 
 class MyProductSearchAPIViewSet(APIView):
@@ -225,13 +216,13 @@ class ProductSearchBySellerAPIView(APIView):
 #         return pg.get_paginated_response(serializer.data)
 
 
-class BaseProductStatusAPIViewSet(APIView):
+class BaseProductStatusAPIView(APIView):
     """
     update product status to normal
     """
     queryset = Product.objects.all()
     serializer_class = ProductUpdateSerializer
-    permission_classes = (IsOwnerOrReadOnly,)
+    permission_classes = (AlreadyLoginUser,)
 
     def post(self, request):
         raise BaseException("not implemented")
@@ -239,8 +230,7 @@ class BaseProductStatusAPIViewSet(APIView):
     def update_product_status(self, request, status):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         logger.debug("public_key:%s status:%s" % (public_key, status))
-        if public_key is None:
-            return create_invalid_response()
+
         try:
             product = Product.objects.get(owner_address=public_key, msg_hash=request.data['market_hash'])
         except Product.DoesNotExist:
@@ -256,26 +246,22 @@ class BaseProductStatusAPIViewSet(APIView):
         return response
 
 
-class ProductShowAPIViewSet(BaseProductStatusAPIViewSet):
+class ProductShowAPIView(BaseProductStatusAPIView):
     """
     update product status to normal
     """
-    queryset = Product.objects.all()
-    serializer_class = ProductUpdateSerializer
-    permission_classes = (IsOwnerOrReadOnly,)
 
+    @ExceptionHandler
     def post(self, request):
         return self.update_product_status(request, "0")
 
 
-class ProductHideAPIViewSet(BaseProductStatusAPIViewSet):
+class ProductHideAPIView(BaseProductStatusAPIView):
     """
     update product status to hide
     """
-    queryset = Product.objects.all()
-    serializer_class = ProductUpdateSerializer
-    permission_classes = (IsOwnerOrReadOnly,)
 
+    @ExceptionHandler
     def post(self, request):
         return self.update_product_status(request, "1")
 
@@ -286,16 +272,11 @@ class ProductViewSet(viewsets.ModelViewSet):
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = (IsOwnerOrReadOnly,)
+    permission_classes = (AlreadyLoginUser,)
 
     def perform_create(self, serializer):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         logger.debug("create product for public_key:%s" % public_key)
-
-        if public_key is None:
-            logger.debug('public_key is none,refuse to save product')
-            return create_invalid_response()
-
         serializer.save(owner=WalletUser.objects.get(public_key=public_key))
 
     def list(self, request, *args, **kwargs):
@@ -322,6 +303,7 @@ class RecommendProductsAPIView(APIView):
     serializer_class = RecommendProductSerializer
     permission_classes = (AllowAny,)
 
+    @ExceptionHandler
     def get(self, request):
         # FIXME query current user following tags,query top 10 products with tags
         queryset = Product.objects.filter(status=0)[0:10]
@@ -342,7 +324,7 @@ class RecommendProductsAPIView(APIView):
             p['sales_number'] = 0 if not sale_status else sale_status.sales_number
             product_list.append(p)
 
-        return JsonResponse({'status': 1, 'message': 'success', 'data': product_list})
+        return create_success_data_response(product_list)
 
 
 class YouMayLikeProductsAPIView(APIView):
@@ -352,7 +334,9 @@ class YouMayLikeProductsAPIView(APIView):
     queryset = Product.objects.all()
     serializer_class = RecommendProductSerializer
     permission_classes = (AlreadyLoginUser,)
+    # permission_classes = (AllowAny,)
 
+    @ExceptionHandler
     def get(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         token = self.request.META.get('MARKET-TOKEN')
@@ -376,8 +360,7 @@ class YouMayLikeProductsAPIView(APIView):
             p['avg_rating'] = 1 if not comment else comment.avg_rating
             p['sales_number'] = 0 if not sale_status else sale_status.sales_number
             product_list.append(p)
-
-        return JsonResponse({'status': 1, 'message': 'success', 'data': product_list})
+        return create_success_data_response(product_list)
 
 
 class ProductSalesQuantityAddAPIView(APIView):
@@ -388,6 +371,7 @@ class ProductSalesQuantityAddAPIView(APIView):
     serializer_class = ProductSalesQuantitySerializer
     permission_classes = (AlreadyLoginUser,)
 
+    @ExceptionHandler
     def post(self, request):
         return self.increase_product_sales_quantity(request)
 
@@ -406,7 +390,7 @@ class ProductSalesQuantityAddAPIView(APIView):
             obj = serializer.update(obj, request.data)
 
         logger.debug("obj.quantity:%s" % obj.quantity)
-        return JsonResponse({'status': 1, 'message': 'success', 'data': obj.quantity})
+        return create_success_data_response(obj.quantity)
 
 
 class ProductTagSubscribeAPIView(APIView):
@@ -416,6 +400,7 @@ class ProductTagSubscribeAPIView(APIView):
     queryset = MyTag.objects.all()
     permission_classes = (AlreadyLoginUser,)
 
+    @ExceptionHandler
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         tag = request.data['tag']
@@ -432,6 +417,7 @@ class ProductTagUnsubscribeAPIView(APIView):
     queryset = MyTag.objects.all()
     permission_classes = (AlreadyLoginUser,)
 
+    @ExceptionHandler
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         tag = request.data['tag']
@@ -448,6 +434,7 @@ class MyTagSearchAPIView(APIView):
     serializer_class = MyTagSerializer
     permission_classes = (AlreadyLoginUser,)
 
+    @ExceptionHandler
     def get(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         queryset = MyTag.objects.filter(public_key=public_key)
@@ -464,8 +451,8 @@ class MyTaggedProductSearchAPIView(APIView):
     serializer_class = ProductSerializer
     permission_classes = (AlreadyLoginUser,)
 
+    @ExceptionHandler
     def get(self, request):
-        # TODO ================================================
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         tag_list = MyTag.objects.filter(public_key=public_key)
         logger.debug('taglist:%s' % tag_list)
@@ -488,6 +475,7 @@ class ProductSellerSubscribeAPIView(APIView):
     queryset = MySeller.objects.all()
     permission_classes = (AlreadyLoginUser,)
 
+    @ExceptionHandler
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         seller_public_key = request.data['seller_public_key']
@@ -505,6 +493,7 @@ class ProductSellerUnsubscribeAPIView(APIView):
     queryset = MySeller.objects.all()
     permission_classes = (AlreadyLoginUser,)
 
+    @ExceptionHandler
     def post(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         seller_public_key = request.data['seller_public_key']
@@ -521,6 +510,7 @@ class MyFollowingSellerSearchAPIView(APIView):
     serializer_class = MySellerSerializer
     permission_classes = (AlreadyLoginUser,)
 
+    @ExceptionHandler
     def get(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         queryset = MySeller.objects.filter(public_key=public_key)
@@ -537,6 +527,7 @@ class MyFollowingSellerProductSearchAPIView(APIView):
     serializer_class = ProductSerializer
     permission_classes = (AlreadyLoginUser,)
 
+    @ExceptionHandler
     def get(self, request):
         public_key = self.request.META.get('HTTP_MARKET_KEY')
         seller_list = MySeller.objects.filter(public_key=public_key)

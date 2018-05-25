@@ -21,14 +21,14 @@ class ProductCommentListAPIView(APIView):
     serializer_class = CommentSerializer
     permission_classes = (AllowAny,)
 
+    @ExceptionHandler
     def get(self, request):
         market_hash = self.request.GET.get('market_hash')
         logger.debug("market_hash is %s" % market_hash)
         queryset = Comment.objects.filter(Q(market_hash=market_hash))
         page_set = PageNumberPagination().paginate_queryset(queryset=queryset, request=request, view=self)
         serializer = CommentSerializer(page_set, many=True)
-
-        return JsonResponse({'status': 1, 'message': 'success', "data": serializer.data})
+        return create_success_data_response(serializer.data)
 
 
 class ProductCommentAddAPIView(APIView):
@@ -39,6 +39,7 @@ class ProductCommentAddAPIView(APIView):
     serializer_class = CommentSerializer
     permission_classes = (AlreadyLoginUser,)
 
+    @ExceptionHandler
     def post(self, request):
         data = request.data
         logger.info("data:%s" % data)
@@ -47,27 +48,22 @@ class ProductCommentAddAPIView(APIView):
         market_hash = data['market_hash']
         logger.info("public_key:%s,market_hash:%s", public_key, market_hash)
 
-        try:
-            user = WalletUser.objects.get(public_key=public_key)
-            logger.info("user:%s" % user)
-            buyer_address = user.address
-            logger.info("buyer_address:%s" % buyer_address)
-            # check if current user(public_key) buy the product(market_hash)
-            exists_transaction = TransactionDetail.objects.filter(
-                buyer_address=buyer_address).filter(
-                market_hash=market_hash).exists()
-            if not exists_transaction:
-                logger.info('no tx,invalid comment request from %s' % public_key)
-                return create_invalid_response()
+        user = WalletUser.objects.get(public_key=public_key)
+        logger.info("user:%s" % user)
+        buyer_address = user.address
+        logger.info("buyer_address:%s" % buyer_address)
+        # check if current user(public_key) buy the product(market_hash)
+        exists_transaction = TransactionDetail.objects.filter(
+            buyer_address=buyer_address).filter(
+            market_hash=market_hash).exists()
+        if not exists_transaction:
+            logger.info('no tx,invalid comment request from %s' % public_key)
+            return create_invalid_response()
 
-            serializer = CommentSerializer(data=data)
-            if serializer.is_valid(raise_exception=True):
-                serializer.save()
-                return JsonResponse({'status': 1, 'message': 'success'})
-        except:
-            logger.exception("save Comment error")
-
-        return create_invalid_response()
+        serializer = CommentSerializer(data=data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return create_success_response()
 
 
 class ProductSummaryCommentSearchAPIView(APIView):
@@ -78,9 +74,10 @@ class ProductSummaryCommentSearchAPIView(APIView):
     serializer_class = SummaryCommentSerializer
     permission_classes = (AllowAny,)
 
+    @ExceptionHandler
     def get(self, request):
         market_hash = self.request.GET.get('market_hash')
         summary_comment, _ = SummaryComment.objects.get_or_create(market_hash=market_hash)
         logger.debug('summary_comment:%s' % summary_comment)
         serializer = SummaryCommentSerializer(summary_comment)
-        return JsonResponse({'status': 1, 'message': 'success', "data": serializer.data})
+        return create_success_data_response(serializer.data)
