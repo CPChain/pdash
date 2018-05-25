@@ -11,6 +11,11 @@ QScrollArea{
 }
 
 QTabWidget::pane {
+  border-top: 2px solid #e5e5e5;
+  top:-1px; 
+} 
+
+QTabWidget::pane {
   border-top: 1px solid #e5e5e5;
   top:-1px; 
 } 
@@ -18,15 +23,26 @@ QTabWidget::pane {
 QTabBar::tab {
   background: #fafafa; 
   border: 1px solid #fafafa; 
-  border-bottom: 1px solid #555555;
+  border-bottom: 2px solid #e5e5e5;
   padding: 15px;
   text-align: left;
+  color: #333333;
+} 
+
+QTabBar::tab:hover {
+  background: #fafafa; 
+  border: 1px solid #fafafa; 
+  border-bottom: 2px solid #e5e5e5;
+  padding: 15px;
+  text-align: left;
+  color: #3984f7;
 } 
 
 QTabBar::tab:selected { 
-  background: #e5e5e5; 
+  background: #fafafa; 
   margin-bottom: -1px; 
-  border-bottom: 4px solid #555555;
+  color: #3173d8;
+  border-bottom: 4px solid #3173d8;
 }
 
 QScrollArea.Product {

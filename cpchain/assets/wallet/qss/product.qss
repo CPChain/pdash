@@ -13,8 +13,9 @@ QFrame#search_frame {
     outline: none;
 }
 
-QLabel#total_sale_label {
-    color: #555555;
+QLabel#total_sale_label, QLabel#time_label{
+    color: #777777;
+    font: 12px;
 }
 
 QFrame.HorizontalLine {
@@ -22,9 +23,9 @@ QFrame.HorizontalLine {
 }
 
 QLabel#price_label{
-    color: #006bcf;
+    color: #0073df;
     /*font-family: "Arieal Regular";*/
-    font: bold 14px;
+    font: 15px;
     /*background: #006bcf;*/
 }
 
@@ -35,10 +36,10 @@ QPushButton#title_btn {
     max-height: 1000px; 
     border: none;
     outline: none;
-    color: #2c2c2c;
+    color: #222222;
     background: none;
     text-align: left;
-    font: bold 14px;
+    font: 15px;
 }
 
 QPushButton#seller_btn {
@@ -48,9 +49,11 @@ QPushButton#seller_btn {
     max-height: 200px; 
     border: none;
     outline: none;
-    color: #006bcf;
+    color: #0073df;
     background: none;
+    font: 12px;
 }
+
 
 /* Specifying QSS for each tag*/
 QPushButton[t_value = "1"] {
@@ -76,3 +79,4 @@ QPushButton[t_value = "1"]:pressed{
     background-color: #c8d5e9;
     border: 1px solid #c8d5e9;
 }
+
