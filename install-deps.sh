@@ -12,6 +12,7 @@ toml==0.9.4
 eth-keyfile
 cryptography
 web3
+apscheduler
 "
 
 chain_pkgs="
