@@ -113,13 +113,20 @@ class SSLServerProtocol(NetstringReceiver):
                     # self.proxy_claim_relay()
                     return self.proxy_reply_success(trade)
 
+
+                def download_ipfs_file():
+                    host, port = ipfs.gateway.strip().split(':')
+                    file_hash = trade.file_hash
+                    ipfs_storage = IPFSStorage()
+                    return ipfs_storage.connect(host, port) and \
+                            ipfs_storage.download_file(
+                                file_hash, server_root)
+
                 d = threads.deferToThread(
-                    self.get_ipfs_file,
-                    ipfs.gateway,
-                    trade.file_hash
+                    download_ipfs_file
                     )
 
-                d.addCallback(self.ipfs_callback, trade)
+                d.addCallback(self.file_download_finished, trade)
 
             elif storage.type == Message.Storage.S3:
                 s3 = storage.s3
@@ -148,7 +155,7 @@ class SSLServerProtocol(NetstringReceiver):
                     download_s3_file
                 )
 
-                d.addCallback(self.ipfs_callback, trade)
+                d.addCallback(self.file_download_finished, trade)
 
         elif message.type == Message.BUYER_DATA:
             data = message.buyer_data
@@ -177,6 +184,15 @@ class SSLServerProtocol(NetstringReceiver):
         # tx_hash = proxy_trans.claim_relay(self.trade.order_id, deliver_hash)
         # return tx_hash
 
+    def file_download_finished(self, success, trade):
+        if success:
+            self.proxy_db.insert(trade)
+            self.proxy_reply_success(trade)
+            # self.proxy_claim_relay()
+        else:
+            error = "failed to download file"
+            self.proxy_reply_error(error)
+
     def proxy_reply_success(self, trade):
         message = Message()
         message.type = Message.PROXY_REPLY
@@ -200,21 +216,6 @@ class SSLServerProtocol(NetstringReceiver):
         string = message.SerializeToString()
         self.sendString(string)
         self.transport.loseConnection()
-
-    def get_ipfs_file(self, ipfs_gateway, file_hash):
-        host, port = ipfs_gateway.strip().split(':')
-        ipfs = IPFSStorage()
-        return ipfs.connect(host, port) and \
-                ipfs.download_file(file_hash, server_root)
-
-    def ipfs_callback(self, success, trade):
-        if success:
-            self.proxy_db.insert(trade)
-            self.proxy_reply_success(trade)
-            # self.proxy_claim_relay()
-        else:
-            error = "failed to get file from ipfs"
-            self.proxy_reply_error(error)
 
     def connectionLost(self, reason):
         self.factory.numConnections -= 1
