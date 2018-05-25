@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, 
                              QWidget, QLineEdit, QSpacerItem, QSizePolicy, QTableWidget, QFormLayout, QComboBox, QTextEdit,
                              QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
 from PyQt5.QtCore import Qt, QSize, QPoint, pyqtSignal
-from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont, QPainter
+from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont, QPainter, QFontDatabase
 
 from cpchain import config, root_dir
 from cpchain.wallet.wallet import Wallet
@@ -2400,8 +2400,6 @@ class HorizontalLine(QFrame):
         self.setFrameShadow(QFrame.Plain)
         self.setLineWidth(self.wid)
 
-
-
 class Product(QScrollArea):
     def __init__(self, parent=None, item={}, mode=""):
         super().__init__(parent)
@@ -2413,6 +2411,12 @@ class Product(QScrollArea):
 
     def init_ui(self):
         #self.frame.setMinimumWidth(500)
+
+        self.path = osp.join(root_dir, "cpchain/assets/wallet/font", "ARLRDBD.TTF")
+        self.font_regular = QFontDatabase.addApplicationFont(str(self.path))
+        self.font_givenname = QFontDatabase.applicationFontFamilies(self.font_regular)[0]
+        self.setFont(QFont(self.font_givenname))
+
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumHeight(200)
         self.setMaximumHeight(500)
@@ -3043,11 +3047,10 @@ class SideBar(QScrollArea):
         # needed
         self.parent = parent
         self.content_tabs = parent.content_tabs
-
         self.init_ui()
 
-
     def init_ui(self):
+
         self.setObjectName("sidebar")
         self.setMaximumWidth(180)
 
@@ -3181,6 +3184,8 @@ class Header(QFrame):
 
         def search_act(self):
             # main_wnd.content_tabs.addTab(SearchProductTab(content_tabs), "")
+            self.keyword = str(self.text())
+            main_wnd.search_tab.present_item(list1,list2)
             wid = self.parent.content_tabs.findChild(QWidget, "search_tab")
             self.parent.content_tabs.setCurrentWidget(wid)
 
@@ -3534,14 +3539,18 @@ class MainWindow(QMainWindow):
         set_layout()
         load_stylesheet(self, "main_window.qss") 
         print("Seting stylesheet of MainWindow......")
-          
+
+        def load_font(self):
+            path = osp.join(root_dir, "cpchain/assets/wallet/font", "ARLRDBD.TTF")
+            self.font_regular = QFontDatabase.addApplicationFont(str(path))
+            self.font_givenname = QFontDatabase.applicationFontFamilies(font_regular)[0]
+            self.setFont(QFont(font_givenname))
+
         self.show()
 
 
     def closeEvent(self, event):
         self.reactor.stop()
-
-
 
 def _handle_keyboard_interrupt():
     def sigint_handler(*args):
@@ -3560,6 +3569,12 @@ def _handle_keyboard_interrupt():
     timer.timeout.connect(lambda: None)
 
 def initialize_system():
+    
+    path = osp.join(root_dir, "cpchain/assets/wallet/font", "liberation.ttf")
+    font_regular = QFontDatabase.addApplicationFont(str(path))
+    font_givenname = QFontDatabase.applicationFontFamilies(font_regular)[0]
+    QApplication.setFont(QFont(font_givenname))
+
     def initialize_net():
         # Temporily modified for easy test by @hyiwr
         print("Initializing network......")

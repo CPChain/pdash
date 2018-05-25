@@ -14,3 +14,7 @@ QScrollArea{
     background: #fafafa;
 }
 
+QApplication{
+	font-family: "font_givenname";
+}
+
