@@ -711,6 +711,7 @@ class SearchProductTab(QScrollArea):
         self.setObjectName("search_tab")
         self.init_ui()
 
+
     def init_ui(self):
 
         self.frame = QFrame()
@@ -726,16 +727,6 @@ class SearchProductTab(QScrollArea):
         self.item_lists = []
         self.promo_lists = []
 
-        def query_product():
-            if self.key_words[0]=='[' and self.key_words[-1]==']':
-                tag = self.key_words[1:-1]
-                d = wallet.market_client.query_by_tag(tag)
-            else:
-                d = wallet.market_client.query_product(self.key_words)
-            def get_item(item_list):
-                self.item_lists = item_list
-            d.addCallback(get_item)
-        query_product()
 
         # TODO: Search for products by self.key_words and return them from the backend
         def get_products(item={}, key_words=""):
@@ -903,6 +894,7 @@ class SearchProductTab(QScrollArea):
         # TODO: Loading stylesheet
         logger.debug("loading stylesheet...")
         load_stylesheet(self, "searchproduct.qss")
+
 
 #class PersonalHomePageTab(QScrollArea)
 
@@ -2423,7 +2415,6 @@ class Product(QScrollArea):
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumHeight(200)
         self.setMaximumHeight(500)
-        self.title_btn = QPushButton("Medicine big data from Mayo Clinic")
         self.setMinimumHeight(120)
         self.setMaximumHeight(120)
         self.title_btn = QPushButton("Medicine big data from Mayo Clinic")
@@ -2530,7 +2521,6 @@ class Product2(QScrollArea):
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumHeight(200)
         self.setMaximumHeight(500)
-        self.title_btn = QPushButton(self.item["title"])
         self.setMinimumHeight(120)
         self.setMaximumHeight(120)
         self.title_btn = QPushButton("Medicine big data from Mayo Clinic")
