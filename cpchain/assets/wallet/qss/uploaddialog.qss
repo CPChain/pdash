@@ -1,3 +1,7 @@
+QDialog{
+    background: #fafafa;
+}
+
 QPushButton#file_choose_btn{
     padding-left: 14px;
     padding-right: 14px;

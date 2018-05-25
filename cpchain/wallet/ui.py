@@ -612,6 +612,7 @@ class ProductDetailTab(QScrollArea):
 
             self.product_layout = QGridLayout(self)
             self.product_layout.setSpacing(10)
+            self.product_layout.setContentsMargins(30, 50, 10, 10)
 
             self.product_layout.addWidget(self.title_label, 1, 1, 1, 10)
             self.product_layout.addWidget(self.seller_avatar, 2, 1, 1, 1)
@@ -662,9 +663,10 @@ class ProductDetailTab(QScrollArea):
             self.product_layout.addLayout(self.comment_layout, 14, 1, 3, 10)    
 
             self.promotion_layout = QVBoxLayout(self)
+            self.promotion_layout.setContentsMargins(20, 25, 10, 10)
             self.promotion_layout.addSpacing(0)
             self.promotion_layout.addWidget(self.may_like_label)
-            self.promotion_layout.addSpacing(0)
+            self.promotion_layout.addSpacing(5)
             self.promotion_layout.addWidget(self.hline_2)
             self.promotion_layout.addSpacing(0)
             for i in range(self.search_promo_num):
@@ -825,6 +827,7 @@ class SearchProductTab(QScrollArea):
         def set_layout():
             self.main_layout = main_layout = QHBoxLayout(self)
             main_layout.addSpacing(0)
+            main_layout.setContentsMargins(10, 20, 10, 10)
 
             self.stat_layout = QHBoxLayout()
             self.stat_layout.addSpacing(0)
@@ -862,6 +865,7 @@ class SearchProductTab(QScrollArea):
             self.sort_layout.addWidget(self.region_label)
             self.sort_layout.addSpacing(0)
             self.sort_layout.addWidget(self.region_btn)
+            self.sort_layout.addStretch(1)
 
             self.product_layout.addLayout(self.stat_layout)
             self.product_layout.addSpacing(0)
@@ -2419,6 +2423,7 @@ class Product(QScrollArea):
         self.setMaximumHeight(120)
         self.title_btn = QPushButton("Medicine big data from Mayo Clinic")
         self.title_btn.setObjectName("title_btn")
+        # self.title_btn.setWordWrap(True)
         self.title_btn.clicked.connect(self.title_clicked_act)
         self.title_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
@@ -2433,7 +2438,7 @@ class Product(QScrollArea):
         self.total_sale_label.setObjectName("total_sale_label")
         self.price_label = QLabel("$18")
         self.price_label.setObjectName("price_label")
-        # self.price_label.setFont(QFont(15, QFont.Bold))
+        #self.price_label.setFont(QFont(15, QFont.Bold))
 
         self.gap_line = HorizontalLine(self, 2)
         self.gap_line.setObjectName("gap_line")
@@ -2455,6 +2460,7 @@ class Product(QScrollArea):
 
         def setlayout():
             self.main_layout = main_layout = QVBoxLayout(self)
+            main_layout.setContentsMargins(0, 0, 0, 0)
             main_layout.addSpacing(0)
             main_layout.addWidget(self.title_btn)
             main_layout.addSpacing(5)
@@ -2469,8 +2475,7 @@ class Product(QScrollArea):
                 self.sales_layout.addStretch(2)
                 self.main_layout.addLayout(self.sales_layout)
                 main_layout.addSpacing(10)
-
-            self.main_layout.addWidget(self.price_label)
+                self.main_layout.addWidget(self.price_label)
 
             self.tag_layout = QHBoxLayout(self)
             self.tag_layout.addSpacing(1)
@@ -2655,7 +2660,7 @@ class PopularTab(QScrollArea):
 
         self.hot_label = QLabel("Hot Industry")
         self.hot_label.setObjectName("hot_label")
-        self.hot_label.setFont(QFont("Arial", 13))
+        # self.hot_label.setFont(QFont("Arial", 13))
         self.hot_label.setMinimumHeight(2)
         self.hot_label.setMaximumHeight(25)
 
@@ -2695,7 +2700,7 @@ class PopularTab(QScrollArea):
 
         self.recom_label = QLabel("Recommended")
         self.recom_label.setObjectName("recom_label")
-        self.recom_label.setFont(QFont("Arial", 13, QFont.Light))
+        # self.recom_label.setFont(QFont("Arial", 13, QFont.Light))
         self.recom_label.setMaximumHeight(25)
 
         self.promo_label = QLabel(self)
@@ -2725,7 +2730,7 @@ class PopularTab(QScrollArea):
         def set_layout():
             self.main_layout = QVBoxLayout(self)
             self.main_layout.setSpacing(0)
-            #self.main_layout.setContentsMargins(0, 0, 0, 0)
+            self.main_layout.setContentsMargins(31, 20, 31, 10)
 
             self.banner_layout = QHBoxLayout(self)
             self.banner_layout.addWidget(self.banner_label)
@@ -3178,6 +3183,7 @@ class SideBar(QScrollArea):
             self.trending_list.setMaximumHeight(100)
             self.trending_list.addItem(QListWidgetItem(get_icon("pop.png"), "Popular"))
             self.trending_list.addItem(QListWidgetItem(get_icon("following.png"), "Following"))
+            # self.trending_list.itemSelectionChanged.connect(self.handle_list1())
 
             self.mine_list = QListWidget()
             self.mine_list.setMaximumHeight(100)
@@ -3201,6 +3207,8 @@ class SideBar(QScrollArea):
                 }
                 wid = self.content_tabs.findChild(QWidget, item_to_tab_name[item.text()])
                 self.content_tabs.setCurrentWidget(wid)
+                self.mine_list.setCurrentRow(-1);
+                self.treasure_list.setCurrentRow(-1);
             self.trending_list.itemPressed.connect(trending_list_clicked)
 
             def mine_list_clicked(item):
@@ -3210,6 +3218,8 @@ class SideBar(QScrollArea):
                 }
                 wid = self.content_tabs.findChild(QWidget, item_to_tab_name[item.text()])
                 self.content_tabs.setCurrentWidget(wid)
+                self.trending_list.setCurrentRow(-1);
+                self.treasure_list.setCurrentRow(-1);
             self.mine_list.itemPressed.connect(mine_list_clicked)
 
             def treasure_list_clicked(item):
@@ -3220,6 +3230,8 @@ class SideBar(QScrollArea):
                 }
                 wid = self.content_tabs.findChild(QWidget, item_to_tab_name[item.text()])
                 self.content_tabs.setCurrentWidget(wid)
+                self.trending_list.setCurrentRow(-1);
+                self.mine_list.setCurrentRow(-1);
             self.treasure_list.itemPressed.connect(treasure_list_clicked)
 
         bind_slots()
@@ -3246,6 +3258,8 @@ class SideBar(QScrollArea):
         print("Loading stylesheet of Sidebar")
 
 
+
+
 class Header(QFrame):
     class SearchBar(QLineEdit):
         def __init__(self, parent=None):
@@ -3264,15 +3278,6 @@ class Header(QFrame):
             search_btn.setCursor(QCursor(Qt.PointingHandCursor))
             self.search_btn.clicked.connect(self.search_act)
 
-            def search_product():
-                self.key_words = str(self.text())
-                if bool(self.key_words):
-                    self.search_product_tab = SearchProductTab(self.parent.parent.content_tabs, self.key_words)
-                    self.parent.parent.content_tabs.addTab(self.search_product_tab, "")
-                    self.cur_index = self.parent.parent.content_tabs.count() - 1
-                    logger.debug(self.cur_index)
-                    self.parent.parent.content_tabs.setCurrentIndex(self.cur_index)
-
             def set_layout():
                 main_layout = QHBoxLayout()
                 main_layout.addWidget(search_btn)
@@ -3282,8 +3287,10 @@ class Header(QFrame):
             set_layout()
 
         def search_act(self):
+            # main_wnd.content_tabs.addTab(SearchProductTab(content_tabs), "")
             wid = self.parent.content_tabs.findChild(QWidget, "search_tab")
             self.parent.content_tabs.setCurrentWidget(wid)
+
 
     class LoginDialog(QDialog):
         def __init__(self, parent=None):
@@ -3419,15 +3426,15 @@ class Header(QFrame):
             self.profile_btn = QPushButton("", self)
             self.profile_btn.setObjectName("profile_btn")
 
-            self.minimize_btn = QPushButton("_", self)
+            self.minimize_btn = QPushButton("", self)
             self.minimize_btn.setObjectName("minimize_btn")
-            self.minimize_btn.setFixedSize(10, 10)
+            self.minimize_btn.setFixedSize(15, 15)
             self.minimize_btn.clicked.connect(self.parent.showMinimized)
 
 
-            self.maximize_btn = QPushButton("-", self)
-            self.maximize_btn.setObjectName("maxmize_btn")
-            self.maximize_btn.setFixedSize(10, 10)
+            self.maximize_btn = QPushButton("", self)
+            self.maximize_btn.setObjectName("maximize_btn")
+            self.maximize_btn.setFixedSize(15, 15)
             def toggle_maximization():
                 state = Qt.WindowFullScreen | Qt.WindowMaximized
                 if state & self.parent.windowState():
@@ -3436,9 +3443,9 @@ class Header(QFrame):
                     self.parent.showMaximized()
             self.maximize_btn.clicked.connect(toggle_maximization)
 
-            self.close_btn = QPushButton("x", self)
+            self.close_btn = QPushButton("", self)
             self.close_btn.setObjectName("close_btn")
-            self.close_btn.setFixedSize(10, 10)
+            self.close_btn.setFixedSize(15, 15)
             self.close_btn.clicked.connect(self.parent.close)
 
             def create_popmenu():
@@ -3568,7 +3575,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('CPChain Wallet')
         self.setObjectName("main_window")
         # no borders.  we make our own header panel.
-        #self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setWindowFlags(Qt.FramelessWindowHint)
 
         def set_geometry():
             self.resize(1002, 710)  # resize before centering.
@@ -3588,7 +3595,7 @@ class MainWindow(QMainWindow):
             content_tabs.addTab(CloudTab(content_tabs), "")
             content_tabs.addTab(FollowingTab(content_tabs), "")
             content_tabs.addTab(SellTab(content_tabs), "")
-            # content_tabs.addTab(ProductInfoEdit(content_tabs), "")
+            #content_tabs.addTab(ProductInfoEdit(content_tabs), "")
             #content_tabs.addTab(PurchasedDownloadedTab(content_tabs), "") 
             #content_tabs.addTab(PurchasedDownloadingTab(content_tabs), "")
             content_tabs.addTab(PersonalProfileTab(content_tabs), "")
@@ -3659,8 +3666,6 @@ def _handle_keyboard_interrupt():
     timer.start(300) # run each 300ms
     timer.timeout.connect(lambda: None)
 
-
-    
 def initialize_system():
     def initialize_net():
         # Temporily modified for easy test by @hyiwr
