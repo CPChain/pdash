@@ -21,6 +21,7 @@ from cpchain.wallet import fs
 from cpchain.crypto import ECCipher, RSACipher, Encoder
 
 from twisted.internet import threads, defer, reactor
+from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import deferToThread
 from twisted.internet.task import LoopingCall
 
@@ -711,6 +712,19 @@ class SearchProductTab(QScrollArea):
         self.key_words = key_words
         #self.setObjectName("cart_tab")
         self.setObjectName("search_tab")
+        self.item_lists = []
+        self.promo_lists = []
+        # logger.debug('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
+        # self.init_ui()
+
+
+    def update_item(self, item_list, promo_list):
+        for i in range(self.search_item_num):
+            self.item_lists.append(Product2(self, item_list[i]))
+        for i in range(self.search_promo_num):
+            self.promo_lists.append(Product2(self, promo_list[i]))
+        logger.debug('item list: %s', self.item_lists)
+        logger.debug('promo list: %s', self.promo_lists)
         self.init_ui()
 
 
@@ -726,23 +740,20 @@ class SearchProductTab(QScrollArea):
         self.search_item_num = 4
         self.search_promo_num = 4
 
-        self.item_lists = []
-        self.promo_lists = []
 
-
-        # TODO: Search for products by self.key_words and return them from the backend
-        def get_products(item={}, key_words=""):
-            for i in range(self.search_item_num):
-                self.item_lists.append(Product(self, item))
-
-        self.item = {"title": "Medical data from NHIS", "none": "none"}
-        get_products(self.item)
-
-        # TODO: Get promotion products based on products returned above or the keywords provided
-        def get_promotion(item={}, key_words=""):
-            for i in range(self.search_promo_num):
-                self.promo_lists.append(Product(self, item, "simple"))
-        get_promotion(self.item)
+        # # TODO: Search for products by self.key_words and return them from the backend
+        # def get_products(item={}, key_words=""):
+        #     for i in range(self.search_item_num):
+        #         self.item_lists.append(Product(self, item))
+        #
+        # self.item = {"title": "Medical data from NHIS", "none": "none"}
+        # get_products(self.item)
+        #
+        # # TODO: Get promotion products based on products returned above or the keywords provided
+        # def get_promotion(item={}, key_words=""):
+        #     for i in range(self.search_promo_num):
+        #         self.promo_lists.append(Product(self, item, "simple"))
+        # get_promotion(self.item)
 
 
 
@@ -2708,23 +2719,22 @@ class PopularTab(QScrollArea):
         self.item = {"title": "Medical data from NHIS", "none": "none"}
 
         # TODO: Get promotion products based on products returned above or the keywords provided
-        
-        def get_promotion(item={}, key_words=""):
-            for i in range(self.promo_num_max):
-                self.promo_lists.append(Product(self, item, "simple"))
-        get_promotion(self.item)
-
 
         d_promotion = wallet.market_client.query_promotion()
+        def get_promotion(products):
+            for i in range(self.promo_num_max):
+                self.promo_lists.append(Product2(parent=self, item=products[i], mode="simple"))
         d_promotion.addCallback(get_promotion)
 
+
+        # d_promotion = wallet.market_client.query_promotion()
+        # d_promotion.addCallback(get_promotion)
+        d_products = wallet.market_client.query_recommend_product()
         def get_items(products):
             print("Getting items from backend......")
             for i in range(self.item_num_max):
-                self.item_lists.append(Product(self, item=products[i]))
+                self.item_lists.append(Product2(parent=self, item=products[i]))
             set_layout()
-
-        d_products = wallet.market_client.query_recommend_product()
         d_products.addCallback(get_items)
 
         def set_layout():
@@ -2838,15 +2848,15 @@ class CloudTab(QScrollArea):
         print("Updating file list......")
         self.file_list = fs.get_file_list()
         logger.debug(len(self.file_list))
+        self.file_table.clearContents()
         self.row_number = len(self.file_list)
         self.file_table.setRowCount(self.row_number)
-        #self.file_table.clearContents()
         for cur_row in range(self.row_number):
             logger.debug('current file id: %s', self.file_list[cur_row].id)
             logger.debug('current file name: %s', self.file_list[cur_row].name)
-            logger.debug('current file name: %s', str(self.file_list[cur_row].size))          
-            logger.debug('current file name: %s', self.file_list[cur_row].remote_type)
-            logger.debug('current file name: %s', str(self.file_list[cur_row].is_published))           
+            logger.debug('current file size: %s', str(self.file_list[cur_row].size))
+            logger.debug('current file remote type: %s', self.file_list[cur_row].remote_type)
+            logger.debug('current file publish: %s', str(self.file_list[cur_row].is_published))
 
             print(str(cur_row) + " row")
             checkbox_item = QTableWidgetItem()
@@ -2857,7 +2867,6 @@ class CloudTab(QScrollArea):
             self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row].name))
             self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(self.file_list[cur_row].size)))
             self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row].remote_type))
-            #self.file_table.item(cur_row, 3).setText(self.file_list[cur_row].remote_type)
             self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(self.file_list[cur_row].is_published)))
             self.file_table.setItem(cur_row, 5, QTableWidgetItem(str(self.file_list[cur_row].id)))
 
@@ -2893,9 +2902,9 @@ class CloudTab(QScrollArea):
 
 
         def create_file_table():
-            self.file_table = file_table = TableWidget(self) 
+            self.file_table = TableWidget(self)
             def right_menu():
-                self.cloud_right_menu = QMenu(file_table)
+                self.cloud_right_menu = QMenu(self.file_table)
                 self.cloud_delete_act = QAction('Delete', self)
                 self.cloud_publish_act = QAction('Publish', self)
 
@@ -2907,28 +2916,28 @@ class CloudTab(QScrollArea):
 
                 self.cloud_right_menu.exec_(QCursor.pos())
 
-            file_table.horizontalHeader().setStretchLastSection(True)
-            file_table.verticalHeader().setVisible(False)
-            file_table.setShowGrid(False)
-            file_table.setAlternatingRowColors(True)
-            file_table.resizeColumnsToContents()  
-            file_table.resizeRowsToContents()
-            file_table.setFocusPolicy(Qt.NoFocus) 
+            self.file_table.horizontalHeader().setStretchLastSection(True)
+            self.file_table.verticalHeader().setVisible(False)
+            self.file_table.setShowGrid(False)
+            self.file_table.setAlternatingRowColors(True)
+            self.file_table.resizeColumnsToContents()
+            self.file_table.resizeRowsToContents()
+            self.file_table.setFocusPolicy(Qt.NoFocus)
             # do not highlight (bold-ize) the header
-            file_table.horizontalHeader().setHighlightSections(False)
-            file_table.setColumnCount(6)
-            file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
-            file_table.set_right_menu(right_menu)
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Size', 'Remote Type', 'Published', 'ID'])
-            file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-            file_table.setSortingEnabled(True)
+            self.file_table.horizontalHeader().setHighlightSections(False)
+            self.file_table.setColumnCount(6)
+            self.file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+            self.file_table.set_right_menu(right_menu)
+            self.file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Size', 'Remote Type', 'Published', 'ID'])
+            self.file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+            self.file_table.setSortingEnabled(True)
 
             self.file_list = fs.get_file_list()
 
             self.check_record_list = []
             self.checkbox_list = []
             self.row_number = len(self.file_list)
-            file_table.setRowCount(self.row_number)
+            self.file_table.setRowCount(self.row_number)
             print("init cloud table, row num: ")
             print(self.row_number)
 
@@ -3091,8 +3100,8 @@ class CloudTab(QScrollArea):
             print("Uploading files to....")
             self.close()
 
-        def handle_ok_callback(self, file_info):
-            self.parent.update_table()
+        def handle_ok_callback(self, file_id):
+            file_info = fs.get_file_by_id(file_id)
             hashcode = file_info.hashcode
             path = file_info.path
             size = file_info.size
@@ -3110,6 +3119,7 @@ class CloudTab(QScrollArea):
                 else:
                     logger.debug('upload file info to market failed')
             d.addCallback(handle_upload_resp)
+            self.parent.update_table()
 
 
     def handle_upload(self):
@@ -3286,7 +3296,14 @@ class Header(QFrame):
                 self.setLayout(main_layout)
             set_layout()
 
+        @inlineCallbacks
+        def query(self):
+            item = yield wallet.market_client.query_product(str(self.text()))
+            promo = yield wallet.market_client.query_promotion()
+            main_wnd.findChild(QWidget, 'search_tab').update_item(item, promo)
+
         def search_act(self):
+            self.query()
             # main_wnd.content_tabs.addTab(SearchProductTab(content_tabs), "")
             wid = self.parent.content_tabs.findChild(QWidget, "search_tab")
             self.parent.content_tabs.setCurrentWidget(wid)

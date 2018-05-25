@@ -92,12 +92,14 @@ class MarketClient:
     #     if not confirm_info['success']:
     #         print('publish failed')
 
-
     @inlineCallbacks
     def query_product(self, keyword):
+        logger.debug('keywords: %s', keyword)
         header = {'Content-Type': 'application/json'}
-        url = self.url + 'product/v1/es_product/search/?keyword=' + str(keyword)
-        resp = yield treq.get(url=url, headers=header)
+        params = {'search': keyword, 'status': 0}
+        url = self.url + 'product/v1/es_product/search/'
+        logger.debug('query url: %s', url)
+        resp = yield treq.get(url=url, headers=header, params=params)
         confirm_info = yield treq.json_content(resp)
         logger.debug("query product confirm info: %s", confirm_info)
         return confirm_info['results']
@@ -106,7 +108,7 @@ class MarketClient:
     @inlineCallbacks
     def query_by_tag(self, tag):
         url = self.url + 'product/v1/es_product/search/?status=0&tag=' + str(tag)
-        header = header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
                   'Content-Type': 'application/json'}
         resp = yield treq.get(url, headers=header)
         confirm_info = yield treq.json_content(resp)
@@ -167,12 +169,11 @@ class MarketClient:
 
     @inlineCallbacks
     def query_promotion(self):
-        url = self.url + 'main/v1/promotion/list/'
+        url = self.url + 'product/v1/recommend_product/list/'
         header = {'Content-Type': 'application/json', 'MARKET-KEY': self.public_key,
                   'MARKET-TOKEN': self.token}
         resp = yield treq.get(url=url, headers=header)
         confirm_info = yield treq.json_content(resp)
-        print(confirm_info)
         logger.debug("promotion: %s", confirm_info)
         return confirm_info['data']
 
