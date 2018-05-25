@@ -20,7 +20,7 @@ from cpchain.proxy.message import message_sanity_check, \
 sign_message_verify, is_address_from_key
 # from cpchain.crypto import ECCipher
 
-from cpchain.storage import IPFSStorage
+from cpchain.storage import IPFSStorage, S3Storage
 from cpchain.proxy.db import Trade, ProxyDB
 # from cpchain.chain.agents import ProxyAgent
 # from cpchain.chain.utils import default_w3
@@ -122,9 +122,33 @@ class SSLServerProtocol(NetstringReceiver):
                 d.addCallback(self.ipfs_callback, trade)
 
             elif storage.type == Message.Storage.S3:
-                error = "not support S3 storage yet"
-                self.proxy_reply_error(error)
-                return
+                s3 = storage.s3
+                bucket = s3.bucket
+                key = s3.key
+
+                # use order id as the local file name to avoid conflict
+                file_name = str(trade.order_id)
+                trade.file_hash = file_name.encode('utf-8')
+                file_path = os.path.join(server_root, file_name)
+
+                def download_s3_file():
+                    try:
+                        S3Storage().download_file(
+                            fpath=file_path,
+                            remote_fpath=key,
+                            bucket=bucket
+                            )
+                    except:
+                        logger.exception('failed to download S3 file')
+                        return False
+                    else:
+                        return True
+
+                d = threads.deferToThread(
+                    download_s3_file
+                )
+
+                d.addCallback(self.ipfs_callback, trade)
 
         elif message.type == Message.BUYER_DATA:
             data = message.buyer_data
