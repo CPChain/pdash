@@ -461,48 +461,36 @@ class BuyNowDialog(QDialog):
 
 
 class ProductDetailTab(QScrollArea):
-    def __init__(self, parent=None, product_uid="", key_words=""):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
-        self.product_uid = product_uid
-        self.key_words = key_words
+        # self.product_uid = product_uid
+        # self.key_words = key_words
         #self.setObjectName("cart_tab")
         self.setObjectName("productdetail_tab")
+        self.product_info = {}
+        self.search_promo_num = 4
+        self.promo_lists = []
+        # self.init_ui()
+
+    def update_page(self, product_info, promo_list):
+        if len(promo_list) == 0:
+            item = {"title": "Medical data from NHIS", "none": "none"}
+            self.get_promotion(item)
+        else:
+            for i in range(self.search_promo_num):
+                self.promo_lists.append(Product2(self, promo_list[i], 'simple'))
+        self.product_info = product_info
         self.init_ui()
 
+    def get_promotion(self, item={}):
+        for i in range(self.search_promo_num):
+            self.promo_lists.append(Product(self, item, "simple"))
+
     def init_ui(self):
-        # self.frame = QFrame()
-        # self.frame.setObjectName("productdetail_frame")
-        # self.setWidget(self.frame)
-        # self.setWidgetResizable(True)
-        # self.frame.setMinimumWidth(500)
-        # self.frame.setMaximumHeight(800)
-
-        # self.hline_1 = HorizontalLine(self, 2)
-
-        self.search_item_num = 1
-        self.search_promo_num = 4
-
-        self.item_lists = []
-        self.promo_lists = []
-
-        #TODO: Search for products by self.key_words and return them from the backend
-        # def get_products(item={}, key_words=""):
-        #     for i in range(self.search_item_num):
-        #          self.item_lists.append(Product(self, item))
-        # get_products(self.item)
-
-        self.item = {"title": "Medical data from NHIS", "none": "none"}
-        
-
-        # TODO: Get promotion products based on products returned above or the keywords provided
-        def get_promotion(item={}, key_words=""):
-            for i in range(self.search_promo_num):
-                self.promo_lists.append(Product(self, item, "simple"))
-        get_promotion(self.item)
-
         def create_labels():
 
+            # TODO: replace hard code by self.product_info['sales_number']
             self.title_label = title_label = QLabel("Title of the Product Title of the Product Title of the Product Title of the Product Title of the Product")
             self.title_label.setObjectName("title_label")
             self.title_label.setWordWrap(True)
@@ -751,6 +739,9 @@ class SearchProductTab(QScrollArea):
 
 
     def init_ui(self):
+
+        # logger.debug('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
+        # logger.debug('search page you may like: %s', self.promo_lists[0]['tags'])
 
         self.frame = QFrame()
         # self.setWidget(self.frame)
@@ -2507,10 +2498,17 @@ class Product(QScrollArea):
         load_stylesheet(self, "product.qss")
         logger.debug("Loading stylesheet of item")
 
+    @inlineCallbacks
+    def get_product_info(self):
+        product_info = self.item
+        promo_list = yield wallet.market_client.query_promotion()
+        main_wnd.findChild(QWidget, 'productdetail_tab').update_page(product_info, promo_list)
+
     def title_clicked_act(self):
         # wid = self.parent.parent.findChild(QWidget, "productdetail_tab")
         # self.parent.parent.content_tabs.setCurrentWidget(wid)
         print("title_clicked_act")
+        self.get_product_info()
         wid = main_wnd.content_tabs.findChild(QWidget, "productdetail_tab")
         main_wnd.content_tabs.setCurrentWidget(wid)
 
@@ -2546,7 +2544,7 @@ class Product2(QScrollArea):
         self.title_btn.clicked.connect(self.title_clicked_act)
         self.title_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
-        self.seller_btn = QPushButton(self.item['username'])
+        self.seller_btn = QPushButton('barack obama')
         self.seller_btn.setObjectName("seller_btn")
         self.seller_btn.setCursor(QCursor(Qt.PointingHandCursor))
         self.seller_btn.clicked.connect(self.seller_clicked_act)
@@ -2562,7 +2560,7 @@ class Product2(QScrollArea):
         self.gap_line = HorizontalLine(self, 2)
         self.gap_line.setObjectName("gap_line")
 
-        self.tag = self.item['tags'].split(',')
+        self.tag = ['tagxxx', 'tag2', 'tag3']  # self.item['tags']
         self.tag_num = len(self.tag)
         self.tag_btn_list = []
 
@@ -3250,6 +3248,7 @@ class SideBar(QScrollArea):
 
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self.frame)
+            self.main_layout.setContentsMargins(0, 0, 0, 0)
             main_layout.addSpacing(10)
             main_layout.addWidget(self.trend_label)
             main_layout.addSpacing(3)

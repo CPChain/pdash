@@ -96,10 +96,10 @@ class MarketClient:
     def query_product(self, keyword):
         logger.debug('keywords: %s', keyword)
         header = {'Content-Type': 'application/json'}
-        params = {'search': keyword, 'status': 0}
-        url = self.url + 'product/v1/es_product/search/'
+        # params = {'search': keyword, 'status': 0}
+        url = self.url + 'product/v1/es_product/search/?search=' + keyword
         logger.debug('query url: %s', url)
-        resp = yield treq.get(url=url, headers=header, params=params)
+        resp = yield treq.get(url=url, headers=header, persistent=False)
         confirm_info = yield treq.json_content(resp)
         logger.debug("query product confirm info: %s", confirm_info)
         return confirm_info['results']

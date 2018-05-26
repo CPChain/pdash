@@ -53,7 +53,7 @@ class Wallet:
 
 def main():
         wallet = Wallet(reactor)
-        wallet.market_client.update_file_info(12, 'msg')
+        wallet.market_client.query_product('Medicine')
         print('end')
         # file_info = fs.get_file_list()[0]
         # hashcode = file_info.hashcode
