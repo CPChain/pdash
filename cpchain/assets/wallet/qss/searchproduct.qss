@@ -32,7 +32,7 @@ QFrame.HorizontalLine {
     color: #e5e5e5;
 }
 
-QPushButton#time_btn, QPushButton#sales_btn, QPushButton#price_btn{
+/*QPushButton#time_btn, QPushButton#sales_btn, QPushButton#price_btn{
 	border: none;
 	background: none;
 	max-height: 20px;
@@ -40,3 +40,21 @@ QPushButton#time_btn, QPushButton#sales_btn, QPushButton#price_btn{
 	max-width: 20px;
 	min-width: 10px;
 }
+*/
+QPushButton#time_btn, QPushButton#sales_btn, QPushButton#price_btn{
+	border-image: url(${asset_dir}/icons/ranknone.png); 
+	max-width: 5px;
+	min-width: 5px;
+	max-height: 10px;
+	min-height: 10px;
+}
+
+QPushButton#time_btn:hover, QPushButton#sales_btn:hover, QPushButton#price_btn:hover{
+	border-image: url(${asset_dir}/icons/rankdown.png); 
+}
+
+QPushButton#time_btn:pressed, QPushButton#sales_btn:pressed, QPushButton#price_btn:pressed{
+	border-image: url(${asset_dir}/icons/rankup.png); 
+}
+
+

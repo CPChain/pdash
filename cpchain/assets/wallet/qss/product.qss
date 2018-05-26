@@ -1,3 +1,7 @@
+QApplication{
+    font-family: "font_givenname";
+}
+
 QScrollArea.Product {
     background: transparent;
 }

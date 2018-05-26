@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, 
                              QWidget, QLineEdit, QSpacerItem, QSizePolicy, QTableWidget, QFormLayout, QComboBox, QTextEdit,
                              QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
 from PyQt5.QtCore import Qt, QSize, QPoint, pyqtSignal
-from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont, QPainter
+from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont, QPainter, QFontDatabase
 
 from cpchain import config, root_dir
 
@@ -502,9 +502,6 @@ class ProductDetailTab(QScrollArea):
             self.seller_name = QLabel("Christopher Chak")
             self.seller_name.setObjectName("seller_name")
 
-            self.date_label = QLabel("May 4, 2018")
-            self.date_label.setObjectName("date_label")
-
             self.sales_label = QLabel("Sales: 356")
             self.sales_label.setObjectName("sales_label")
 
@@ -609,7 +606,7 @@ class ProductDetailTab(QScrollArea):
             self.product_layout.addWidget(self.title_label, 1, 1, 1, 10)
             self.product_layout.addWidget(self.seller_avatar, 2, 1, 1, 1)
             self.product_layout.addWidget(self.seller_btn, 2, 2, 1, 1) 
-            self.product_layout.addWidget(self.date_label, 2, 3, 1, 2)                      
+            self.product_layout.addWidget(self.data_label, 2, 3, 1, 2)                      
             self.product_layout.addWidget(self.size_label, 4, 1, 1, 2)
             self.product_layout.addWidget(self.sales_label, 4, 3, 1, 2)
 
@@ -1534,6 +1531,8 @@ class PurchasedDownloadedTab(QScrollArea):
         self.purchased_dled_delete_btn = purchased_dled_delete_btn = QPushButton("Delete")
         purchased_dled_delete_btn.setObjectName("purchased_dled_delete_btn")
 
+        self.hline_1 = HorizontalLine(self, 2)
+
         self.purchased_total_orders_label = purchased_total_orders_label = QLabel("Total Orders: ")
         purchased_total_orders_label.setObjectName("purchased_total_orders_label")
         self.total_orders_value = total_orders_value = QLabel("{}".format(self.purchased_total_orders))
@@ -1566,6 +1565,7 @@ class PurchasedDownloadedTab(QScrollArea):
             #file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price', 'Size', 'Order Time'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+            file_table.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
             file_table.setSortingEnabled(True)
 
             #file_list = get_file_list()
@@ -1602,6 +1602,9 @@ class PurchasedDownloadedTab(QScrollArea):
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self)
             main_layout.addSpacing(0)
+            self.main_layout.setContentsMargins(10, 0, 10, 10)
+            self.main_layout.addWidget(self.hline_1)
+            self.main_layout.addSpacing(0)
             self.purchased_dled_upper_layout = QHBoxLayout(self)
             self.purchased_dled_upper_layout.addSpacing(0)
             self.purchased_dled_upper_layout.addWidget(self.purchased_total_orders_label)
@@ -1631,9 +1634,6 @@ class PurchasedDownloadedTab(QScrollArea):
                 self.file_table.removeRow(i)
                 print("Deleting files permanently from the cloud...")
                 self.update_table()
-
-
-
 
 class PurchasedDownloadingTab(QScrollArea):
     def __init__(self, parent = None):
@@ -1697,6 +1697,7 @@ class PurchasedDownloadingTab(QScrollArea):
     
         self.row_number = 100
 
+        self.hline_1 = HorizontalLine(self, 2)
 
         def create_file_table():
             self.file_table = file_table = TableWidget(self) 
@@ -1728,6 +1729,9 @@ class PurchasedDownloadingTab(QScrollArea):
             file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Progress', 'Order Time'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+            file_table.verticalHeader().setDefaultSectionSize(30)
+            file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+            # file_table.setMinimumHeight(30);
             file_table.setSortingEnabled(True)
 
             #file_list = get_file_list()
@@ -1768,19 +1772,22 @@ class PurchasedDownloadingTab(QScrollArea):
 
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self)
-            main_layout.addSpacing(0)
+            self.main_layout.setContentsMargins(10, 0, 10, 10)
+            self.main_layout.addSpacing(0)
+            self.main_layout.addWidget(self.hline_1)
+            self.main_layout.addSpacing(0)
             self.purchased_upper_layout = QHBoxLayout(self)
             self.purchased_upper_layout.addSpacing(0)
             self.purchased_upper_layout.addWidget(self.purchased_total_orders_label)
             self.purchased_upper_layout.addSpacing(0)
             self.purchased_upper_layout.addWidget(self.total_orders_value)
-            self.purchased_upper_layout.addSpacing(10)         
+            self.purchased_upper_layout.addSpacing(10)
             self.purchased_upper_layout.addWidget(self.open_path)
             self.purchased_upper_layout.addStretch(1)
             self.purchased_upper_layout.addWidget(self.purchased_dling_start_btn)
             self.purchased_upper_layout.addSpacing(10)
             self.purchased_upper_layout.addWidget(self.purchased_dling_pause_btn)
-            self.purchased_upper_layout.addSpacing(10)            
+            self.purchased_upper_layout.addSpacing(10)
             self.purchased_upper_layout.addWidget(self.purchased_dling_delete_btn)
             self.purchased_upper_layout.addSpacing(5)
 
@@ -2086,6 +2093,7 @@ class SellTab(QScrollArea):
 
             file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price ($)', 'Order', 'Sales', 'Rating', 'Update Time', 'ID'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+            file_table.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
             file_table.setSortingEnabled(True)
 
             #file_list = get_file_list()
@@ -2407,8 +2415,6 @@ class HorizontalLine(QFrame):
         self.setFrameShadow(QFrame.Plain)
         self.setLineWidth(self.wid)
 
-
-
 class Product(QScrollArea):
     def __init__(self, parent=None, item={}, mode=""):
         super().__init__(parent)
@@ -2420,6 +2426,12 @@ class Product(QScrollArea):
 
     def init_ui(self):
         #self.frame.setMinimumWidth(500)
+
+        self.path = osp.join(root_dir, "cpchain/assets/wallet/font", "ARLRDBD.TTF")
+        self.font_regular = QFontDatabase.addApplicationFont(str(self.path))
+        self.font_givenname = QFontDatabase.applicationFontFamilies(self.font_regular)[0]
+        self.setFont(QFont(self.font_givenname))
+
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumHeight(200)
         self.setMaximumHeight(500)
@@ -2471,6 +2483,8 @@ class Product(QScrollArea):
 
             if self.mode != "simple":
                 self.sales_layout = QHBoxLayout(self)
+                self.sales_layout.setContentsMargins(0, 0, 0, 0)
+                self.sales_layout.setSpacing(0)
                 self.sales_layout.addWidget(self.total_sale_label)
                 self.sales_layout.addStretch(1)
                 self.sales_layout.addWidget(self.seller_btn)
@@ -2482,6 +2496,7 @@ class Product(QScrollArea):
                 self.main_layout.addWidget(self.price_label)
 
             self.tag_layout = QHBoxLayout(self)
+            self.tag_layout.setContentsMargins(0, 5, 0, 5)
             self.tag_layout.addSpacing(1)
             for i in range(self.tag_num):
                 self.tag_layout.addWidget(self.tag_btn_list[i])
@@ -2775,8 +2790,10 @@ class PopularTab(QScrollArea):
             self.main_layout.addSpacing(1)
             
             self.bottom_layout = QHBoxLayout(self)
+            self.bottom_layout.setContentsMargins(0, 0, 0, 0)
 
             self.product_layout = QVBoxLayout(self)
+            self.product_layout.setContentsMargins(0, 0, 0, 0)
             for i in range(self.item_num_max):
                 self.product_layout.addWidget(self.item_lists[i])
                 self.product_layout.addSpacing(1)
@@ -2785,8 +2802,8 @@ class PopularTab(QScrollArea):
             self.promo_layout = QVBoxLayout(self)
             self.promo_layout.setContentsMargins(0, 0, 0, 0)
             self.promo_layout.addSpacing(0)            
-            self.promo_layout.addWidget(self.promo_label)
-            self.promo_layout.addSpacing(1)
+            # self.promo_layout.addWidget(self.promo_label)
+            # self.promo_layout.addSpacing(0)
 
             for i in range(self.promo_num_max):
                 self.promo_layout.addWidget(self.promo_lists[i])
@@ -2924,13 +2941,15 @@ class CloudTab(QScrollArea):
             self.file_table.resizeRowsToContents()
             self.file_table.setFocusPolicy(Qt.NoFocus)
             # do not highlight (bold-ize) the header
-            self.file_table.horizontalHeader().setHighlightSections(False)
-            self.file_table.setColumnCount(6)
-            self.file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
-            self.file_table.set_right_menu(right_menu)
-            self.file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Size', 'Remote Type', 'Published', 'ID'])
-            self.file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-            self.file_table.setSortingEnabled(True)
+
+            file_table.horizontalHeader().setHighlightSections(False)
+            file_table.setColumnCount(6)
+            file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+            file_table.set_right_menu(right_menu)
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Size', 'Remote Type', 'Published', 'ID'])
+            file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+            file_table.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+            file_table.setSortingEnabled(True)
 
             self.file_list = fs.get_file_list()
 
@@ -3160,11 +3179,10 @@ class SideBar(QScrollArea):
         # needed
         self.parent = parent
         self.content_tabs = parent.content_tabs
-
         self.init_ui()
 
-
     def init_ui(self):
+
         self.setObjectName("sidebar")
         self.setMaximumWidth(180)
 
@@ -3193,18 +3211,21 @@ class SideBar(QScrollArea):
             self.trending_list.setMaximumHeight(100)
             self.trending_list.addItem(QListWidgetItem(get_icon("pop.png"), "Popular"))
             self.trending_list.addItem(QListWidgetItem(get_icon("following.png"), "Following"))
+            self.trending_list.setContentsMargins(0, 0, 0, 0)
             # self.trending_list.itemSelectionChanged.connect(self.handle_list1())
 
             self.mine_list = QListWidget()
             self.mine_list.setMaximumHeight(100)
             self.mine_list.addItem(QListWidgetItem(get_icon("cloud.png"), "Cloud"))
             self.mine_list.addItem(QListWidgetItem(get_icon("store.png"), "Selling"))
+            self.mine_list.setContentsMargins(0, 0, 0, 0)
 
             self.treasure_list = QListWidget()
             self.treasure_list.setMaximumHeight(100)
             self.treasure_list.addItem(QListWidgetItem(get_icon("purchased.png"), "Purchased"))
             self.treasure_list.addItem(QListWidgetItem(get_icon("collection.png"), "Collection"))
             self.treasure_list.addItem(QListWidgetItem(get_icon("collection.png"), "Shopping Cart"))
+            self.treasure_list.setContentsMargins(0, 0, 0, 0)
 
             self.trending_list.setCurrentRow(0)
         add_lists()
@@ -3608,6 +3629,7 @@ class MainWindow(QMainWindow):
             self.content_tabs = content_tabs = QTabWidget(self)
             content_tabs.setObjectName("content_tabs")
             content_tabs.tabBar().hide()
+            content_tabs.setContentsMargins(0, 0, 0, 0)
             # Temporily modified for easy test by @hyiwr
             content_tabs.addTab(PopularTab(content_tabs), "")
             content_tabs.addTab(CloudTab(content_tabs), "")
@@ -3659,14 +3681,18 @@ class MainWindow(QMainWindow):
         set_layout()
         load_stylesheet(self, "main_window.qss") 
         print("Seting stylesheet of MainWindow......")
-          
+
+        def load_font(self):
+            path = osp.join(root_dir, "cpchain/assets/wallet/font", "ARLRDBD.TTF")
+            self.font_regular = QFontDatabase.addApplicationFont(str(path))
+            self.font_givenname = QFontDatabase.applicationFontFamilies(font_regular)[0]
+            self.setFont(QFont(font_givenname))
+
         self.show()
 
 
     def closeEvent(self, event):
         self.reactor.stop()
-
-
 
 def _handle_keyboard_interrupt():
     def sigint_handler(*args):
@@ -3685,6 +3711,12 @@ def _handle_keyboard_interrupt():
     timer.timeout.connect(lambda: None)
 
 def initialize_system():
+    
+    path = osp.join(root_dir, "cpchain/assets/wallet/font", "liberation.ttf")
+    font_regular = QFontDatabase.addApplicationFont(str(path))
+    font_givenname = QFontDatabase.applicationFontFamilies(font_regular)[0]
+    QApplication.setFont(QFont(font_givenname))
+
     def initialize_net():
         # Temporily modified for easy test by @hyiwr
         print("Initializing network......")
