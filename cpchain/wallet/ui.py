@@ -2919,7 +2919,7 @@ class CloudTab(QScrollArea):
 
 
         def create_file_table():
-            self.file_table = TableWidget(self)
+            self.file_table = file_table = TableWidget(self)
             def right_menu():
                 self.cloud_right_menu = QMenu(self.file_table)
                 self.cloud_delete_act = QAction('Delete', self)
