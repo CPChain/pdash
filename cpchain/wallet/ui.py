@@ -3,9 +3,12 @@ from twisted.logger import globalLogBeginner, textFileLogObserver
 import sys
 globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
 
+from cpchain.wallet.wallet import Wallet
+
 import os.path as osp
 import string
 import logging
+
 
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, 
@@ -16,7 +19,7 @@ from PyQt5.QtCore import Qt, QSize, QPoint, pyqtSignal
 from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont, QPainter
 
 from cpchain import config, root_dir
-from cpchain.wallet.wallet import Wallet
+
 from cpchain.wallet import fs
 from cpchain.crypto import ECCipher, RSACipher, Encoder
 
@@ -714,18 +717,37 @@ class SearchProductTab(QScrollArea):
         self.setObjectName("search_tab")
         self.item_lists = []
         self.promo_lists = []
+        self.search_item_num = 4
+        self.search_promo_num = 4
         # logger.debug('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
         # self.init_ui()
 
 
     def update_item(self, item_list, promo_list):
-        for i in range(self.search_item_num):
-            self.item_lists.append(Product2(self, item_list[i]))
-        for i in range(self.search_promo_num):
-            self.promo_lists.append(Product2(self, promo_list[i]))
+        if len(item_list) == 0:
+            item = {"title": "Medical data from NHIS", "none": "none"}
+            self.get_products(item)
+        else:
+            for i in range(self.search_item_num):
+                self.item_lists.append(Product2(self, item_list[i]))
+        if len(promo_list) == 0:
+            item = {"title": "Medical data from NHIS", "none": "none"}
+            self.get_promotion(item)
+        else:
+            for i in range(self.search_promo_num):
+                self.promo_lists.append(Product2(self, promo_list[i], 'simple'))
+        # TODO: item_list should return by query_product in net.py, now it return empty list
         logger.debug('item list: %s', self.item_lists)
         logger.debug('promo list: %s', self.promo_lists)
         self.init_ui()
+
+    def get_products(self, item={}):
+        for i in range(self.search_item_num):
+            self.item_lists.append(Product(self, item))
+
+    def get_promotion(self, item={}):
+        for i in range(self.search_promo_num):
+            self.promo_lists.append(Product(self, item, "simple"))
 
 
     def init_ui(self):
@@ -736,26 +758,6 @@ class SearchProductTab(QScrollArea):
         self.setWidgetResizable(True)
         self.frame.setMinimumWidth(200)
         self.frame.setMaximumWidth(200)
-
-        self.search_item_num = 4
-        self.search_promo_num = 4
-
-
-        # # TODO: Search for products by self.key_words and return them from the backend
-        # def get_products(item={}, key_words=""):
-        #     for i in range(self.search_item_num):
-        #         self.item_lists.append(Product(self, item))
-        #
-        # self.item = {"title": "Medical data from NHIS", "none": "none"}
-        # get_products(self.item)
-        #
-        # # TODO: Get promotion products based on products returned above or the keywords provided
-        # def get_promotion(item={}, key_words=""):
-        #     for i in range(self.search_promo_num):
-        #         self.promo_lists.append(Product(self, item, "simple"))
-        # get_promotion(self.item)
-
-
 
         def create_labels():
             self.num_label = QLabel("100")

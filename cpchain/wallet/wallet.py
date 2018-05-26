@@ -2,14 +2,16 @@ import signal
 import sys
 import time
 
+from cpchain.utils import reactor
+
 from PyQt5.QtWidgets import QApplication
-# do it before any other twisted code.
-app = None
-def install_reactor():
-    global app
-    app = QApplication(sys.argv)
-    import qt5reactor; qt5reactor.install()
-install_reactor()
+# # do it before any other twisted code.
+# app = None
+# def install_reactor():
+#     global app
+#     app = QApplication(sys.argv)
+#     import qt5reactor; qt5reactor.install()
+# install_reactor()
 
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
