@@ -1565,7 +1565,8 @@ class PurchasedDownloadedTab(QScrollArea):
             #file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price', 'Size', 'Order Time'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-            file_table.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+            file_table.verticalHeader().setDefaultSectionSize(30)
+            file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
             file_table.setSortingEnabled(True)
 
             #file_list = get_file_list()
@@ -2093,7 +2094,8 @@ class SellTab(QScrollArea):
 
             file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price ($)', 'Order', 'Sales', 'Rating', 'Update Time', 'ID'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-            file_table.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+            file_table.verticalHeader().setDefaultSectionSize(30)
+            file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
             file_table.setSortingEnabled(True)
 
             #file_list = get_file_list()
@@ -2948,7 +2950,8 @@ class CloudTab(QScrollArea):
             file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Size', 'Remote Type', 'Published', 'ID'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-            file_table.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+            file_table.verticalHeader().setDefaultSectionSize(30)
+            file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
             file_table.setSortingEnabled(True)
 
             self.file_list = fs.get_file_list()
@@ -3270,6 +3273,7 @@ class SideBar(QScrollArea):
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self.frame)
             self.main_layout.setContentsMargins(0, 0, 0, 0)
+
             main_layout.addSpacing(10)
             main_layout.addWidget(self.trend_label)
             main_layout.addSpacing(3)
@@ -3282,14 +3286,11 @@ class SideBar(QScrollArea):
             main_layout.addWidget(self.treasure_label)
             main_layout.addSpacing(3)
             main_layout.addWidget(self.treasure_list)
-            main_layout.setContentsMargins(0, 0, 0, 0)
             main_layout.addStretch(1)
             self.setLayout(self.main_layout)
         set_layout()
         load_stylesheet(self, "sidebar.qss")
         print("Loading stylesheet of Sidebar")
-
-
 
 
 class Header(QFrame):

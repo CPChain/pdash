@@ -21,6 +21,7 @@ QFrame {
 QListWidget {
     /*font-family: "DejaVu Sans Mono";*/
     /*font-family: : Arial;*/
+    border: none;
     font-size: 12pt; 
     /*font-weight: bold;*/  
     /*border: none;*/
