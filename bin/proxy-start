@@ -11,8 +11,8 @@ from cpchain.proxy.node import Peer
 logger = logging.getLogger(__name__)
 
 if len(sys.argv) != 3:
-    logger.info("Usage: python3 start_proxy.py <tracker ip:port> <dht ip:port>")
-    logger.info("example: python3 start_proxy.py 127.0.0.1:8101 127.0.0.1:8201")
+    logger.info("Usage: proxy-start <tracker ip:port> <dht ip:port>")
+    logger.info("example: proxy-start 127.0.0.1:8101 127.0.0.1:8201")
     sys.exit(1)
 
 log.startLogging(sys.stdout)
