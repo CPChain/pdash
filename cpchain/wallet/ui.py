@@ -1558,6 +1558,7 @@ class PurchasedDownloadedTab(QScrollArea):
             #file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price', 'Size', 'Order Time'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+            file_table.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
             file_table.setSortingEnabled(True)
 
             #file_list = get_file_list()
@@ -1721,6 +1722,9 @@ class PurchasedDownloadingTab(QScrollArea):
             file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Progress', 'Order Time'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+            file_table.verticalHeader().setDefaultSectionSize(30)
+            file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+            # file_table.setMinimumHeight(30);
             file_table.setSortingEnabled(True)
 
             #file_list = get_file_list()
@@ -2082,6 +2086,7 @@ class SellTab(QScrollArea):
 
             file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price ($)', 'Order', 'Sales', 'Rating', 'Update Time', 'ID'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+            file_table.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
             file_table.setSortingEnabled(True)
 
             #file_list = get_file_list()
@@ -2826,6 +2831,7 @@ class CloudTab(QScrollArea):
             file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Size', 'Remote Type', 'Published', 'ID'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+            file_table.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
             file_table.setSortingEnabled(True)
 
             self.file_list = fs.get_file_list()
