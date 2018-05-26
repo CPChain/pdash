@@ -510,9 +510,6 @@ class ProductDetailTab(QScrollArea):
             self.seller_name = QLabel("Christopher Chak")
             self.seller_name.setObjectName("seller_name")
 
-            self.date_label = QLabel("May 4, 2018")
-            self.date_label.setObjectName("date_label")
-
             self.sales_label = QLabel("Sales: 356")
             self.sales_label.setObjectName("sales_label")
 
@@ -617,7 +614,7 @@ class ProductDetailTab(QScrollArea):
             self.product_layout.addWidget(self.title_label, 1, 1, 1, 10)
             self.product_layout.addWidget(self.seller_avatar, 2, 1, 1, 1)
             self.product_layout.addWidget(self.seller_btn, 2, 2, 1, 1) 
-            self.product_layout.addWidget(self.date_label, 2, 3, 1, 2)                      
+            self.product_layout.addWidget(self.data_label, 2, 3, 1, 2)                      
             self.product_layout.addWidget(self.size_label, 4, 1, 1, 2)
             self.product_layout.addWidget(self.sales_label, 4, 3, 1, 2)
 
@@ -1527,6 +1524,8 @@ class PurchasedDownloadedTab(QScrollArea):
         self.purchased_dled_delete_btn = purchased_dled_delete_btn = QPushButton("Delete")
         purchased_dled_delete_btn.setObjectName("purchased_dled_delete_btn")
 
+        self.hline_1 = HorizontalLine(self, 2)
+
         self.purchased_total_orders_label = purchased_total_orders_label = QLabel("Total Orders: ")
         purchased_total_orders_label.setObjectName("purchased_total_orders_label")
         self.total_orders_value = total_orders_value = QLabel("{}".format(self.purchased_total_orders))
@@ -1595,6 +1594,9 @@ class PurchasedDownloadedTab(QScrollArea):
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self)
             main_layout.addSpacing(0)
+            self.main_layout.setContentsMargins(10, 0, 10, 10)
+            self.main_layout.addWidget(self.hline_1)
+            self.main_layout.addSpacing(0)
             self.purchased_dled_upper_layout = QHBoxLayout(self)
             self.purchased_dled_upper_layout.addSpacing(0)
             self.purchased_dled_upper_layout.addWidget(self.purchased_total_orders_label)
@@ -1624,9 +1626,6 @@ class PurchasedDownloadedTab(QScrollArea):
                 self.file_table.removeRow(i)
                 print("Deleting files permanently from the cloud...")
                 self.update_table()
-
-
-
 
 class PurchasedDownloadingTab(QScrollArea):
     def __init__(self, parent = None):
@@ -1690,6 +1689,7 @@ class PurchasedDownloadingTab(QScrollArea):
     
         self.row_number = 100
 
+        self.hline_1 = HorizontalLine(self, 2)
 
         def create_file_table():
             self.file_table = file_table = TableWidget(self) 
@@ -1761,19 +1761,22 @@ class PurchasedDownloadingTab(QScrollArea):
 
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self)
-            main_layout.addSpacing(0)
+            self.main_layout.setContentsMargins(10, 0, 10, 10)
+            self.main_layout.addSpacing(0)
+            self.main_layout.addWidget(self.hline_1)
+            self.main_layout.addSpacing(0)
             self.purchased_upper_layout = QHBoxLayout(self)
             self.purchased_upper_layout.addSpacing(0)
             self.purchased_upper_layout.addWidget(self.purchased_total_orders_label)
             self.purchased_upper_layout.addSpacing(0)
             self.purchased_upper_layout.addWidget(self.total_orders_value)
-            self.purchased_upper_layout.addSpacing(10)         
+            self.purchased_upper_layout.addSpacing(10)
             self.purchased_upper_layout.addWidget(self.open_path)
             self.purchased_upper_layout.addStretch(1)
             self.purchased_upper_layout.addWidget(self.purchased_dling_start_btn)
             self.purchased_upper_layout.addSpacing(10)
             self.purchased_upper_layout.addWidget(self.purchased_dling_pause_btn)
-            self.purchased_upper_layout.addSpacing(10)            
+            self.purchased_upper_layout.addSpacing(10)
             self.purchased_upper_layout.addWidget(self.purchased_dling_delete_btn)
             self.purchased_upper_layout.addSpacing(5)
 
@@ -2469,6 +2472,8 @@ class Product(QScrollArea):
 
             if self.mode != "simple":
                 self.sales_layout = QHBoxLayout(self)
+                self.sales_layout.setContentsMargins(0, 0, 0, 0)
+                self.sales_layout.setSpacing(0)
                 self.sales_layout.addWidget(self.total_sale_label)
                 self.sales_layout.addStretch(1)
                 self.sales_layout.addWidget(self.seller_btn)
@@ -2480,6 +2485,7 @@ class Product(QScrollArea):
                 self.main_layout.addWidget(self.price_label)
 
             self.tag_layout = QHBoxLayout(self)
+            self.tag_layout.setContentsMargins(0, 5, 0, 5)
             self.tag_layout.addSpacing(1)
             for i in range(self.tag_num):
                 self.tag_layout.addWidget(self.tag_btn_list[i])
@@ -2662,8 +2668,10 @@ class PopularTab(QScrollArea):
             self.main_layout.addSpacing(1)
             
             self.bottom_layout = QHBoxLayout(self)
+            self.bottom_layout.setContentsMargins(0, 0, 0, 0)
 
             self.product_layout = QVBoxLayout(self)
+            self.product_layout.setContentsMargins(0, 0, 0, 0)
             for i in range(self.item_num_max):
                 self.product_layout.addWidget(self.item_lists[i])
                 self.product_layout.addSpacing(1)
@@ -2672,8 +2680,8 @@ class PopularTab(QScrollArea):
             self.promo_layout = QVBoxLayout(self)
             self.promo_layout.setContentsMargins(0, 0, 0, 0)
             self.promo_layout.addSpacing(0)            
-            self.promo_layout.addWidget(self.promo_label)
-            self.promo_layout.addSpacing(1)
+            # self.promo_layout.addWidget(self.promo_label)
+            # self.promo_layout.addSpacing(0)
 
             for i in range(self.promo_num_max):
                 self.promo_layout.addWidget(self.promo_lists[i])
@@ -3079,18 +3087,21 @@ class SideBar(QScrollArea):
             self.trending_list.setMaximumHeight(100)
             self.trending_list.addItem(QListWidgetItem(get_icon("pop.png"), "Popular"))
             self.trending_list.addItem(QListWidgetItem(get_icon("following.png"), "Following"))
+            self.trending_list.setContentsMargins(0, 0, 0, 0)
             # self.trending_list.itemSelectionChanged.connect(self.handle_list1())
 
             self.mine_list = QListWidget()
             self.mine_list.setMaximumHeight(100)
             self.mine_list.addItem(QListWidgetItem(get_icon("cloud.png"), "Cloud"))
             self.mine_list.addItem(QListWidgetItem(get_icon("store.png"), "Selling"))
+            self.mine_list.setContentsMargins(0, 0, 0, 0)
 
             self.treasure_list = QListWidget()
             self.treasure_list.setMaximumHeight(100)
             self.treasure_list.addItem(QListWidgetItem(get_icon("purchased.png"), "Purchased"))
             self.treasure_list.addItem(QListWidgetItem(get_icon("collection.png"), "Collection"))
             self.treasure_list.addItem(QListWidgetItem(get_icon("collection.png"), "Shopping Cart"))
+            self.treasure_list.setContentsMargins(0, 0, 0, 0)
 
             self.trending_list.setCurrentRow(0)
         add_lists()
@@ -3184,8 +3195,6 @@ class Header(QFrame):
 
         def search_act(self):
             # main_wnd.content_tabs.addTab(SearchProductTab(content_tabs), "")
-            self.keyword = str(self.text())
-            main_wnd.search_tab.present_item(list1,list2)
             wid = self.parent.content_tabs.findChild(QWidget, "search_tab")
             self.parent.content_tabs.setCurrentWidget(wid)
 
@@ -3488,6 +3497,7 @@ class MainWindow(QMainWindow):
             self.content_tabs = content_tabs = QTabWidget(self)
             content_tabs.setObjectName("content_tabs")
             content_tabs.tabBar().hide()
+            content_tabs.setContentsMargins(0, 0, 0, 0)
             # Temporily modified for easy test by @hyiwr
             content_tabs.addTab(PopularTab(content_tabs), "")
             content_tabs.addTab(CloudTab(content_tabs), "")

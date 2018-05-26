@@ -1,14 +1,16 @@
 QTabWidget{
     margin-right: 0, 0, 0, 0;
+    border: none;
+    border-top: 2px solid #333333;
+}
+
+QFrame.HorizontalLine{
+    color: #e5e5e5;
 }
 
 QLineEdit#search_bar{
-    /* border: 1px solid #724f61;    */
     border-radius: 5px;
     border: 1px solid #d7d7d7;
-    /* color: #0f0000; */
-    /* background: #5b4b19; */
-    /* background: #423611; */
 }
 
 QLineEdit#search_bar:hover {
@@ -133,7 +135,7 @@ QProgressBar:focus{
     background-color: #6f9bdf;
 }
 
-QQProgressBar::chunk:focus{
+QProgressBar::chunk:focus{
     background-color: #ffffff;
 }
 
