@@ -56,7 +56,16 @@ def _install_reactor():
             asyncioreactor.install(eventloop=loop)
         elif config.core.mode == "wallet":
             # TODO, add qmuash support
-            pass
+            import asyncio
+            import time
+            from PyQt5.QtWidgets import QApplication, QProgressBar
+            from quamash import QEventLoop, QThreadExecutor
+            app = QApplication(sys.argv)
+            loop = QEventLoop(app)
+            asyncio.set_event_loop(loop)
+            from twisted.internet import asyncioreactor
+            asyncioreactor.install(eventloop=loop)
+            from twisted.internet import reactor
 
     return sys.modules.get(reactor_qual_name)
 

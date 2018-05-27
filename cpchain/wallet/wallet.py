@@ -2,14 +2,16 @@ import signal
 import sys
 import time
 
+from cpchain.utils import reactor
+
 from PyQt5.QtWidgets import QApplication
-# do it before any other twisted code.
-app = None
-def install_reactor():
-    global app
-    app = QApplication(sys.argv)
-    import qt5reactor; qt5reactor.install()
-install_reactor()
+# # do it before any other twisted code.
+# app = None
+# def install_reactor():
+#     global app
+#     app = QApplication(sys.argv)
+#     import qt5reactor; qt5reactor.install()
+# install_reactor()
 
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
@@ -51,7 +53,7 @@ class Wallet:
 
 def main():
         wallet = Wallet(reactor)
-        wallet.market_client.update_file_info(12, 'msg')
+        wallet.market_client.query_product('Medicine')
         print('end')
         # file_info = fs.get_file_list()[0]
         # hashcode = file_info.hashcode

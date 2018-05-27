@@ -1,0 +1,89 @@
+QDialog{
+    background: #fafafa;
+}
+
+QPushButton#pinfo_cancel_btn{
+    padding-left: 14px;
+    padding-right: 14px;
+    border: 1px solid #3173d8; 
+    border-radius: 5px;
+    color: #3173d8;
+    min-height: 40px;
+    max-height: 40px;
+    background: #ffffff;
+    min-width: 80px;
+    max-width: 80px;
+}
+
+QPushButton#pinfo_cancel_btn:hover{
+    border: 1px solid #3984f7; 
+    color: #3984f6;
+}
+
+QPushButton#pinfo_cancel_btn:pressed{
+    border: 1px solid #2e6dcd; 
+    color: #2e6dcd;
+    background: #e5ecf4;
+}
+
+QPushbutton#pinfo_cancel_btn:disabled{
+    border: 1px solid #8cb8ea; 
+    color: #8cb8ea;
+}
+
+QPushButton#pinfo_publish_btn{
+    padding-left: 14px;
+    padding-right: 14px;
+    border: 1px solid #3173d8; 
+    border-radius: 5px;
+    color: #ffffff;
+    min-height: 40px;
+    max-height: 40px;
+    min-width: 80px;
+    max-width: 80px;
+    background: #3173d8;
+}
+
+QPushButton#pinfo_publish_btn:hover{
+    background: #3984f7; 
+    border: 1px solid #3984f7;
+}
+
+QPushButton#pinfo_publish_btn:pressed{
+    border: 1px solid #2e6dcd; 
+    background: #2e6dcd;
+}
+
+QPushbutton#pinfo_publish_btn:disabled{
+    border: 1px solid #8cb8ea; 
+    background: #98b9eb;
+}
+
+QPushButton[t_value = "1"] {
+    padding-left: 5px;
+    padding-right: 5px;
+    min-height: 21px; 
+    min-width: 50px;  
+    max-width: 50px; 
+    max-height: 21px;
+    border: 1px solid #dddddd;
+    border-radius: 5px;
+    background: #edf3f9;
+    color: #555555;
+    text-align: center;
+}
+
+QPushButton[t_value = "1"]:hover{
+    border: 1px solid #3173d8;
+}
+
+QPushButton[t_value = "1"]:checked{
+    color: #3173d8;
+    border: 1px solid #3173d8;
+}
+
+QPushButton[t_value = "1"]:checked:hover{
+    color: #3173d8;
+    border: 1px solid #3173d8;
+    background: #ebf3ff;
+}

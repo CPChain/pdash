@@ -1,0 +1,60 @@
+QScrollArea.Product {
+    background: transparent;
+}
+
+QScrollArea {
+    border: none;
+    outline: none;
+}
+
+QFrame#search_frame {
+    background: #fafafa;
+    border: none;
+    outline: none;
+}
+
+QLineEdit{
+	max-width: 30px;
+	min-width: 30px;
+}
+
+QLabel#num_label, QLabel#may_like_label{
+    color: #1c1c1c;
+    font-size: 16px;
+}
+
+QLabel#res_label, QLabel#time_label, QLabel#sales_label, QLabel#price_label, QLabel#region_label, QLabel#line_label{
+    color: #777777;
+    font-size: 12px;
+}
+
+QFrame.HorizontalLine {
+    color: #e5e5e5;
+}
+
+/*QPushButton#time_btn, QPushButton#sales_btn, QPushButton#price_btn{
+	border: none;
+	background: none;
+	max-height: 20px;
+	min-height: 10px;
+	max-width: 20px;
+	min-width: 10px;
+}
+*/
+QPushButton#time_btn, QPushButton#sales_btn, QPushButton#price_btn{
+	border-image: url(${asset_dir}/icons/ranknone.png); 
+	max-width: 5px;
+	min-width: 5px;
+	max-height: 10px;
+	min-height: 10px;
+}
+
+QPushButton#time_btn:hover, QPushButton#sales_btn:hover, QPushButton#price_btn:hover{
+	border-image: url(${asset_dir}/icons/rankdown.png); 
+}
+
+QPushButton#time_btn:pressed, QPushButton#sales_btn:pressed, QPushButton#price_btn:pressed{
+	border-image: url(${asset_dir}/icons/rankup.png); 
+}
+
+

@@ -110,6 +110,8 @@ QTableWidget::item {
     outline: none;
     outline-style: none;
     color: #1c1c1c;
+    height: 30px;
+    font-family: "Arial"
 }
 
 QTableWidget::item:selected, QTableWidget::item:focus {

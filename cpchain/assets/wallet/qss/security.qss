@@ -1,0 +1,7 @@
+QPushButton#display_btn, QPushButton#reset_btn{
+	background: none;
+	border: none;
+	color: #006bcf;
+	text-align: left;
+}
+

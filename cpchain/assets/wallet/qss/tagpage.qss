@@ -1,0 +1,9 @@
+QFrame.HorizontalLine {
+    color: #e5e5e5;
+}
+
+QPushButton#followthis_label{
+	border: none;
+	background: none;
+	color: #006bcf;
+}
