@@ -2,6 +2,15 @@ QLabel {
     color: #fefefe;
 }
 
+QDialog{
+    background: #fafafa;
+}
+
+QLabel#choice_label{
+    color: #414141;
+    font: bold 15px;
+}
+
 QLineEdit#search_bar {
     border-radius: 5px;
     border-color: #d7d7d7;
@@ -9,6 +18,42 @@ QLineEdit#search_bar {
 
 QLineEdit#search_bar:pressed {
     border-color: #3984f7;
+}
+
+QPushButton#close_btn {
+    border-image: url(${asset_dir}/icons/close.png);
+}
+
+QPushButton#close_btn:hover {
+    border-image: url(${asset_dir}/icons/closehover.png);
+}
+
+QPushButton#close_btn:pressed {
+    border-image: url(${asset_dir}/icons/closepress.png);
+}
+
+QPushButton#minimize_btn {
+    border-image: url(${asset_dir}/icons/mini.png);
+}
+
+QPushButton#minimize_btn:hover {
+    border-image: url(${asset_dir}/icons/minihover.png);
+}
+
+QPushButton#minimize_btn:pressed {
+    border-image: url(${asset_dir}/icons/minipress.png);
+}
+
+QPushButton#maximize_btn {
+    border-image: url(${asset_dir}/icons/max.png);
+}
+
+QPushButton#maximize_btn:hover {
+    border-image: url(${asset_dir}/icons/maxhover.png);
+}
+
+QPushButton#maximize_btn:pressed {
+    border-image: url(${asset_dir}/icons/maxpress.png);
 }
 
 QPushButton#prev_btn {
@@ -91,13 +136,30 @@ QPushButton#search_btn {
     border-image: url(${asset_dir}/icons/search_btn.png); 
 }
 
-QPushButton#login_btn {
-    margin-right: 11px;
-    font-size: 12px;
-    font-weight: bold;
-    color: #8c6a6a;
-    border: 1px solid #3a2f2f; 
-    background: #443b3b;
+QPushButton#login_btn{
+    padding-left: 14px;
+    padding-right: 14px;
+    border: 1px solid #3173d8; 
+    border-radius: 5px;
+    color: #ffffff;
+    min-height: 30px;
+    max-height: 30px;
+    background: #3173d8;
+}
+
+QPushButton#login_btn:hover{
+    background: #3984f7; 
+    border: 1px solid #3984f7;
+}
+
+QPushButton#login_btn:pressed{
+    border: 1px solid #2e6dcd; 
+    background: #2e6dcd;
+}
+
+QPushbutton#login_btn:disabled{
+    border: 1px solid #8cb8ea; 
+    background: #98b9eb;
 }
 
 QPushButton#profile_page_btn:pressed {
@@ -122,12 +184,33 @@ QPushButton#profile_btn {
     background-color: #006bcf;
 }
 
-QPushButton#login_btn:hover {
-    color: #efacac;
+QPushButton#cancel_btn{
+    padding-left: 14px;
+    padding-right: 14px;
+    border: 1px solid #3173d8; 
+    border-radius: 5px;
+    color: #3173d8;
+    min-height: 30px;
+    max-height: 30px;
+    background: #ffffff;
 }
 
-QPushButton#close_btn, QPushButton#maxmize_btn, QPushButton#minimize_btn{
-    outline: none;
+QPushButton#cancel_btn:hover{
+    border: 1px solid #3984f7; 
+    color: #3984f6;
 }
+
+QPushButton#cancel_btn:pressed{
+    border: 1px solid #2e6dcd; 
+    color: #2e6dcd;
+    background: #e5ecf4;
+}
+
+QPushbutton#cancel_btn:disabled{
+    border: 1px solid #8cb8ea; 
+    color: #8cb8ea;
+}
+
+
 
 

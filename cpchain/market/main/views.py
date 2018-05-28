@@ -17,11 +17,11 @@ class CarouselQueryAPIView(APIView):
     serializer_class = CarouselQuerySerializer
     permission_classes = (AllowAny,)
 
+    @ExceptionHandler
     def get(self, request):
         carousel_queryset = Carousel.objects.filter(status=1)[0:3]
         carousel_serializer = CarouselQuerySerializer(carousel_queryset, many=True)
-        carousel_list = carousel_serializer.data
-        return JsonResponse({'status': 1, 'message': 'success', 'data': carousel_list})
+        return create_success_data_response(carousel_serializer.data)
 
 
 class CarouselAddAPIView(APIView):
@@ -32,20 +32,16 @@ class CarouselAddAPIView(APIView):
     serializer_class = CarouselAddSerializer
     permission_classes = (AllowAny,)
 
+    @ExceptionHandler
     def post(self, request):
         data = request.data
         logger.info("data:%s" % data)
 
         serializer = CarouselAddSerializer(data=data)
 
-        try:
-            if serializer.is_valid(raise_exception=True):
-                serializer.save()
-                return JsonResponse({'status': 1, 'message': 'success'})
-        except:
-            logger.exception("save Carousel error")
-
-        return create_invalid_response()
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return create_success_response()
 
 
 class PromotionQueryAPIView(APIView):
@@ -56,11 +52,11 @@ class PromotionQueryAPIView(APIView):
     serializer_class = PromotionSerializer
     permission_classes = (AllowAny,)
 
+    @ExceptionHandler
     def get(self, request):
         query_set = Promotion.objects.filter(status=1)
         serializer = PromotionSerializer(query_set, many=True)
-        data_list = serializer.data
-        return JsonResponse({'status': 1, 'message': 'success', 'data': data_list})
+        return create_success_data_response(serializer.data)
 
 
 class PromotionAddAPIView(APIView):
@@ -71,20 +67,16 @@ class PromotionAddAPIView(APIView):
     serializer_class = PromotionSerializer
     permission_classes = (AllowAny,)
 
+    @ExceptionHandler
     def post(self, request):
         data = request.data
         logger.info("data:%s" % data)
 
         serializer = PromotionSerializer(data=data)
 
-        try:
-            if serializer.is_valid(raise_exception=True):
-                serializer.save()
-                return JsonResponse({'status': 1, 'message': 'success'})
-        except:
-            logger.exception("save Promotion error")
-
-        return create_invalid_response()
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return create_success_response()
 
 
 class HotTagQueryAPIView(APIView):
@@ -98,8 +90,7 @@ class HotTagQueryAPIView(APIView):
     def get(self, request):
         query_set = HotTag.objects.filter(status=1)
         serializer = HotTagSerializer(query_set, many=True)
-        data_list = serializer.data
-        return JsonResponse({'status': 1, 'message': 'success', 'data': data_list})
+        return create_success_data_response(serializer.data)
 
 
 class HotTagAddAPIView(APIView):
@@ -115,12 +106,6 @@ class HotTagAddAPIView(APIView):
         logger.info("data:%s" % data)
 
         serializer = HotTagSerializer(data=data)
-
-        try:
-            if serializer.is_valid(raise_exception=True):
-                serializer.save()
-                return JsonResponse({'status': 1, 'message': 'success'})
-        except:
-            logger.exception("save HotTag error")
-
-        return create_invalid_response()
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return create_success_response()

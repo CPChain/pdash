@@ -44,7 +44,7 @@ class UserLoginAPIView(APIView):
         logger.info("put cache public_key:%s, nonce:%s" % (public_key, nonce))
         cache.set(public_key, nonce, 1000)
         status = 2 if is_new else 1
-        return JsonResponse({"status": status, "message": nonce})
+        return create_invalid_response(status=status, message=nonce)
 
 
 class UserLoginConfirmAPIView(APIView):
@@ -55,6 +55,7 @@ class UserLoginConfirmAPIView(APIView):
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
+    @ExceptionHandler
     def post(self, request):
         data = request.data
         public_key_string = data.get(PUBLIC_KEY)
@@ -64,18 +65,15 @@ class UserLoginConfirmAPIView(APIView):
             logger.info("public_key is None or code is None. public_key:%s" % public_key_string)
             return create_invalid_response()
 
-        try:
-            verify_code = cache.get(public_key_string)
-            if verify_code is None:
-                logger.info("verify_code not found for public_key:%s" % public_key_string)
-                return create_invalid_response()
-
-            if not is_valid_signature(public_key_string, verify_code, signature):
-                return create_invalid_response()
-
-            user = WalletUser.objects.get(public_key__exact=public_key_string)
-        except WalletUser.DoesNotExist:
+        verify_code = cache.get(public_key_string)
+        if verify_code is None:
+            logger.info("verify_code not found for public_key:%s" % public_key_string)
             return create_invalid_response()
+
+        if not is_valid_signature(public_key_string, verify_code, signature):
+            return create_invalid_response()
+
+        user = WalletUser.objects.get(public_key__exact=public_key_string)
 
         try:
             existing_token = Token.objects.get(public_key=public_key_string)
@@ -83,7 +81,7 @@ class UserLoginConfirmAPIView(APIView):
             existing_token = Token.objects.create(user=user, public_key=public_key_string)
 
         serializer = TokenSerializer(existing_token)
-        return JsonResponse({"status": 1, "message": serializer.data['key']})
+        return create_login_success_data_response(serializer.data['key'])
 
 
 class LogoutAPIView(APIView):
@@ -91,6 +89,7 @@ class LogoutAPIView(APIView):
     API endpoint that logout.
     """
 
+    @ExceptionHandler
     def post(self, request):
         data = request.data
         public_key = data.get(PUBLIC_KEY)
@@ -100,17 +99,13 @@ class LogoutAPIView(APIView):
             logger.info("public_key is None or token is None. public_key:%s" % public_key)
             return create_invalid_response()
 
-        try:
-            existing_token = Token.objects.get(public_key=public_key)
-            serializer = TokenSerializer(existing_token)
-            if serializer.data['key'] != token:
-                return create_invalid_response()
-
-            existing_token.delete()
-            return JsonResponse({"status": 1, "message": "logout success"})
-        except Token.DoesNotExist:
-            logger.info("logout public_key:%s not login" % public_key)
+        existing_token = Token.objects.get(public_key=public_key)
+        serializer = TokenSerializer(existing_token)
+        if serializer.data['key'] != token:
             return create_invalid_response()
+
+        existing_token.delete()
+        return create_login_success_data_response("logout success")
 
 
 class UpdateProfileAPIView(APIView):
@@ -119,19 +114,15 @@ class UpdateProfileAPIView(APIView):
     permission_classes = [AlreadyLoginUser,]
 
     """
-    TODO API endpoint that update profile.
+    API endpoint that update profile.
     """
+    @ExceptionHandler
     def post(self, request):
         data = request.data
         public_key = data.get(PUBLIC_KEY)
-        logger.info("public_key:%s" % (public_key))
+        logger.info("public_key:%s" % public_key)
 
-
-        try:
-            user = WalletUser.objects.get(public_key=public_key)
-        except Product.DoesNotExist:
-            return create_invalid_response()
-
+        user = WalletUser.objects.get(public_key=public_key)
 
         # update profile
         serializer = UserRegisterSerializer(user, data=data)
@@ -139,8 +130,6 @@ class UpdateProfileAPIView(APIView):
         if serializer.is_valid(raise_exception=True):
             serializer.update(user,data)
             return create_success_response()
-
-        return create_invalid_response()
 
 
 class UserViewSet(viewsets.ModelViewSet):

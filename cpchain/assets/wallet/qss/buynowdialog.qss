@@ -1,0 +1,66 @@
+QLabel#price_value{
+	color: #006bcf;
+	font: bold 20px;
+}
+
+QDialog{
+    background: #fafafa;
+}
+
+QLabel#account_value{
+	color: #006bcf;
+	font: 15px;
+}
+
+QPushButton#confirm_btn{
+    padding-left: 14px;
+    padding-right: 14px;
+    border: 1px solid #3173d8; 
+    border-radius: 5px;
+    color: #ffffff;
+    min-height: 30px;
+    max-height: 30px;
+    background: #3173d8;
+}
+
+QPushButton#confirm_btn:hover{
+    background: #3984f7; 
+    border: 1px solid #3984f7;
+}
+
+QPushButton#confirm_btn:pressed{
+    border: 1px solid #2e6dcd; 
+    background: #2e6dcd;
+}
+
+QPushbutton#confirm_btn:disabled{
+    border: 1px solid #8cb8ea; 
+    background: #98b9eb;
+}
+
+QPushButton#cancel_btn{
+    padding-left: 14px;
+    padding-right: 14px;
+    border: 1px solid #3173d8; 
+    border-radius: 5px;
+    color: #3173d8;
+    min-height: 30px;
+    max-height: 30px;
+    background: #ffffff;
+}
+
+QPushButton#cancel_btn:hover{
+    border: 1px solid #3984f7; 
+    color: #3984f6;
+}
+
+QPushButton#cancel_btn:pressed{
+    border: 1px solid #2e6dcd; 
+    color: #2e6dcd;
+    background: #e5ecf4;
+}
+
+QPushbutton#cancel_btn:disabled{
+    border: 1px solid #8cb8ea; 
+    color: #8cb8ea;
+}

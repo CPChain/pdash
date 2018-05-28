@@ -26,8 +26,8 @@ urlpatterns = [
     # url(r'^search_by_tag/$', ProductSearchByTagAPIView.as_view(), name='search_by_tag'),
     # url(r'^search_by_seller/$', ProductSearchBySellerAPIView.as_view(), name='search_by_seller'),
 
-    url(r'^product/show/$', ProductShowAPIViewSet.as_view(), name='product_show'),
-    url(r'^product/hide/$', ProductHideAPIViewSet.as_view(), name='product_hide'),
+    url(r'^product/show/$', ProductShowAPIView.as_view(), name='product_show'),
+    url(r'^product/hide/$', ProductHideAPIView.as_view(), name='product_hide'),
     url(r'^product/publish/$', ProductPublishAPIViewSet.as_view(), name='product_publish'),
     # url(r'^product/search/$', ProductSearchAPIViewSet.as_view(), name='product_search'),
     # url(r'^product_paged/search/$', ProductPagedSearchAPIViewSet.as_view(), name='product_paged_search'),
