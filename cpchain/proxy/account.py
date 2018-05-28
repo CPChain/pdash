@@ -4,16 +4,17 @@ from cpchain.account import Accounts
 from cpchain.crypto import ECCipher
 
 
-def get_proxy_id(index=0):
-    account = Accounts()[index]
+def set_proxy_account(index=0):
+    global _proxy_account # pylint: disable=global-variable-undefined
+    _proxy_account = Accounts()[index]
 
+def get_proxy_id():
     return ECCipher.get_address_from_public_key(
-        account.public_key)
+        _proxy_account.public_key)
 
-def sign_proxy_data(data, index=0):
-    account = Accounts()[index]
-    public_key = account.public_key
-    private_key = account.private_key
+def sign_proxy_data(data):
+    public_key = _proxy_account.public_key
+    private_key = _proxy_account.private_key
 
     signature = ECCipher.create_signature(
         private_key,

@@ -14,7 +14,8 @@ from cpchain.utils import join_with_rc, join_with_root
 from cpchain.proxy.network import PeerProtocol
 from cpchain.proxy.server import SSLServerFactory, FileServer
 from cpchain.proxy.client import start_client
-from cpchain.proxy.account import get_proxy_id, sign_proxy_data, derive_proxy_data
+from cpchain.proxy.account import set_proxy_account, get_proxy_id, \
+                                sign_proxy_data, derive_proxy_data
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +51,9 @@ class Peer:
         self.peer_id = None
         self.ip = None
 
-    def start_service(self, ctrl_port=None, data_port=None):
+    def start_service(self, ctrl_port=None, data_port=None, account_id=0):
 
+        set_proxy_account(account_id)
         self.peer_id = get_proxy_id()
 
         server_key = os.path.expanduser(
