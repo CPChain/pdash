@@ -329,10 +329,10 @@ class RecommendProductsAPIView(APIView):
 
 class YouMayLikeProductsAPIView(APIView):
     """
-    API endpoint that allows query recommend products.
+    API endpoint that allows query YouMayLike products.
     """
     queryset = Product.objects.all()
-    serializer_class = RecommendProductSerializer
+    serializer_class = YouMayLikeProductSerializer
     permission_classes = (AlreadyLoginUser,)
     # permission_classes = (AllowAny,)
 
@@ -344,7 +344,7 @@ class YouMayLikeProductsAPIView(APIView):
         logger.info("public_key:%s,token:%s",public_key,token)
         # FIXME query current user following tags,query top 10 products with tags
         queryset = Product.objects.filter(status=0)[0:10]
-        serializer = RecommendProductSerializer(queryset, many=True)
+        serializer = YouMayLikeProductSerializer(queryset, many=True)
         products = serializer.data
 
         # fill username and rating for each product,return to client
