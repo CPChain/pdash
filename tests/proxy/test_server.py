@@ -1,94 +1,113 @@
+# run trial test with following command:
+#     python3 -m twisted.trial ./test_server.py
+
+import os
+
 from twisted.test import proto_helpers
 from twisted.trial import unittest
-
 from twisted.internet.defer import Deferred
-from twisted.internet import reactor
+
+from cpchain.utils import reactor, join_with_rc
+
+from cpchain.account import Accounts
+from cpchain.crypto import ECCipher
 from cpchain.proxy.server import SSLServerFactory
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
-from cpchain.crypto import ECCipher, pub_key_der_to_addr
-from cpchain.proxy.proxy_db import Trade, ProxyDB
+from cpchain.proxy.db import ProxyDB
 from cpchain import config
 
-import os, time
 
-def fake_message(test_type):
-    buyer_private_key = b'\xa6\xf8_\xee\x1c\x85\xc5\x95\x8d@\x9e\xfa\x80\x7f\xb6\xe0\xb4u\x12\xb6\xdf\x00\xda4\x98\x8e\xaeR\x89~\xf6\xb5'
-    buyer_public_key = b'0V0\x10\x06\x07*\x86H\xce=\x02\x01\x06\x05+\x81\x04\x00\n\x03B\x00\x04\\\xfd\xf7\xccD(\x1e\xce`|\x85\xad\xbc*,\x17h.Gj[_N\xadTa\xa9*\xa0x\xff\xb4as\xd1\x94\x9fN\xa3\xe2\xd1fX\xf6\xcf\x8e\xb9+\xab\x0f3\x81\x12\x91\xbdy\xbd\xec\xa6\rZ\x05:\x80'
+accounts = Accounts()
+buyer_account = accounts[0]
+seller_account = accounts[1]
 
-    seller_private_key = b'\xa6\xf8_\xee\x1c\x85\xc5\x95\x8d@\x9e\xfa\x80\x7f\xb6\xe0\xb4u\x12\xb6\xdf\x00\xda4\x98\x8e\xaeR\x89~\xf6\xb5'
-    seller_public_key = b'0V0\x10\x06\x07*\x86H\xce=\x02\x01\x06\x05+\x81\x04\x00\n\x03B\x00\x04\\\xfd\xf7\xccD(\x1e\xce`|\x85\xad\xbc*,\x17h.Gj[_N\xadTa\xa9*\xa0x\xff\xb4as\xd1\x94\x9fN\xa3\xe2\xd1fX\xf6\xcf\x8e\xb9+\xab\x0f3\x81\x12\x91\xbdy\xbd\xec\xa6\rZ\x05:\x80'
+buyer_private_key = buyer_account.private_key  #object type
+buyer_public_key = ECCipher.serialize_public_key(
+    buyer_account.public_key)    # string type
+buyer_addr = ECCipher.get_address_from_public_key(
+    buyer_account.public_key)  #string type
 
-    if test_type == 'seller_data':
-        message = Message()
-        seller_data = message.seller_data
-        message.type = Message.SELLER_DATA
-        seller_data.order_id = 1
-        seller_data.seller_addr = pub_key_der_to_addr(seller_public_key)
-        seller_data.buyer_addr = pub_key_der_to_addr(buyer_public_key)
-        seller_data.market_hash = b'MARKET_HASH'
-        seller_data.AES_key = b'AES_key'
-        storage = seller_data.storage
+seller_private_key = seller_account.private_key
+seller_public_key = ECCipher.serialize_public_key(
+    seller_account.public_key)   #string type
+seller_addr = ECCipher.get_address_from_public_key(
+    seller_account.public_key)  #string type
+
+
+def fake_seller_message(storage_type):
+    message = Message()
+    seller_data = message.seller_data
+    message.type = Message.SELLER_DATA
+    seller_data.order_id = 1
+    seller_data.seller_addr = seller_addr
+    seller_data.buyer_addr = buyer_addr
+    seller_data.market_hash = 'MARKET_HASH'
+    seller_data.AES_key = b'AES_key'
+    storage = seller_data.storage
+
+    if storage_type == 'ipfs':
         storage.type = Message.Storage.IPFS
         ipfs = storage.ipfs
-        ipfs.file_hash = b'QmT4kFS5gxzQZJwiDJQ66JLVGPpyTCF912bywYkpgyaPsD'
+        ipfs.file_hash = 'QmT4kFS5gxzQZJwiDJQ66JLVGPpyTCF912bywYkpgyaPsD'
         ipfs.gateway = "192.168.0.132:5001"
 
-    elif test_type == 'buyer_data':
-        message = Message()
-        buyer_data = message.buyer_data
-        message.type = Message.BUYER_DATA
-        buyer_data.order_id = 1
-        buyer_data.seller_addr = pub_key_der_to_addr(seller_public_key)
-        buyer_data.buyer_addr = pub_key_der_to_addr(buyer_public_key)
-        buyer_data.market_hash = b'MARKET_HASH'
-
-    else:
-        message = Message()
+    elif storage_type == 's3':
+        storage.type = Message.Storage.S3
+        s3 = storage.s3
+        s3.bucket = 'cpchain-bucket'
+        s3.key = 'cpchain-test.txt'
 
     return message
 
-def generate_sign_message(message):
-    private_key = b'\xa6\xf8_\xee\x1c\x85\xc5\x95\x8d@\x9e\xfa\x80\x7f\xb6\xe0\xb4u\x12\xb6\xdf\x00\xda4\x98\x8e\xaeR\x89~\xf6\xb5'
-    public_key = b'0V0\x10\x06\x07*\x86H\xce=\x02\x01\x06\x05+\x81\x04\x00\n\x03B\x00\x04\\\xfd\xf7\xccD(\x1e\xce`|\x85\xad\xbc*,\x17h.Gj[_N\xadTa\xa9*\xa0x\xff\xb4as\xd1\x94\x9fN\xa3\xe2\xd1fX\xf6\xcf\x8e\xb9+\xab\x0f3\x81\x12\x91\xbdy\xbd\xec\xa6\rZ\x05:\x80'
+def fake_buyer_message():
+    message = Message()
+    buyer_data = message.buyer_data
+    message.type = Message.BUYER_DATA
+    buyer_data.order_id = 1
+    buyer_data.seller_addr = seller_addr
+    buyer_data.buyer_addr = buyer_addr
+    buyer_data.market_hash = 'MARKET_HASH'
 
+    return message
+
+def sign_seller_message(message):
     sign_message = SignMessage()
-    sign_message.public_key = public_key
+    sign_message.public_key = seller_public_key
     sign_message.data = message.SerializeToString()
-    sign_message.signature = ECCipher.generate_signature(
-                                private_key,
-                                sign_message.data
-                            )
+    sign_message.signature = ECCipher.create_signature(
+        seller_private_key,
+        sign_message.data
+        )
+
+    return sign_message
+
+def sign_buyer_message(message):
+    sign_message = SignMessage()
+    sign_message.public_key = buyer_public_key
+    sign_message.data = message.SerializeToString()
+    sign_message.signature = ECCipher.create_signature(
+        buyer_private_key,
+        sign_message.data
+        )
 
     return sign_message
 
 
-def proxy_reply_success(self):
-        trade = self.trade
-        message = Message()
-        message.type = Message.PROXY_REPLY
-        proxy_reply = message.proxy_reply
-        proxy_reply.AES_key = trade.AES_key
-        proxy_reply.file_uuid = trade.file_uuid
-
-        string = message.SerializeToString()
-        self.sendString(string)
-
-
-clean_up = False
+_clean_up_db = False
 class SSLServerTestCase(unittest.TestCase):
 
     def clean_up_old_data(self, ):
-        global clean_up
-        if not clean_up:
-            clean_up = True
+        global _clean_up_db  # pylint: disable=global-statement
+        if not _clean_up_db:
+            _clean_up_db = True
             # init database
-            db_path = os.path.join(config.home, config.proxy.dbpath)
+            db_path = join_with_rc(config.proxy.dbpath)
             db_path = os.path.expanduser(db_path)
             if os.path.isfile(db_path):
                 os.remove(db_path)
 
             # clean server_root
-            server_root = os.path.join(config.home, config.proxy.server_root)
+            server_root = join_with_rc(config.proxy.server_root)
             server_root = os.path.expanduser(server_root)
             for root, dirs, files in os.walk(server_root, topdown=False):
                 for name in files:
@@ -103,19 +122,24 @@ class SSLServerTestCase(unittest.TestCase):
         self.factory.proxy_db = ProxyDB()
         self.factory.proxy_db.session_create()
 
+        self.factory.ip = '127.0.0.1'
+        self.factory.data_port = 8001
+
         self.proto = self.factory.buildProtocol(("localhost", 0))
         self.transport = proto_helpers.StringTransport()
         self.proto.makeConnection(self.transport)
 
-    def defer_task(self, reply_error):
+    def check_response_later(self, reply_error, wait=5):
         d = Deferred()
-        reactor.callLater(5, d.callback, reply_error)
+        reactor.callLater(wait, d.callback, reply_error)
+        d.addCallback(self.check_response)
 
         return d
 
     def check_response(self, reply_error):
         string = self.transport.value()
-        len, string = string.split(b':')
+        _, string = string.split(b':', 1)
+
         message = Message()
         message.ParseFromString(string)
 
@@ -129,97 +153,70 @@ class SSLServerTestCase(unittest.TestCase):
             self.assertEqual(reply_error, proxy_reply.error)
 
     def test_1_buyer_request(self):
-        message = fake_message('buyer_data')
-        sign_message = generate_sign_message(message)
+        message = fake_buyer_message()
+        sign_message = sign_buyer_message(message)
         string = sign_message.SerializeToString()
         self.proto.stringReceived(string)
-        d = self.defer_task('trade record not found in database')
-        d.addCallback(self.check_response)
-        return d
+        return self.check_response_later('trade record not found in database')
 
     def test_2_seller_request(self):
-        message = fake_message('seller_data')
-        sign_message = generate_sign_message(message)
+        message = fake_seller_message('ipfs')
+        sign_message = sign_seller_message(message)
         string = sign_message.SerializeToString()
         self.proto.stringReceived(string)
-        d = self.defer_task('')
-        d.addCallback(self.check_response)
-        return d
+        return self.check_response_later('')
 
     def test_3_seller_request(self):
-        message = fake_message('seller_data')
-        sign_message = generate_sign_message(message)
+        message = fake_seller_message('ipfs')
+        sign_message = sign_seller_message(message)
         string = sign_message.SerializeToString()
         self.proto.stringReceived(string)
-        d = self.defer_task('trade record already in database')
-        d.addCallback(self.check_response)
-        return d
+        return self.check_response_later('trade record already in database')
 
     def test_3_sold_to_another_buyer(self):
-        message = fake_message('seller_data')
+        message = fake_seller_message('ipfs')
+        message.seller_data.order_id = 2
         message.seller_data.buyer_addr = b'fake addr'
-        sign_message = generate_sign_message(message)
+        sign_message = sign_seller_message(message)
         string = sign_message.SerializeToString()
         self.proto.stringReceived(string)
-        d = self.defer_task('')
-        d.addCallback(self.check_response)
-        return d
+        return self.check_response_later('')
 
     def test_4_buyer_request(self):
-        message = fake_message('buyer_data')
-        sign_message = generate_sign_message(message)
+        message = fake_buyer_message()
+        sign_message = sign_buyer_message(message)
         string = sign_message.SerializeToString()
         self.proto.stringReceived(string)
-        d = self.defer_task('')
-        d.addCallback(self.check_response)
-        return d
+        return self.check_response_later('')
 
     def test_invalid_signature(self):
-        message = fake_message('seller_data')
-        sign_message = generate_sign_message(message)
-        sign_message.public_key = b'invalid key'
+        message = fake_buyer_message()
+        sign_message = sign_buyer_message(message)
+        sign_message.public_key = 'invalid key'
         string = sign_message.SerializeToString()
         self.proto.stringReceived(string)
-        d = self.defer_task('wrong signature')
-        d.addCallback(self.check_response)
-        return d
+        return self.check_response_later('wrong signature')
 
     def test_S3_storage(self):
-        message = fake_message('seller_data')
-        message.seller_data.storage.type = Message.Storage.S3
-        message.seller_data.storage.s3.uri = 's3 uri'
-        sign_message = generate_sign_message(message)
+        message = fake_seller_message('s3')
+        message.seller_data.order_id = 3
+        sign_message = sign_seller_message(message)
         string = sign_message.SerializeToString()
         self.proto.stringReceived(string)
-        d = self.defer_task('not support S3 storage yet')
-        d.addCallback(self.check_response)
-        return d
+        return self.check_response_later('', 10)
 
-    def test_not_seller_signature(self):
-        message = fake_message('seller_data')
-        message.seller_data.seller_addr = b'fake addr'
-        sign_message = generate_sign_message(message)
+    def test_key_not_match_address(self):
+        message = fake_buyer_message()
+        message.buyer_data.buyer_addr = 'fake addr'
+        sign_message = sign_buyer_message(message)
         string = sign_message.SerializeToString()
         self.proto.stringReceived(string)
-        d = self.defer_task("not seller's signature")
-        d.addCallback(self.check_response)
-        return d
-
-    def test_not_buyer_signature(self):
-        message = fake_message('buyer_data')
-        message.seller_data.seller_addr = b'fake addr'
-        sign_message = generate_sign_message(message)
-        string = sign_message.SerializeToString()
-        self.proto.stringReceived(string)
-        d = self.defer_task("not buyer's signature")
-        d.addCallback(self.check_response)
-        return d
+        return self.check_response_later('public key does not match with address')
 
     def test_invalid_request(self):
-        message = fake_message('invalid_data')
-        sign_message = generate_sign_message(message)
+        message = fake_buyer_message()
+        message.type = 3 # any value large than 2 is invalid
+        sign_message = sign_buyer_message(message)
         string = sign_message.SerializeToString()
         self.proto.stringReceived(string)
-        d = self.defer_task('wrong client request')
-        d.addCallback(self.check_response)
-        return d
+        return self.check_response_later('wrong client request')
