@@ -26,7 +26,7 @@ class ProductPublishAPIViewSet(APIView):
     permission_classes = (AlreadyLoginUser,)
 
     def post(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         logger.info("public_key:%s" % public_key)
 
         data = request.data
@@ -90,7 +90,7 @@ class MyProductSearchAPIViewSet(APIView):
     permission_classes = (AlreadyLoginUser,)
 
     def get(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         logger.info("public_key:%s" % public_key)
         params = request.query_params
         keyword = params.get('keyword')
@@ -117,7 +117,7 @@ class MyProductPagedSearchAPIViewSet(APIView):
 
     def get(self, request):
 
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         logger.info("public_key:%s" % public_key)
         params = request.query_params
         keyword = params.get('keyword')
@@ -228,7 +228,7 @@ class BaseProductStatusAPIView(APIView):
         raise BaseException("not implemented")
 
     def update_product_status(self, request, status):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         logger.debug("public_key:%s status:%s" % (public_key, status))
 
         try:
@@ -275,7 +275,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = (AlreadyLoginUser,)
 
     def perform_create(self, serializer):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         logger.debug("create product for public_key:%s" % public_key)
         serializer.save(owner=WalletUser.objects.get(public_key=public_key))
 
@@ -334,12 +334,11 @@ class YouMayLikeProductsAPIView(APIView):
     queryset = Product.objects.all()
     serializer_class = YouMayLikeProductSerializer
     permission_classes = (AlreadyLoginUser,)
-    # permission_classes = (AllowAny,)
 
     @ExceptionHandler
     def get(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
-        token = self.request.META.get('MARKET-TOKEN')
+        public_key = get_header(self.request)
+        token = get_header(self.request, 'MARKET-TOKEN')
 
         logger.info("public_key:%s,token:%s",public_key,token)
         # FIXME query current user following tags,query top 10 products with tags
@@ -376,7 +375,7 @@ class ProductSalesQuantityAddAPIView(APIView):
         return self.increase_product_sales_quantity(request)
 
     def increase_product_sales_quantity(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         market_hash = request.data['market_hash']
         logger.debug("public_key:%s market_hash:%s" % (public_key, market_hash))
 
@@ -402,7 +401,7 @@ class ProductTagSubscribeAPIView(APIView):
 
     @ExceptionHandler
     def post(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         tag = request.data['tag']
         logger.debug("public_key:%s tag:%s" % (public_key, tag))
 
@@ -419,7 +418,7 @@ class ProductTagUnsubscribeAPIView(APIView):
 
     @ExceptionHandler
     def post(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         tag = request.data['tag']
         logger.debug("delete tag:%s for public_key:%s" % (tag, public_key))
         MyTag.objects.filter(public_key=public_key, tag=request.data['tag']).delete()
@@ -436,7 +435,7 @@ class MyTagSearchAPIView(APIView):
 
     @ExceptionHandler
     def get(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         queryset = MyTag.objects.filter(public_key=public_key)
         page_set = PageNumberPagination().paginate_queryset(queryset=queryset, request=request, view=self)
         serializer = MyTagSerializer(page_set, many=True)
@@ -453,7 +452,7 @@ class MyTaggedProductSearchAPIView(APIView):
 
     @ExceptionHandler
     def get(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         tag_list = MyTag.objects.filter(public_key=public_key)
         logger.debug('taglist:%s' % tag_list)
         keyword = ','.join(x.tag for x in tag_list)
@@ -477,7 +476,7 @@ class ProductSellerSubscribeAPIView(APIView):
 
     @ExceptionHandler
     def post(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         seller_public_key = request.data['seller_public_key']
         logger.debug("public_key:%s seller_public_key:%s" % (public_key, seller_public_key))
 
@@ -495,7 +494,7 @@ class ProductSellerUnsubscribeAPIView(APIView):
 
     @ExceptionHandler
     def post(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         seller_public_key = request.data['seller_public_key']
         logger.debug("delete seller_public_key:%s for public_key:%s" % (seller_public_key, public_key))
         MySeller.objects.filter(public_key=public_key, seller_public_key=request.data['seller_public_key']).delete()
@@ -512,7 +511,7 @@ class MyFollowingSellerSearchAPIView(APIView):
 
     @ExceptionHandler
     def get(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         queryset = MySeller.objects.filter(public_key=public_key)
         page_set = PageNumberPagination().paginate_queryset(queryset=queryset, request=request, view=self)
         serializer = MySellerSerializer(page_set, many=True)
@@ -529,7 +528,7 @@ class MyFollowingSellerProductSearchAPIView(APIView):
 
     @ExceptionHandler
     def get(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         seller_list = MySeller.objects.filter(public_key=public_key)
         keyword = ','.join(x.seller_public_key for x in seller_list)
         logger.debug('keyword:%s' % keyword)
