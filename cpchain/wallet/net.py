@@ -297,3 +297,12 @@ class MarketClient:
         confirm_info = yield treq.json_content(resp)
         logger.debug('upload file info to market confirm: %s', confirm_info)
         return confirm_info['status']
+
+
+    @inlineCallbacks
+    def query_by_seller(self, public_key):
+        url = self.url + 'product/v1/es_product/search/?status=0&seller=' + str(public_key)
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token, 'Content-Type': 'application/json'}
+        resp = yield treq.get(url, headers=header)
+        confirm_info = yield treq.json_content(resp)
+        return confirm_info['results']

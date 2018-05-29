@@ -1995,27 +1995,33 @@ class SellTab(QScrollArea):
         self.init_ui()
 
     def update_table(self):
-        #file_list = get_file_list()
-        print("Updating file list......")
-        file_list = []
-        # single element data structure (assumed); to be changed 
-        dict_exa = {"type": "mkv", "name": "Infinity War", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "published"}
-        for i in range(self.row_number):
-            file_list.append(dict_exa)
 
-        for cur_row in range(self.row_number):
-            if cur_row == len(file_list):
-                break
-            checkbox_item = QTableWidgetItem()
-            checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-            checkbox_item.setCheckState(Qt.Unchecked)
-            self.file_table.setItem(cur_row, 0, checkbox_item)
-            self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["type"]))
-            self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["name"]))
-            self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
-            self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["remote_type"]))
-            self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
-            self.file_table.setItem(cur_row, 6, QTableWidgetItem(str(self.file_list[cur_row].id)))
+        d = wallet.market_client.query_by_seller(wallet.market_client.public_key)
+        def handle_query_by_seller(products):
+            self.file_list = []
+            if len(products) == 0:
+                item = {"ID": "00x2222", "title": "Medical Data from Mayo Clinic", "price": "100", "avg_rating": "83%", "sales_number": "13087", "end_date": "2018-05-05"}
+                for i in range(self.row_number):
+                    self.file_list.append(item)
+            else:
+                self.file_list = products
+            set_table_value(self.file_list)
+
+        d.addCallback(handle_query_by_seller)
+
+        def set_table_value(products):
+            for cur_row in range(self.row_number):
+                if cur_row == len(products):
+                    break
+                checkbox_item = QTableWidgetItem()
+                checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+                checkbox_item.setCheckState(Qt.Unchecked)
+                self.file_table.setItem(cur_row, 0, checkbox_item)
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(products[cur_row]["title"]))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(products[cur_row]["price"]))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(products[cur_row]["sales_number"]))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(products[cur_row]["avg_rating"]))
+                self.file_table.setItem(cur_row, 5, QTableWidgetItem(products[cur_row]["end_date"]))
 
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
@@ -2088,49 +2094,54 @@ class SellTab(QScrollArea):
             file_table.setFocusPolicy(Qt.NoFocus) 
             # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
-            file_table.setColumnCount(8)
+            file_table.setColumnCount(6)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
 
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price ($)', 'Order', 'Sales', 'Rating', 'Update Time', 'ID'])
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price ($)', 'Sales', 'Rating', 'Update Time'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.verticalHeader().setDefaultSectionSize(30)
             file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
             file_table.setSortingEnabled(True)
 
-            #file_list = get_file_list()
-            file_list = []
-            print("Getting file list.......")
-            dict_exa = {"type": "mkv", "name": "Infinity War", "price": "200", "order": "36", "sales": "7200", "rating": "4.5", "updatetime": "2018/5/14 08:30"}
-            for i in range(self.row_number):
-                file_list.append(dict_exa)
-
             self.check_record_list = []
             self.checkbox_list = []
             for cur_row in range(self.row_number):
-                if cur_row == len(file_list):
+                if cur_row == len(self.file_list):
                     break
                 checkbox_item = QTableWidgetItem()
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 checkbox_item.setCheckState(Qt.Unchecked)
                 self.file_table.setItem(cur_row, 0, checkbox_item)
-                self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["name"]))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["price"]))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["order"]))
-                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["sales"]))
-                self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["rating"]))
-                self.file_table.setItem(cur_row, 6, QTableWidgetItem(file_list[cur_row]["updatetime"]))
-                #self.file_table.setItem(cur_row, 7, QTableWidgetItem(str(self.file_list[cur_row].id)))
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row]["title"]))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(self.file_list[cur_row]["price"]))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row]["sales_number"]))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(self.file_list[cur_row]["avg_rating"]))
+                self.file_table.setItem(cur_row, 5, QTableWidgetItem(self.file_list[cur_row]["end_date"]))
                 self.check_record_list.append(False)
-        create_file_table()    
-        self.file_table.sortItems(2)
-        self.file_table.horizontalHeader().setStyleSheet("QHeaderView::section{background: #f3f3f3; border: 1px solid #dcdcdc}")
-        # record rows that are clicked or checked
+
+        d = wallet.market_client.query_by_seller(wallet.market_client.public_key)
+        def handle_query_by_seller(products):
+            self.file_list = []
+            if len(products) == 0:
+                item = {"ID": "00x2222", "title": "Medical Data from Mayo Clinic", "price": "100", "avg_rating": "83%", "sales_number": "13087", "end_date": "2018-05-05"}
+                for i in range(self.row_number):
+                    self.file_list.append(item)
+            else:
+                self.file_list = products
+            create_file_table()
+            self.file_table.itemClicked.connect(record_check)
+
+            self.file_table.sortItems(2)
+            self.file_table.horizontalHeader().setStyleSheet("QHeaderView::section{background: #f3f3f3; border: 1px solid #dcdcdc}")
+            set_layout()
+        d.addCallback(handle_query_by_seller)
+
         def record_check(item):
             self.cur_clicked = item.row()
             if item.checkState() == Qt.Checked:
                 self.check_record_list[item.row()] = True
-        self.file_table.itemClicked.connect(record_check)
+        # self.file_table.itemClicked.connect(record_check)
 
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self)
@@ -2165,9 +2176,10 @@ class SellTab(QScrollArea):
             self.main_layout.addWidget(self.file_table)
             self.main_layout.addSpacing(2)
             self.setLayout(self.main_layout)
-        set_layout()
-        print("Loading stylesheet of cloud tab widget")
-        load_stylesheet(self, "sell.qss")
+            load_stylesheet(self, "sell.qss")
+        # set_layout()
+        # print("Loading stylesheet of cloud tab widget")
+        # load_stylesheet(self, "sell.qss")
 
     def handle_delete(self):
         for i in range(len(self.check_record_list)):
