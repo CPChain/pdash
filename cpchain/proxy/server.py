@@ -226,6 +226,8 @@ class SSLServerFactory(protocol.Factory):
 
     def __init__(self):
         self.proxy_db = None
+        self.ip = '127.0.0.1'
+        self.data_port = config.proxy.server_data_port
 
     def buildProtocol(self, addr):
         return SSLServerProtocol(self)
