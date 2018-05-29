@@ -2628,10 +2628,18 @@ class Product2(QScrollArea):
         load_stylesheet(self, "product.qss")
         logger.debug("Loading stylesheet of item")
 
+    @inlineCallbacks
+    def get_product_info(self):
+        product_info = self.item
+        promo_list = yield wallet.market_client.query_promotion()
+        main_wnd.findChild(QWidget, 'productdetail_tab').update_page(product_info, promo_list)
+
+
     def title_clicked_act(self):
         # wid = self.parent.parent.findChild(QWidget, "productdetail_tab")
         # self.parent.parent.content_tabs.setCurrentWidget(wid)
         print("title_clicked_act")
+        self.get_product_info()
         wid = main_wnd.content_tabs.findChild(QWidget, "productdetail_tab")
         main_wnd.content_tabs.setCurrentWidget(wid)
 
