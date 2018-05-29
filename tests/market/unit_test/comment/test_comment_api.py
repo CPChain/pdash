@@ -40,8 +40,6 @@ class TestCommentApi(LocalBaseApiTest, APITestCase):
         token, market_hash = self.get_token_market_hash()
         url = reverse('get_summary_comment')
         params = {'market_hash': market_hash}
-        # url = '%s/comment/v1/summary_comment/?market_hash=%s' % (HOST,market_hash)
-        # summary_comment = requests.get(url)
         summary_comment = self.client.get(url, params)
         print("summary_comment:%s" % summary_comment)
         resp_text = self.get_response_content(summary_comment)
