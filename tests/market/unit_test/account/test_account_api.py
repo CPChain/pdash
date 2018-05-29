@@ -32,7 +32,7 @@ class TestAccountApi(LocalBaseApiTest, APITestCase):
         print("update profiles request:%s" % payload)
         header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
         resp_obj = self.client.post(url, data=payload, format='json', **header)
-        resp_text = resp_obj.content.decode("utf-8")
+        resp_text = self.get_response_content(resp_obj)
         print(resp_text)
         parsed_json = json.loads(resp_text)
         self.assertEqual(parsed_json['status'], 1)

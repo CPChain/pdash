@@ -87,6 +87,6 @@ class LocalBaseApiTest(unittest.TestCase):
         return token
 
     @staticmethod
-    def get_response_content(self, resp_obj):
+    def get_response_content(resp_obj):
         resp_text = resp_obj.content.decode("utf-8")
         return resp_text

@@ -1,9 +1,8 @@
-from cpchain.market.transaction.models import TransactionDetail
-from tests.market.base_api_test import *
-from cpchain.market.market.utils import *
-
-from tests.market.base_api_test_local import *
 from rest_framework.test import APITestCase
+
+from cpchain.market.market.utils import *
+from cpchain.market.transaction.models import TransactionDetail
+from tests.market.base_api_test_local import *
 
 
 class TestCommentApi(LocalBaseApiTest, APITestCase):
@@ -40,8 +39,6 @@ class TestCommentApi(LocalBaseApiTest, APITestCase):
         token, market_hash = self.get_token_market_hash()
         url = reverse('get_summary_comment')
         params = {'market_hash': market_hash}
-        # url = '%s/comment/v1/summary_comment/?market_hash=%s' % (HOST,market_hash)
-        # summary_comment = requests.get(url)
         summary_comment = self.client.get(url, params)
         print("summary_comment:%s" % summary_comment)
         resp_text = self.get_response_content(summary_comment)
