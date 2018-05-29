@@ -11,7 +11,7 @@ test-proxy:
 	python3 -m twisted.trial ./tests/proxy/test_server.py
 
 test-chain:
-	@exit 1
+	py.test ./tests/chain
 
 test-market:
 	@exit 1
