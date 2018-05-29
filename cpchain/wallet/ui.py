@@ -2700,6 +2700,7 @@ class PopularTab(QScrollArea):
         more_btn_2.setObjectName("more_btn_2")
         self.more_btn_2.setCursor(QCursor(Qt.PointingHandCursor))
 
+
         def create_hot_industry():
             self.hot_industry_label = []
             for i in range(config.wallet.hot_industry_num):
