@@ -461,9 +461,10 @@ class BuyNowDialog(QDialog):
 
 
 class ProductDetailTab(QScrollArea):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, item={}):
         super().__init__(parent)
         self.parent = parent
+        self.item = item
         # self.product_uid = product_uid
         # self.key_words = key_words
         #self.setObjectName("cart_tab")
@@ -491,7 +492,7 @@ class ProductDetailTab(QScrollArea):
         def create_labels():
 
             # TODO: replace hard code by self.product_info['sales_number']
-            self.title_label = title_label = QLabel("Title of the Product Title of the Product Title of the Product Title of the Product Title of the Product")
+            self.title_label = title_label = QLabel(self.product_info["title"])
             self.title_label.setObjectName("title_label")
             self.title_label.setWordWrap(True)
             self.title_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
@@ -514,28 +515,31 @@ class ProductDetailTab(QScrollArea):
             self.rating_label = QLabel("Rating")
             self.rating_label.setObjectName("rating_label")
 
-            self.average_score = QLabel("4.5")
+            self.average_score = QLabel("{0}".format(self.product_info["avg_rating"]))
             self.average_score.setObjectName("average_score")
 
             self.may_like_label = QLabel("You may like")
             self.may_like_label.setObjectName("may_like_label")
 
-            self.buyer_avatar = QLabel("")
-            self.buyer_avatar.setObjectName("buyer_avatar")
+            # TODO: to get info from backend
+            def add_comment():
+                self.buyer_avatar = QLabel("")
+                self.buyer_avatar.setObjectName("buyer_avatar")
 
-            self.buyer_name = QLabel("Ross Geller")
-            self.buyer_name.setObjectName("buyer_name") 
-            
-            self.data_label = QLabel("May 4, 2018")
-            self.data_label.setObjectName("data_label")   
+                self.buyer_name = QLabel("Ross Geller")
+                self.buyer_name.setObjectName("buyer_name")
 
-            self.buyer_rating = QLabel("4.5")
-            self.buyer_rating.setObjectName("buyer_rating")   
-    
-            self.buyer_comment = QLabel("Lorem ipsim dolor sit amet, consectetur adipiscing elit. Aenean euismod bibendum laoreet.")
-            self.buyer_comment.setObjectName("buyer_comment")    
-            self.buyer_comment.setWordWrap(True)
-            self.buyer_comment.setAlignment(Qt.AlignTop | Qt.AlignLeft)              
+                self.data_label = QLabel("May 4, 2018")
+                self.data_label.setObjectName("data_label")
+
+                self.buyer_rating = QLabel("4.5")
+                self.buyer_rating.setObjectName("buyer_rating")
+
+                self.buyer_comment = QLabel("Lorem ipsim dolor sit amet, consectetur adipiscing elit. Aenean euismod bibendum laoreet.")
+                self.buyer_comment.setObjectName("buyer_comment")
+                self.buyer_comment.setWordWrap(True)
+                self.buyer_comment.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+            add_comment()
 
             des_text = "In 2012, OWSLA launched a monthly subscription, The Nest, with benefits including early access to OWSLA releases.[12] In 2013, Bromance Records partners up with OWSLA to create an American branch titled BromanceUS with releases from Gesaffelstein, Illangelo."
 

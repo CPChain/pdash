@@ -306,3 +306,16 @@ class MarketClient:
         resp = yield treq.get(url, headers=header)
         confirm_info = yield treq.json_content(resp)
         return confirm_info['results']
+
+
+
+    @inlineCallbacks
+    def query_comment_by_hash(self, market_hash):
+        logger.debug("xxxxxxxxxxxxxxxxxxxxxxxx query comment ...")
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        url = self.url + '/comment/v1/comment/list/?market_hash=' + market_hash
+        resp = yield treq.get(url, headers=header)
+        comment_info = yield treq.json_content(resp)
+        logger.debug('upload file info to market confirm: %s', comment_info)
+        return comment_info['data']
