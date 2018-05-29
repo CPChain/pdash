@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from cpchain.market.account.models import WalletUser
+
 
 class Comment(models.Model):
     """
@@ -11,6 +13,13 @@ class Comment(models.Model):
     content = models.CharField('comment content', max_length=200)
     rating = models.IntegerField(default=1)
     created = models.DateTimeField('Created', auto_now_add=True)
+
+    def fill_attr(item):
+        pk = item['public_key']
+        u = WalletUser.objects.get(public_key=pk)
+        item['username'] = 'unknown' if not u else u.username
+        item['avatar'] = '' if not u else u.avatar
+        return item
 
     def __str__(self):
         return self.public_key
