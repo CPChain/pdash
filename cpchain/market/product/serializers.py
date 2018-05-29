@@ -15,6 +15,15 @@ class RecommendProductSerializer(serializers.ModelSerializer):
             'signature', 'msg_hash')
 
 
+class YouMayLikeProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = (
+            'id', 'owner_address', 'title', 'description', 'tags', 'price',
+            'created', 'seq', 'file_md5',
+            'signature', 'msg_hash')
+
+
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product

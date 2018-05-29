@@ -7,8 +7,7 @@ from tests.market.base_api_test import BaseApiTest
 class UtilsTest(BaseApiTest):
 
     def test_load_key_pair_from_keystore(self):
-
-        pri_key, pub_key = self.pri_key,self.pub_key
+        pri_key, pub_key = self.pri_key, self.pub_key
 
         # ---------- sign and verify ------------
         data = "testdata"
@@ -24,14 +23,21 @@ class UtilsTest(BaseApiTest):
         self.assertFalse(is_valid_sign, "should be failed")
 
     def test_get_address_from_public_key_object(self):
-
         pri_key, pub_key = self.pri_key, self.pub_key
 
         pub_key_string = ECCipher.serialize_public_key(pub_key)
 
-        addr_hex_str = get_address_from_public_key_object(pub_key_string )
+        addr_hex_str = get_address_from_public_key_object(pub_key_string)
         print("addr_hex_str:%s" % addr_hex_str)
         self.assertIsNotNone(addr_hex_str)
+
+    def test_short_name_success(self):
+        name = get_short_name('HTTP_MARKET_KEY')
+        self.assertEquals('MARKET-KEY', name)
+
+    def test_short_name_original(self):
+        name = get_short_name('MARKET-KEY')
+        self.assertEquals('MARKET-KEY', name)
 
 
 if __name__ == '__main__':

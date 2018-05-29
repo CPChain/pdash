@@ -84,6 +84,22 @@ def create_login_success_data_response(data):
     return JsonResponse({"status": 1, "message": data})
 
 
+def get_header(request, head_name='HTTP_MARKET_KEY'):
+    value = request.META.get(head_name, None)
+    if value is None:
+        another_head_name = get_short_name(head_name)
+        value = request.META.get(another_head_name, None)
+
+    return value
+
+
+def get_short_name(head_name):
+    names = head_name.split('_')
+    if len(names) > 1:
+        return "-".join(names[1:])
+    return head_name
+
+
 class ExceptionHandler(object):
 
     def __init__(self, func):
