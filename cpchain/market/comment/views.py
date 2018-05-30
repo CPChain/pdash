@@ -1,5 +1,4 @@
-import json
-
+from django.utils.http import unquote
 from django.db.models import Q
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
@@ -25,7 +24,7 @@ class ProductCommentListAPIView(APIView):
 
     @ExceptionHandler
     def get(self, request):
-        market_hash = self.request.GET.get('market_hash')
+        market_hash = unquote(self.request.GET.get('market_hash'))
         logger.debug("market_hash is %s" % market_hash)
         queryset = Comment.objects.filter(Q(market_hash=market_hash))
         page_set = PageNumberPagination().paginate_queryset(
@@ -56,7 +55,7 @@ class ProductCommentAddAPIView(APIView):
         logger.info("data:%s" % data)
 
         public_key = data['public_key']
-        market_hash = data['market_hash']
+        market_hash = unquote(data['market_hash'])
         logger.info("public_key:%s,market_hash:%s", public_key, market_hash)
 
         user = WalletUser.objects.get(public_key=public_key)
@@ -87,7 +86,8 @@ class ProductSummaryCommentSearchAPIView(APIView):
 
     @ExceptionHandler
     def get(self, request):
-        market_hash = self.request.GET.get('market_hash')
+
+        market_hash = unquote(self.request.GET.get('market_hash'))
         summary_comment, _ = SummaryComment.objects.get_or_create(market_hash=market_hash)
         logger.debug('summary_comment:%s' % summary_comment)
         serializer = SummaryCommentSerializer(summary_comment)

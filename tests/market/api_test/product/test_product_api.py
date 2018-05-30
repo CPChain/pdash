@@ -59,6 +59,7 @@ class TestProductApi(BaseApiTest):
         result = parsed_json['results']
         for p in result:
             print("title:%s" % p["title"])
+            self.assertGreater(p['size'], 1)
 
     def test_query_es_by_seller(self):
         url = '%s/product/v1/es_product/search/?status=0&seller=045cfdf7cc44281ece607c85adbc2a2c17682e476a5b5f4ead5461a92aa078ffb46173d1949f4ea3e2d16658f6cf8eb92bab0f33811291bd79bdeca60d5a053a80' % HOST
@@ -70,6 +71,7 @@ class TestProductApi(BaseApiTest):
         result = parsed_json['results']
         for p in result:
             print("title:%s" % p["title"])
+            self.assertGreater(p['size'], 1)
 
     def test_query_es_by_market_hash(self):
         url = '%s/product/v1/es_product/search/?status=0&pid=1xrqb9w9AUQguQE4Cds1q3VQQPojVUPNfwE2G19qVNo=' % HOST
@@ -81,7 +83,7 @@ class TestProductApi(BaseApiTest):
         result = parsed_json['results']
         for p in result:
             print("title:%s" % p["title"])
-
+            self.assertGreater(p['size'], 1)
 
     def test_hide_or_show_es_product(self):
 
@@ -153,28 +155,6 @@ class TestProductApi(BaseApiTest):
         # ======= unsubscribe seller ========
         self.unsubscribe_seller(token)
 
-    def query_product(self, keyword):
-        # params = {"keyword": keyword}
-        # url = '%s/product/v1/product/search/' % HOST
-        # response = requests.get(url, params)
-        # print("products:%s" % response)
-        # print(response.text)
-        # parsed_json = json.loads(response.text)
-        # for p in parsed_json:
-        #     print("title:%s" % p["title"])
-        pass
-
-    def query_paged_product(self, keyword):
-        pass
-        # params = {"keyword": keyword, "page":1}
-        # url = '%s/product/v1/product_paged/search/' % HOST
-        # response = requests.get(url, params)
-        # print("products:%s" % response)
-        # print(response.text)
-        # parsed_json = json.loads(response.text)
-        # for p in parsed_json['results']:
-        #     print(p["title"])
-
     def query_es_product(self):
         keyword = "Medicine"
         params = {"search": keyword,"status":0}
@@ -187,31 +167,7 @@ class TestProductApi(BaseApiTest):
         result = parsed_json['results']
         for p in result:
             print("title:%s" % p["title"])
-
-    def publish_product(self, token):
-        title = "Medicine big data from Mayo Clinic 222"
-        description = "test12345654654654654"
-        price = 15
-        tags = "tag1,tag2"
-        start_date = "2018-04-01 10:10:10"
-        end_date = "2018-12-10 10:10:10"
-        file_md5 = "12345678901234567890"
-        url = '%s/product/v1/product/publish/' % HOST
-        payload = {'owner_address': self.pub_key_string, 'title': title, 'description': description, 'price': price,
-                   'tags': tags, 'start_date': start_date, 'end_date': end_date, 'file_md5': file_md5}
-        signature_source = self.pub_key_string + title + description + str(price) + start_date + end_date + file_md5
-        signature = sign(self.pri_key, signature_source)
-
-        payload['signature'] = signature.hex()
-        print("publish product request:%s" % payload)
-        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
-        publish_resp = requests.post(url, headers=header, json=payload)
-        self.assertEqual(publish_resp.status_code, 200)
-        print(publish_resp.text)
-        parsed_json = json.loads(publish_resp.text)
-        self.assertEqual(parsed_json['status'], 1)
-        print("market_hash:%s" % parsed_json['data']["market_hash"])
-        return parsed_json['data']["market_hash"]
+            self.assertGreater(p['size'], 1)
 
     def add_product_sales_quantity(self, token):
         url = '%s/product/v1/sales_quantity/add/' % HOST
