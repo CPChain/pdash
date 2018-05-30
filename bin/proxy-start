@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys
+import sys, getopt
 import logging
 
 from twisted.python import log
@@ -10,27 +10,91 @@ from cpchain.proxy.node import Peer
 
 logger = logging.getLogger(__name__)
 
-if len(sys.argv) != 3:
-    logger.info("Usage: proxy-start <tracker ip:port> <dht ip:port>")
-    logger.info("example: proxy-start 127.0.0.1:8101 127.0.0.1:8201")
+def usage():
+    print(
+        """
+Usage: %s [options]
+Options:
+    -h, --help                 Display this information
+    --tracker    <ip:port>     Configure tracker address
+    --boot_node  <ip:port>     Configure boot_node address
+    --account_id <number>      Configure proxy account index
+    --ctrl_port  <port>        Configure proxy control channel port
+    --data_port  <port>        Configure proxy data channel port
+    --slave_port <port>        Configure slave port number to tracker
+    --dht_port   <port>        Configure port number to DHT network
+
+tracker and boot_node are required, while others are optional.
+        """ % sys.argv[0])
+
+try:
+    opts, args = getopt.getopt(
+        sys.argv[1:],
+        "h",
+        [
+            "help", "tracker=", "boot_node=", "account_id=",
+            "ctrl_port=", "data_port=", "slave_port=", "dht_port="
+            ]
+        )
+
+except getopt.GetoptError:
+    usage()
+    sys.exit(1)
+
+tracker = None
+boot_node = None
+
+account_id = 0
+ctrl_port = None
+data_port = None
+
+slave_port = None
+dht_port = None
+
+for opt, arg in opts:
+    if opt in ("-h", "--help"):
+        usage()
+        sys.exit(1)
+    elif opt == '--tracker':
+        addr, port = arg.split(':')
+        tracker = (str(addr), int(port))
+    elif opt == '--boot_node':
+        addr, port = arg.split(':')
+        boot_node = (str(addr), int(port))
+    elif opt == '--account_id':
+        account_id = int(arg)
+    elif opt == '--ctrl_port':
+        ctrl_port = int(arg)
+    elif opt == '--data_port':
+        data_port = int(arg)
+    elif opt == '--slave_port':
+        slave_port = int(arg)
+    elif opt == '--dht_port':
+        dht_port = int(arg)
+    else:
+        usage()
+
+if not tracker or not boot_node:
+    usage()
     sys.exit(1)
 
 log.startLogging(sys.stdout)
 
-addr, port = sys.argv[1].split(':')
-tracker = (str(addr), int(port))
-
 peer = Peer()
-peer.start_service()
+peer.start_service(
+    ctrl_port=ctrl_port,
+    data_port=data_port,
+    account_id=account_id
+    )
+
 peer.join_centra_net(
+    port=slave_port,
     tracker=tracker
     )
 
-addr, port = sys.argv[2].split(':')
-boot_nodes = [(str(addr), int(port))]
-
 peer.join_decentra_net(
-    boot_nodes=boot_nodes
+    port=dht_port,
+    boot_nodes=[boot_node]
     )
 
 reactor.run()
