@@ -2,7 +2,7 @@ import json
 import unittest
 
 import requests
-
+from cpchain.market.market.utils import *
 from cpchain.crypto import ECCipher
 from cpchain.utils import join_with_root, config, Encoder
 
@@ -68,3 +68,32 @@ class BaseApiTest(unittest.TestCase):
         token = parsed_json['message']
         print("token:%s" % token)
         return token
+
+
+    def publish_product(self, token):
+        title = "publish product 12444"
+        description = "test12345654654654654"
+        price = 9527
+        tags = "tag1,tag2"
+        start_date = "2018-04-01 10:10:10"
+        end_date = "2018-12-10 10:10:10"
+        file_md5 = "12345678901234567890"
+        url = '%s/product/v1/product/publish/' % HOST
+        payload = {'owner_address': self.pub_key_string, 'title': title,
+                   'description': description, 'price': price, 'size': 10,
+                   'tags': tags, 'start_date': start_date, 'end_date': end_date, 'file_md5': file_md5}
+        signature_source = self.pub_key_string + title + description + str(price) + start_date + end_date + file_md5
+
+        new_signature = sign(self.pri_key, signature_source)
+        print("new_signature is:" + new_signature.hex())
+
+        payload['signature'] = new_signature.hex()
+        print("publish product request:%s" % payload)
+        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
+        publish_resp = requests.post(url, headers=header, json=payload)
+        self.assertEqual(publish_resp.status_code, 200)
+        print(publish_resp.text)
+        parsed_json = json.loads(publish_resp.text)
+        self.assertEqual(parsed_json['status'], 1)
+        print("market_hash:%s" % parsed_json['data']["market_hash"])
+        return parsed_json['data']["market_hash"]

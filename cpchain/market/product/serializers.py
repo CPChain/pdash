@@ -11,7 +11,7 @@ class RecommendProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = (
             'id', 'owner_address', 'title', 'description', 'tags', 'price',
-            'created', 'seq', 'file_md5',
+            'created', 'seq', 'file_md5', 'size',
             'signature', 'msg_hash')
 
 
@@ -20,7 +20,7 @@ class YouMayLikeProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = (
             'id', 'owner_address', 'title', 'description', 'tags', 'price',
-            'created', 'seq', 'file_md5',
+            'created', 'seq', 'file_md5', 'size',
             'signature', 'msg_hash')
 
 
@@ -29,7 +29,7 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = (
             'id', 'owner_address', 'title', 'description', 'tags', 'price',
-            'created', 'start_date', 'end_date', 'seq', 'file_md5',
+            'created', 'start_date', 'end_date', 'seq', 'file_md5', 'size',
             'signature', 'msg_hash', 'status')
 
     def create(self, validated_data):
@@ -45,6 +45,7 @@ class ProductSerializer(serializers.ModelSerializer):
             signature=validated_data['signature'],
             owner=validated_data['owner'],
             file_md5=validated_data['file_md5'],
+            size=validated_data['size'],
             seq=validated_data['seq'],
             msg_hash=validated_data['msg_hash'],
             tags=validated_data['tags'],
@@ -91,11 +92,3 @@ class MySellerSerializer(serializers.ModelSerializer):
         model = MySeller
         fields = ('public_key', 'seller_public_key')
 
-
-class ElasticProductSerializer(ElasticModelSerializer):
-    class Meta:
-        model = Product
-        es_model = ProductIndex
-        fields = ('pk', 'owner_address', 'title', 'description', 'tags', 'price',
-                  'created', 'start_date', 'end_date', 'seq', 'file_md5',
-                  'signature', 'msg_hash', 'status')

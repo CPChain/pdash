@@ -82,7 +82,6 @@ class TestProductApi(BaseApiTest):
         for p in result:
             print("title:%s" % p["title"])
 
-
     def test_hide_or_show_es_product(self):
 
         token = self.login_and_fetch_token()
@@ -187,31 +186,6 @@ class TestProductApi(BaseApiTest):
         result = parsed_json['results']
         for p in result:
             print("title:%s" % p["title"])
-
-    def publish_product(self, token):
-        title = "Medicine big data from Mayo Clinic 222"
-        description = "test12345654654654654"
-        price = 15
-        tags = "tag1,tag2"
-        start_date = "2018-04-01 10:10:10"
-        end_date = "2018-12-10 10:10:10"
-        file_md5 = "12345678901234567890"
-        url = '%s/product/v1/product/publish/' % HOST
-        payload = {'owner_address': self.pub_key_string, 'title': title, 'description': description, 'price': price,
-                   'tags': tags, 'start_date': start_date, 'end_date': end_date, 'file_md5': file_md5}
-        signature_source = self.pub_key_string + title + description + str(price) + start_date + end_date + file_md5
-        signature = sign(self.pri_key, signature_source)
-
-        payload['signature'] = signature.hex()
-        print("publish product request:%s" % payload)
-        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
-        publish_resp = requests.post(url, headers=header, json=payload)
-        self.assertEqual(publish_resp.status_code, 200)
-        print(publish_resp.text)
-        parsed_json = json.loads(publish_resp.text)
-        self.assertEqual(parsed_json['status'], 1)
-        print("market_hash:%s" % parsed_json['data']["market_hash"])
-        return parsed_json['data']["market_hash"]
 
     def add_product_sales_quantity(self, token):
         url = '%s/product/v1/sales_quantity/add/' % HOST
