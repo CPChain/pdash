@@ -27,6 +27,7 @@ ipfsapi
 eth-keyfile
 google-cloud
 twisted
+service_identity
 treq
 protobuf
 cryptography
@@ -99,4 +100,3 @@ fi
 
 # openssl
 # libssl-dev
-
