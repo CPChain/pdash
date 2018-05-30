@@ -12,7 +12,7 @@ class TestCommentApi(LocalBaseApiTest, APITestCase):
                                          buyer_address=self.address)
         self.add_comment_success(token, market_hash)
 
-        params = {'market_hash':market_hash}
+        params = {'market_hash': market_hash}
         url = reverse('comment_list')
         print("url:", url)
         resp_obj = self.client.get(url,params)

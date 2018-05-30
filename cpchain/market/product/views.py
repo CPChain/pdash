@@ -458,7 +458,7 @@ class ProductSellerSubscribeAPIView(APIView):
         logger.debug("public_key:%s seller_public_key:%s" % (public_key, seller_public_key))
 
         obj, _ = MySeller.objects.get_or_create(public_key=public_key,
-                                                seller_public_key=request.data['seller_public_key'])
+                                                seller_public_key=seller_public_key)
         return JsonResponse({'status': 1, 'message': 'success'})
 
 
@@ -474,7 +474,7 @@ class ProductSellerUnsubscribeAPIView(APIView):
         public_key = get_header(self.request)
         seller_public_key = request.data['seller_public_key']
         logger.debug("delete seller_public_key:%s for public_key:%s" % (seller_public_key, public_key))
-        MySeller.objects.filter(public_key=public_key, seller_public_key=request.data['seller_public_key']).delete()
+        MySeller.objects.filter(public_key=public_key, seller_public_key=seller_public_key).delete()
         return JsonResponse({'status': 1, 'message': 'success'})
 
 
