@@ -18,6 +18,9 @@ def get_file_list():
 def get_file_by_id(file_id):
     return session.query(FileInfo).filter(FileInfo.id == file_id).all()[0]
 
+def get_file_by_hash(file_hash):
+    return session.query(FileInfo).filter(FileInfo.hashcode == file_hash)
+
 
 def get_buyer_file_list():
     return session.query(BuyerFileInfo).all()
