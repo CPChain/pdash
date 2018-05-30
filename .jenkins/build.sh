@@ -43,6 +43,7 @@ export PYTHONPATH=$PYTHONPATH:$ROOT_PATH
 
 echo "unit test for $modulename"
 
+# setup env
 if [ "$modulename" = "chain" ];
 then
     if ! pgrep geth > /dev/null
@@ -55,8 +56,16 @@ then
     fi
 fi
 
-py.test tests/$modulename  --junitxml=test_report.xml --cov-report=xml --cov=./
+# run test
+if [ "$modulename" = "market" ];
+then
+    python cpchain/market/manage.py test tests/market/unit_test --junitxml=test_report.xml --cov-report=xml --cov=./
+else
+    py.test tests/$modulename  --junitxml=test_report.xml --cov-report=xml --cov=./
+fi
 
+
+# teardown
 if [ $modulename="chain" ]
 then
    pkill -f "geth"
