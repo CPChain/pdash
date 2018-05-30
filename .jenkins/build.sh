@@ -72,3 +72,5 @@ if [ $modulename="chain" ]
 then
    pkill -f "geth"
 fi
+
+return 0
