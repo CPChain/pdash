@@ -1,42 +1,55 @@
-QTableWidget {
-    background: #ffffff;
-    alternate-background-color: #f3f3f3;
+QTabWidget{
+    margin-right: 0, 0, 0, 0;
     border: none;
-    border-top: 1px solid #555555;
-    color: #676767;
+    border-top: 2px solid #333333;
 }
 
-QTableWidget::item {
-    border: none;
-    outline: none;
-    outline-style: none;
-    color: #1c1c1c;
+QFrame.HorizontalLine{
+    color: #e5e5e5;
 }
 
-QTableWidget::item:selected {
-    background: #d8e1eb;
+QLineEdit#search_bar{
+    border-radius: 5px;
+    border: 1px solid #d7d7d7;
 }
 
-QTableWidget.QHeaderView::section {
-    color: #676767;
-    background-color: #f3f3f3
-    border: 1px solid #c9c9c9;
+QLineEdit#search_bar:hover {
+    border-radius: 5px;
+    border: 1px solid #3984f7;
 }
 
-QLineEdit.SearchBar{
-    border-radius: 7px;
-    border-color: #d7d7d7;
-}
-
-QLineEdit.SearchBar:hover{
-    border-color: #3984f7;
-}
-
-QPushButton#search_btn_sell {
+QPushButton#search_btn {
     border: none;
     outline: none;
     border-image: url(${asset_dir}/icons/search_btn.png); 
 }
+
+QPushButton#purchased_dled_tab_btn{
+    padding-left: 14px;
+    padding-right: 14px;
+    border: 1px solid #3173d8; 
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+    color: #ffffff;
+    min-height: 30px;
+    max-height: 30px;
+    background: #3173d8;
+    margin-right: 0px;
+}
+
+QPushButton#purchased_dling_tab_btn{
+    padding-left: 14px;
+    padding-right: 14px;
+    border: 1px solid #3173d8; 
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    color: #3173d8;
+    min-height: 30px;
+    max-height: 30px;
+    background: #ffffff;
+    margin-left: 0px;
+}
+
 
 QPushButton#purchased_dled_delete_btn, QPushButton#purchased_delete_btn, QPushButton#purchased_dling_delete_btn, QPushButton#purchased_dling_start_btn, QPushButton#purchased_dling_pause_btn{
     padding-left: 14px;
@@ -65,7 +78,85 @@ QPushButton#purchased_dled_delete_btn:disabled, QPushButton#purchased_delete_btn
     color: #8cb8ea;
 }
 
-QPushButton[c_flag = "1"]{
+
+QTableWidget {
+    background: #ffffff;
+    alternate-background-color: #f3f3f3;
+    border: none;
+    border-top: 1px solid #c9c9c9;
+    color: #676767;
+}
+
+QTableWidget::item {
+    border: none;
+    outline: none;
+    outline-style: none;
+    color: #1c1c1c;
+    height: 30px;
+}
+
+QTableWidget::item:selected, QTableWidget::item:focus {
+    background: #3173d8;
+    color: #ffffff;
+}
+
+QLineEdit#search_bar{
+    border-radius: 7px;
+    border-color: #d7d7d7;
+}
+
+QLineEdit#search_bar:hover{
+    border-color: #3984f7;
+}
+
+QPushButton#search_btn_sell {
+    border: none;
+    outline: none;
+    border-image: url(${asset_dir}/icons/search_btn.png); 
+}
+
+QProgressBar{
+    margin-top: 11px;
+    margin-bottom: 11px;
+    margin-right: 5px;
+    margin-left: 5px;
+    text-align: center;
+    background-color: #dddddd;
+    border: transparent;
+    border-radius: 10px;
+}
+
+QProgressBar::chunk{
+    border-radius: 10px;
+    background-color: #61cda8;
+}
+
+QProgressBar:focus{
+    background-color: #6f9bdf;
+}
+
+QProgressBar::chunk:focus{
+    background-color: #ffffff;
+}
+
+QLabel#open_path{
+    color: #3173d8;
+    font-size: 12px;
+}
+
+QLabel#purchased_total_orders_label, QLabel#time_label{
+    color: #777777;
+    font-size: 12px;
+}
+
+QLabel#total_orders_value{
+    color: #1c1c1c;
+    font-size: 16px;
+}
+
+
+
+/*QPushButton[c_flag = "1"]{
     padding-left: 14px;
     padding-right: 14px;
     border: 1px solid #3173d8; 
@@ -86,7 +177,7 @@ QPushButton[c_flag = "0"]{
     max-height: 30px;
     background: #ffffff;
 }
-
+*/
 
 
 

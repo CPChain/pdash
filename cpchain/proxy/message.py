@@ -1,5 +1,5 @@
 from cpchain.proxy.msg.trade_msg_pb2 import Message
-from cpchain.crypto import ECCipher # pylint: disable=no-name-in-module
+from cpchain.crypto import ECCipher
 
 def message_sanity_check(message):
 
@@ -23,7 +23,8 @@ def message_sanity_check(message):
                         return True
                 elif storage.type == Message.Storage.S3:
                     if storage.s3 and \
-                        storage.s3.uri:
+                        storage.s3.bucket and \
+                        storage.s3.key:
                         return True
     elif message.type == Message.BUYER_DATA and \
         message.buyer_data:
@@ -39,20 +40,26 @@ def message_sanity_check(message):
         if proxy_reply.error:
             return True
         elif proxy_reply.AES_key and \
-            proxy_reply.file_uuid:
+            proxy_reply.file_uri:
             return True
 
     return False
 
 def sign_message_verify(sign_message):
 
-    public_key = ECCipher.create_public_key(sign_message.public_key)
+    try:
+        public_key = ECCipher.create_public_key(sign_message.public_key)
 
-    return ECCipher.verify_sign(
-        public_key,
-        sign_message.signature,
-        sign_message.data
-        )
+        valid = ECCipher.verify_sign(
+            public_key,
+            sign_message.signature,
+            sign_message.data
+            )
+    except:
+        return False
+
+    else:
+        return valid
 
 def is_address_from_key(addr, public_key):
     public_key = ECCipher.create_public_key(public_key)

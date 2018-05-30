@@ -1,0 +1,54 @@
+[
+  {
+    "model": "main.carousel",
+    "pk": 1,
+    "fields": {
+      "name": "nnn",
+      "image": "cpchain/assets/wallet/icons/Banner.png",
+      "link": "http://www.google.com",
+      "index": 0,
+      "status": 1
+    }
+  },
+  {
+    "model": "main.hottag",
+    "pk": 1,
+    "fields": {
+      "image": "cpchain/assets/wallet/icons/tag1.png",
+      "tag": "t1",
+      "index": 0,
+      "status": 1
+    }
+  },
+  {
+    "model": "main.hottag",
+    "pk": 2,
+    "fields": {
+      "image": "cpchain/assets/wallet/icons/tag2.png",
+      "tag": "t1",
+      "index": 0,
+      "status": 1
+    }
+  },
+  {
+    "model": "main.hottag",
+    "pk": 3,
+    "fields": {
+      "image": "cpchain/assets/wallet/icons/tag3.png",
+      "tag": "t1",
+      "index": 0,
+      "status": 1
+    }
+  },
+  {
+    "model": "main.promotion",
+    "pk": 1,
+    "fields": {
+      "name": "",
+      "image": "cpchain/assets/wallet/icons/cpc-logo-single.png",
+      "link": "http://111.222.com",
+      "index": 0,
+      "status": 1
+    }
+  }
+]

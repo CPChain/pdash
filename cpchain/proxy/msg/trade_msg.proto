@@ -18,12 +18,13 @@ message Message {
 		}
 
 		message IPFS_Storage {
-			bytes file_hash = 1;
+			string file_hash = 1;
 			string gateway = 2;
 		}
 
 		message S3_Storage {
-			string uri = 1;
+			string bucket = 1;
+			string key = 2;
 		}
 
 		StorageType type = 1;
@@ -50,7 +51,7 @@ message Message {
 	message ProxyReply {
 		string error = 1;
 		bytes AES_key = 2;
-		string file_uuid = 3;
+		string file_uri = 3;
 	}
 
 	MessageType type = 1;

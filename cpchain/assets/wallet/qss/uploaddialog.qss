@@ -1,0 +1,85 @@
+QDialog{
+    background: #fafafa;
+}
+
+QPushButton#file_choose_btn{
+    padding-left: 14px;
+    padding-right: 14px;
+    border: 1px solid #3173d8; 
+    border-radius: 5px;
+    color: #ffffff;
+    min-height: 30px;
+    max-height: 30px;
+    min-width:  50px;
+    background: #3173d8;
+}
+
+QPushButton#file_choose_btn:hover{
+    background: #3984f7; 
+    border: 1px solid #3984f7;
+}
+
+QPushButton#file_choose_btn:pressed{
+    border: 1px solid #2e6dcd; 
+    background: #2e6dcd;
+}
+
+QPushbutton#file_choose_btn:disabled{
+    border: 1px solid #8cb8ea; 
+    background: #98b9eb;
+}
+
+QPushButton#cancel_btn{
+    padding-left: 14px;
+    padding-right: 14px;
+    border: 1px solid #3173d8; 
+    border-radius: 5px;
+    color: #3173d8;
+    min-height: 20px;
+    max-height: 30px;
+    background: #ffffff;
+    min-width: 50px;
+}
+
+QPushButton#cancel_btn:hover{
+    border: 1px solid #3984f7; 
+    color: #3984f6;
+}
+
+QPushButton#cancel_btn:pressed{
+    border: 1px solid #2e6dcd; 
+    color: #2e6dcd;
+    background: #e5ecf4;
+}
+
+QPushbutton#cancel_btn:disabled{
+    border: 1px solid #8cb8ea; 
+    color: #8cb8ea;
+}
+
+QPushButton#ok_btn{
+    padding-left: 14px;
+    padding-right: 14px;
+    border: 1px solid #3173d8; 
+    border-radius: 5px;
+    color: #ffffff;
+    min-height: 20px;
+    max-height: 30px;
+    min-width: 50px;
+    background: #3173d8;
+}
+
+QPushButton#ok_btn:hover{
+    background: #3984f7; 
+    border: 1px solid #3984f7;
+}
+
+QPushButton#ok_btn:pressed{
+    border: 1px solid #2e6dcd; 
+    background: #2e6dcd;
+}
+
+QPushbutton#ok_btn:disabled{
+    border: 1px solid #8cb8ea; 
+    background: #98b9eb;
+}

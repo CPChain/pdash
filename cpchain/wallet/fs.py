@@ -1,5 +1,6 @@
 import tempfile
 import os
+import logging
 
 from cpchain.wallet.db import session, FileInfo, osp, create_engine, sessionmaker, BuyerFileInfo
 from cpchain.crypto import AESCipher, RSACipher
@@ -7,11 +8,15 @@ from cpchain.utils import Encoder, join_with_rc
 from cpchain.storage import IPFSStorage
 from cpchain import root_dir, config
 
+logger = logging.getLogger(__name__)  # pylint: disable=locally-disabled, invalid-name
 
 def get_file_list():
     """This returns a list of files.
     """
     return session.query(FileInfo).all()
+
+def get_file_by_id(file_id):
+    return session.query(FileInfo).filter(FileInfo.id == file_id).all()[0]
 
 
 def get_buyer_file_list():
@@ -37,12 +42,30 @@ def add_file(new_file_info):
     session.commit()
 
 
+def update_file_info_version(public_key):
+    dbpath = join_with_rc(config.wallet.dbpath)
+    engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    public_key_list = []
+    for key in session.query(FileInfoVersion).all():
+        public_key_list.append(key.public_key)
+    if public_key not in public_key_list:
+        new_user_version = FileInfoVersion(version=1, public_key=public_key)
+        add_file(new_user_version)
+    else:
+        cur_version = session.query(FileInfoVersion).filter(FileInfoVersion.public_key==public_key)
+        session.query(FileInfoVersion).filter(FileInfoVersion.public_key==public_key). \
+            update({FileInfoVersion.version: cur_version+1}, synchronize_session=False)
+
+
+
 def publish_file_update(market_hash, selected_id):
     dbpath = join_with_rc(config.wallet.dbpath)
     engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
     Session = sessionmaker(bind=engine)
     session = Session()
-    session.query(FileInfo).filter(FileInfo.id == selected_id + 1). \
+    session.query(FileInfo).filter(FileInfo.id == selected_id). \
         update({FileInfo.market_hash: market_hash, FileInfo.is_published: True}, synchronize_session=False)
     session.commit()
 
@@ -77,20 +100,22 @@ def decrypt_file(file_in_path, file_out_path):
 def upload_file_ipfs(file_path):
     with tempfile.TemporaryDirectory() as tmpdirname:
         encrypted_path = os.path.join(tmpdirname, 'encrypted.txt')
-        print("before encrypt")
+        logger.debug("start to encrypt")
         this_key = encrypt_file(file_path, encrypted_path)
-        print("after encrypt")
+        logger.debug("encrypt completed")
         ipfs_client = IPFSStorage()
         ipfs_client.connect()
         file_hash = ipfs_client.upload_file(encrypted_path)
     file_name = list(os.path.split(file_path))[-1]
     file_size = os.path.getsize(file_path)
-    print("before database")
+    logger.debug('start to write data into database')
     new_file_info = FileInfo(hashcode=str(file_hash), name=file_name, path=file_path, size=file_size,
                              remote_type="ipfs", remote_uri="/ipfs/" + file_name,
                              is_published=False, aes_key=this_key)
     add_file(new_file_info)
-    return file_hash
+    logger.debug('file id: %s', new_file_info.id)
+    file_id = new_file_info.id
+    return file_id
 
 
 def download_file_ipfs(fhash, file_path):

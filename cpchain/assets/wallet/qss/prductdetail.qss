@@ -1,0 +1,146 @@
+QScrollArea.Product {
+    background: transparent;
+}
+
+QScrollArea {
+    border: none;
+    outline: none;
+}
+
+QFrame#productdetail_frame {
+    background: #fafafa;
+    border: none;
+    outline: none;
+}
+
+QLabel#title_label{
+	font: bold 20px;
+	/*font-family: "Arial"*/
+}
+
+QLabel#description_label, QLabel#date_label, QLabel#sales_label ,QLabel#size_label{
+	font: 14px;
+	color: #777777;
+}
+
+
+
+QLabel#descriptiondetail{
+	color: #222222;
+	font: 14px;
+}
+
+QLabel#seller_avatar{
+    border-image: url(${asset_dir}/icons/avatar.jpeg); 
+ 	min-height: 40px;
+    max-height: 40px;
+    min-width: 40px;
+    max-width: 40px;
+}
+
+QLabel#price_label{
+	color: #006bcf;
+	font: bold 20px;
+}
+
+QPushButton#collect_btn{
+    padding-left: 14px;
+    padding-right: 14px;
+    border: 1px solid #3173d8; 
+    border-radius: 5px;
+    color: #3173d8;
+    min-height: 30px;
+    max-height: 30px;
+    background: #ffffff;
+}
+
+QPushButton#collect_btn:hover{
+    border: 1px solid #3984f7; 
+    color: #3984f6;
+}
+
+QPushButton#collect_btn:pressed{
+    border: 1px solid #2e6dcd; 
+    color: #2e6dcd;
+    background: #e5ecf4;
+}
+
+QPushbutton#collect_btn:disabled{
+    border: 1px solid #8cb8ea; 
+    color: #8cb8ea;
+}
+
+QPushButton#buynow_btn{
+    padding-left: 14px;
+    padding-right: 14px;
+    border: 1px solid #3173d8; 
+    border-radius: 5px;
+    color: #ffffff;
+    min-height: 30px;
+    max-height: 30px;
+    background: #3173d8;
+}
+
+QPushButton#buynow_btn:hover{
+    background: #3984f7; 
+    border: 1px solid #3984f7;
+}
+
+QPushButton#buynow_btn:pressed{
+    border: 1px solid #2e6dcd; 
+    background: #2e6dcd;
+}
+
+QPushbutton#buynow_btn:disabled{
+    border: 1px solid #8cb8ea; 
+    background: #98b9eb;
+}
+
+QPushButton#seller_btn{
+	border: none;
+	background: none;
+	color: #006bcf;
+}
+
+QPushButton[t_value = "1"] {
+    padding-left: 5px;
+    padding-right: 5px;
+    min-height: 20px; 
+    min-width: 50px;  
+    max-width: 50px; 
+    max-height: 20px;
+    border: 1px solid #ececec;
+    border-radius: 5px;
+    background: #ececec;
+    color: #202020;
+    text-align: center;
+}
+
+QPushButton[t_value = "1"]:pressed{
+    background-color: #cfe3f5;
+    border: 1px solid #cfe3f5;
+    color: #006bcf;
+}
+
+QFrame.HorizontalLine {
+    color: #e5e5e5;
+}
+
+QLabel#buyer_name{
+	border: none;
+	background: none;
+	color: #006bcf;
+}
+
+QLabel#buyer_avatar{
+    border-image: url(${asset_dir}/icons/avatar.jpeg); 
+ 	min-height: 70px;
+    max-height: 70px;
+    min-width: 70px;
+    max-width: 70px;
+}
+
+QLabel#average_score, QLabel#buyer_rating {
+	font: bold 20px;
+}
+

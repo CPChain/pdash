@@ -1,0 +1,85 @@
+QTabWidget::pane {
+  border-top: 1px solid #e5e5e5;
+  top:-1px; 
+} 
+
+QTabBar::tab {
+  background: #fafafa; 
+  border: 1px solid #fafafa; 
+  padding: 15px;
+  text-align: left;
+} 
+
+QTabBar::tab:selected { 
+  background: #e5e5e5; 
+  margin-bottom: -1px; 
+  border-bottom: 4px solid #555555;
+}
+
+QPushButton#openpath_btn, QPushButton#addtag_btn{
+	background: none;
+	border: none;
+	color: #006bcf;
+	text-align: left;
+}
+
+QLabel#tips_label{
+
+}
+
+QPushButton#unfollow_btn{
+    padding-left: 14px;
+    padding-right: 14px;
+    border: 1px solid #3173d8; 
+    border-radius: 5px;
+    color: #3173d8;
+    min-height: 30px;
+    max-height: 30px;
+    background: #ffffff;
+    min-width: 60px;
+}
+
+QPushButton#unfollow_btn:hover{
+    border: 1px solid #3984f7; 
+    color: #3984f6;
+}
+
+QPushButton#unfollow_btn:pressed{
+    border: 1px solid #2e6dcd; 
+    color: #2e6dcd;
+    background: #e5ecf4;
+}
+
+QPushbutton#unfollow_btn:disabled{
+    border: 1px solid #8cb8ea; 
+    color: #8cb8ea;
+}
+
+QLabel#seller_avatar{
+    border-image: url(${asset_dir}/icons/avatar.jpeg); 
+ 	min-height: 100px;
+    max-height: 100px;
+    min-width: 100px;
+    max-width: 100px;
+
+}
+
+QPushButton[t_value = "1"] {
+    padding-left: 5px;
+    padding-right: 5px;
+    min-height: 20px; 
+    min-width: 50px;  
+    max-width: 50px; 
+    max-height: 20px;
+    border: 1px solid #ececec;
+    border-radius: 5px;
+    background: #ececec;
+    color: #202020;
+    text-align: center;
+}
+
+QPushButton[t_value = "1"]:pressed{
+    background-color: #cfe3f5;
+    border: 1px solid #cfe3f5;
+    color: #006bcf;
+}

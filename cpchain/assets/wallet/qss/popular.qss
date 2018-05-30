@@ -19,19 +19,15 @@ QLabel#price_label{
 }
 
 
-QLabel#trans_label, QLabel#forest_label, QLabel#medicine_label{
-    max-width: 250px;
-    max-height: 150px;
-    min-width: 150px;
+QLabel#hot_industry_0, QLabel#hot_industry_1, QLabel#hot_industry_2{
+    max-width: 230px;
+    max-height: 110px;
+    min-width: 200px;
     min-height: 90px;
 }
 
-QLabel {
-	color: #555555;
-}
-
 QPushButton#more_btn_1, QPushButton#more_btn_2 {
-	min-height: 16px; 
+    min-height: 16px; 
     min-width: 60px;  
     max-width: 60px; 
     max-height: 16px; 
@@ -42,7 +38,20 @@ QPushButton#more_btn_1, QPushButton#more_btn_2 {
 }
 
 QPushButton#more_btn_1:hover, QPushButton#more_btn_2:hover {
-	color: #5ca7ee;
+    color: #5ca7ee;
+}
+
+QLabel#banner_label{
+    max-width: 740px;
+    max-height: 195px;
+    min-width: 370px;
+    min-height: 98px;
+}
+
+QLabel#recom_label, QLabel#hot_label {
+	font: 18px;
+    /*font-family: "Ariel"*/
+    color: #555555;
 }
 
 QPushButton#title_btn {
@@ -90,65 +99,3 @@ QPushButton[t_value = "1"]:pressed{
     color: #006bcf;
 }
 /* END Specifying QSS for each tag*/
-
-QScrollBar:vertical{
-width:12px;
-border:1px solid rgba(0,0,0,50);
-margin:0px,0px,0px,0px;
-padding-top:15px;
-padding-bottom:15px;
-}
-
-QScrollBar::handle:vertical{
-width:16px;
-background:rgba(0,0,0,25%);
-min-height:20;
-}
-
-QScrollBar::handle:vertical:hover{
-background:rgba(0,0,0,50%);
-border:0px rgba(0,0,0,25%);
-}
-
-QScrollBar::sub-line:vertical{
-height:15px;
-border-image:url(:/Res/scroll_up.png);
-subcontrol-position:top;
-}
-
-QScrollBar::sub-line:vertical:hover{
-height:15px;
-background:rgba(0,0,0,25%);
-subcontrol-position:top;
-}
-
-QScrollBar::add-line:vertical{
-height:15px;
-border-image:url(:/Res/scroll_down.png);
-subcontrol-position:bottom;
-}
-
-QScrollBar::add-line:vertical:hover{
-height:15px;
-background:rgba(0,0,0,25%);
-subcontrol-position:bottom;
-}
-
-QScrollBar::add-page:vertical{
-background:rgb(255,255,255);
-}
-
-QScrollBar::sub-page:vertical{
-background:rgb(255,255,255);
-}
-
-QScrollBar::up-arrow:vertical{
-border-width:0px;
-max-height:16px;
-min-width:17px;
-}
-
-QScrollBar::down-arrow:vertical{
-border-style:outset;
-border-width:0px;
-} 

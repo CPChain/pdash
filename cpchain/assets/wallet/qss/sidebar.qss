@@ -18,29 +18,10 @@ QFrame {
     outline: none;
 }
 
-QPushButton#close_wnd_btn, QPushButton#minimize_wnd_btn, QPushButton#maximize_wnd_btn {
-    border: none;
-    icon-size: 20px;
-}
-
-
-QPushButton#close_wnd_btn {image: url(${asset_dir}/icons/close_wnd_btn.png);}
-QPushButton#close_wnd_btn:hover {image: url(${asset_dir}/icons/close_wnd_btn_active.png);}
-
-QPushButton#minimize_wnd_btn {image: url(${asset_dir}/icons/minimize_wnd_btn.png);}
-QPushButton#minimize_wnd_btn:hover {image: url(${asset_dir}/icons/minimize_wnd_btn_active.png);}
-
-/* #489E62 */
-QPushButton#maximize_wnd_btn {image: url(${asset_dir}/icons/maximize_wnd_btn.png);}
-/* #e67e22 */
-QPushButton#maximize_wnd_btn:hover {image: url(${asset_dir}/icons/maximize_wnd_btn_active.png);}
-
-QPushButton#close_wnd_btn::hover, QPushButton#minimize_wnd_btn::hover, QPushButton#maximize_wnd_btn::hover {
-    color: #ff4c4c;
-}
-
 QListWidget {
     /*font-family: "DejaVu Sans Mono";*/
+    /*font-family: : Arial;*/
+    border: none;
     font-size: 12pt; 
     /*font-weight: bold;*/  
     /*border: none;*/
@@ -48,8 +29,12 @@ QListWidget {
 }
 
 QListWidget::item  {
+    /*font-family: : Arial;*/
+    padding-left: 15px;
+    border-left: 3px solid #eeeeee;
     background: none;
     color: #1c1c1c; 
+    text-align: center; 
 }
 
 QListWidget::item:selected  {

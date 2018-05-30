@@ -18,11 +18,11 @@ from cpchain import config
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.message import message_sanity_check, \
 sign_message_verify, is_address_from_key
-# from cpchain.crypto import ECCipher # pylint: disable=no-name-in-module
+# from cpchain.crypto import ECCipher
 
-from cpchain.storage import IPFSStorage
+from cpchain.storage import IPFSStorage, S3Storage
 from cpchain.proxy.db import Trade, ProxyDB
-# from cpchain.chain.agents import ProxyAgent # pylint: disable=no-name-in-module
+# from cpchain.chain.agents import ProxyAgent
 # from cpchain.chain.utils import default_w3
 # from cpchain.utils import join_with_root, join_with_rc, Encoder
 from cpchain.utils import join_with_rc
@@ -40,7 +40,6 @@ class SSLServerProtocol(NetstringReceiver):
         self.proxy_db = factory.proxy_db
 
         self.peer = None
-        self.trade = None
 
     def connectionMade(self):
         self.factory.numConnections += 1
@@ -55,142 +54,159 @@ class SSLServerProtocol(NetstringReceiver):
 
         if not valid:
             error = 'wrong signature'
-            self.proxy_reply_error(error)
-            return
+            return self.proxy_reply_error(error)
 
         message = Message()
         message.ParseFromString(sign_message.data)
         valid = message_sanity_check(message)
         if not valid or message.type == Message.PROXY_REPLY:
             error = "wrong client request"
-            self.proxy_reply_error(error)
-            return
+            return self.proxy_reply_error(error)
 
         public_key = sign_message.public_key
 
+        if message.type == Message.SELLER_DATA:
+            public_addr = message.seller_data.seller_addr
+        elif message.type == Message.BUYER_DATA:
+            public_addr = message.buyer_data.buyer_addr
+
+        if not is_address_from_key(public_addr, public_key):
+            error = "public key does not match with address"
+            return self.proxy_reply_error(error)
+
+        self.handle_message(message)
+
+    def handle_message(self, message):
+
         proxy_db = self.proxy_db
-        self.trade = Trade()
-        trade = self.trade
-        error = None
+        trade = Trade()
 
         if message.type == Message.SELLER_DATA:
             data = message.seller_data
             trade.order_id = data.order_id
+
+            if proxy_db.count(trade):
+                error = "trade record already in database"
+                return self.proxy_reply_error(error)
+
             trade.seller_addr = data.seller_addr
             trade.buyer_addr = data.buyer_addr
             trade.market_hash = data.market_hash
             trade.AES_key = data.AES_key
 
-            if not is_address_from_key(data.seller_addr, public_key):
-                error = "not seller's signature"
-                self.proxy_reply_error(error)
-                return
-
             storage = data.storage
             if storage.type == Message.Storage.IPFS:
                 ipfs = storage.ipfs
-                trade.file_hash = ipfs.file_hash
-                if proxy_db.count(trade):
-                    error = "trade record already in database"
-                    self.proxy_reply_error(error)
-                    return
-                else:
-                    file_path = os.path.join(
-                        server_root,
-                        trade.file_hash.decode()
-                        )
+                trade.file_name = ipfs.file_hash
 
-                    # seller sold the same file to another buyer
-                    if os.path.isfile(file_path):
-                        mtime = time.time()
-                        os.utime(file_path, (mtime, mtime))
-                        proxy_db.insert(trade)
-                        self.proxy_reply_success()
+                file_path = os.path.join(
+                    server_root,
+                    trade.file_name
+                    )
 
-                        self.proxy_claim_relay()
+                # seller sold the same file to another buyer
+                if os.path.isfile(file_path):
+                    mtime = time.time()
+                    os.utime(file_path, (mtime, mtime))
+                    proxy_db.insert(trade)
 
-                        return
-                    else:
-                        d = threads.deferToThread(
-                            self.get_ipfs_file,
-                            ipfs.gateway,
-                            trade.file_hash
-                            )
+                    # self.proxy_claim_relay()
+                    return self.proxy_reply_success(trade)
 
-                        d.addBoth(self.ipfs_callback)
+
+                def download_ipfs_file():
+                    host, port = ipfs.gateway.strip().split(':')
+                    file_name = trade.file_name
+                    ipfs_storage = IPFSStorage()
+                    return ipfs_storage.connect(host, port) and \
+                            ipfs_storage.download_file(
+                                file_name, server_root)
+
+                d = threads.deferToThread(
+                    download_ipfs_file
+                    )
+
+                d.addCallback(self.file_download_finished, trade)
 
             elif storage.type == Message.Storage.S3:
-                error = "not support S3 storage yet"
-                self.proxy_reply_error(error)
-                return
+                s3 = storage.s3
+                bucket = s3.bucket
+                key = s3.key
+
+                # use order id as the local file name to avoid conflict
+                file_name = str(trade.order_id)
+                trade.file_name = file_name
+                file_path = os.path.join(server_root, file_name)
+
+                def download_s3_file():
+                    try:
+                        S3Storage().download_file(
+                            fpath=file_path,
+                            remote_fpath=key,
+                            bucket=bucket
+                            )
+                    except:
+                        logger.exception('failed to download S3 file')
+                        return False
+                    else:
+                        return True
+
+                d = threads.deferToThread(
+                    download_s3_file
+                )
+
+                d.addCallback(self.file_download_finished, trade)
 
         elif message.type == Message.BUYER_DATA:
             data = message.buyer_data
             trade.order_id = data.order_id
-            trade.seller_addr = data.seller_addr
-            trade.buyer_addr = data.buyer_addr
-            trade.market_hash = data.market_hash
-
-            if not is_address_from_key(data.buyer_addr, public_key):
-                error = "not buyer's signature"
-                self.proxy_reply_error(error)
-                return
 
             if proxy_db.count(trade):
-                self.trade = proxy_db.query(trade)
-                self.proxy_reply_success()
+                trade = proxy_db.query(trade)
+                self.proxy_reply_success(trade)
             else:
                 error = "trade record not found in database"
                 self.proxy_reply_error(error)
 
     def proxy_claim_relay(self):
         pass
+        # TODO: Some thing changed since last merge, need to update accordingly
+        # proxy_trans = ProxyAgent(default_w3, config.chain.core_contract)
+        # private_key_file_path = join_with_root(config.wallet.private_key_file)
+        # password_path = join_with_root(config.wallet.private_key_password_file)
+        # with open(password_path) as f:
+        #     password = f.read()
+        # priv_key, _ = ECCipher.load_key_pair_from_keystore(private_key_file_path, password)
+        # priv_key_bytes = Encoder.str_to_base64_byte(priv_key)
+        # digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
+        # digest.update(ECCipher.generate_signature(priv_key_bytes, to_bytes(self.trade.order_id)))
+        # deliver_hash = digest.finalize()
+        # tx_hash = proxy_trans.claim_relay(self.trade.order_id, deliver_hash)
+        # return tx_hash
 
-    # TODO: Some thing changed since last merge, need to update accordingly
-    #     proxy_trans = ProxyAgent(default_w3, config.chain.core_contract)
-    #     private_key_file_path = join_with_root(config.wallet.private_key_file)
-    #     password_path = join_with_root(config.wallet.private_key_password_file)
-    #     with open(password_path) as f:
-    #         password = f.read()
-    #     priv_key, _ = ECCipher.load_key_pair_from_keystore(private_key_file_path, password)
-    #     priv_key_bytes = Encoder.str_to_base64_byte(priv_key)
-    #     digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
-    #     digest.update(ECCipher.generate_signature(priv_key_bytes, to_bytes(self.trade.order_id)))
-    #     deliver_hash = digest.finalize()
-    #     tx_hash = proxy_trans.claim_relay(self.trade.order_id, deliver_hash)
-    #     return tx_hash
+    def file_download_finished(self, success, trade):
+        if success:
+            self.proxy_db.insert(trade)
+            self.proxy_reply_success(trade)
+            # self.proxy_claim_relay()
+        else:
+            error = "failed to download file"
+            self.proxy_reply_error(error)
 
-    def proxy_reply_success(self):
-        trade = self.trade
+    def proxy_reply_success(self, trade):
         message = Message()
         message.type = Message.PROXY_REPLY
         proxy_reply = message.proxy_reply
         proxy_reply.AES_key = trade.AES_key
-        proxy_reply.file_uuid = trade.file_uuid
+        file_uri = "https://%s:%d/%s" % (
+            self.factory.ip,
+            self.factory.data_port,
+            trade.file_uuid)
+        proxy_reply.file_uri = file_uri
 
         string = message.SerializeToString()
         self.sendString(string)
         self.transport.loseConnection()
-
-    def get_ipfs_file(self, ipfs_gateway, file_hash):
-        host, port = ipfs_gateway.strip().split(':')
-        ipfs = IPFSStorage()
-        return ipfs.connect(host, port) and \
-                ipfs.download_file(file_hash, server_root)
-
-    def ipfs_callback(self, success):
-        if success:
-            self.proxy_db.insert(self.trade)
-            self.proxy_reply_success()
-
-            self.proxy_claim_relay()
-        else:
-            error = "failed to get file from ipfs"
-            self.proxy_reply_error(error)
-
-    def connectionLost(self, reason):
-        self.factory.numConnections -= 1
-        logger.debug("lost connection to client %s" % self.peer)
 
     def proxy_reply_error(self, error):
         message = Message()
@@ -201,11 +217,17 @@ class SSLServerProtocol(NetstringReceiver):
         self.sendString(string)
         self.transport.loseConnection()
 
+    def connectionLost(self, reason):
+        self.factory.numConnections -= 1
+        logger.debug("lost connection to client %s" % self.peer)
+
 class SSLServerFactory(protocol.Factory):
     numConnections = 0
 
     def __init__(self):
         self.proxy_db = None
+        self.ip = '127.0.0.1'
+        self.data_port = config.proxy.server_data_port
 
     def buildProtocol(self, addr):
         return SSLServerProtocol(self)
@@ -236,8 +258,8 @@ class FileServer(Resource):
         trade = Trade()
         trade = self.proxy_db.query_file_uuid(uuid)
         if trade:
-            file_hash = trade.file_hash
-            file_path = os.path.join(server_root, file_hash.decode())
+            file_name = trade.file_name
+            file_path = os.path.join(server_root, file_name)
             return File(file_path)
 
         return ForbiddenResource()
