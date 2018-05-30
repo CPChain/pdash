@@ -17,7 +17,7 @@ urlpatterns = [
 
     url(r'^my_seller/subscribe/$', ProductSellerSubscribeAPIView.as_view(), name='product_seller_subscribe'),
     url(r'^my_seller/unsubscribe/$', ProductSellerUnsubscribeAPIView.as_view(), name='product_seller_unsubscribe'),
-    url(r'^my_seller/search/$', MyFollowingSellerSearchAPIView.as_view(), name='product_mytag_search'),
+    url(r'^my_seller/search/$', MyFollowingSellerSearchAPIView.as_view(), name='product_my_seller_search'),
     url(r'^my_seller_product/search/$', MyFollowingSellerProductSearchAPIView.as_view(), name='product_seller_search'),
 
     url(r'^my_product/search/$', MyProductSearchAPIViewSet.as_view(), name='my_product_search'),
@@ -36,6 +36,6 @@ urlpatterns = [
 
     url(r'^recommend_product/list/$', RecommendProductsAPIView.as_view(), name='recommend_products'),
     url(r'^you_may_like/list/$', YouMayLikeProductsAPIView.as_view(), name='you_may_like_products'),
-    url(r'^sales_quantity/add/$', ProductSalesQuantityAddAPIView.as_view(), name='product_sales_quantity_add'),
+    url(r'^sales_quantity/add/$', ProductSalesQuantityAddAPIView.as_view(), name='sales_quantity_add'),
 
 ]

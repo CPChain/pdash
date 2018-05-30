@@ -1,6 +1,4 @@
 from rest_framework.test import APITestCase
-
-from cpchain.market.market.utils import *
 from cpchain.market.transaction.models import TransactionDetail
 from tests.market.base_api_test_local import *
 

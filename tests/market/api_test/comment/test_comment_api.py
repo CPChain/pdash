@@ -14,8 +14,10 @@ class TestCommentApi(BaseApiTest):
     def test_query_comment_list(self):
 
         token, market_hash = self.get_token_market_hash()
-        self.add_comment_failed(token,market_hash)
-        # self.add_comment_success(token, market_hash)
+        TransactionDetail.objects.create(seller_address=self.address_2, market_hash=market_hash,
+                                         buyer_address=self.address)
+        self.add_comment_success(token, market_hash)
+        print("market_hash:", market_hash)
 
         url = '%s/comment/v1/comment/list/?market_hash=%s' % (HOST,market_hash)
         print("url:", url)

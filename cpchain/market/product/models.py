@@ -65,7 +65,11 @@ class Product(models.Model):
 
     def fill_attr(item):
         pk = item.owner_address
-        u = WalletUser.objects.get(public_key=pk)
+        try:
+            u = WalletUser.objects.get(public_key=pk)
+        except:
+            logger.error('user %s not found' % pk)
+            u = None
 
         comment, _ = SummaryComment.objects.get_or_create(market_hash=item.market_hash)
         sale_status, _ = ProductSaleStatus.objects.get_or_create(market_hash=item.market_hash)
