@@ -1,7 +1,7 @@
 import json
 import unittest
 
-import requests
+from cpchain.market.market.utils import *
 from django.urls import reverse
 
 from cpchain.crypto import ECCipher
@@ -90,3 +90,33 @@ class LocalBaseApiTest(unittest.TestCase):
     def get_response_content(resp_obj):
         resp_text = resp_obj.content.decode("utf-8")
         return resp_text
+
+
+    def publish_product(self, token):
+        title = "publish product 12444"
+        description = "test12345654654654654"
+        price = 9527
+        tags = "tag1,tag2"
+        start_date = "2018-04-01 10:10:10"
+        end_date = "2018-12-10 10:10:10"
+        file_md5 = "12345678901234567890"
+        url = reverse('product_publish')
+        payload = {'owner_address': self.pub_key_string, 'title': title, 'description': description, 'price': price,
+                   'tags': tags, 'start_date': start_date, 'end_date': end_date, 'file_md5': file_md5}
+        signature_source = self.pub_key_string + title + description + str(price) + start_date + end_date + file_md5
+
+        new_signature = sign(self.pri_key, signature_source)
+        print("new_signature is:" + new_signature.hex())
+
+        payload['signature'] = new_signature.hex()
+        print("publish product request:%s" % payload)
+        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
+        publish_resp = self.client.post(url, data=payload, format='json', **header)
+        resp_text = self.get_response_content(publish_resp)
+
+        self.assertEqual(publish_resp.status_code, 200)
+        print(resp_text)
+        parsed_json = json.loads(resp_text)
+        self.assertEqual(parsed_json['status'], 1)
+        print("market_hash:%s" % parsed_json['data']["market_hash"])
+        return parsed_json['data']["market_hash"]
