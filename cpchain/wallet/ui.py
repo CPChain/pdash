@@ -461,6 +461,60 @@ class BuyNowDialog(QDialog):
 
 
 class ProductDetailTab(QScrollArea):
+    class ProductComment(QScrollArea):
+        def __init__(self, parent=None, comment={}):
+            super().__init__()
+            self.parent = parent
+            self.comment = comment
+            self.init_ui()
+
+        def init_ui(self):
+
+            self.path = osp.join(root_dir, "cpchain/assets/wallet/font", "ARLRDBD.TTF")
+            self.font_regular = QFontDatabase.addApplicationFont(str(self.path))
+            self.font_givenname = QFontDatabase.applicationFontFamilies(self.font_regular)[0]
+            self.setFont(QFont(self.font_givenname))
+
+            self.setContentsMargins(0, 0, 0, 0)
+            self.setMinimumHeight(120)
+            self.setMaximumHeight(120)
+
+            def create_labels():
+                self.avatar_label = QLabel("")
+                self.avatar_label.setObjectName("avatar_label")
+
+                self.name_label = QLabel(self.comment['user_name'])
+                self.name_label.setObjectName('name_label')
+
+                self.rating_label = QLabel("{}".format(self.comment['rating']))
+                self.rating_label.setObjectName('rating_label')
+
+                self.description_label = QLabel(self.comment['content'])
+                self.description_label.setObjectName("description_label")
+
+            def setlayout():
+                self.main_layout = main_layout = QVBoxLayout(self)
+                main_layout.setContentsMargins(0, 0, 0, 0)
+                main_layout.addSpacing(0)
+
+                self.basic_layout = QHBoxLayout(self)
+                self.basic_layout.setContentsMargins(0, 5, 0, 5)
+                self.basic_layout.addSpacing(1)
+                self.basic_layout.addWidget(self.avatar_label)
+                self.basic_layout.addSpacing(1)
+                self.basic_layout.addWidget(self.name_label)
+                self.basic_layout.addSpacing(10)
+                self.basic_layout.addWidget(self.description_label)
+
+                self.main_layout.addLayout(self.basic_layout)
+                self.main_layout.addSpacing(1)
+                self.main_layout.addWidget(self.description_label)
+
+                self.setLayout(self.main_layout)
+            setlayout()
+            #TODO: Loading stylesheet
+            logger.debug("Loading stylesheet of item")
+
     def __init__(self, parent=None, item={}):
         super().__init__(parent)
         self.parent = parent
@@ -503,7 +557,7 @@ class ProductDetailTab(QScrollArea):
             self.seller_name = QLabel("Christopher Chak")
             self.seller_name.setObjectName("seller_name")
 
-            self.sales_label = QLabel("Sales: 356")
+            self.sales_label = QLabel("Sales: {}".format(self.product_info['sales_number']))
             self.sales_label.setObjectName("sales_label")
 
             self.size_label = QLabel("Size: 20 Mb")
@@ -522,6 +576,7 @@ class ProductDetailTab(QScrollArea):
             self.may_like_label.setObjectName("may_like_label")
 
             # TODO: to get info from backend
+            # d_comments = wallet.market_client.query_comment_by_hash(self.item['market_hash'])
             def add_comment():
                 self.buyer_avatar = QLabel("")
                 self.buyer_avatar.setObjectName("buyer_avatar")
@@ -540,6 +595,7 @@ class ProductDetailTab(QScrollArea):
                 self.buyer_comment.setWordWrap(True)
                 self.buyer_comment.setAlignment(Qt.AlignTop | Qt.AlignLeft)
             add_comment()
+
 
             des_text = "In 2012, OWSLA launched a monthly subscription, The Nest, with benefits including early access to OWSLA releases.[12] In 2013, Bromance Records partners up with OWSLA to create an American branch titled BromanceUS with releases from Gesaffelstein, Illangelo."
 
@@ -3767,5 +3823,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-                                                                                                                                                                                      
