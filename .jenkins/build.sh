@@ -60,7 +60,8 @@ fi
 if [ "$modulename" = "market" ];
 then
     export CPCHAIN_HOME_CONFIG_PATH="~/.cpchain/cpchain_market.toml"
-    python cpchain/market/manage.py test tests/market/unit_test --junitxml=test_report.xml --cov-report=xml --cov=./
+    python cpchain/market/manage.py test tests/market/unit_test
+    #--junitxml=test_report.xml --cov-report=xml --cov=./
 else
     py.test tests/$modulename  --junitxml=test_report.xml --cov-report=xml --cov=./
 fi
