@@ -2937,7 +2937,7 @@ class CloudTab(QScrollArea):
                 self.setLayout(main_layout)
             set_layout()
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("cloud_tab")
@@ -3098,6 +3098,9 @@ class CloudTab(QScrollArea):
         for i in range(len(self.check_record_list)):
             if self.check_record_list[i] == True:
                 self.file_table.removeRow(i)
+                #TODO: delete corresponding record
+                file_id = self.file_list[i].id
+                fs.delete_file_by_id(file_id)
                 print("Deleting files permanently from the cloud...")
                 self.update_table()
 
