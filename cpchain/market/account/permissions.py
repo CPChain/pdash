@@ -1,5 +1,5 @@
 from rest_framework import permissions
-
+from cpchain.market.market.utils import get_header
 from .models import Token
 import logging
 
@@ -14,8 +14,8 @@ class AlreadyLoginUser(permissions.BasePermission):
         return self.check_permission(request)
 
     def check_permission(self, request):
-        public_key = request.META.get('HTTP_MARKET_KEY', 'unknown')
-        token = request.META.get('HTTP_MARKET_TOKEN', 'unknown')
+        public_key = get_header(request,'HTTP_MARKET_KEY')
+        token = get_header(request, 'HTTP_MARKET_TOKEN')
         logger.debug('public_key:%s,token:%s' % (public_key,token))
         if public_key is None:
             return False

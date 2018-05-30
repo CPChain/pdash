@@ -1,3 +1,5 @@
+import json
+
 from django.db.models import Q
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
@@ -26,9 +28,18 @@ class ProductCommentListAPIView(APIView):
         market_hash = self.request.GET.get('market_hash')
         logger.debug("market_hash is %s" % market_hash)
         queryset = Comment.objects.filter(Q(market_hash=market_hash))
-        page_set = PageNumberPagination().paginate_queryset(queryset=queryset, request=request, view=self)
+        page_set = PageNumberPagination().paginate_queryset(
+            queryset=queryset,
+            request=request,
+            view=self
+        )
         serializer = CommentSerializer(page_set, many=True)
-        return create_success_data_response(serializer.data)
+        comments = serializer.data
+        comment_list = []
+        for item in comments:
+            comment_list.append(Comment.fill_attr(item))
+
+        return create_success_data_response(comment_list)
 
 
 class ProductCommentAddAPIView(APIView):
