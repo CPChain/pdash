@@ -19,7 +19,7 @@ class TransactionDetail(models.Model):
 class ProductSaleStatus(models.Model):
     """
     The ProductSaleStatus model.
-    TODO read sales_number from chain,write into db
+    read sales_number from chain,write into db
     """
     market_hash = models.CharField("market hash", max_length=256,null=False)
     sales_number = models.IntegerField("Sales number", default=0)

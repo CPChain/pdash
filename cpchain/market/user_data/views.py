@@ -31,7 +31,7 @@ class UploadFileInfoAddAPIView(APIView):
 
     @ExceptionHandler
     def post(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         logger.info("public_key:%s" % public_key)
 
         data = request.data
@@ -55,7 +55,7 @@ class UploadFileInfoUpdateAPIView(APIView):
 
     @ExceptionHandler
     def post(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         logger.info("public_key:%s" % public_key)
 
         data = request.data
@@ -81,7 +81,7 @@ class PullUserInfoAPIView(APIView):
 
     @ExceptionHandler
     def get(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         logger.info("public_key:%s" % public_key)
 
         upload_file_queryset = UploadFileInfo.objects.filter(public_key=public_key)
@@ -106,7 +106,7 @@ class BuyerFileInfoAddAPIView(APIView):
 
     @ExceptionHandler
     def post(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         logger.info("public_key:%s" % public_key)
 
         data = request.data
@@ -130,7 +130,7 @@ class BuyerFileInfoUpdateAPIView(APIView):
 
     @ExceptionHandler
     def post(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         logger.info("public_key:%s" % public_key)
 
         data = request.data
@@ -156,7 +156,7 @@ class UserInfoVersionAPIView(APIView):
 
     @ExceptionHandler
     def get(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         logger.info("public_key:%s" % public_key)
         params = request.query_params
         version = params.get('version')
@@ -180,7 +180,7 @@ class ProductTagSearchAPIView(APIView):
 
     @ExceptionHandler
     def get(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         logger.info("public_key:%s" % public_key)
         tag_queryset = ProductTag.objects.all()
         tag_serializer = ProductTagSerializer(tag_queryset, many=True)
@@ -216,7 +216,7 @@ class BookmarkSearchAPIView(APIView):
 
     @ExceptionHandler
     def get(self, request):
-        public_key = self.request.META.get('HTTP_MARKET_KEY')
+        public_key = get_header(self.request)
         logger.info("public_key:%s" % public_key)
 
         bookmark_queryset = Bookmark.objects.filter(public_key=public_key)
