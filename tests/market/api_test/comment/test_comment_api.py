@@ -2,6 +2,7 @@ from tests.market.base_api_test import *
 from cpchain.market.market.utils import *
 import os
 import django
+import urllib.parse
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "cpchain.market.market.settings")
 django.setup()
@@ -19,7 +20,7 @@ class TestCommentApi(BaseApiTest):
         self.add_comment_success(token, market_hash)
         print("market_hash:", market_hash)
 
-        url = '%s/comment/v1/comment/list/?market_hash=%s' % (HOST,market_hash)
+        url = '%s/comment/v1/comment/list/?market_hash=%s' % (HOST, urllib.parse.quote(market_hash))
         print("url:", url)
         response = requests.get(url)
         print("products:%s" % response)
@@ -43,7 +44,7 @@ class TestCommentApi(BaseApiTest):
     def test_query_summary_comment(self):
         token, market_hash = self.get_token_market_hash()
 
-        url = '%s/comment/v1/summary_comment/?market_hash=%s' % (HOST,market_hash)
+        url = '%s/comment/v1/summary_comment/?market_hash=%s' % (HOST, urllib.parse.quote(market_hash))
         summary_comment = requests.get(url)
         print("summary_comment:%s" % summary_comment)
         print(summary_comment.text)
