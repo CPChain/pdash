@@ -13,6 +13,7 @@ eth-keyfile
 cryptography
 web3
 apscheduler
+pytest-django
 "
 
 chain_pkgs="
