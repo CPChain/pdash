@@ -91,7 +91,6 @@ class LocalBaseApiTest(unittest.TestCase):
         resp_text = resp_obj.content.decode("utf-8")
         return resp_text
 
-
     def publish_product(self, token):
         title = "publish product 12444"
         description = "test12345654654654654"
@@ -101,7 +100,8 @@ class LocalBaseApiTest(unittest.TestCase):
         end_date = "2018-12-10 10:10:10"
         file_md5 = "12345678901234567890"
         url = reverse('product_publish')
-        payload = {'owner_address': self.pub_key_string, 'title': title, 'description': description, 'price': price,
+        payload = {'owner_address': self.pub_key_string, 'title': title,
+                   'description': description, 'price': price, 'size': 10,
                    'tags': tags, 'start_date': start_date, 'end_date': end_date, 'file_md5': file_md5}
         signature_source = self.pub_key_string + title + description + str(price) + start_date + end_date + file_md5
 

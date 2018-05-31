@@ -36,10 +36,42 @@ echo "activate"
 . venv/bin/activate
 
 echo "install dependency for $1"
-sudo /bin/sh install-deps.sh "$@"
+sh install-deps.sh "$@"
 
 ROOT_PATH=`pwd`
 export PYTHONPATH=$PYTHONPATH:$ROOT_PATH
 
 echo "unit test for $modulename"
-py.test tests/$modulename  --junitxml=test_report.xml --cov-report=xml --cov=./
+
+# setup env
+if [ "$modulename" = "chain" ];
+then
+    if ! pgrep geth > /dev/null
+    then
+        echo "init chain"
+        export CPCHAIN_HOME_CONFIG_PATH="~/.cpchain/cpchain_$modulename.toml"
+        nohup ./bin/eth-init-chain > /dev/null 2>&1 &
+        sleep 5s
+        nohup ./bin/eth-run-geth > /dev/null 2>&1 &
+        sleep 30s
+    fi
+fi
+
+# run test
+if [ "$modulename" = "market" ];
+then
+    export CPCHAIN_HOME_CONFIG_PATH="~/.cpchain/cpchain_$modulename.toml"
+    python cpchain/market/manage.py test tests/market/unit_test
+    #--junitxml=test_report.xml --cov-report=xml --cov=./
+else
+    py.test tests/$modulename  --junitxml=test_report.xml --cov-report=xml --cov=./
+fi
+
+
+# teardown
+if [ $modulename="chain" ]
+then
+   pkill -f "geth"
+fi
+
+return 0

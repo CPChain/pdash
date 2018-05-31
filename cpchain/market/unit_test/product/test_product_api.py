@@ -64,7 +64,7 @@ class TestProductApi(LocalBaseApiTest, APITestCase):
 
         url = reverse('es_product_search')
         params = {"status": 0,
-                  "seller": '045cfdf7cc44281ece607c85adbc2a2c17682e476a5b5f4ead5461a92aa078ffb46173d1949f4ea3e2d16658f6cf8eb92bab0f33811291bd79bdeca60d5a053a80'}
+                  "seller": self.pub_key_string}
         response = self.client.get(url, params)
         resp_text = self.get_response_content(response)
         parsed_json = json.loads(resp_text)
@@ -79,6 +79,7 @@ class TestProductApi(LocalBaseApiTest, APITestCase):
 
         url = reverse('es_product_search')
         params = {"status": 0, "pid": market_hash}
+        print('market_hash:', market_hash)
         response = self.client.get(url, params)
         resp_text = self.get_response_content(response)
         print("resp_text:%s" % resp_text)
@@ -87,6 +88,7 @@ class TestProductApi(LocalBaseApiTest, APITestCase):
         result = parsed_json['results']
         for p in result:
             print("title:%s" % p["title"])
+            self.assertGreater(p['size'],1)
 
     def test_hide_or_show_es_product(self):
         token = self.login()
@@ -149,12 +151,13 @@ class TestProductApi(LocalBaseApiTest, APITestCase):
 
     def query_es_product(self):
 
-        keyword = "Medicine"
+        keyword = "publish"
         params = {"search": keyword, "status": 0}
 
         url = reverse('es_product_search')
         response = self.client.get(url, params)
         resp_text = self.get_response_content(response)
+        print('query_es_product:', resp_text)
         parsed_json = json.loads(resp_text)
 
         result = parsed_json['results']
@@ -235,10 +238,11 @@ class TestProductApi(LocalBaseApiTest, APITestCase):
         header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
         market_hash = self.publish_product(token)
 
-        payload = {"market_hash": market_hash}
+        payload = {"seller_public_key": self.pub_key_string}
         url = reverse('product_seller_unsubscribe')
         response = self.client.post(url, data=payload, format='json', **header)
         resp_text = self.get_response_content(response)
+        print('unsubscribe seller:', resp_text)
         self.assertEqual(response.status_code, 200)
         parsed_json = json.loads(resp_text)
 

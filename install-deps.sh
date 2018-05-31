@@ -19,6 +19,7 @@ chain_pkgs="
 eth-keyfile
 web3
 toml==0.9.4
+cryptography
 "
 
 proxy_pkgs="
@@ -27,6 +28,7 @@ ipfsapi
 eth-keyfile
 google-cloud
 twisted
+service_identity
 treq
 protobuf
 cryptography
@@ -99,4 +101,3 @@ fi
 
 # openssl
 # libssl-dev
-
