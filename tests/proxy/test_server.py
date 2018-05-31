@@ -16,6 +16,20 @@ from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.db import ProxyDB
 from cpchain import config
 
+from cpchain.storage import IPFSStorage, S3Storage
+
+def mock_ipfs_download_file(_, file_hash, file_dir):
+    open(os.path.join(file_dir, file_hash), 'a').close()
+    return True
+
+IPFSStorage.connect = lambda *args: True
+IPFSStorage.download_file = mock_ipfs_download_file
+
+def mock_s3_download_file(_, fpath, remote_fpath, fsize=None, bucket=None):
+    open(fpath, 'a').close()
+
+S3Storage.__init__ = lambda *args: None
+S3Storage.download_file = mock_s3_download_file
 
 accounts = Accounts()
 buyer_account = accounts[0]
@@ -48,14 +62,14 @@ def fake_seller_message(storage_type):
     if storage_type == 'ipfs':
         storage.type = Message.Storage.IPFS
         ipfs = storage.ipfs
-        ipfs.file_hash = 'QmT4kFS5gxzQZJwiDJQ66JLVGPpyTCF912bywYkpgyaPsD'
-        ipfs.gateway = "192.168.0.132:5001"
+        ipfs.file_hash = 'fake_file_hash'
+        ipfs.gateway = "1.2.3.4:5001"
 
     elif storage_type == 's3':
         storage.type = Message.Storage.S3
         s3 = storage.s3
-        s3.bucket = 'cpchain-bucket'
-        s3.key = 'cpchain-test.txt'
+        s3.bucket = 'fake-bucket'
+        s3.key = 'fake-key'
 
     return message
 
@@ -129,7 +143,7 @@ class SSLServerTestCase(unittest.TestCase):
         self.transport = proto_helpers.StringTransport()
         self.proto.makeConnection(self.transport)
 
-    def check_response_later(self, reply_error, wait=5):
+    def check_response_later(self, reply_error, wait=1):
         d = Deferred()
         reactor.callLater(wait, d.callback, reply_error)
         d.addCallback(self.check_response)
@@ -203,7 +217,7 @@ class SSLServerTestCase(unittest.TestCase):
         sign_message = sign_seller_message(message)
         string = sign_message.SerializeToString()
         self.proto.stringReceived(string)
-        return self.check_response_later('', 10)
+        return self.check_response_later('')
 
     def test_key_not_match_address(self):
         message = fake_buyer_message()
