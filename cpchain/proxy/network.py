@@ -1,7 +1,8 @@
 import logging
 import time
+import operator
 
-from random import randint, choice
+from random import randint
 
 import socket
 
@@ -23,6 +24,7 @@ def generate_tid():
 class PeerProtocol(protocol.DatagramProtocol):
     def __init__(self, peer_info=None, timeout=5):
         self.peers = {}
+        self.peers_lat = {}
         self.request = {}
         self.timeout = timeout
         self.peer_info = peer_info
@@ -99,6 +101,7 @@ class PeerProtocol(protocol.DatagramProtocol):
                 }
 
                 self.peers[peer_id] = peer
+                self.peers_lat[peer_id] = 0  # initialize
                 logger.debug("add peer %s" % str(peer['addr']))
 
                 response = {
@@ -122,12 +125,12 @@ class PeerProtocol(protocol.DatagramProtocol):
         elif msg['type'] == 'pick_peer':
             tid = msg['tid']
 
-            pick_peer = None
-
-            if self.peers:
-                peer_id = choice(list(self.peers.keys()))
+            if self.peers_lat:
+                peer_id = min(self.peers_lat.items(), key=operator.itemgetter(1))[0]
                 peer = self.peers[peer_id]
                 pick_peer = (peer['addr'][0], peer['peer_info'])
+            else:
+                pick_peer = None
 
             response = {
                 'type': 'response',
@@ -212,10 +215,14 @@ class PeerProtocol(protocol.DatagramProtocol):
         now = time.time()
         expired_peers = []
 
-        def refresh(result, peer):
+        def refresh(result, peer_id, last):
             success, _ = result
+
             if success:
-                peer['ts'] = time.time()
+                now = time.time()
+                self.peers[peer_id]['ts'] = now
+                lat = now - last
+                self.peers_lat[peer_id] = lat
             return result
 
         for peer_id in self.peers:
@@ -226,7 +233,7 @@ class PeerProtocol(protocol.DatagramProtocol):
                 logger.debug('retire peer %s' %  str(peer['addr']))
             else:
                 addr = peer['addr']
-                self.ping(addr).addCallback(refresh, peer)
+                self.ping(addr).addCallback(refresh, peer_id, time.time())
 
         for peer in expired_peers:
             self.peers.pop(peer)
