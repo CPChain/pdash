@@ -49,6 +49,7 @@ then
     if ! pgrep geth > /dev/null
     then
         echo "init chain"
+        export CPCHAIN_HOME_CONFIG_PATH="~/.cpchain/cpchain_$modulename.toml"
         nohup ./bin/eth-init-chain > /dev/null 2>&1 &
         sleep 5s
         nohup ./bin/eth-run-geth > /dev/null 2>&1 &
@@ -59,7 +60,7 @@ fi
 # run test
 if [ "$modulename" = "market" ];
 then
-    export CPCHAIN_HOME_CONFIG_PATH="~/.cpchain/cpchain_market.toml"
+    export CPCHAIN_HOME_CONFIG_PATH="~/.cpchain/cpchain_$modulename.toml"
     python cpchain/market/manage.py test tests/market/unit_test
     #--junitxml=test_report.xml --cov-report=xml --cov=./
 else

@@ -19,6 +19,7 @@ chain_pkgs="
 eth-keyfile
 web3
 toml==0.9.4
+cryptography
 "
 
 proxy_pkgs="
