@@ -90,7 +90,7 @@ class Peer:
         def set_external_ip():
             if self.ip is None:
                 # waiting for node bootstrap finish
-                reactor.callLater(1, set_external_ip)
+                return reactor.callLater(1, set_external_ip)
 
             ctrl_factory.ip = self.ip
 

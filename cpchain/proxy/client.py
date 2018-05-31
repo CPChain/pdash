@@ -20,6 +20,7 @@ class SSLClientProtocol(NetstringReceiver):
         self.sign_message = self.factory.sign_message
 
         self.peer = None
+        self.proxy_reply = None
 
     def connectionMade(self):
         self.peer = str(self.transport.getPeer())
@@ -39,12 +40,18 @@ class SSLClientProtocol(NetstringReceiver):
         else:
             proxy_reply = message.proxy_reply
 
-        self.factory.d.callback(proxy_reply)
+        self.proxy_reply = proxy_reply
 
         self.transport.loseConnection()
 
     def connectionLost(self, reason):
         logger.debug("lost connection to client %s" % (self.peer))
+        if not self.proxy_reply:
+            # Connection may lost after client sent request to proxy
+            # but not received any response yet.
+            self.proxy_reply = proxy_reply_error("connection Lost")
+
+        self.factory.d.callback(self.proxy_reply)
 
 
 class SSLClientFactory(protocol.ClientFactory):

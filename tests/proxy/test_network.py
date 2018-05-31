@@ -71,6 +71,7 @@ class PeerProtocolTest(unittest.TestCase):
             }
 
         self.protocol.peers[peer_id] = peer
+        self.protocol.peers_lat[peer_id] = 1
 
         msg = fake_pick_peer()
         data = msgpack.packb(msg, use_bin_type=True)
