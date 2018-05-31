@@ -156,7 +156,13 @@ class MarketClient:
         resp = yield treq.post(self.url + 'product/v1/product/publish/', headers=header, json=data, persistent=False)
         confirm_info = yield treq.json_content(resp)
         print(confirm_info)
+        logger.debug("xxxxxxxxxxxxxPUBLISH PRODUCTxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+        logger.debug("xxxxxxxxxxxxxPUBLISH PRODUCTxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+        print(confirm_info)
+        logger.debug("xxxxxxxxxxxxxPUBLISH PRODUCTxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+        logger.debug("xxxxxxxxxxxxxPUBLISH PRODUCTxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         logger.debug('market_hash: %s', confirm_info['data']['market_hash'])
+        #TODO: previous problems not solved
         market_hash = confirm_info['data']['market_hash']
         publish_file_update(market_hash, selected_id)
         return market_hash

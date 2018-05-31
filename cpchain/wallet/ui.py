@@ -1878,8 +1878,9 @@ class PublishDialog(QDialog):
         #for testing this Tab @rayhueng
         #self.setObjectName("cart_tab")
         self.setObjectName("publish_dialog")
-        self.init_ui()
         self.product_id = id
+        
+        self.init_ui()
 
     def init_ui(self):
 
