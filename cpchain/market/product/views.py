@@ -48,6 +48,7 @@ class ProductPublishAPIViewSet(APIView):
         product.price = data['price'],
         product.created = now,
         product.start_date = data['start_date']
+        product.size = data['size']
         product.end_date = data['end_date']
         product.signature = data['signature']
         product.file_md5 = data['file_md5']
@@ -190,30 +191,6 @@ class ProductSearchBySellerAPIView(APIView):
         queryset = Product.objects.filter(status=0).filter(Q(owner_address=seller))
         serializer = ProductSerializer(queryset, many=True)
         return JsonResponse({'status': 1, 'message': 'success', 'data': serializer.data})
-
-
-# class ProductPagedSearchAPIViewSet(APIView):
-#     """
-#     API endpoint that allows query products.
-#     """
-#     queryset = Product.objects.all()
-#     serializer_class = ProductSerializer
-#     permission_classes = (AllowAny,)
-#
-#     def get(self, request):
-#         params = request.query_params
-#         keyword = params.get('keyword')
-#         if keyword is not None:
-#             logger.debug("keyword is %s" % keyword)
-#             queryset = Product.objects.filter(status=0).filter(
-#                 Q(title__contains=keyword) | Q(description__contains=keyword) | Q(tags__contains=keyword))
-#         else:
-#             queryset = Product.objects.filter(status=0)
-#
-#         pg = PageNumberPagination()
-#         page_set = pg.paginate_queryset(queryset=queryset, request=request, view=self)
-#         serializer = ProductSerializer(page_set, many=True)
-#         return pg.get_paginated_response(serializer.data)
 
 
 class BaseProductStatusAPIView(APIView):
@@ -481,7 +458,7 @@ class ProductSellerSubscribeAPIView(APIView):
         logger.debug("public_key:%s seller_public_key:%s" % (public_key, seller_public_key))
 
         obj, _ = MySeller.objects.get_or_create(public_key=public_key,
-                                                seller_public_key=request.data['seller_public_key'])
+                                                seller_public_key=seller_public_key)
         return JsonResponse({'status': 1, 'message': 'success'})
 
 
@@ -497,7 +474,7 @@ class ProductSellerUnsubscribeAPIView(APIView):
         public_key = get_header(self.request)
         seller_public_key = request.data['seller_public_key']
         logger.debug("delete seller_public_key:%s for public_key:%s" % (seller_public_key, public_key))
-        MySeller.objects.filter(public_key=public_key, seller_public_key=request.data['seller_public_key']).delete()
+        MySeller.objects.filter(public_key=public_key, seller_public_key=seller_public_key).delete()
         return JsonResponse({'status': 1, 'message': 'success'})
 
 

@@ -25,6 +25,7 @@ class Product(models.Model):
     start_date = models.DateTimeField('Start time', null=True)
     end_date = models.DateTimeField('End time', null=True)
     status = models.IntegerField('0:normal,1:frozen', default=0)
+    size = models.IntegerField('file size (byte)', null=True, default=0)
     seq = models.IntegerField('Sequence increase')
     file_md5 = models.CharField(max_length=32, null=True)
     # verify wallet hash(title,description,expired_date,price,tags)
@@ -53,6 +54,7 @@ class Product(models.Model):
             end_date=self.end_date,
             market_hash=self.msg_hash,
             file_md5=self.file_md5,
+            size=self.size,
             status=self.status,
             created=self.created,
             owner_address=self.owner_address,
@@ -65,7 +67,11 @@ class Product(models.Model):
 
     def fill_attr(item):
         pk = item.owner_address
-        u = WalletUser.objects.get(public_key=pk)
+        try:
+            u = WalletUser.objects.get(public_key=pk)
+        except:
+            logger.error('user %s not found' % pk)
+            u = None
 
         comment, _ = SummaryComment.objects.get_or_create(market_hash=item.market_hash)
         sale_status, _ = ProductSaleStatus.objects.get_or_create(market_hash=item.market_hash)

@@ -1,4 +1,5 @@
 import base64
+import os
 import os.path as osp
 import sys
 import subprocess
@@ -35,7 +36,9 @@ def _get_config():
                 d[k] = d2[k]
 
     conf = toml.load(osp.join(root_dir, 'cpchain/cpchain.toml'))
-    user_path = osp.expanduser("~/.cpchain/cpchain.toml")
+    config_file = os.getenv("CPCHAIN_HOME_CONFIG_PATH", "~/.cpchain/cpchain.toml")
+    print('config file path:', config_file)
+    user_path = osp.expanduser(config_file)
     if osp.exists(user_path):
         merge_dict(conf, toml.load(user_path))
 

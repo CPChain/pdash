@@ -15,7 +15,7 @@ class ProductIndex(DocType):
     end_date = Date()
     status = Integer()
     msg_hash = Keyword()
-
+    size = Integer()
     username = Text()
     avg_rating = Float()
     sales_number = Integer()
