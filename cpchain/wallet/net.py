@@ -9,7 +9,87 @@ from cpchain.utils import config, Encoder
 
 from cpchain.wallet.fs import publish_file_update
 
+from cpchain.utils import reactor
+
+from cpchain.proxy.node import start_proxy_request
+
+from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
+
+
 logger = logging.getLogger(__name__)  # pylint: disable=locally-disabled, invalid-name
+
+
+class ProxyClient:
+    def __init__(self, wallet):
+        self.proxy_id = '7975bcf2faefec0dae6ccc82a66f89b12f23c747'
+        self.wallet = wallet
+        self.accounts = self.wallet.accounts
+        self.buyer_account = self.accounts[0]
+        self.seller_account = self.accounts[1]
+
+        self.buyer_private_key = self.buyer_account.private_key  # object type
+        self.buyer_public_key = ECCipher.serialize_public_key(self.buyer_account.public_key)  # string type
+        self.buyer_addr = ECCipher.get_address_from_public_key(self.buyer_account.public_key)  # string type
+
+        self.seller_private_key = self.seller_account.private_key
+        self.seller_public_key = ECCipher.serialize_public_key(self.seller_account.public_key)  # string type
+        self.seller_addr = ECCipher.get_address_from_public_key(self.seller_account.public_key)  # string type
+
+    @staticmethod
+    def str_to_timestamp(s):
+        return s
+
+    #inclineCallbacks ?
+    @inlineCallbacks
+    def publish_to_proxy(self, product_info={}, mode='recommended'):
+        self.proxy_mode = mode
+        self.product_info = product_info
+        self.storage_type = storage_type = product_info['storage_type']
+
+        self.message = Message()
+        self.seller_data = self.message.seller_data
+        self.message.type = Message.SELLER_DATA
+        self.seller_data.order_id = 1
+        self.seller_data.seller_addr = self.seller_addr
+        self.seller_data.buyer_addr = self.buyer_addr
+        self.seller_data.market_hash = product_info['market_hash']
+        self.seller_data.AES_key = b'AES_key'
+        self.storage = self.seller_data.storage
+
+        if storage_type == 'ipfs':
+            self.storage.type = Message.Storage.IPFS
+            self.ipfs = self.storage.ipfs
+            self.ipfs.file_hash = self.product_info['file_hash']
+            self.ipfs.gateway = "192.168.0.132:5001"
+        elif storage_type == 's3':
+            self.storage.type = Message.Storage.S3
+            self.s3 = self.storage.s3
+            self.s3.bucket = 'cpchain-bucket'
+            self.s3.key = self.product_info['s3_key']
+        else:
+            logger.debug("Wrong parameters !")
+
+        self.sign_message = SignMessage()
+        self.sign_message.public_key = self.seller_public_key
+        self.sign_message.data = self.message.SerializeToString()
+        self.sign_message.signature = ECCipher.create_signature(self.seller_private_key, self.sign_message.data)
+        self.seller_sign_message = self.sign_message
+
+        if self.proxy_mode == 'recommended':
+            self.d_seller_request = start_proxy_request(self.seller_sign_message, tracker=('127.0.0.1', 8101))
+        elif self.proxy_mode == 'master-slave':
+            self.d_seller_request = start_proxy_request(self.seller_sign_message, tracker=('127.0.0.1', 8101), proxy_id=self.proxy_id)
+        elif self.proxy_mode == 'DHT':
+            self.d_selller_request = start_proxy_request(self.seller_sign_message, boot_nodes=[('127.0.0.1', 8201)], proxy_id =self.proxy_id)
+        else:
+            logger.debug("Wrong proxy mode parameters!")
+
+        if not self.d_seller_request.error:
+            logger.debug('file_uri: %s' % self.d_seller_request.file_uri)
+            logger.debug('AES_key: %s' % self.d_seller_request.AES_key.decode())
+        else:
+            logger.debug(self.d_seller_request.error)
+
 
 
 class MarketClient:
@@ -76,7 +156,13 @@ class MarketClient:
         resp = yield treq.post(self.url + 'product/v1/product/publish/', headers=header, json=data, persistent=False)
         confirm_info = yield treq.json_content(resp)
         print(confirm_info)
+        logger.debug("xxxxxxxxxxxxxPUBLISH PRODUCTxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+        logger.debug("xxxxxxxxxxxxxPUBLISH PRODUCTxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+        print(confirm_info)
+        logger.debug("xxxxxxxxxxxxxPUBLISH PRODUCTxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+        logger.debug("xxxxxxxxxxxxxPUBLISH PRODUCTxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         logger.debug('market_hash: %s', confirm_info['data']['market_hash'])
+        #TODO: previous problems not solved
         market_hash = confirm_info['data']['market_hash']
         publish_file_update(market_hash, selected_id)
         return market_hash
@@ -297,3 +383,25 @@ class MarketClient:
         confirm_info = yield treq.json_content(resp)
         logger.debug('upload file info to market confirm: %s', confirm_info)
         return confirm_info['status']
+
+
+    @inlineCallbacks
+    def query_by_seller(self, public_key):
+        url = self.url + 'product/v1/es_product/search/?status=0&seller=' + str(public_key)
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token, 'Content-Type': 'application/json'}
+        resp = yield treq.get(url, headers=header)
+        confirm_info = yield treq.json_content(resp)
+        return confirm_info['results']
+
+
+
+    @inlineCallbacks
+    def query_comment_by_hash(self, market_hash):
+        logger.debug("xxxxxxxxxxxxxxxxxxxxxxxx query comment ...")
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        url = self.url + '/comment/v1/comment/list/?market_hash=' + market_hash
+        resp = yield treq.get(url, headers=header)
+        comment_info = yield treq.json_content(resp)
+        logger.debug('upload file info to market confirm: %s', comment_info)
+        return comment_info['data']

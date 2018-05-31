@@ -18,6 +18,9 @@ def get_file_list():
 def get_file_by_id(file_id):
     return session.query(FileInfo).filter(FileInfo.id == file_id).all()[0]
 
+def get_file_by_hash(file_hash):
+    return session.query(FileInfo).filter(FileInfo.hashcode == file_hash)
+
 
 def get_buyer_file_list():
     return session.query(BuyerFileInfo).all()
@@ -75,6 +78,11 @@ def delete_file(file_name):
         delete(synchronize_session=False)
     session.commit()
 
+def delete_file_by_id(file_id):
+    session.query(FileInfo).filter(FileInfo.name == file_id).\
+        delete(synchronize_session=False)
+    session.commit()
+
 
 def delete_buyer_file(file_name):
     session.query(FileInfo).filter(BuyerFileInfo.name == file_name). \
@@ -110,7 +118,7 @@ def upload_file_ipfs(file_path):
     file_size = os.path.getsize(file_path)
     logger.debug('start to write data into database')
     new_file_info = FileInfo(hashcode=str(file_hash), name=file_name, path=file_path, size=file_size,
-                             remote_type="ipfs", remote_uri="/ipfs/" + file_name,
+                             remote_type="ipfs", remote_uri="/ipfs/" + file_hash,
                              is_published=False, aes_key=this_key)
     add_file(new_file_info)
     logger.debug('file id: %s', new_file_info.id)
