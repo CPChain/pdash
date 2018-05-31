@@ -2008,6 +2008,17 @@ class PublishDialog(QDialog):
                         self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
                 d.addCallback(handle_update_file)
             d_publish.addCallback(update_table)
+
+            def update_proxy(markethash):
+                file_info = fs.get_file_by_id(self.product_id)
+                file_hash = file_info.hashcode
+                # TODO: Amazon S3 is not supported at the time
+                s3_key = file_info.remote_uri
+                storage_type = file_info.remote_type
+                product_info = {'storage_type': storage_type, 'file_hash': file_hash, 's3_key': s3_key,
+                                'market_hash': markethash}
+                wallet.proxy_client.publish_to_proxy(product_info, 'recommended')
+            d_publish.addCallback(update_proxy)
             self.close()
         else:
             QMessageBox.warning(self, "Warning", "Please fill out the necessary selling information first!")

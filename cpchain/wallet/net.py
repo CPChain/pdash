@@ -41,16 +41,18 @@ class ProxyClient:
 
     #inclineCallbacks ?
     @inlineCallbacks
-    def publish_to_proxy(self, product_info={}, storage_type='ipfs', mode='recommended'):
+    def publish_to_proxy(self, product_info={}, mode='recommended'):
         self.proxy_mode = mode
         self.product_info = product_info
+        self.storage_type = storage_type = product_info['storage_type']
+
         self.message = Message()
         self.seller_data = self.message.seller_data
         self.message.type = Message.SELLER_DATA
         self.seller_data.order_id = 1
         self.seller_data.seller_addr = self.seller_addr
         self.seller_data.buyer_addr = self.buyer_addr
-        self.seller_data.market_hash = 'MARKET_HASH'
+        self.seller_data.market_hash = product_info['market_hash']
         self.seller_data.AES_key = b'AES_key'
         self.storage = self.seller_data.storage
 
@@ -63,7 +65,7 @@ class ProxyClient:
             self.storage.type = Message.Storage.S3
             self.s3 = self.storage.s3
             self.s3.bucket = 'cpchain-bucket'
-            self.s3.key = 'sp'
+            self.s3.key = self.product_info['s3_key']
         else:
             logger.debug("Wrong parameters !")
 
@@ -85,10 +87,8 @@ class ProxyClient:
         if not self.d_seller_request.error:
             logger.debug('file_uri: %s' % self.d_seller_request.file_uri)
             logger.debug('AES_key: %s' % self.d_seller_request.AES_key.decode())
-            return self.d_seller_request
         else:
             logger.debug(self.d_seller_request.error)
-            return {}
 
 
 
