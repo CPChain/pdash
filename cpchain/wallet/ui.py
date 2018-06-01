@@ -2013,6 +2013,17 @@ class PublishDialog(QDialog):
                         self.parent.update_table()
                         self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
                 d.addCallback(handle_update_file)
+
+                def update_proxy(markethash):
+                    file_info = fs.get_file_by_id(self.product_id)
+                    file_hash = file_info.hashcode
+                    # TODO: Amazon S3 is not supported at the time
+                    s3_key = file_info.remote_uri
+                    storage_type = file_info.remote_type
+                    product_info = {'storage_type': storage_type, 'file_hash': file_hash, 's3_key': s3_key,
+                                    'market_hash': markethash}
+                    wallet.proxy_client.publish_to_proxy(product_info, 'recommended')
+                update_proxy(market_hash)
             d_publish.addCallback(update_table)
 
             # def update_proxy(markethash):
@@ -3243,6 +3254,7 @@ class CloudTab(QScrollArea):
                 else:
                     logger.debug('upload file info to market failed')
             d.addCallback(handle_upload_resp)
+            # TODO: Not working here ?
             self.parent.update_table()
 
 
@@ -3271,7 +3283,8 @@ class CloudTab(QScrollArea):
 
     def handle_publish_act(self):
         # item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
-        product_id = self.file_table.item(self.cur_clicked, 5).text()
+        # product_id = self.file_table.item(self.cur_clicked, 5).text()
+        product_id = self.file_list[self.cur_clicked].id
         self.publish_dialog = PublishDialog(self, product_id)
         # self.file_list[self.cur_clicked]
         print("handle publish act....")

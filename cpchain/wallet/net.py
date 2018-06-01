@@ -39,7 +39,6 @@ class ProxyClient:
     def str_to_timestamp(s):
         return s
 
-    #inclineCallbacks ?
     @inlineCallbacks
     def publish_to_proxy(self, product_info={}, mode='recommended'):
         self.proxy_mode = mode
@@ -85,10 +84,18 @@ class ProxyClient:
             logger.debug("Wrong proxy mode parameters!")
 
         if not self.d_seller_request.error:
+            logger.debug("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+            logger.debug("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
             logger.debug('file_uri: %s' % self.d_seller_request.file_uri)
             logger.debug('AES_key: %s' % self.d_seller_request.AES_key.decode())
+            logger.debug("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+            logger.debug("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         else:
+            logger.debug("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+            logger.debug("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
             logger.debug(self.d_seller_request.error)
+            logger.debug("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+            logger.debug("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
 
 
 
