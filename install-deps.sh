@@ -21,6 +21,7 @@ eth-keyfile
 web3
 toml==0.9.4
 cryptography
+twisted
 "
 
 proxy_pkgs="
@@ -56,7 +57,7 @@ pylint
 "
 
 if test $# -eq 0; then
-   echo "Usage: install-deps.sh {all|market|wallet|...}"
+   echo "Usage: install-deps.sh {all|market|wallet|proxy|chain|...}"
    exit 1
 fi
 
