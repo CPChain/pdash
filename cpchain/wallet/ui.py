@@ -1996,10 +1996,15 @@ class PublishDialog(QDialog):
             # logger.debug("product selected id: %s", product_info.id)
             logger.debug("product info title: %s", self.pinfo_title)
             logger.debug("product info id: %s", self.product_id)
+            #TODO: Get following attributes from fileinfo table
+            self.size = 17
+            self.start_date = '2018-04-01 10:10:10'
+            self.end_date = '2018-04-01 10:10:10'
+            self.file_md5 = '123456'
             d_publish = wallet.market_client.publish_product(self.product_id, self.pinfo_title,
                                                              self.pinfo_descrip, self.pinfo_price,
-                                                             self.pinfo_tag, '2018-04-01 10:10:10',
-                                                             '2018-04-01 10:10:10', '123456')
+                                                             self.pinfo_tag, self.start_date,
+                                                             self.end_date, self.file_md5, self.size)
             def update_table(market_hash):
                 d = wallet.market_client.update_file_info(self.product_id, market_hash)
                 def handle_update_file(status):
@@ -2010,16 +2015,17 @@ class PublishDialog(QDialog):
                 d.addCallback(handle_update_file)
             d_publish.addCallback(update_table)
 
-            def update_proxy(markethash):
-                file_info = fs.get_file_by_id(self.product_id)
-                file_hash = file_info.hashcode
-                # TODO: Amazon S3 is not supported at the time
-                s3_key = file_info.remote_uri
-                storage_type = file_info.remote_type
-                product_info = {'storage_type': storage_type, 'file_hash': file_hash, 's3_key': s3_key,
-                                'market_hash': markethash}
-                wallet.proxy_client.publish_to_proxy(product_info, 'recommended')
-            d_publish.addCallback(update_proxy)
+            # def update_proxy(markethash):
+            #     file_info = fs.get_file_by_id(self.product_id)
+            #     file_hash = file_info.hashcode
+            #     # TODO: Amazon S3 is not supported at the time
+            #     s3_key = file_info.remote_uri
+            #     storage_type = file_info.remote_type
+            #     product_info = {'storage_type': storage_type, 'file_hash': file_hash, 's3_key': s3_key,
+            #                     'market_hash': markethash}
+            #     wallet.proxy_client.publish_to_proxy(product_info, 'recommended')
+            # d_publish.addCallback(update_proxy)
+
             self.close()
         else:
             QMessageBox.warning(self, "Warning", "Please fill out the necessary selling information first!")

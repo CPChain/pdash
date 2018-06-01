@@ -138,7 +138,7 @@ class MarketClient:
 
     @inlineCallbacks
     def publish_product(self, selected_id, title, description, price, tags, start_date, end_date,
-                        file_md5):
+                        file_md5, size):
         logger.debug("start publish product")
         header = {'Content-Type': 'application/json'}
         header['MARKET-KEY'] = self.public_key
@@ -146,7 +146,7 @@ class MarketClient:
         logger.debug('header token: %s', self.token)
         data = {'owner_address': self.public_key, 'title': title, 'description': description,
                 'price': price, 'tags': tags, 'start_date': start_date, 'end_date': end_date,
-                'file_md5': file_md5}
+                'file_md5': file_md5, 'size': size}
         signature_source = str(self.public_key) + str(title) + str(description) + str(
             price) + MarketClient.str_to_timestamp(start_date) + MarketClient.str_to_timestamp(
             end_date) + str(file_md5)
@@ -156,11 +156,7 @@ class MarketClient:
         resp = yield treq.post(self.url + 'product/v1/product/publish/', headers=header, json=data, persistent=False)
         confirm_info = yield treq.json_content(resp)
         print(confirm_info)
-        logger.debug("xxxxxxxxxxxxxPUBLISH PRODUCTxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-        logger.debug("xxxxxxxxxxxxxPUBLISH PRODUCTxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-        print(confirm_info)
-        logger.debug("xxxxxxxxxxxxxPUBLISH PRODUCTxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-        logger.debug("xxxxxxxxxxxxxPUBLISH PRODUCTxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+
         logger.debug('market_hash: %s', confirm_info['data']['market_hash'])
         #TODO: previous problems not solved
         market_hash = confirm_info['data']['market_hash']
