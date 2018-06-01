@@ -26,7 +26,7 @@ class ProductCommentListAPIView(APIView):
     def get(self, request):
         market_hash = unquote(self.request.GET.get('market_hash'))
         logger.debug("market_hash is %s" % market_hash)
-        queryset = Comment.objects.filter(Q(market_hash=market_hash))
+        queryset = Comment.objects.filter(Q(market_hash=market_hash)).order_by('-created')
         page_set = PageNumberPagination().paginate_queryset(
             queryset=queryset,
             request=request,
