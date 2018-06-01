@@ -22,7 +22,8 @@ def generate_tid():
 
 
 class PeerProtocol(protocol.DatagramProtocol):
-    def __init__(self, peer_id=None, peer_info=None, timeout=5):
+    def __init__(self, peer_ip=None, peer_id=None, peer_info=None, timeout=5):
+        self.peer_ip = peer_ip
         self.peer_id = peer_id
         self.peer_info = peer_info
         self.timeout = timeout
@@ -81,9 +82,7 @@ class PeerProtocol(protocol.DatagramProtocol):
             return
 
         if msg['type'] == 'bootstrap':
-            peer_id = msg['peer_id']
             tid = msg['tid']
-            peer_info = msg['peer_info']
             sign_tid = msg['sign_tid']
 
             if tid != derive_proxy_data(sign_tid):
@@ -96,8 +95,12 @@ class PeerProtocol(protocol.DatagramProtocol):
                 }
 
             else:
+                peer_ip = (msg['peer_ip'] or addr[0], addr[1])
+                peer_id = msg['peer_id']
+                peer_info = msg['peer_info']
+
                 peer = {
-                    'addr': addr,
+                    'addr': peer_ip,
                     'peer_info': peer_info,
                     'ts': time.time()
                 }
@@ -196,6 +199,7 @@ class PeerProtocol(protocol.DatagramProtocol):
         msg = {
             'type': 'bootstrap',
             'tid': tid,
+            'peer_ip': self.peer_ip,
             'peer_id': self.peer_id,
             'peer_info': self.peer_info,
             'sign_tid': sign_proxy_data(tid)

@@ -51,8 +51,9 @@ class Peer:
         self.peer_id = None
         self.ip = None
 
-    def start_service(self, ctrl_port=None, data_port=None, account_id=0):
+    def start_service(self, ip=None, ctrl_port=None, data_port=None, account_id=0):
 
+        self.ip = ip
         set_proxy_account(account_id)
         self.peer_id = get_proxy_id()
 
@@ -102,6 +103,7 @@ class Peer:
 
         port = port or config.proxy.server_peer_port
         protocol = PeerProtocol(
+            peer_ip=self.ip,
             peer_id=self.peer_id,
             peer_info=self.service_port)
         reactor.listenUDP(port, protocol)
@@ -144,11 +146,20 @@ class Peer:
                     ).add_done_callback(set_key_done)
 
             def bootstrap_done(_):
-                asyncio.ensure_future(
-                    peer.protocol.stun(
-                        boot_nodes[0]
-                        )
-                    ).add_done_callback(stun_done)
+                if self.ip:
+                    addr = '%s,%d' % (self.ip, self.service_port)
+                    asyncio.ensure_future(
+                        peer.set(
+                            self.peer_id,
+                            sign_proxy_data(addr)
+                            )
+                        ).add_done_callback(set_key_done)
+                else:
+                    asyncio.ensure_future(
+                        peer.protocol.stun(
+                            boot_nodes[0]
+                            )
+                        ).add_done_callback(stun_done)
 
             def listen_done(_):
                 asyncio.ensure_future(
