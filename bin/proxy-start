@@ -23,6 +23,7 @@ Options:
     --data_port  <port>        Configure proxy data channel port
     --slave_port <port>        Configure slave port number to tracker
     --dht_port   <port>        Configure port number to DHT network
+    --ip <ip>                  Configure proxy ip address
 
 tracker and boot_node are required, while others are optional.
         """ % sys.argv[0])
@@ -33,7 +34,8 @@ try:
         "h",
         [
             "help", "tracker=", "boot_node=", "account_id=",
-            "ctrl_port=", "data_port=", "slave_port=", "dht_port="
+            "ctrl_port=", "data_port=", "slave_port=", "dht_port=",
+            "ip="
             ]
         )
 
@@ -71,6 +73,8 @@ for opt, arg in opts:
         slave_port = int(arg)
     elif opt == '--dht_port':
         dht_port = int(arg)
+    elif opt == '--ip':
+        ip = str(arg)
     else:
         usage()
 
@@ -82,6 +86,7 @@ log.startLogging(sys.stdout)
 
 peer = Peer()
 peer.start_service(
+    ip=ip,
     ctrl_port=ctrl_port,
     data_port=data_port,
     account_id=account_id

@@ -224,10 +224,13 @@ class SSLServerProtocol(NetstringReceiver):
 class SSLServerFactory(protocol.Factory):
     numConnections = 0
 
-    def __init__(self):
+    def __init__(self, ip=None, data_port=None):
         self.proxy_db = None
-        self.ip = '127.0.0.1'
-        self.data_port = config.proxy.server_data_port
+        self.ip = ip or '127.0.0.1'
+        self.data_port = data_port or config.proxy.server_data_port
+
+    def set_external_ip(self, ip):
+        self.ip = ip
 
     def buildProtocol(self, addr):
         return SSLServerProtocol(self)
