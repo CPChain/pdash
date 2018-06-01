@@ -22,12 +22,14 @@ def generate_tid():
 
 
 class PeerProtocol(protocol.DatagramProtocol):
-    def __init__(self, peer_info=None, timeout=5):
+    def __init__(self, peer_id=None, peer_info=None, timeout=5):
+        self.peer_id = peer_id
+        self.peer_info = peer_info
+        self.timeout = timeout
+
         self.peers = {}
         self.peers_lat = {}
         self.request = {}
-        self.timeout = timeout
-        self.peer_info = peer_info
 
     def tranaction_timeout(self, tid):
         self.request[tid][0].callback((False, tid))
