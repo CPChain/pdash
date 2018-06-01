@@ -61,8 +61,8 @@ fi
 if [ "$modulename" = "market" ];
 then
     export CPCHAIN_HOME_CONFIG_PATH="~/.cpchain/cpchain_$modulename.toml"
-    python cpchain/market/manage.py test tests/market/unit_test
-    #--junitxml=test_report.xml --cov-report=xml --cov=./
+    #python cpchain/market/manage.py test tests/market/unit_test
+    py.test ./cpchain/market --junitxml=test_report.xml --cov-report=xml --cov=./
 else
     py.test tests/$modulename  --junitxml=test_report.xml --cov-report=xml --cov=./
 fi
@@ -71,7 +71,8 @@ fi
 # teardown
 if [ $modulename="chain" ]
 then
-   pkill -f "geth"
+#   pkill -f "geth"
+    echo "chain test end"
 fi
 
 return 0

@@ -413,7 +413,7 @@ class MyTagSearchAPIView(APIView):
     @ExceptionHandler
     def get(self, request):
         public_key = get_header(self.request)
-        queryset = MyTag.objects.filter(public_key=public_key)
+        queryset = MyTag.objects.filter(public_key=public_key).order_by('-id')
         page_set = PageNumberPagination().paginate_queryset(queryset=queryset, request=request, view=self)
         serializer = MyTagSerializer(page_set, many=True)
         return JsonResponse({'status': 1, 'message': 'success', "data": serializer.data})
@@ -430,7 +430,7 @@ class MyTaggedProductSearchAPIView(APIView):
     @ExceptionHandler
     def get(self, request):
         public_key = get_header(self.request)
-        tag_list = MyTag.objects.filter(public_key=public_key)
+        tag_list = MyTag.objects.filter(public_key=public_key).order_by('-id')
         logger.debug('taglist:%s' % tag_list)
         keyword = ','.join(x.tag for x in tag_list)
 
@@ -489,7 +489,7 @@ class MyFollowingSellerSearchAPIView(APIView):
     @ExceptionHandler
     def get(self, request):
         public_key = get_header(self.request)
-        queryset = MySeller.objects.filter(public_key=public_key)
+        queryset = MySeller.objects.filter(public_key=public_key).order_by('-id')
         page_set = PageNumberPagination().paginate_queryset(queryset=queryset, request=request, view=self)
         serializer = MySellerSerializer(page_set, many=True)
         return JsonResponse({'status': 1, 'message': 'success', "data": serializer.data})

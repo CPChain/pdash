@@ -461,9 +461,64 @@ class BuyNowDialog(QDialog):
 
 
 class ProductDetailTab(QScrollArea):
-    def __init__(self, parent=None):
+    class ProductComment(QScrollArea):
+        def __init__(self, parent=None, comment={}):
+            super().__init__()
+            self.parent = parent
+            self.comment = comment
+            self.init_ui()
+
+        def init_ui(self):
+
+            self.path = osp.join(root_dir, "cpchain/assets/wallet/font", "ARLRDBD.TTF")
+            self.font_regular = QFontDatabase.addApplicationFont(str(self.path))
+            self.font_givenname = QFontDatabase.applicationFontFamilies(self.font_regular)[0]
+            self.setFont(QFont(self.font_givenname))
+
+            self.setContentsMargins(0, 0, 0, 0)
+            self.setMinimumHeight(120)
+            self.setMaximumHeight(120)
+
+            def create_labels():
+                self.avatar_label = QLabel("")
+                self.avatar_label.setObjectName("avatar_label")
+
+                self.name_label = QLabel(self.comment['user_name'])
+                self.name_label.setObjectName('name_label')
+
+                self.rating_label = QLabel("{}".format(self.comment['rating']))
+                self.rating_label.setObjectName('rating_label')
+
+                self.description_label = QLabel(self.comment['content'])
+                self.description_label.setObjectName("description_label")
+
+            def setlayout():
+                self.main_layout = main_layout = QVBoxLayout(self)
+                main_layout.setContentsMargins(0, 0, 0, 0)
+                main_layout.addSpacing(0)
+
+                self.basic_layout = QHBoxLayout(self)
+                self.basic_layout.setContentsMargins(0, 5, 0, 5)
+                self.basic_layout.addSpacing(1)
+                self.basic_layout.addWidget(self.avatar_label)
+                self.basic_layout.addSpacing(1)
+                self.basic_layout.addWidget(self.name_label)
+                self.basic_layout.addSpacing(10)
+                self.basic_layout.addWidget(self.description_label)
+
+                self.main_layout.addLayout(self.basic_layout)
+                self.main_layout.addSpacing(1)
+                self.main_layout.addWidget(self.description_label)
+
+                self.setLayout(self.main_layout)
+            setlayout()
+            #TODO: Loading stylesheet
+            logger.debug("Loading stylesheet of item")
+
+    def __init__(self, parent=None, item={}):
         super().__init__(parent)
         self.parent = parent
+        self.item = item
         # self.product_uid = product_uid
         # self.key_words = key_words
         #self.setObjectName("cart_tab")
@@ -491,7 +546,7 @@ class ProductDetailTab(QScrollArea):
         def create_labels():
 
             # TODO: replace hard code by self.product_info['sales_number']
-            self.title_label = title_label = QLabel("Title of the Product Title of the Product Title of the Product Title of the Product Title of the Product")
+            self.title_label = title_label = QLabel(self.product_info["title"])
             self.title_label.setObjectName("title_label")
             self.title_label.setWordWrap(True)
             self.title_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
@@ -502,7 +557,7 @@ class ProductDetailTab(QScrollArea):
             self.seller_name = QLabel("Christopher Chak")
             self.seller_name.setObjectName("seller_name")
 
-            self.sales_label = QLabel("Sales: 356")
+            self.sales_label = QLabel("Sales: {}".format(self.product_info['sales_number']))
             self.sales_label.setObjectName("sales_label")
 
             self.size_label = QLabel("Size: 20 Mb")
@@ -514,28 +569,33 @@ class ProductDetailTab(QScrollArea):
             self.rating_label = QLabel("Rating")
             self.rating_label.setObjectName("rating_label")
 
-            self.average_score = QLabel("4.5")
+            self.average_score = QLabel("{0}".format(self.product_info["avg_rating"]))
             self.average_score.setObjectName("average_score")
 
             self.may_like_label = QLabel("You may like")
             self.may_like_label.setObjectName("may_like_label")
 
-            self.buyer_avatar = QLabel("")
-            self.buyer_avatar.setObjectName("buyer_avatar")
+            # TODO: to get info from backend
+            # d_comments = wallet.market_client.query_comment_by_hash(self.item['market_hash'])
+            def add_comment():
+                self.buyer_avatar = QLabel("")
+                self.buyer_avatar.setObjectName("buyer_avatar")
 
-            self.buyer_name = QLabel("Ross Geller")
-            self.buyer_name.setObjectName("buyer_name") 
-            
-            self.data_label = QLabel("May 4, 2018")
-            self.data_label.setObjectName("data_label")   
+                self.buyer_name = QLabel("Ross Geller")
+                self.buyer_name.setObjectName("buyer_name")
 
-            self.buyer_rating = QLabel("4.5")
-            self.buyer_rating.setObjectName("buyer_rating")   
-    
-            self.buyer_comment = QLabel("Lorem ipsim dolor sit amet, consectetur adipiscing elit. Aenean euismod bibendum laoreet.")
-            self.buyer_comment.setObjectName("buyer_comment")    
-            self.buyer_comment.setWordWrap(True)
-            self.buyer_comment.setAlignment(Qt.AlignTop | Qt.AlignLeft)              
+                self.data_label = QLabel("May 4, 2018")
+                self.data_label.setObjectName("data_label")
+
+                self.buyer_rating = QLabel("4.5")
+                self.buyer_rating.setObjectName("buyer_rating")
+
+                self.buyer_comment = QLabel("Lorem ipsim dolor sit amet, consectetur adipiscing elit. Aenean euismod bibendum laoreet.")
+                self.buyer_comment.setObjectName("buyer_comment")
+                self.buyer_comment.setWordWrap(True)
+                self.buyer_comment.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+            add_comment()
+
 
             des_text = "In 2012, OWSLA launched a monthly subscription, The Nest, with benefits including early access to OWSLA releases.[12] In 2013, Bromance Records partners up with OWSLA to create an American branch titled BromanceUS with releases from Gesaffelstein, Illangelo."
 
@@ -1818,8 +1878,9 @@ class PublishDialog(QDialog):
         #for testing this Tab @rayhueng
         #self.setObjectName("cart_tab")
         self.setObjectName("publish_dialog")
-        self.init_ui()
         self.product_id = id
+
+        self.init_ui()
 
     def init_ui(self):
 
@@ -1948,6 +2009,17 @@ class PublishDialog(QDialog):
                         self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
                 d.addCallback(handle_update_file)
             d_publish.addCallback(update_table)
+
+            def update_proxy(markethash):
+                file_info = fs.get_file_by_id(self.product_id)
+                file_hash = file_info.hashcode
+                # TODO: Amazon S3 is not supported at the time
+                s3_key = file_info.remote_uri
+                storage_type = file_info.remote_type
+                product_info = {'storage_type': storage_type, 'file_hash': file_hash, 's3_key': s3_key,
+                                'market_hash': markethash}
+                wallet.proxy_client.publish_to_proxy(product_info, 'recommended')
+            d_publish.addCallback(update_proxy)
             self.close()
         else:
             QMessageBox.warning(self, "Warning", "Please fill out the necessary selling information first!")
@@ -1995,27 +2067,33 @@ class SellTab(QScrollArea):
         self.init_ui()
 
     def update_table(self):
-        #file_list = get_file_list()
-        print("Updating file list......")
-        file_list = []
-        # single element data structure (assumed); to be changed 
-        dict_exa = {"type": "mkv", "name": "Infinity War", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "published"}
-        for i in range(self.row_number):
-            file_list.append(dict_exa)
 
-        for cur_row in range(self.row_number):
-            if cur_row == len(file_list):
-                break
-            checkbox_item = QTableWidgetItem()
-            checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-            checkbox_item.setCheckState(Qt.Unchecked)
-            self.file_table.setItem(cur_row, 0, checkbox_item)
-            self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["type"]))
-            self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["name"]))
-            self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
-            self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["remote_type"]))
-            self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["is_published"]))
-            self.file_table.setItem(cur_row, 6, QTableWidgetItem(str(self.file_list[cur_row].id)))
+        d = wallet.market_client.query_by_seller(wallet.market_client.public_key)
+        def handle_query_by_seller(products):
+            self.file_list = []
+            if len(products) == 0:
+                item = {"ID": "00x2222", "title": "Medical Data from Mayo Clinic", "price": "100", "avg_rating": "83%", "sales_number": "13087", "end_date": "2018-05-05"}
+                for i in range(self.row_number):
+                    self.file_list.append(item)
+            else:
+                self.file_list = products
+            set_table_value(self.file_list)
+
+        d.addCallback(handle_query_by_seller)
+
+        def set_table_value(products):
+            for cur_row in range(self.row_number):
+                if cur_row == len(products):
+                    break
+                checkbox_item = QTableWidgetItem()
+                checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+                checkbox_item.setCheckState(Qt.Unchecked)
+                self.file_table.setItem(cur_row, 0, checkbox_item)
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(products[cur_row]["title"]))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(products[cur_row]["price"]))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(products[cur_row]["sales_number"]))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(products[cur_row]["avg_rating"]))
+                self.file_table.setItem(cur_row, 5, QTableWidgetItem(products[cur_row]["end_date"]))
 
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
@@ -2088,49 +2166,54 @@ class SellTab(QScrollArea):
             file_table.setFocusPolicy(Qt.NoFocus) 
             # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
-            file_table.setColumnCount(8)
+            file_table.setColumnCount(6)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
 
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price ($)', 'Order', 'Sales', 'Rating', 'Update Time', 'ID'])
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price ($)', 'Sales', 'Rating', 'Update Time'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.verticalHeader().setDefaultSectionSize(30)
             file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
             file_table.setSortingEnabled(True)
 
-            #file_list = get_file_list()
-            file_list = []
-            print("Getting file list.......")
-            dict_exa = {"type": "mkv", "name": "Infinity War", "price": "200", "order": "36", "sales": "7200", "rating": "4.5", "updatetime": "2018/5/14 08:30"}
-            for i in range(self.row_number):
-                file_list.append(dict_exa)
-
             self.check_record_list = []
             self.checkbox_list = []
             for cur_row in range(self.row_number):
-                if cur_row == len(file_list):
+                if cur_row == len(self.file_list):
                     break
                 checkbox_item = QTableWidgetItem()
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 checkbox_item.setCheckState(Qt.Unchecked)
                 self.file_table.setItem(cur_row, 0, checkbox_item)
-                self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["name"]))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["price"]))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["order"]))
-                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["sales"]))
-                self.file_table.setItem(cur_row, 5, QTableWidgetItem(file_list[cur_row]["rating"]))
-                self.file_table.setItem(cur_row, 6, QTableWidgetItem(file_list[cur_row]["updatetime"]))
-                #self.file_table.setItem(cur_row, 7, QTableWidgetItem(str(self.file_list[cur_row].id)))
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row]["title"]))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(self.file_list[cur_row]["price"]))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row]["sales_number"]))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(self.file_list[cur_row]["avg_rating"]))
+                self.file_table.setItem(cur_row, 5, QTableWidgetItem(self.file_list[cur_row]["end_date"]))
                 self.check_record_list.append(False)
-        create_file_table()    
-        self.file_table.sortItems(2)
-        self.file_table.horizontalHeader().setStyleSheet("QHeaderView::section{background: #f3f3f3; border: 1px solid #dcdcdc}")
-        # record rows that are clicked or checked
+
+        d = wallet.market_client.query_by_seller(wallet.market_client.public_key)
+        def handle_query_by_seller(products):
+            self.file_list = []
+            if len(products) == 0:
+                item = {"ID": "00x2222", "title": "Medical Data from Mayo Clinic", "price": "100", "avg_rating": "83%", "sales_number": "13087", "end_date": "2018-05-05"}
+                for i in range(self.row_number):
+                    self.file_list.append(item)
+            else:
+                self.file_list = products
+            create_file_table()
+            self.file_table.itemClicked.connect(record_check)
+
+            self.file_table.sortItems(2)
+            self.file_table.horizontalHeader().setStyleSheet("QHeaderView::section{background: #f3f3f3; border: 1px solid #dcdcdc}")
+            set_layout()
+        d.addCallback(handle_query_by_seller)
+
         def record_check(item):
             self.cur_clicked = item.row()
             if item.checkState() == Qt.Checked:
                 self.check_record_list[item.row()] = True
-        self.file_table.itemClicked.connect(record_check)
+        # self.file_table.itemClicked.connect(record_check)
 
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self)
@@ -2165,9 +2248,10 @@ class SellTab(QScrollArea):
             self.main_layout.addWidget(self.file_table)
             self.main_layout.addSpacing(2)
             self.setLayout(self.main_layout)
-        set_layout()
-        print("Loading stylesheet of cloud tab widget")
-        load_stylesheet(self, "sell.qss")
+            load_stylesheet(self, "sell.qss")
+        # set_layout()
+        # print("Loading stylesheet of cloud tab widget")
+        # load_stylesheet(self, "sell.qss")
 
     def handle_delete(self):
         for i in range(len(self.check_record_list)):
@@ -2628,10 +2712,18 @@ class Product2(QScrollArea):
         load_stylesheet(self, "product.qss")
         logger.debug("Loading stylesheet of item")
 
+    @inlineCallbacks
+    def get_product_info(self):
+        product_info = self.item
+        promo_list = yield wallet.market_client.query_promotion()
+        main_wnd.findChild(QWidget, 'productdetail_tab').update_page(product_info, promo_list)
+
+
     def title_clicked_act(self):
         # wid = self.parent.parent.findChild(QWidget, "productdetail_tab")
         # self.parent.parent.content_tabs.setCurrentWidget(wid)
         print("title_clicked_act")
+        self.get_product_info()
         wid = main_wnd.content_tabs.findChild(QWidget, "productdetail_tab")
         main_wnd.content_tabs.setCurrentWidget(wid)
 
@@ -2699,6 +2791,7 @@ class PopularTab(QScrollArea):
         self.more_btn_2 = more_btn_2 = QPushButton("More>", self)
         more_btn_2.setObjectName("more_btn_2")
         self.more_btn_2.setCursor(QCursor(Qt.PointingHandCursor))
+
 
         def create_hot_industry():
             self.hot_industry_label = []
@@ -2856,7 +2949,7 @@ class CloudTab(QScrollArea):
                 self.setLayout(main_layout)
             set_layout()
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("cloud_tab")
@@ -3017,6 +3110,9 @@ class CloudTab(QScrollArea):
         for i in range(len(self.check_record_list)):
             if self.check_record_list[i] == True:
                 self.file_table.removeRow(i)
+                #TODO: delete corresponding record
+                file_id = self.file_list[i].id
+                fs.delete_file_by_id(file_id)
                 print("Deleting files permanently from the cloud...")
                 self.update_table()
 
@@ -3742,5 +3838,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-                                                                                                                                                                                      
