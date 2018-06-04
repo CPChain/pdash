@@ -239,8 +239,18 @@ class Peer:
         else:
             logger.error("wrong tracker/boot nodes")
 
+def start_proxy_request(sign_message, proxy_id=None, tracker=None, boot_nodes=None):
 
-def start_proxy_request(sign_message, tracker=None, boot_nodes=None, proxy_id=None):
+    if tracker is None:
+        addr, port = config.proxy.tracker.split(':')
+        tracker = (str(addr), int(port))
+
+    if boot_nodes is None:
+        boot_nodes = []
+        nodes = (config.proxy.boot_nodes.split())
+        for node in nodes:
+            addr, port = node.split(':')
+            boot_nodes.append((str(addr), int(port)))
 
     d = defer.Deferred()
 
