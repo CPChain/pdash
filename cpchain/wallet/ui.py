@@ -1996,6 +1996,7 @@ class PublishDialog(QDialog):
             # logger.debug("product selected id: %s", product_info.id)
             logger.debug("product info title: %s", self.pinfo_title)
             logger.debug("product info id: %s", self.product_id)
+
             #TODO: Get following attributes from fileinfo table
             self.size = 17
             self.start_date = '2018-04-01 10:10:10'
@@ -2025,17 +2026,6 @@ class PublishDialog(QDialog):
                     wallet.proxy_client.publish_to_proxy(product_info, 'recommended')
                 update_proxy(market_hash)
             d_publish.addCallback(update_table)
-
-            # def update_proxy(markethash):
-            #     file_info = fs.get_file_by_id(self.product_id)
-            #     file_hash = file_info.hashcode
-            #     # TODO: Amazon S3 is not supported at the time
-            #     s3_key = file_info.remote_uri
-            #     storage_type = file_info.remote_type
-            #     product_info = {'storage_type': storage_type, 'file_hash': file_hash, 's3_key': s3_key,
-            #                     'market_hash': markethash}
-            #     wallet.proxy_client.publish_to_proxy(product_info, 'recommended')
-            # d_publish.addCallback(update_proxy)
 
             self.close()
         else:
@@ -3125,13 +3115,17 @@ class CloudTab(QScrollArea):
 
     def handle_delete(self):
         for i in range(len(self.check_record_list)):
+            logger.debug(self.check_record_list)
             if self.check_record_list[i] == True:
-                self.file_table.removeRow(i)
-                #TODO: delete corresponding record
-                file_id = self.file_list[i].id
+                # self.file_table.removeRow(i)
+                # TODO: delete corresponding record from local FileInfo
+                file_id = self.file_table.item(i, 5).text()
                 fs.delete_file_by_id(file_id)
-                print("Deleting files permanently from the cloud...")
-                self.update_table()
+                # TODO: delete corresponding record from market database
+                # wallet.market_client.delete_file_info(file_id)
+        QMessageBox.information(self, "Tips", "Deleted successfully !")
+
+        self.update_table()
 
     class UploadDialog(QDialog):
         def __init__(self, parent=None):
