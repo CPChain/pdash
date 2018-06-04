@@ -133,7 +133,7 @@ class PeerProtocol(protocol.DatagramProtocol):
             if self.peers_lat:
                 peer_id = min(self.peers_lat.items(), key=operator.itemgetter(1))[0]
                 peer = self.peers[peer_id]
-                pick_peer = (peer['addr'][0], peer['peer_info'])
+                pick_peer = peer_id
             else:
                 pick_peer = None
 

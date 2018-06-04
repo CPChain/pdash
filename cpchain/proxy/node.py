@@ -184,7 +184,7 @@ class Peer:
             protocol.transport.stopListening()
             success, data = result
             if success and data:
-                return tuple(data)
+                return data
 
         d = protocol.pick_peer(tracker)
         d.addBoth(pick_peer_done)
@@ -242,7 +242,17 @@ class Peer:
         else:
             logger.error("wrong tracker/boot nodes")
 
-def start_proxy_request(sign_message, proxy_id=None, tracker=None, boot_nodes=None):
+def pick_proxy(tracker=None):
+    if tracker is None:
+        addr, port = config.proxy.tracker.split(':')
+        tracker = (str(addr), int(port))
+
+    # pick a proxy from tracker
+    return Peer().pick_peer(
+        tracker=tracker
+        )
+
+def start_proxy_request(sign_message, proxy_id, tracker=None, boot_nodes=None):
 
     if tracker is None:
         addr, port = config.proxy.tracker.split(':')
@@ -267,12 +277,6 @@ def start_proxy_request(sign_message, proxy_id=None, tracker=None, boot_nodes=No
             d.errback('failed to get proxy')
 
     def get_proxy(tracker, boot_nodes, proxy_id):
-        if proxy_id is None:
-            # pick a proxy from tracker
-            return Peer().pick_peer(
-                tracker=tracker
-                )
-
         # find the (ip, port) for given proxy
         return Peer().get_peer(
             peer_id=proxy_id,
