@@ -3122,7 +3122,7 @@ class CloudTab(QScrollArea):
                 file_id = self.file_table.item(i, 5).text()
                 fs.delete_file_by_id(file_id)
                 # TODO: delete corresponding record from market database
-                # wallet.market_client.delete_file_info(file_id)
+                wallet.market_client.delete_file_info(file_id)
         QMessageBox.information(self, "Tips", "Deleted successfully !")
 
         self.update_table()

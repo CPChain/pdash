@@ -412,14 +412,14 @@ class MarketClient:
     @inlineCallbacks
     def delete_file_info(self, product_id):
         logger.debug("delete file info in market")
-        # header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
-        #           'Content-Type': 'application/json'}
-        # data = {"client_id"}
-        # url = self.url + 'user_data/v1/uploaded_file/delete/'
-        # logger.debug('upload file info payload: %s', data)
-        # logger.debug('upload file info url: %s', url)
-        # logger.debug('product id: %s', product_id)
-        # resp = yield treq.post(url, headers=header, json=data, persistent=False)
-        # confirm_info = yield treq.json_content(resp)
-        # logger.debug('upload file info to market confirm: %s', confirm_info)
-        # return confirm_info['status']
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        data = {"client_id"}
+        url = self.url + 'user_data/v1/uploaded_file/delete/'
+        logger.debug('upload file info payload: %s', data)
+        logger.debug('upload file info url: %s', url)
+        logger.debug('product id: %s', product_id)
+        resp = yield treq.post(url, headers=header, json=data, persistent=False)
+        confirm_info = yield treq.json_content(resp)
+        logger.debug('upload file info to market confirm: %s', confirm_info)
+        return confirm_info['status']
