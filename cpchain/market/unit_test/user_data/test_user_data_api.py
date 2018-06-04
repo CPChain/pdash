@@ -27,7 +27,25 @@ class TestUserDataApi(LocalBaseApiTest, APITestCase):
         self.update_upload_file_info(header=header, client_id=client_id, market_hash=market_hash)
 
         # ======== test pull user data in wallet ========
-        self._pull_user_data(header=header)
+        buyer_files, upload_files = self._pull_user_data(header=header)
+
+    def test_delete_upload_file_info(self):
+        header = self.get_header()
+
+        client_id = self.get_long_id()
+        print(client_id)
+        market_hash = "market_hash"
+
+        # ======== test save upload file info in wallet ========
+        self._save_upload_file_info(header=header, client_id=client_id)
+
+        # update upload_file_info
+        self.delete_upload_file_info(header=header, client_id=client_id)
+
+        # ======== test pull user data in wallet ========
+        buyer_files, upload_files = self._pull_user_data(header=header)
+        self.assertEquals(0, len(buyer_files))
+        self.assertEquals(0, len(upload_files))
 
     def test_update_buyer_file_info(self):
         header = self.get_header()
@@ -38,11 +56,29 @@ class TestUserDataApi(LocalBaseApiTest, APITestCase):
         # ======== test save buyer file info in wallet ========
         self._save_buyer_file_info(header=header, order_id=order_id)
 
-        # TODO update buyer_file_info
-        self.update_buyer_file_info(header=header, order_id = order_id)
+        # update buyer_file_info
+        self.update_buyer_file_info(header=header, order_id=order_id)
 
         # ======== test pull user data in wallet ========
         self._pull_user_data(header=header)
+
+    def test_delete_buyer_file_info(self):
+        header = self.get_header()
+
+        order_id = self.get_long_id()
+        print(order_id)
+
+        # ======== test save buyer file info in wallet ========
+        self._save_buyer_file_info(header=header, order_id=order_id)
+
+        # delete buyer_file_info
+        self.delete_buyer_file_info(header=header, order_id=order_id)
+
+        # ======== test pull user data in wallet ========
+
+        buyer_files, upload_files = self._pull_user_data(header=header)
+        self.assertEquals(0, len(buyer_files))
+        self.assertEquals(0, len(upload_files))
 
     def test_query_latest_version(self):
         header = self.get_header()
@@ -85,7 +121,7 @@ class TestUserDataApi(LocalBaseApiTest, APITestCase):
         print("======== save upload file info in wallet ========")
 
         payload = {"public_key": self.pub_key_string,
-                   "hashcode": "hashcode", "path": "path", "size": 1222,"client_id": client_id,
+                   "hashcode": "hashcode", "path": "path", "size": 1222, "client_id": client_id,
                    "remote_type": "1", "remote_uri": "remote_uri", "is_published": "True",
                    "aes_key": "aes_key", "market_hash": "market_hash", "name": "nnnn"}
 
@@ -125,9 +161,15 @@ class TestUserDataApi(LocalBaseApiTest, APITestCase):
         print(resp_text)
         parsed_json = json.loads(resp_text)
 
-        result = parsed_json['data']['buyer_files']
-        for p in result:
+        buyer_files = parsed_json['data']['buyer_files']
+        for p in buyer_files:
             print("created:%s" % p["created"])
+
+        upload_files = parsed_json['data']['upload_files']
+        for p in upload_files:
+            print("created:%s" % p["created"])
+
+        return buyer_files, upload_files
 
     def _query_latest_version(self, header):
         print("======== query latest version ========")
@@ -141,6 +183,7 @@ class TestUserDataApi(LocalBaseApiTest, APITestCase):
 
         version = parsed_json['data']['version']
         print("version:%s" % version)
+        self.assertEquals(0, version)
         status = parsed_json['status']
         self.assertEqual(1, status)
 
@@ -203,7 +246,7 @@ class TestUserDataApi(LocalBaseApiTest, APITestCase):
         status = parsed_json['status']
         self.assertEqual(1, status)
 
-    def update_upload_file_info(self, header,client_id , market_hash):
+    def update_upload_file_info(self, header, client_id, market_hash):
         print("======== update uploaded_file ========")
         # public_key + client_id -->market_hash + is_published
         payload = {"client_id": client_id, "market_hash": market_hash, "is_published": False}
@@ -219,12 +262,45 @@ class TestUserDataApi(LocalBaseApiTest, APITestCase):
         message = parsed_json['message']
         print("message:%s" % message)
 
+    def delete_upload_file_info(self, header, client_id):
+        print("======== delete uploaded_file ========")
+        # public_key + client_id -->upload file info
+        payload = {"client_id": client_id}
+
+        url = reverse('uploaded_file_delete')
+        response = self.client.post(url, data=payload, format='json', **header)
+        resp_text = self.get_response_content(response)
+        print(resp_text)
+        self.assertEqual(response.status_code, 200)
+        parsed_json = json.loads(resp_text)
+
+        self.assertEqual(parsed_json['status'], 1)
+        version = parsed_json['data']['version']
+        print("version:%s" % version)
+        self.assertGreaterEqual(version, 1)
+
     def update_buyer_file_info(self, header, order_id):
         print("======== update buyer_file ========")
         # order_id -> is_downloaded
         payload = {"order_id": order_id, "is_downloaded": False}
 
         url = reverse('buyer_file_update')
+        response = self.client.post(url, data=payload, format='json', **header)
+        resp_text = self.get_response_content(response)
+        print(resp_text)
+        self.assertEqual(response.status_code, 200)
+        parsed_json = json.loads(resp_text)
+
+        self.assertEqual(parsed_json['status'], 1)
+        message = parsed_json['message']
+        print("message:%s" % message)
+
+    def delete_buyer_file_info(self, header, order_id):
+        print("======== delete buyer_file ========")
+        # order_id -> is_downloaded
+        payload = {"order_id": order_id}
+
+        url = reverse('buyer_file_delete')
         response = self.client.post(url, data=payload, format='json', **header)
         resp_text = self.get_response_content(response)
         print(resp_text)
