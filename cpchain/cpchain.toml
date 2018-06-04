@@ -56,6 +56,8 @@ server_key = 'proxy/server.key'
 server_crt = 'proxy/server.crt'
 dbpath = 'proxy/proxy.db'
 server_root = 'proxy/server_root'
+tracker = '192.168.0.132:8101'
+boot_nodes = '192.168.0.132:8201'
 
 
 [market]
