@@ -217,8 +217,11 @@ class Peer:
             def get_key_done(future):
                 value = future.result()
                 peer.stop()
-                addr = derive_proxy_data(value)
-                d.callback(tuple(addr.split(',')))
+                if value:
+                    addr = derive_proxy_data(value)
+                    d.callback(tuple(addr.split(',')))
+                else:
+                    d.callback(None)
 
             def bootstrap_done(_):
                 asyncio.ensure_future(
@@ -258,7 +261,10 @@ def start_proxy_request(sign_message, proxy_id=None, tracker=None, boot_nodes=No
         d.callback(proxy_reply)
 
     def get_proxy_done(addr):
-        start_client(sign_message, addr).addCallback(start_client_done)
+        if addr:
+            start_client(sign_message, addr).addCallback(start_client_done)
+        else:
+            d.errback('failed to get proxy')
 
     def get_proxy(tracker, boot_nodes, proxy_id):
         if proxy_id is None:
