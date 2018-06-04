@@ -2013,7 +2013,7 @@ class PublishDialog(QDialog):
                         self.parent.update_table()
                         self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
                 d.addCallback(handle_update_file)
-
+                # TODO: This is only for test purpose. Will be replaced in this week later.
                 def update_proxy(markethash):
                     file_info = fs.get_file_by_id(self.product_id)
                     file_hash = file_info.hashcode
@@ -3251,11 +3251,11 @@ class CloudTab(QScrollArea):
             def handle_upload_resp(status):
                 if status == 1:
                     logger.debug('upload file info to market succeed')
+                    self.parent.update_table()
+                    logger.debug("update_table successful !")
                 else:
                     logger.debug('upload file info to market failed')
             d.addCallback(handle_upload_resp)
-            # TODO: Not working here ?
-            self.parent.update_table()
 
 
     def handle_upload(self):
@@ -3282,9 +3282,7 @@ class CloudTab(QScrollArea):
         print("row {} has been removed...".format(self.cur_clicked))
 
     def handle_publish_act(self):
-        # item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
-        # product_id = self.file_table.item(self.cur_clicked, 5).text()
-        product_id = self.file_list[self.cur_clicked].id
+        product_id = self.file_table.item(self.cur_clicked, 5).text()
         self.publish_dialog = PublishDialog(self, product_id)
         # self.file_list[self.cur_clicked]
         print("handle publish act....")
