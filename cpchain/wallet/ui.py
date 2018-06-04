@@ -3282,10 +3282,13 @@ class CloudTab(QScrollArea):
         print("row {} has been removed...".format(self.cur_clicked))
 
     def handle_publish_act(self):
-        product_id = self.file_table.item(self.cur_clicked, 5).text()
-        self.publish_dialog = PublishDialog(self, product_id)
-        # self.file_list[self.cur_clicked]
-        print("handle publish act....")
+        if wallet.market_client.token == '':
+            QMessageBox.information(self, "Tips", "Please login first !")
+        else:
+            product_id = self.file_table.item(self.cur_clicked, 5).text()
+            self.publish_dialog = PublishDialog(self, product_id)
+            # self.file_list[self.cur_clicked]
+            logger.debug("handle publish act....")
 
 
 
