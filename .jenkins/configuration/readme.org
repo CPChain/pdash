@@ -1,0 +1,9 @@
+-*- mode: org; -*-
+
+* module configuration for CI
+
+    copy cpchain_xxx.toml to ~/.cpchain/
+    set env variable for special configuration:
+        export CPCHAIN_HOME_CONFIG_PATH="~/.cpchain/cpchain_$modulename.toml"
+
+

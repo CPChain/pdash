@@ -71,6 +71,32 @@ class UploadFileInfoUpdateAPIView(APIView):
             return create_success_data_response({'version': user_version})
 
 
+class UploadFileInfoDeleteAPIView(APIView):
+    """
+    API endpoint that allows delete UploadFileInfo.
+    """
+    queryset = UploadFileInfo.objects.all()
+    serializer_class = UploadFileInfoSerializer
+    permission_classes = (AlreadyLoginUser,)
+
+    @ExceptionHandler
+    def post(self, request):
+        public_key = get_header(self.request)
+        logger.info("public_key:%s" % public_key)
+
+        data = request.data
+        data['public_key'] = public_key
+        deleted, rows_count = UploadFileInfo.objects.filter(
+            public_key=public_key, client_id=data['client_id']
+        ).delete()
+        logger.info("deleted:%i" % deleted)
+        logger.info(rows_count)
+
+        if deleted:
+            user_version = increase_data_version(public_key)
+            return create_success_data_response({'version': user_version})
+
+
 class PullUserInfoAPIView(APIView):
     """
     API endpoint that allows pull user info (UploadFileInfo,BuyerFileInfo) by owner.
@@ -85,7 +111,7 @@ class PullUserInfoAPIView(APIView):
         logger.info("public_key:%s" % public_key)
 
         upload_file_queryset = UploadFileInfo.objects.filter(public_key=public_key)
-        upload_file_serializer = UploadFileInfoSerializer(upload_file_queryset,many=True)
+        upload_file_serializer = UploadFileInfoSerializer(upload_file_queryset, many=True)
 
         buyer_file_queryset = BuyerFileInfo.objects.filter(public_key=public_key)
         buyer_file_serializer = BuyerFileInfoSerializer(buyer_file_queryset, many=True)
@@ -143,6 +169,29 @@ class BuyerFileInfoUpdateAPIView(APIView):
         if serializer.is_valid(raise_exception=True):
             user_version = increase_data_version(public_key)
             serializer.update(instance=info, validated_data=data)
+            return create_success_data_response({'version': user_version})
+
+
+class BuyerFileInfoDeleteAPIView(APIView):
+    """
+    API endpoint that allows delete BuyerFileInfo.
+    """
+    queryset = BuyerFileInfo.objects.all()
+    serializer_class = BuyerFileInfoUpdateSerializer
+    permission_classes = (AlreadyLoginUser,)
+
+    @ExceptionHandler
+    def post(self, request):
+        public_key = get_header(self.request)
+        logger.info("public_key:%s" % public_key)
+
+        data = request.data
+        logger.info("data:%s" % data)
+
+        deleted, _ = BuyerFileInfo.objects.filter(order_id=data['order_id']).delete()
+
+        if deleted:
+            user_version = increase_data_version(public_key)
             return create_success_data_response({'version': user_version})
 
 

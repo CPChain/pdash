@@ -71,7 +71,8 @@ fi
 # teardown
 if [ $modulename="chain" ]
 then
-   pkill -f "geth"
+#   pkill -f "geth"
+    echo "chain test end"
 fi
 
 return 0
