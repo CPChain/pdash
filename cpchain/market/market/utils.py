@@ -10,7 +10,7 @@ from cpchain.utils import Encoder, SHA256Hash
 logger = logging.getLogger(__name__)
 
 PUBLIC_KEY = "public_key"
-
+HTTP_MARKET_TOKEN = 'HTTP_MARKET_TOKEN'
 
 def md5(source):
     digest = hashlib.md5()

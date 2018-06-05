@@ -91,9 +91,9 @@ class LogoutAPIView(APIView):
 
     @ExceptionHandler
     def post(self, request):
-        data = request.data
-        public_key = data.get(PUBLIC_KEY)
-        token = data.get('token')
+        public_key = get_header(request)
+        token = get_header(request, HTTP_MARKET_TOKEN)
+
         logger.info("public_key:%s,code:%s" % (public_key,token))
         if public_key is None or token is None:
             logger.info("public_key is None or token is None. public_key:%s" % public_key)
