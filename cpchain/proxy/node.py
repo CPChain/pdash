@@ -266,11 +266,10 @@ def pick_proxy(tracker=None):
 
 def start_proxy_request(sign_message, proxy_id, tracker=None, boot_nodes=None):
 
-    if tracker is None:
+    if tracker is None and boot_nodes is None:
         addr, port = config.proxy.tracker.split(':')
         tracker = (str(addr), int(port))
 
-    if boot_nodes is None:
         boot_nodes = []
         nodes = (config.proxy.boot_nodes.split())
         for node in nodes:
