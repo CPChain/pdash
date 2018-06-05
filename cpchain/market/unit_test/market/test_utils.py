@@ -6,6 +6,19 @@ from tests.market.base_api_test import BaseApiTest
 
 class UtilsTest(BaseApiTest):
 
+    def test_gen_sign(self):
+        title = "publish product 12444"
+        description = "test12345654654654654"
+        price = 9527
+        start_date = "2018-04-01 10:10:10"
+        end_date = "2018-12-10 10:10:10"
+        file_md5 = "12345678901234567890"
+        signature_source = self.pub_key_string + title + description + str(price) + start_date + end_date + file_md5
+
+        new_signature = sign(self.pri_key, signature_source)
+        print("new_signature is:" + new_signature.hex())
+        self.assertIsNotNone(new_signature)
+
     def test_load_key_pair_from_keystore(self):
         pri_key, pub_key = self.pri_key, self.pub_key
 
