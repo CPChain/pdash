@@ -1996,6 +1996,7 @@ class PublishDialog(QDialog):
             # logger.debug("product selected id: %s", product_info.id)
             logger.debug("product info title: %s", self.pinfo_title)
             logger.debug("product info id: %s", self.product_id)
+
             #TODO: Get following attributes from fileinfo table
             self.size = 17
             self.start_date = '2018-04-01 10:10:10'
@@ -2009,11 +2010,11 @@ class PublishDialog(QDialog):
                 d = wallet.market_client.update_file_info(self.product_id, market_hash)
                 def handle_update_file(status):
                     if status == 1:
-                        QMessageBox.information(self, "Tips", "Successful !")
+                        QMessageBox.information(self, "Tips", "Update market side product successfully !")
                         self.parent.update_table()
                         self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
                 d.addCallback(handle_update_file)
-
+                # TODO: This is only for test purpose. Will be replaced in this week later.
                 def update_proxy(markethash):
                     file_info = fs.get_file_by_id(self.product_id)
                     file_hash = file_info.hashcode
@@ -2025,17 +2026,6 @@ class PublishDialog(QDialog):
                     wallet.proxy_client.publish_to_proxy(product_info, 'recommended')
                 update_proxy(market_hash)
             d_publish.addCallback(update_table)
-
-            # def update_proxy(markethash):
-            #     file_info = fs.get_file_by_id(self.product_id)
-            #     file_hash = file_info.hashcode
-            #     # TODO: Amazon S3 is not supported at the time
-            #     s3_key = file_info.remote_uri
-            #     storage_type = file_info.remote_type
-            #     product_info = {'storage_type': storage_type, 'file_hash': file_hash, 's3_key': s3_key,
-            #                     'market_hash': markethash}
-            #     wallet.proxy_client.publish_to_proxy(product_info, 'recommended')
-            # d_publish.addCallback(update_proxy)
 
             self.close()
         else:
@@ -3124,14 +3114,27 @@ class CloudTab(QScrollArea):
         load_stylesheet(self, "cloud.qss")
 
     def handle_delete(self):
+        if wallet.market_client.token == '':
+            QMessageBox.information(self, "Tips", "Please login first !")
+            return
         for i in range(len(self.check_record_list)):
+            logger.debug(self.check_record_list)
             if self.check_record_list[i] == True:
-                self.file_table.removeRow(i)
-                #TODO: delete corresponding record
-                file_id = self.file_list[i].id
+                # delete corresponding record from local FileInfo
+                file_id = self.file_table.item(i, 5).text()
                 fs.delete_file_by_id(file_id)
-                print("Deleting files permanently from the cloud...")
-                self.update_table()
+                # Set check box state to false
+                self.check_record_list[i] = False
+
+                self.file_table.removeRow(i)
+                # TODO: delete corresponding record from market database
+                d_status = wallet.market_client.delete_file_info(file_id)
+                def update_market_backup(status):
+                    if status == 1:
+                        QMessageBox.information(self, "Tips", "Deleted from market backup successfully!")
+                    else:
+                        QMessageBox.information(self, "Tips", "Failed to delete record from market backup!")
+                d_status.addCallback(update_market_backup)
 
     class UploadDialog(QDialog):
         def __init__(self, parent=None):
@@ -3251,43 +3254,53 @@ class CloudTab(QScrollArea):
             def handle_upload_resp(status):
                 if status == 1:
                     logger.debug('upload file info to market succeed')
+                    # self.parent.update_table()
+                    # TODO: add new row instead of refeshing the whole table
+                    # TODO: display problem not solved: checkbox item is the key
+                    file_table = self.parent.file_table
+                    row_count = file_table.rowCount()
+                    file_table.insertRow(row_count)
+                    checkbox_item = QTableWidgetItem()
+                    checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+                    checkbox_item.setCheckState(Qt.Unchecked)
+                    file_table.setItem(row_count, 0, checkbox_item)
+                    file_table.setItem(row_count, 1, QTableWidgetItem(name))
+                    file_table.setItem(row_count, 2, QTableWidgetItem(str(size)))
+                    file_table.setItem(row_count, 3, QTableWidgetItem(remote_type))
+                    file_table.setItem(row_count, 4, QTableWidgetItem('False'))
+                    file_table.setItem(row_count, 5, QTableWidgetItem(str(product_id)))
+
+                    # TODO: To test if there are bugs with check_record_list, esp. when the row number has changed
+                    # TODO: or is influenced by the order
+
+                    check_record_list = self.parent.check_record_list
+                    check_record_list.append(False)
+
+                    logger.debug("update table successfully !")
                 else:
                     logger.debug('upload file info to market failed')
             d.addCallback(handle_upload_resp)
-            # TODO: Not working here ?
-            self.parent.update_table()
 
 
     def handle_upload(self):
-        # Maybe useful for buyer.
-        # row_selected = self.file_table.selectionModel().selectedRows()[0].row()
-        # selected_fpath = self.file_table.item(row_selected, 2).text()
-        print("Uploading local files....")
+        if wallet.market_client.token == '':
+            QMessageBox.information(self, "Tips", "Please login first !")
+            return
+        logger.debug("Uploading local files....")
         self.upload_dialog = CloudTab.UploadDialog(self)
-
-    #def handle_upload(self):
-        # Maybe useful for buyer.
-        # row_selected = self.file_table.selectionModel().selectedRows()[0].row()
-        # selected_fpath = self.file_table.item(row_selected, 2).text()
-        #self.local_file = QFileDialog.getOpenFileName()[0]
-        #print("Uploading local files....")
-        # defered = threads.deferToThread(upload_file_ipfs, self.local_file)
-        # def handle_callback_upload(x):
-        #     print("in handle_callback_upload" + x)
-        #     self.update_table()
-        # defered.addCallback(handle_callback_upload)
 
     def handle_delete_act(self):
         self.file_table.removeRow(self.cur_clicked)
         print("row {} has been removed...".format(self.cur_clicked))
 
     def handle_publish_act(self):
-        # item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
-        # product_id = self.file_table.item(self.cur_clicked, 5).text()
-        product_id = self.file_list[self.cur_clicked].id
-        self.publish_dialog = PublishDialog(self, product_id)
-        # self.file_list[self.cur_clicked]
-        print("handle publish act....")
+        if wallet.market_client.token == '':
+            QMessageBox.information(self, "Tips", "Please login first !")
+        else:
+            product_id = self.file_table.item(self.cur_clicked, 5).text()
+            self.publish_dialog = PublishDialog(self, product_id)
+            # self.file_list[self.cur_clicked]
+            logger.debug("handle publish act....")
 
 
 
