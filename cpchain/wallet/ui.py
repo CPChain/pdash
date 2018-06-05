@@ -3117,15 +3117,15 @@ class CloudTab(QScrollArea):
         for i in range(len(self.check_record_list)):
             logger.debug(self.check_record_list)
             if self.check_record_list[i] == True:
-                # self.file_table.removeRow(i)
-                # TODO: delete corresponding record from local FileInfo
+                # delete corresponding record from local FileInfo
                 file_id = self.file_table.item(i, 5).text()
                 fs.delete_file_by_id(file_id)
                 # TODO: delete corresponding record from market database
-                wallet.market_client.delete_file_info(file_id)
+                self.file_table.removeRow(i)
+                # d_status = wallet.market_client.delete_file_info(file_id)
         QMessageBox.information(self, "Tips", "Deleted successfully !")
 
-        self.update_table()
+        # self.update_table()
 
     class UploadDialog(QDialog):
         def __init__(self, parent=None):
