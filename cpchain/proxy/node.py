@@ -180,14 +180,20 @@ class Peer:
         protocol = PeerProtocol()
         reactor.listenUDP(port, protocol)
 
-        def pick_peer_done(result):
-            protocol.transport.stopListening()
+        d = defer.Deferred()
+
+        def stop_listening_done(_, result):
             success, data = result
             if success and data:
-                return data
+                d.callback(data)
+            else:
+                d.callback(None)
 
-        d = protocol.pick_peer(tracker)
-        d.addBoth(pick_peer_done)
+        def pick_peer_done(result):
+            protocol.transport.stopListening().addCallback(
+                stop_listening_done, result)
+
+        protocol.pick_peer(tracker).addCallback(pick_peer_done)
         return d
 
     def get_peer(self, peer_id, tracker=None, boot_nodes=None, port=None):
@@ -197,14 +203,20 @@ class Peer:
             protocol = PeerProtocol()
             reactor.listenUDP(port, protocol)
 
-            def get_peer_done(result):
-                protocol.transport.stopListening()
+            d = defer.Deferred()
+
+            def stop_listening_done(_, result):
                 success, data = result
                 if success and data:
-                    return tuple(data)
+                    d.callback(data)
+                else:
+                    d.callback(None)
 
-            d = protocol.get_peer(peer_id, tracker)
-            d.addBoth(get_peer_done)
+            def get_peer_done(result):
+                protocol.transport.stopListening().addCallback(
+                    stop_listening_done, result)
+
+            protocol.get_peer(peer_id, tracker).addCallback(get_peer_done)
             return d
 
         elif isinstance(boot_nodes, list):
