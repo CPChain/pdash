@@ -2023,8 +2023,15 @@ class PublishDialog(QDialog):
                     storage_type = file_info.remote_type
                     product_info = {'storage_type': storage_type, 'file_hash': file_hash, 's3_key': s3_key,
                                     'market_hash': markethash}
-                    wallet.proxy_client.publish_to_proxy(product_info, 'recommended')
+                    d_status = wallet.proxy_client.publish_to_proxy(product_info, 'recommended')
+                    def status_check_proxy(status):
+                        if status == True:
+                            QMessageBox.information(self, "Tips", "Successfully passed info to proxy (Seller)")
+                        else:
+                            QMessageBox.information(self, "Tips", "Failed to pass info to proxy (Seller)")
+                    d_status.addCallback(status_check_proxy)
                 update_proxy(market_hash)
+
             d_publish.addCallback(update_table)
 
             self.close()

@@ -55,7 +55,7 @@ class ProxyClient:
         self.message = Message()
         self.seller_data = self.message.seller_data
         self.message.type = Message.SELLER_DATA
-        self.seller_data.order_id = 3
+        self.seller_data.order_id = 7
         self.seller_data.seller_addr = self.seller_addr
         self.seller_data.buyer_addr = self.buyer_addr
         self.seller_data.market_hash = product_info['market_hash']
@@ -92,19 +92,29 @@ class ProxyClient:
         # logger.debug("-----------------------------------------------------------")
         # pick_proxy().addCallback(pick_proxy_done)
 
-        def request_done(proxy_reply):
-            logger.debug('------------------')
-            if proxy_reply.error:
+        # def request_done(proxy_reply):
+        #     logger.debug('------------------')
+        #     if proxy_reply.error:
+        #
+        #         logger.debug(proxy_reply.error)
+        #     else:
+        #         logger.debug(proxy_reply.file_uri)
+        #         logger.debug(proxy_reply.AES_key.decode())
+        #
+        #     logger.debug('++++++++++++++++++++')
+        #
+        #
+        # start_proxy_request(self.seller_sign_message, proxy_id=self.proxy_id).addCallback(request_done)
 
-                logger.debug(proxy_reply.error)
-            else:
-                logger.debug(proxy_reply.file_uri)
-                logger.debug(proxy_reply.AES_key.decode())
+        proxy_response = yield start_proxy_request(self.seller_sign_message, proxy_id=self.proxy_id)
+        if proxy_response.error:
+            logger.debug(proxy_response.error)
+            return False
+        else:
+            logger.debug(proxy_response.file_uri)
+            logger.debug(proxy_response.AES_key.decode())
+            return True
 
-            logger.debug('++++++++++++++++++++')
-
-
-        start_proxy_request(self.seller_sign_message, proxy_id=self.proxy_id).addCallback(request_done)
 
 
 
