@@ -51,8 +51,9 @@ class Peer:
         self.peer_id = None
         self.ip = None
 
-    def start_service(self, ctrl_port=None, data_port=None, account_id=0):
+    def start_service(self, ip=None, ctrl_port=None, data_port=None, account_id=0):
 
+        self.ip = ip
         set_proxy_account(account_id)
         self.peer_id = get_proxy_id()
 
@@ -69,15 +70,6 @@ class Peer:
             server_key = join_with_root(server_key_sample)
             server_crt = join_with_root(server_crt_sample)
 
-        # ctrl channel
-        ctrl_port = (ctrl_port or config.proxy.server_ctrl_port)
-        ctrl_factory = SSLServerFactory()
-        reactor.listenSSL(ctrl_port, ctrl_factory,
-                          ssl.DefaultOpenSSLContextFactory(
-                              server_key, server_crt))
-
-        self.service_port = ctrl_port
-
         # data channel
         data_port = (data_port or config.proxy.server_data_port)
         file_factory = Site(FileServer())
@@ -85,16 +77,23 @@ class Peer:
                           ssl.DefaultOpenSSLContextFactory(
                               server_key, server_crt))
 
-        ctrl_factory.data_port = data_port
+        # ctrl channel
+        ctrl_port = (ctrl_port or config.proxy.server_ctrl_port)
+        ctrl_factory = SSLServerFactory(data_port=data_port)
+        reactor.listenSSL(ctrl_port, ctrl_factory,
+                          ssl.DefaultOpenSSLContextFactory(
+                              server_key, server_crt))
 
-        def set_external_ip():
+        self.service_port = ctrl_port
+
+        def set_proxy_ip():
             if self.ip is None:
                 # waiting for node bootstrap finish
-                return reactor.callLater(1, set_external_ip)
+                return reactor.callLater(1, set_proxy_ip)
 
-            ctrl_factory.ip = self.ip
+            ctrl_factory.set_external_ip(self.ip)
 
-        set_external_ip()
+        set_proxy_ip()
 
     def join_centra_net(self, port=None, tracker=None):
 
@@ -103,15 +102,16 @@ class Peer:
             return
 
         port = port or config.proxy.server_peer_port
-        protocol = PeerProtocol()
+        protocol = PeerProtocol(
+            peer_ip=self.ip,
+            peer_id=self.peer_id,
+            peer_info=self.service_port)
         reactor.listenUDP(port, protocol)
 
         def refresh():
             protocol.refresh_peers()
 
         if tracker:
-            protocol.peer_id = self.peer_id
-            protocol.peer_info = self.service_port
             protocol.bootstrap(tracker)
         else:
             LoopingCall(refresh).start(5)
@@ -146,11 +146,20 @@ class Peer:
                     ).add_done_callback(set_key_done)
 
             def bootstrap_done(_):
-                asyncio.ensure_future(
-                    peer.protocol.stun(
-                        boot_nodes[0]
-                        )
-                    ).add_done_callback(stun_done)
+                if self.ip:
+                    addr = '%s,%d' % (self.ip, self.service_port)
+                    asyncio.ensure_future(
+                        peer.set(
+                            self.peer_id,
+                            sign_proxy_data(addr)
+                            )
+                        ).add_done_callback(set_key_done)
+                else:
+                    asyncio.ensure_future(
+                        peer.protocol.stun(
+                            boot_nodes[0]
+                            )
+                        ).add_done_callback(stun_done)
 
             def listen_done(_):
                 asyncio.ensure_future(
@@ -171,14 +180,20 @@ class Peer:
         protocol = PeerProtocol()
         reactor.listenUDP(port, protocol)
 
-        def pick_peer_done(result):
-            protocol.transport.stopListening()
+        d = defer.Deferred()
+
+        def stop_listening_done(_, result):
             success, data = result
             if success and data:
-                return tuple(data)
+                d.callback(data)
+            else:
+                d.callback(None)
 
-        d = protocol.pick_peer(tracker)
-        d.addBoth(pick_peer_done)
+        def pick_peer_done(result):
+            protocol.transport.stopListening().addCallback(
+                stop_listening_done, result)
+
+        protocol.pick_peer(tracker).addCallback(pick_peer_done)
         return d
 
     def get_peer(self, peer_id, tracker=None, boot_nodes=None, port=None):
@@ -188,14 +203,20 @@ class Peer:
             protocol = PeerProtocol()
             reactor.listenUDP(port, protocol)
 
-            def get_peer_done(result):
-                protocol.transport.stopListening()
+            d = defer.Deferred()
+
+            def stop_listening_done(_, result):
                 success, data = result
                 if success and data:
-                    return tuple(data)
+                    d.callback(data)
+                else:
+                    d.callback(None)
 
-            d = protocol.get_peer(peer_id, tracker)
-            d.addBoth(get_peer_done)
+            def get_peer_done(result):
+                protocol.transport.stopListening().addCallback(
+                    stop_listening_done, result)
+
+            protocol.get_peer(peer_id, tracker).addCallback(get_peer_done)
             return d
 
         elif isinstance(boot_nodes, list):
@@ -208,8 +229,11 @@ class Peer:
             def get_key_done(future):
                 value = future.result()
                 peer.stop()
-                addr = derive_proxy_data(value)
-                d.callback(tuple(addr.split(',')))
+                if value:
+                    addr = derive_proxy_data(value)
+                    d.callback(tuple(addr.split(',')))
+                else:
+                    d.callback(None)
 
             def bootstrap_done(_):
                 asyncio.ensure_future(
@@ -230,8 +254,28 @@ class Peer:
         else:
             logger.error("wrong tracker/boot nodes")
 
+def pick_proxy(tracker=None):
+    if tracker is None:
+        addr, port = config.proxy.tracker.split(':')
+        tracker = (str(addr), int(port))
 
-def start_proxy_request(sign_message, tracker=None, boot_nodes=None, proxy_id=None):
+    # pick a proxy from tracker
+    return Peer().pick_peer(
+        tracker=tracker
+        )
+
+def start_proxy_request(sign_message, proxy_id, tracker=None, boot_nodes=None):
+
+    if tracker is None:
+        addr, port = config.proxy.tracker.split(':')
+        tracker = (str(addr), int(port))
+
+    if boot_nodes is None:
+        boot_nodes = []
+        nodes = (config.proxy.boot_nodes.split())
+        for node in nodes:
+            addr, port = node.split(':')
+            boot_nodes.append((str(addr), int(port)))
 
     d = defer.Deferred()
 
@@ -239,15 +283,12 @@ def start_proxy_request(sign_message, tracker=None, boot_nodes=None, proxy_id=No
         d.callback(proxy_reply)
 
     def get_proxy_done(addr):
-        start_client(sign_message, addr).addCallback(start_client_done)
+        if addr:
+            start_client(sign_message, addr).addCallback(start_client_done)
+        else:
+            d.errback('failed to get proxy')
 
     def get_proxy(tracker, boot_nodes, proxy_id):
-        if proxy_id is None:
-            # pick a proxy from tracker
-            return Peer().pick_peer(
-                tracker=tracker
-                )
-
         # find the (ip, port) for given proxy
         return Peer().get_peer(
             peer_id=proxy_id,
