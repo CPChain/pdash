@@ -3120,12 +3120,18 @@ class CloudTab(QScrollArea):
                 # delete corresponding record from local FileInfo
                 file_id = self.file_table.item(i, 5).text()
                 fs.delete_file_by_id(file_id)
-                # TODO: delete corresponding record from market database
-                self.file_table.removeRow(i)
-                # d_status = wallet.market_client.delete_file_info(file_id)
-        QMessageBox.information(self, "Tips", "Deleted successfully !")
+                # Set check box state to false
+                self.check_record_list[i] = False
 
-        # self.update_table()
+                self.file_table.removeRow(i)
+                # TODO: delete corresponding record from market database
+                d_status = wallet.market_client.delete_file_info(file_id)
+                def update_market_backup(status):
+                    if status == 1:
+                        QMessageBox.information(self, "Tips", "Deleted from market backup successfully!")
+                    else:
+                        QMessageBox.information(self, "Tips", "Failed to delete record from market backup!")
+                d_status.addCallback(update_market_backup)
 
     class UploadDialog(QDialog):
         def __init__(self, parent=None):
