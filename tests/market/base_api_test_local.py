@@ -67,7 +67,7 @@ class LocalBaseApiTest(unittest.TestCase):
 
         self.assertEqual(confirm_resp.status_code, 200)
         resp = confirm_resp.content.decode("utf-8")
-        print("response:%s", resp)
+        print("response:%s" % resp)
         parsed_json = json.loads(resp)
         self.assertEqual(parsed_json['status'], 1)
         token = parsed_json['message']
