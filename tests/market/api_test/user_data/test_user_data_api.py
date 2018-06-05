@@ -36,7 +36,7 @@ class TestUserDataApi(BaseApiTest):
         # ======== test save buyer file info in wallet ========
         self._save_buyer_file_info(header=header, order_id=order_id)
 
-        # TODO update buyer_file_info
+        # update buyer_file_info
         self.update_buyer_file_info(header=header, order_id = order_id)
 
         # ======== test pull user data in wallet ========

@@ -131,7 +131,10 @@ class Encoder:
 
     @staticmethod
     def hex_to_bytes(hex_string):
-        return bytes.fromhex(hex_string)
+        try:
+            return bytes.fromhex(hex_string)
+        except:
+            return None
 
 
 class SHA256Hash:
