@@ -3254,8 +3254,29 @@ class CloudTab(QScrollArea):
             def handle_upload_resp(status):
                 if status == 1:
                     logger.debug('upload file info to market succeed')
-                    self.parent.update_table()
-                    logger.debug("update_table successful !")
+                    # self.parent.update_table()
+                    # TODO: add new row instead of refeshing the whole table
+                    # TODO: display problem not solved: checkbox item is the key
+                    file_table = self.parent.file_table
+                    row_count = file_table.rowCount()
+                    file_table.insertRow(row_count)
+                    checkbox_item = QTableWidgetItem()
+                    checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+                    checkbox_item.setCheckState(Qt.Unchecked)
+                    file_table.setItem(row_count, 0, checkbox_item)
+                    file_table.setItem(row_count, 1, QTableWidgetItem(name))
+                    file_table.setItem(row_count, 2, QTableWidgetItem(str(size)))
+                    file_table.setItem(row_count, 3, QTableWidgetItem(remote_type))
+                    file_table.setItem(row_count, 4, QTableWidgetItem('False'))
+                    file_table.setItem(row_count, 5, QTableWidgetItem(str(product_id)))
+
+                    # TODO: To test if there are bugs with check_record_list, esp. when the row number has changed
+                    # TODO: or is influenced by the order
+
+                    check_record_list = self.parent.check_record_list
+                    check_record_list.append(False)
+
+                    logger.debug("update table successfully !")
                 else:
                     logger.debug('upload file info to market failed')
             d.addCallback(handle_upload_resp)
@@ -3267,18 +3288,6 @@ class CloudTab(QScrollArea):
             return
         logger.debug("Uploading local files....")
         self.upload_dialog = CloudTab.UploadDialog(self)
-
-    #def handle_upload(self):
-        # Maybe useful for buyer.
-        # row_selected = self.file_table.selectionModel().selectedRows()[0].row()
-        # selected_fpath = self.file_table.item(row_selected, 2).text()
-        #self.local_file = QFileDialog.getOpenFileName()[0]
-        #print("Uploading local files....")
-        # defered = threads.deferToThread(upload_file_ipfs, self.local_file)
-        # def handle_callback_upload(x):
-        #     print("in handle_callback_upload" + x)
-        #     self.update_table()
-        # defered.addCallback(handle_callback_upload)
 
     def handle_delete_act(self):
         self.file_table.removeRow(self.cur_clicked)
