@@ -81,8 +81,7 @@ class PeerProtocolTest(unittest.TestCase):
         msg = msgpack.unpackb(data, raw=False)
         self.assertEqual(addr, self.peer_addr)
         self.assertEqual(msg['type'], 'response')
-        self.assertEqual(msg['data'][0], self.peer_addr[0])
-        self.assertEqual(msg['data'][1], service_port)
+        self.assertEqual(msg['data'], peer_id)
 
     def test_get_peer(self):
         peer = {
