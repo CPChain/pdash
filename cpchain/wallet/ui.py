@@ -2010,7 +2010,7 @@ class PublishDialog(QDialog):
                 d = wallet.market_client.update_file_info(self.product_id, market_hash)
                 def handle_update_file(status):
                     if status == 1:
-                        QMessageBox.information(self, "Tips", "Successful !")
+                        QMessageBox.information(self, "Tips", "Update market side product successfully !")
                         self.parent.update_table()
                         self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
                 d.addCallback(handle_update_file)
