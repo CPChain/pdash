@@ -3114,6 +3114,9 @@ class CloudTab(QScrollArea):
         load_stylesheet(self, "cloud.qss")
 
     def handle_delete(self):
+        if wallet.market_client.token == '':
+            QMessageBox.information(self, "Tips", "Please login first !")
+            return
         for i in range(len(self.check_record_list)):
             logger.debug(self.check_record_list)
             if self.check_record_list[i] == True:
@@ -3259,10 +3262,10 @@ class CloudTab(QScrollArea):
 
 
     def handle_upload(self):
-        # Maybe useful for buyer.
-        # row_selected = self.file_table.selectionModel().selectedRows()[0].row()
-        # selected_fpath = self.file_table.item(row_selected, 2).text()
-        print("Uploading local files....")
+        if wallet.market_client.token == '':
+            QMessageBox.information(self, "Tips", "Please login first !")
+            return
+        logger.debug("Uploading local files....")
         self.upload_dialog = CloudTab.UploadDialog(self)
 
     #def handle_upload(self):
