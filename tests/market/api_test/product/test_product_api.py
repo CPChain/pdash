@@ -91,10 +91,6 @@ class TestProductApi(BaseApiTest):
 
         market_hash = self.publish_product(token)
 
-        # ======= query product ========
-        keyword = "Medicine"
-        self.query_product(keyword=keyword)
-
         # ======= query product via elasticsearch ========
         self.query_es_product()
 
@@ -135,6 +131,8 @@ class TestProductApi(BaseApiTest):
 
         # ======= query my tag ========
         self.query_my_tag(token)
+
+        self.query_product_by_following_tag(token)
 
         # ======= unsubscribe tag ========
         self.unsubscribe_tag(token)
@@ -199,16 +197,6 @@ class TestProductApi(BaseApiTest):
         print(resp.text)
         parsed_json = json.loads(resp.text)
         self.assertEqual(parsed_json['status'], 1)
-
-    def query_subscribed_tag(self, token):
-        url = '%s/product/v1/my_tag/search/' % HOST
-        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
-        response = requests.get(url, headers=header)
-        print("products:%s" % response)
-        print(response.text)
-        parsed_json = json.loads(response.text)
-        for p in parsed_json['data']:
-            print("title:%s" % p["title"])
 
     def query_product_by_following_tag(self, token):
         url = '%s/product/v1/my_tag/product/search/' % HOST
