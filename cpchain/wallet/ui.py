@@ -524,10 +524,10 @@ class ProductDetailTab(QScrollArea):
         # self.key_words = key_words
         #self.setObjectName("cart_tab")
         self.setObjectName("productdetail_tab")
-        self.product_info = {}
+        self.product_info = item
         self.search_promo_num = 4
         self.promo_lists = []
-        # self.init_ui()
+        self.init_ui()
 
     def update_page(self, product_info, promo_list):
         if len(promo_list) == 0:
@@ -652,6 +652,24 @@ class ProductDetailTab(QScrollArea):
         self.hline_1 = HorizontalLine(self, 2)
         self.hline_2 = HorizontalLine(self, 2)
 
+        def get_promotion(item={}):
+            for i in range(self.search_promo_num):
+                self.promo_lists.append(Product(self, item, "simple"))
+
+        @inlineCallbacks
+        def get_product_info():
+            promo_list = yield wallet.market_client.query_promotion()
+            if len(promo_list) == 0:
+                item = {"title": "Medical data from NHIS", "none": "none"}
+                get_promotion(item)
+            else:
+                for i in range(self.search_promo_num):
+                    if i == len(promo_list) - 1:
+                        break
+                    self.promo_lists.append(Product2(self, promo_list[i], 'simple'))
+            set_layout()
+        get_product_info()
+
         def set_layout():
 
             # self.main_layout = main_layout = QVBoxLayout(self)
@@ -720,6 +738,8 @@ class ProductDetailTab(QScrollArea):
             self.promotion_layout.addWidget(self.hline_2)
             self.promotion_layout.addSpacing(0)
             for i in range(self.search_promo_num):
+                if i == len(self.promo_lists) - 1:
+                    break
                 self.promotion_layout.addWidget(self.promo_lists[i])
                 self.promotion_layout.addSpacing(0)
 
@@ -2643,6 +2663,7 @@ class Product(QScrollArea):
 
 
 class Product2(QScrollArea):
+    tab_count = 0
     def __init__(self, parent=None, item={}, mode=""):
         super().__init__(parent)
         self.parent = parent
@@ -2730,20 +2751,25 @@ class Product2(QScrollArea):
         load_stylesheet(self, "product.qss")
         logger.debug("Loading stylesheet of item")
 
-    @inlineCallbacks
-    def get_product_info(self):
-        product_info = self.item
-        promo_list = yield wallet.market_client.query_promotion()
-        main_wnd.findChild(QWidget, 'productdetail_tab').update_page(product_info, promo_list)
+    # @inlineCallbacks
+    # def get_product_info(self):
+    #     product_info = self.item
+    #     promo_list = yield wallet.market_client.query_promotion()
+    #     main_wnd.findChild(QWidget, 'productdetail_tab').update_page(product_info, promo_list)
 
 
     def title_clicked_act(self):
         # wid = self.parent.parent.findChild(QWidget, "productdetail_tab")
         # self.parent.parent.content_tabs.setCurrentWidget(wid)
-        print("title_clicked_act")
-        self.get_product_info()
-        wid = main_wnd.content_tabs.findChild(QWidget, "productdetail_tab")
-        main_wnd.content_tabs.setCurrentWidget(wid)
+        # print("title_clicked_act")
+        # self.get_product_info()
+        # wid = main_wnd.content_tabs.findChild(QWidget, "productdetail_tab")
+        # main_wnd.content_tabs.setCurrentWidget(wid)
+        Product2.tab_count = Product2.tab_count + 1
+        content_tabs = self.parent.parent
+        product_detail_tab = ProductDetailTab(self, self.item)
+        tab_index = content_tabs.addTab(product_detail_tab, "")
+        content_tabs.setCurrentIndex(tab_index)
 
     def seller_clicked_act(self):
         print("seller_clicked_act")
@@ -2848,11 +2874,11 @@ class PopularTab(QScrollArea):
 
         # TODO: Get promotion products based on products returned above or the keywords provided
 
-        d_promotion = wallet.market_client.query_promotion()
-        def get_promotion(products):
-            for i in range(self.promo_num_max):
-                self.promo_lists.append(Product2(parent=self, item=products[i], mode="simple"))
-        d_promotion.addCallback(get_promotion)
+        # d_promotion = wallet.market_client.query_promotion()
+        # def get_promotion(products):
+        #     for i in range(self.promo_num_max):
+        #         self.promo_lists.append(Product2(parent=self, item=products[i], mode="simple"))
+        # d_promotion.addCallback(get_promotion)
 
 
         # d_promotion = wallet.market_client.query_promotion()
@@ -2862,7 +2888,12 @@ class PopularTab(QScrollArea):
             print("Getting items from backend......")
             for i in range(self.item_num_max):
                 self.item_lists.append(Product2(parent=self, item=products[i]))
-            set_layout()
+            d_promotion = wallet.market_client.query_promotion()
+            def get_promotion(products):
+                for i in range(self.promo_num_max):
+                    self.promo_lists.append(Product2(parent=self, item=products[i], mode="simple"))
+                set_layout()
+            d_promotion.addCallback(get_promotion)
         d_products.addCallback(get_items)
 
         def set_layout():
@@ -2919,6 +2950,8 @@ class PopularTab(QScrollArea):
             # self.promo_layout.addSpacing(0)
 
             for i in range(self.promo_num_max):
+                if i == len(self.promo_lists) - 1:
+                    break
                 self.promo_layout.addWidget(self.promo_lists[i])
                 self.promo_layout.addSpacing(0)
 
@@ -2929,7 +2962,7 @@ class PopularTab(QScrollArea):
             #self.bottom_layout.setStretch(promo_layout,1)
 
             self.main_layout.addLayout(self.bottom_layout)
-        load_stylesheet(self, "popular.qss")
+            load_stylesheet(self, "popular.qss")
         print("Loading stylesheet of cloud tab widget")
 
     def handld_hotindustry_clicked(self):
@@ -3781,7 +3814,7 @@ class MainWindow(QMainWindow):
             content_tabs.addTab(PersonalProfileTab(content_tabs), "")
             content_tabs.addTab(TagHPTab(content_tabs), "")
             content_tabs.addTab(SellerHPTab(content_tabs), "") 
-            content_tabs.addTab(ProductDetailTab(content_tabs), "") 
+            # content_tabs.addTab(ProductDetailTab(content_tabs), "")
             content_tabs.addTab(SearchProductTab(content_tabs), "")
             content_tabs.addTab(SecurityTab(content_tabs), "") 
             content_tabs.addTab(PreferenceTab(content_tabs), "")
