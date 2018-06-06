@@ -655,7 +655,8 @@ class ProductDetailTab(QScrollArea):
         def get_promotion(item={}):
             for i in range(self.search_promo_num):
                 self.promo_lists.append(Product(self, item, "simple"))
-
+        # TODO: Problems not solved here: list out of range for self.promo_lists
+        # TODO: Most likely the wrong usage of addCallback
         @inlineCallbacks
         def get_product_info():
             promo_list = yield wallet.market_client.query_promotion()
