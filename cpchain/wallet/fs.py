@@ -79,7 +79,7 @@ def delete_file(file_name):
     session.commit()
 
 def delete_file_by_id(file_id):
-    session.query(FileInfo).filter(FileInfo.name == file_id).\
+    session.query(FileInfo).filter(FileInfo.id == file_id).\
         delete(synchronize_session=False)
     session.commit()
 

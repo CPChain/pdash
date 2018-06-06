@@ -1,7 +1,9 @@
+import sys
 import logging
-
 import treq
 from twisted.internet.defer import inlineCallbacks
+
+from twisted.python import log
 
 from cpchain.crypto import ECCipher
 
@@ -11,7 +13,7 @@ from cpchain.wallet.fs import publish_file_update
 
 from cpchain.utils import reactor
 
-from cpchain.proxy.node import start_proxy_request
+from cpchain.proxy.node import start_proxy_request, pick_proxy
 
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 
@@ -41,6 +43,11 @@ class ProxyClient:
 
     @inlineCallbacks
     def publish_to_proxy(self, product_info={}, mode='recommended'):
+
+        # TODO: Pass relevant parameters from buyers.
+        # TODO: AES key encryption from seller.
+        # TODO: Class inclineCallbacks problems. Return necessary status value.
+
         self.proxy_mode = mode
         self.product_info = product_info
         self.storage_type = storage_type = product_info['storage_type']
@@ -48,7 +55,7 @@ class ProxyClient:
         self.message = Message()
         self.seller_data = self.message.seller_data
         self.message.type = Message.SELLER_DATA
-        self.seller_data.order_id = 1
+        self.seller_data.order_id = 3
         self.seller_data.seller_addr = self.seller_addr
         self.seller_data.buyer_addr = self.buyer_addr
         self.seller_data.market_hash = product_info['market_hash']
@@ -74,28 +81,31 @@ class ProxyClient:
         self.sign_message.signature = ECCipher.create_signature(self.seller_private_key, self.sign_message.data)
         self.seller_sign_message = self.sign_message
 
-        if self.proxy_mode == 'recommended':
-            self.d_seller_request = start_proxy_request(self.seller_sign_message, tracker=('127.0.0.1', 8101))
-        elif self.proxy_mode == 'master-slave':
-            self.d_seller_request = start_proxy_request(self.seller_sign_message, tracker=('127.0.0.1', 8101), proxy_id=self.proxy_id)
-        elif self.proxy_mode == 'DHT':
-            self.d_selller_request = start_proxy_request(self.seller_sign_message, boot_nodes=[('127.0.0.1', 8201)], proxy_id =self.proxy_id)
-        else:
-            logger.debug("Wrong proxy mode parameters!")
+        log.startLogging(sys.stdout)
 
-        if not self.d_seller_request.error:
-            logger.debug("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-            logger.debug("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-            logger.debug('file_uri: %s' % self.d_seller_request.file_uri)
-            logger.debug('AES_key: %s' % self.d_seller_request.AES_key.decode())
-            logger.debug("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-            logger.debug("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-        else:
-            logger.debug("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-            logger.debug("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-            logger.debug(self.d_seller_request.error)
-            logger.debug("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-            logger.debug("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+
+        # def pick_proxy_done(result):
+        #
+        #     logger.debug("xxxxxxxxxxxxxxxxxxxxxPROXYxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+        #     logger.debug(result)
+        #     logger.debug("xxxxxxxxxxxxxxxxxxxxxPROXYxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+        # logger.debug("-----------------------------------------------------------")
+        # pick_proxy().addCallback(pick_proxy_done)
+
+        def request_done(proxy_reply):
+            logger.debug('------------------')
+            if proxy_reply.error:
+
+                logger.debug(proxy_reply.error)
+            else:
+                logger.debug(proxy_reply.file_uri)
+                logger.debug(proxy_reply.AES_key.decode())
+
+            logger.debug('++++++++++++++++++++')
+
+
+        start_proxy_request(self.seller_sign_message, proxy_id=self.proxy_id).addCallback(request_done)
+
 
 
 
@@ -408,3 +418,18 @@ class MarketClient:
         comment_info = yield treq.json_content(resp)
         logger.debug('upload file info to market confirm: %s', comment_info)
         return comment_info['data']
+
+    @inlineCallbacks
+    def delete_file_info(self, product_id):
+        logger.debug("delete file info in market")
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        data = {"client_id": product_id}
+        url = self.url + 'user_data/v1/uploaded_file/delete/'
+        logger.debug('upload file info payload: %s', data)
+        logger.debug('upload file info url: %s', url)
+        logger.debug('product id: %s', product_id)
+        resp = yield treq.post(url, headers=header, json=data, persistent=False)
+        confirm_info = yield treq.json_content(resp)
+        logger.debug('upload file info to market confirm: %s', confirm_info)
+        return confirm_info['status']
