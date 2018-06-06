@@ -7,6 +7,7 @@ from cpchain.wallet.wallet import Wallet
 
 import os.path as osp
 import string
+import hashlib
 import logging
 
 
@@ -1998,10 +1999,13 @@ class PublishDialog(QDialog):
             logger.debug("product info id: %s", self.product_id)
 
             #TODO: Get following attributes from fileinfo table
-            self.size = 17
+            file_info = fs.get_file_by_id(self.product_id)
+            self.size = file_info.size
             self.start_date = '2018-04-01 10:10:10'
             self.end_date = '2018-04-01 10:10:10'
-            self.file_md5 = '123456'
+            self.path = file_info.path
+            self.file_md5 = hashlib.md5(open(self.path, "rb").read()).hexdigest()
+            logger.debug(self.file_md5)
             d_publish = wallet.market_client.publish_product(self.product_id, self.pinfo_title,
                                                              self.pinfo_descrip, self.pinfo_price,
                                                              self.pinfo_tag, self.start_date,
