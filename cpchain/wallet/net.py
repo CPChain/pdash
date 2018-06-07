@@ -85,29 +85,6 @@ class ProxyClient:
 
         log.startLogging(sys.stdout)
 
-
-        # def pick_proxy_done(result):
-        #
-        #     logger.debug("xxxxxxxxxxxxxxxxxxxxxPROXYxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-        #     logger.debug(result)
-        #     logger.debug("xxxxxxxxxxxxxxxxxxxxxPROXYxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-        # logger.debug("-----------------------------------------------------------")
-        # pick_proxy().addCallback(pick_proxy_done)
-
-        # def request_done(proxy_reply):
-        #     logger.debug('------------------')
-        #     if proxy_reply.error:
-        #
-        #         logger.debug(proxy_reply.error)
-        #     else:
-        #         logger.debug(proxy_reply.file_uri)
-        #         logger.debug(proxy_reply.AES_key.decode())
-        #
-        #     logger.debug('++++++++++++++++++++')
-        #
-        #
-        # start_proxy_request(self.seller_sign_message, proxy_id=self.proxy_id).addCallback(request_done)
-
         proxy_response = yield start_proxy_request(self.seller_sign_message, proxy_id=self.proxy_id)
         if proxy_response.error:
             logger.debug(proxy_response.error)
