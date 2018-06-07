@@ -3294,7 +3294,8 @@ class CloudTab(QScrollArea):
                     d_upload.addCallback(self.handle_ok_callback)
                 if self.s3_btn.isChecked():
                     print("upload to s3")
-                    # encrypt and uoload self.file_choice
+                    d_upload = deferToThread(fs.upload_file_s3, self.file_choice)
+                    d_upload.addCallback(self.handle_ok_callback)
 
             print("Uploading files to....")
             self.close()

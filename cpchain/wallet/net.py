@@ -17,6 +17,8 @@ from cpchain.proxy.node import start_proxy_request, pick_proxy
 
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 
+from cpchain.storage import S3Storage
+
 
 logger = logging.getLogger(__name__)  # pylint: disable=locally-disabled, invalid-name
 
