@@ -483,8 +483,14 @@ class ProductDetailTab(QScrollArea):
             def create_labels():
                 self.avatar_label = QLabel("")
                 self.avatar_label.setObjectName("avatar_label")
+                pixmap = get_pixm('avatar.jpeg')
+                pixmap = pixmap.scaled(40, 40)
+                self.avatar_label.setPixmap(pixmap)
 
-                self.name_label = QLabel(self.comment['user_name'])
+                username = self.comment['username']
+                if self.comment['username'] == "":
+                    username = "Dcda Ali"
+                self.name_label = QLabel(username)
                 self.name_label.setObjectName('name_label')
 
                 self.rating_label = QLabel("{}".format(self.comment['rating']))
@@ -492,6 +498,7 @@ class ProductDetailTab(QScrollArea):
 
                 self.description_label = QLabel(self.comment['content'])
                 self.description_label.setObjectName("description_label")
+            create_labels()
 
             def setlayout():
                 self.main_layout = main_layout = QVBoxLayout(self)
@@ -502,10 +509,10 @@ class ProductDetailTab(QScrollArea):
                 self.basic_layout.setContentsMargins(0, 5, 0, 5)
                 self.basic_layout.addSpacing(1)
                 self.basic_layout.addWidget(self.avatar_label)
-                self.basic_layout.addSpacing(1)
+                self.basic_layout.addSpacing(0)
                 self.basic_layout.addWidget(self.name_label)
-                self.basic_layout.addSpacing(10)
-                self.basic_layout.addWidget(self.description_label)
+                self.basic_layout.addSpacing(60)
+                self.basic_layout.addWidget(self.rating_label)
 
                 self.main_layout.addLayout(self.basic_layout)
                 self.main_layout.addSpacing(1)
@@ -576,27 +583,35 @@ class ProductDetailTab(QScrollArea):
             self.may_like_label = QLabel("You may like")
             self.may_like_label.setObjectName("may_like_label")
 
+
             # TODO: to get info from backend
-            # d_comments = wallet.market_client.query_comment_by_hash(self.item['market_hash'])
-            def add_comment():
-                self.buyer_avatar = QLabel("")
-                self.buyer_avatar.setObjectName("buyer_avatar")
-
-                self.buyer_name = QLabel("Ross Geller")
-                self.buyer_name.setObjectName("buyer_name")
-
-                self.data_label = QLabel("May 4, 2018")
-                self.data_label.setObjectName("data_label")
-
-                self.buyer_rating = QLabel("4.5")
-                self.buyer_rating.setObjectName("buyer_rating")
-
-                self.buyer_comment = QLabel("Lorem ipsim dolor sit amet, consectetur adipiscing elit. Aenean euismod bibendum laoreet.")
-                self.buyer_comment.setObjectName("buyer_comment")
-                self.buyer_comment.setWordWrap(True)
-                self.buyer_comment.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-            add_comment()
-
+            self.data_label = QLabel("May 4, 2018")
+            self.data_label.setObjectName("data_label")
+            # # d_comments = wallet.market_client.query_comment_by_hash(self.item['market_hash'])
+            # def add_comment():
+            #     self.buyer_avatar = QLabel("")
+            #     self.buyer_avatar.setObjectName("buyer_avatar")
+            #
+            #     self.buyer_name = QLabel("Ross Geller")
+            #     self.buyer_name.setObjectName("buyer_name")
+            #
+                # self.data_label = QLabel("May 4, 2018")
+                # self.data_label.setObjectName("data_label")
+            #
+            #     self.buyer_rating = QLabel("4.5")
+            #     self.buyer_rating.setObjectName("buyer_rating")
+            #
+            #     self.buyer_comment = QLabel("Lorem ipsim dolor sit amet, consectetur adipiscing elit. Aenean euismod bibendum laoreet.")
+            #     self.buyer_comment.setObjectName("buyer_comment")
+            #     self.buyer_comment.setWordWrap(True)
+            #     self.buyer_comment.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+            # add_comment()
+            # self.comment_list = []
+            # d_comments = wallet.market_client.query_comment_by_hash(self.item['msg_hash'])
+            # def add_comment(comments):
+            #     for i in range(len(comments)):
+            #         self.comment_list.append(ProductDetailTab.ProductComment(self, comments[i]))
+            # d_comments.addCallback(add_comment)
 
             des_text = "In 2012, OWSLA launched a monthly subscription, The Nest, with benefits including early access to OWSLA releases.[12] In 2013, Bromance Records partners up with OWSLA to create an American branch titled BromanceUS with releases from Gesaffelstein, Illangelo."
 
@@ -668,13 +683,14 @@ class ProductDetailTab(QScrollArea):
                     if i == len(promo_list) - 1:
                         break
                     self.promo_lists.append(Product2(self, promo_list[i], 'simple'))
+            self.comment_list = []
+            comments = yield wallet.market_client.query_comment_by_hash(self.item['msg_hash'])
+            for j in range(len(comments)):
+                self.comment_list.append(ProductDetailTab.ProductComment(self, comments[j]))
             set_layout()
         get_product_info()
 
         def set_layout():
-
-            # self.main_layout = main_layout = QVBoxLayout(self)
-            # main_layout.addSpacing(0)
 
             self.content_layout = QHBoxLayout(self)
             self.content_layout.addSpacing(0)
@@ -719,16 +735,19 @@ class ProductDetailTab(QScrollArea):
             self.product_layout.addLayout(self.rating_all, 12, 1, 1, 10) 
 
             self.comment_layout = QVBoxLayout(self)
-            self.buyer_layout = QHBoxLayout(self)
-            self.buyer_layout.addWidget(self.buyer_avatar)
-            self.buyer_layout.addWidget(self.buyer_name)
-            self.buyer_layout.addSpacing(10)
-            self.buyer_layout.addWidget(self.data_label)
-            self.buyer_layout.addStretch(1)
-            self.buyer_layout.addWidget(self.buyer_rating)
-
-            self.comment_layout.addLayout(self.buyer_layout)
-            self.comment_layout.addWidget(self.buyer_comment)
+            for i in range(len(self.comment_list)):
+                self.comment_layout.addWidget(self.comment_list[i])
+                self.comment_layout.addSpacing(0)
+            # self.buyer_layout = QHBoxLayout(self)
+            # self.buyer_layout.addWidget(self.buyer_avatar)
+            # self.buyer_layout.addWidget(self.buyer_name)
+            # self.buyer_layout.addSpacing(10)
+            # self.buyer_layout.addWidget(self.data_label)
+            # self.buyer_layout.addStretch(1)
+            # self.buyer_layout.addWidget(self.buyer_rating)
+            #
+            # self.comment_layout.addLayout(self.buyer_layout)
+            # self.comment_layout.addWidget(self.buyer_comment)
             self.product_layout.addLayout(self.comment_layout, 14, 1, 3, 10)    
 
             self.promotion_layout = QVBoxLayout(self)
@@ -748,9 +767,6 @@ class ProductDetailTab(QScrollArea):
 
             self.content_layout.addLayout(self.product_layout, 2)
             self.content_layout.addLayout(self.promotion_layout, 1)
-
-            # self.main_layout.addWidget(self.may_like_label)
-            # self.main_layout.addLayout(self.product_layout)
 
             self.setLayout(self.content_layout)
             # TODO: Loading stylesheet

@@ -11,7 +11,7 @@ from cpchain.utils import config, Encoder
 
 from cpchain.wallet.fs import publish_file_update
 
-from cpchain.utils import reactor
+from cpchain.wallet import utils
 
 from cpchain.proxy.node import start_proxy_request, pick_proxy
 
@@ -423,8 +423,10 @@ class MarketClient:
         logger.debug("xxxxxxxxxxxxxxxxxxxxxxxx query comment ...")
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
                   'Content-Type': 'application/json'}
-        url = self.url + '/comment/v1/comment/list/?market_hash=' + market_hash
+        url = utils.build_url(self.url + "comment/v1/comment/list/", {'market_hash': market_hash})
+        logger.debug(url)
         resp = yield treq.get(url, headers=header)
+        logger.debug(resp)
         comment_info = yield treq.json_content(resp)
         logger.debug('upload file info to market confirm: %s', comment_info)
         return comment_info['data']
