@@ -2057,7 +2057,7 @@ class PublishDialog(QDialog):
                 def update_proxy(markethash):
                     file_info = fs.get_file_by_id(self.product_id)
                     file_hash = file_info.hashcode
-                    # TODO: Amazon S3 is not supported at the time
+                    # TODO: remote_uri is currently defined as the file name
                     s3_key = file_info.remote_uri
                     storage_type = file_info.remote_type
                     product_info = {'storage_type': storage_type, 'file_hash': file_hash, 's3_key': s3_key,

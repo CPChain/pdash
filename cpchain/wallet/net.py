@@ -57,7 +57,7 @@ class ProxyClient:
         self.message = Message()
         self.seller_data = self.message.seller_data
         self.message.type = Message.SELLER_DATA
-        self.seller_data.order_id = 7
+        self.seller_data.order_id = 9
         self.seller_data.seller_addr = self.seller_addr
         self.seller_data.buyer_addr = self.buyer_addr
         self.seller_data.market_hash = product_info['market_hash']
@@ -116,9 +116,6 @@ class ProxyClient:
             logger.debug(proxy_response.file_uri)
             logger.debug(proxy_response.AES_key.decode())
             return True
-
-
-
 
 
 class MarketClient:
