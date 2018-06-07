@@ -22,7 +22,7 @@ def generate_tid():
     return entropy(20)
 
 
-class PeerProtocol(protocol.DatagramProtocol):
+class PeerProtocol(protocol.DatagramProtocol): # pylint: disable=too-many-instance-attributes
     def __init__(self, peer_ip=None, peer_id=None, peer_info=None, timeout=5):
         self.timeout = timeout
         self.peer_ip = peer_ip
