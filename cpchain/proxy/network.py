@@ -11,6 +11,7 @@ from twisted.internet import reactor, protocol, defer
 import msgpack
 
 from cpchain.proxy.account import sign_proxy_data, derive_proxy_data
+from cpchain.proxy.sysconf import get_cpu_info, get_mem_info, get_nic_info
 
 logger = logging.getLogger(__name__)
 
@@ -23,14 +24,16 @@ def generate_tid():
 
 class PeerProtocol(protocol.DatagramProtocol):
     def __init__(self, peer_ip=None, peer_id=None, peer_info=None, timeout=5):
+        self.timeout = timeout
         self.peer_ip = peer_ip
         self.peer_id = peer_id
         self.peer_info = peer_info
-        self.timeout = timeout
+        self.peer_conf = {}
+        self.request = {}
 
         self.peers = {}
         self.peers_lat = {}
-        self.request = {}
+        self.peers_conf = {}
 
     def tranaction_timeout(self, tid):
         self.request[tid][0].callback((False, tid))
@@ -98,6 +101,7 @@ class PeerProtocol(protocol.DatagramProtocol):
                 peer_ip = (msg['peer_ip'] or addr[0], addr[1])
                 peer_id = msg['peer_id']
                 peer_info = msg['peer_info']
+                peer_conf = msg['peer_conf']
 
                 peer = {
                     'addr': peer_ip,
@@ -107,6 +111,7 @@ class PeerProtocol(protocol.DatagramProtocol):
 
                 self.peers[peer_id] = peer
                 self.peers_lat[peer_id] = 0  # initialize
+                self.peers_conf[peer_id] = peer_conf
                 logger.debug("add peer %s" % str(peer['addr']))
 
                 response = {
@@ -195,14 +200,19 @@ class PeerProtocol(protocol.DatagramProtocol):
         if self.transport is None:
             return reactor.callLater(1, self.bootstrap)
 
+        self.peer_conf['cpu'] = get_cpu_info()
+        self.peer_conf['mem'] = get_mem_info()
+        self.peer_conf['nic'] = get_nic_info(addr[0])
+
         tid = generate_tid()
         msg = {
             'type': 'bootstrap',
             'tid': tid,
+            'sign_tid': sign_proxy_data(tid),
             'peer_ip': self.peer_ip,
             'peer_id': self.peer_id,
             'peer_info': self.peer_info,
-            'sign_tid': sign_proxy_data(tid)
+            'peer_conf': self.peer_conf
             }
 
         return self.send_msg(msg, addr)

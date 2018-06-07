@@ -53,6 +53,8 @@ data_port = None
 slave_port = None
 dht_port = None
 
+ip = None
+
 for opt, arg in opts:
     if opt in ("-h", "--help"):
         usage()
