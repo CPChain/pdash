@@ -17,10 +17,11 @@ def fake_bootstrap():
     msg = {
         'type': 'bootstrap',
         'tid': tid,
+        'sign_tid': sign_proxy_data(tid),
         'peer_ip': None,
         'peer_id': peer_id,
         'peer_info': service_port,
-        'sign_tid': sign_proxy_data(tid)
+        'peer_conf': None
         }
 
     return msg
@@ -28,7 +29,8 @@ def fake_bootstrap():
 def fake_pick_peer():
     msg = {
         'type': 'pick_peer',
-        'tid': generate_tid()
+        'tid': generate_tid(),
+        'sysconf': None
     }
 
     return msg

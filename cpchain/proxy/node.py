@@ -175,7 +175,7 @@ class Peer:
         return peer.listen(port)
 
 
-    def pick_peer(self, tracker, port=None):
+    def pick_peer(self, tracker, port=None, sysconf=None):
         port = port or 8150
         protocol = PeerProtocol()
         reactor.listenUDP(port, protocol)
@@ -193,7 +193,7 @@ class Peer:
             protocol.transport.stopListening().addCallback(
                 stop_listening_done, result)
 
-        protocol.pick_peer(tracker).addCallback(pick_peer_done)
+        protocol.pick_peer(tracker, sysconf).addCallback(pick_peer_done)
         return d
 
     def get_peer(self, peer_id, tracker=None, boot_nodes=None, port=None):
@@ -254,23 +254,23 @@ class Peer:
         else:
             logger.error("wrong tracker/boot nodes")
 
-def pick_proxy(tracker=None):
+def pick_proxy(tracker=None, sysconf=None):
     if tracker is None:
         addr, port = config.proxy.tracker.split(':')
         tracker = (str(addr), int(port))
 
     # pick a proxy from tracker
     return Peer().pick_peer(
-        tracker=tracker
+        tracker=tracker,
+        sysconf=sysconf
         )
 
 def start_proxy_request(sign_message, proxy_id, tracker=None, boot_nodes=None):
 
-    if tracker is None:
+    if tracker is None and boot_nodes is None:
         addr, port = config.proxy.tracker.split(':')
         tracker = (str(addr), int(port))
 
-    if boot_nodes is None:
         boot_nodes = []
         nodes = (config.proxy.boot_nodes.split())
         for node in nodes:

@@ -84,11 +84,11 @@ class ProductSalesQuantitySerializer(serializers.ModelSerializer):
 class MyTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyTag
-        fields = ('public_key', 'tag')
+        fields = ('tag',)
 
 
 class MySellerSerializer(serializers.ModelSerializer):
     class Meta:
         model = MySeller
-        fields = ('public_key', 'seller_public_key')
+        fields = ('seller_public_key',)
 

@@ -2,9 +2,26 @@ import unittest
 
 from cpchain.market.market.utils import *
 from tests.market.base_api_test import BaseApiTest
-
+from django.utils.http import quote,unquote
 
 class UtilsTest(BaseApiTest):
+
+    def test_url_encode(self):
+        pp = "QwToU/09ys0B8SVKmBnv5OKTax2s1+Mlxj0OywiF77U="
+        encoded = quote(pp)
+        print("\n")
+        print(encoded)
+        self.assertEquals("QwToU/09ys0B8SVKmBnv5OKTax2s1%2BMlxj0OywiF77U%3D",encoded)
+
+        decoded = unquote(encoded)
+        print(decoded)
+        self.assertEquals(pp, decoded)
+
+        decoded = unquote(encoded)
+        print(decoded)
+        self.assertEquals(pp, decoded)
+
+
 
     def test_gen_sign(self):
         title = "publish product 12444"
