@@ -383,7 +383,7 @@ class ProductTagSubscribeAPIView(APIView):
         logger.debug("public_key:%s tag:%s" % (public_key, tag))
 
         obj, _ = MyTag.objects.get_or_create(public_key=public_key, tag=request.data['tag'])
-        return JsonResponse({'status': 1, 'message': 'success'})
+        return create_success_response()
 
 
 class ProductTagUnsubscribeAPIView(APIView):
@@ -399,7 +399,7 @@ class ProductTagUnsubscribeAPIView(APIView):
         tag = request.data['tag']
         logger.debug("delete tag:%s for public_key:%s" % (tag, public_key))
         MyTag.objects.filter(public_key=public_key, tag=request.data['tag']).delete()
-        return JsonResponse({'status': 1, 'message': 'success'})
+        return create_success_response()
 
 
 class MyTagSearchAPIView(APIView):
@@ -416,7 +416,7 @@ class MyTagSearchAPIView(APIView):
         queryset = MyTag.objects.filter(public_key=public_key).order_by('-id')
         page_set = PageNumberPagination().paginate_queryset(queryset=queryset, request=request, view=self)
         serializer = MyTagSerializer(page_set, many=True)
-        return JsonResponse({'status': 1, 'message': 'success', "data": serializer.data})
+        return create_success_data_response(serializer.data)
 
 
 class MyTaggedProductSearchAPIView(APIView):
@@ -440,8 +440,7 @@ class MyTaggedProductSearchAPIView(APIView):
 
         page_set = PageNumberPagination().paginate_queryset(queryset=queryset, request=request, view=self)
         serializer = ProductSerializer(page_set, many=True)
-
-        return JsonResponse({'status': 1, 'message': 'success', "data": serializer.data})
+        return create_success_data_response(serializer.data)
 
 
 class ProductSellerSubscribeAPIView(APIView):
@@ -459,7 +458,7 @@ class ProductSellerSubscribeAPIView(APIView):
 
         obj, _ = MySeller.objects.get_or_create(public_key=public_key,
                                                 seller_public_key=seller_public_key)
-        return JsonResponse({'status': 1, 'message': 'success'})
+        return create_success_response()
 
 
 class ProductSellerUnsubscribeAPIView(APIView):
@@ -475,7 +474,7 @@ class ProductSellerUnsubscribeAPIView(APIView):
         seller_public_key = request.data['seller_public_key']
         logger.debug("delete seller_public_key:%s for public_key:%s" % (seller_public_key, public_key))
         MySeller.objects.filter(public_key=public_key, seller_public_key=seller_public_key).delete()
-        return JsonResponse({'status': 1, 'message': 'success'})
+        return create_success_response()
 
 
 class MyFollowingSellerSearchAPIView(APIView):
@@ -492,7 +491,7 @@ class MyFollowingSellerSearchAPIView(APIView):
         queryset = MySeller.objects.filter(public_key=public_key).order_by('-id')
         page_set = PageNumberPagination().paginate_queryset(queryset=queryset, request=request, view=self)
         serializer = MySellerSerializer(page_set, many=True)
-        return JsonResponse({'status': 1, 'message': 'success', "data": serializer.data})
+        return create_success_data_response(serializer.data)
 
 
 class MyFollowingSellerProductSearchAPIView(APIView):
@@ -513,4 +512,4 @@ class MyFollowingSellerProductSearchAPIView(APIView):
         queryset = Product.objects.filter(status=0).filter(Q(owner_address=keyword))
         page_set = PageNumberPagination().paginate_queryset(queryset=queryset, request=request, view=self)
         serializer = ProductSerializer(page_set, many=True)
-        return JsonResponse({'status': 1, 'message': 'success', "data": serializer.data})
+        return create_success_data_response(serializer.data)
