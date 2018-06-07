@@ -53,8 +53,7 @@ class ProductCommentAddAPIView(APIView):
     def post(self, request):
         data = request.data
         logger.info("data:%s" % data)
-
-        public_key = data['public_key']
+        public_key = get_header(request)
         market_hash = unquote(data['market_hash'])
         logger.info("public_key:%s,market_hash:%s", public_key, market_hash)
 

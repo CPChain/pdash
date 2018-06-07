@@ -129,10 +129,11 @@ class TestProductApi(LocalBaseApiTest, APITestCase):
         # ======= query my tag ========
         self.query_my_tag(token)
 
+        self.query_product_by_following_tag(token)
+
         # ======= unsubscribe tag ========
         self.unsubscribe_tag(token)
 
-    # TODO xxx1
     def test_subscribe_seller_and_search_product(self):
 
         token = self.login()
@@ -145,6 +146,8 @@ class TestProductApi(LocalBaseApiTest, APITestCase):
 
         # ======= query by following seller ========
         self.query_my_seller(token)
+
+        self.query_product_by_following_seller(token)
 
         # ======= unsubscribe seller ========
         self.unsubscribe_seller(token)
@@ -199,18 +202,6 @@ class TestProductApi(LocalBaseApiTest, APITestCase):
         parsed_json = json.loads(resp_text)
 
         self.assertEqual(parsed_json['status'], 1)
-
-    def query_subscribed_tag(self, token):
-
-        header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
-        url = reverse('my_tag_search')
-        response = self.client.get(url, format='json', **header)
-        resp_text = self.get_response_content(response)
-        self.assertEqual(response.status_code, 200)
-        parsed_json = json.loads(resp_text)
-
-        for p in parsed_json['data']:
-            print("title:%s" % p["title"])
 
     def query_product_by_following_tag(self, token):
         header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}

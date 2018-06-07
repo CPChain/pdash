@@ -64,7 +64,7 @@ class TestCommentApi(BaseApiTest):
 
     def add_comment_failed(self, token, market_hash):
         url = '%s/comment/v1/comment/add/' % HOST
-        payload = {'public_key': self.pub_key_string, 'market_hash':market_hash, 'content':'test111'}
+        payload = {'market_hash':market_hash, 'content':'test111'}
         print("add_comment request:%s" % payload)
         header = {"MARKET-KEY": self.pub_key_string, "MARKET-TOKEN": token, 'Content-Type': 'application/json'}
         response = requests.post(url, headers=header, json=payload)
