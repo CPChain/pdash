@@ -209,7 +209,7 @@ class ProxyAgent(Agent):
 
     def claim_delivered(self, order_id, relay_hash, account=None):
         account = account or self.web3.eth.defaultAccount
-        transaction = {'value': 0, 'from': account}
+        transaction = {'value': 0, 'from': account, 'gas':100000}
         tx_hash = self.contract.transact(transaction).proxyDelivered(relay_hash, order_id)
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
@@ -222,22 +222,22 @@ class ProxyAgent(Agent):
         return tx_hash
 
 
-class Trent(Agent):
+class TrentAgent(Agent):
 
     def fetch_unhandled_disputes(self, start_id, end_id, account=None) -> "list of order_id":
         account = account or self.web3.eth.defaultAccount
         disputed_order_ids= []
         for id in range(start_id, end_id):
             order_state = self.query_order(id)[10]
-            if order_state == 7: # order.state == Disputed
+            if order_state == 8: # order.state == Disputed
                 dispute_record = self.fetch_dispute_result(id)
-                if dispute_record[8] == 2 and (dispute_record[5] & dispute_record[6] & dispute_record[7]):
+                if dispute_record[7] == 1 and (not (dispute_record[5] and dispute_record[6])):
                     disputed_order_ids.append(id)
         return disputed_order_ids
 
     def handle_dispute(self, order_id, badBuyer, badSeller, badProxy, account=None):
         account = account or self.web3.eth.defaultAccount
-        transaction = {'value': 0, 'from': account}
+        transaction = {'value': 0, 'from': account, 'gas': 100000}
         tx_hash = self.contract.transact(transaction).trentHandleDispute(order_id, badBuyer, badSeller, badProxy)
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash

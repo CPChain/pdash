@@ -41,7 +41,15 @@ def strans(contract_name):
 @pytest.fixture()
 def ptrans(contract_name):
     proxy_web3 = chain.utils.default_w3
-    print('seller: defaultAccount:{}'.format(proxy_web3.eth.defaultAccount))
+    print('proxy: defaultAccount:{}'.format(proxy_web3.eth.defaultAccount))
     bin_path = chain.utils.join_with_root(config.chain.contract_bin_path)
     trans_obj = chain.agents.ProxyAgent(proxy_web3, bin_path, contract_name)
+    return trans_obj
+
+@pytest.fixture()
+def ttrans(contract_name):
+    trent_web3 = chain.utils.default_w3
+    print('trent: defaultAccount:{}'.format(trent_web3.eth.defaultAccount))
+    bin_path = chain.utils.join_with_root(config.chain.contract_bin_path)
+    trans_obj = chain.agents.TrentAgent(trent_web3, bin_path, contract_name)
     return trans_obj
