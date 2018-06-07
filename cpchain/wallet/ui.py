@@ -2327,7 +2327,7 @@ class SellTab(QScrollArea):
 
 class FollowingTagTab(QScrollArea):
     def __init__(self, parent=None):
-        super().__init__(parent)
+        super().__init__()
         self.parent = parent
         self.setObjectName("follow_tab_tag")
         self.init_ui()
@@ -2349,8 +2349,9 @@ class FollowingTagTab(QScrollArea):
         def get_items(products):
             print("Getting items from backend......")
             for i in range(self.follow_item_num):
-                self.item_lists.append(Product(self, item=products[i]))
+                self.item_lists.append(Product2(self, item=products[i], navi="following"))
             set_layout()
+
 
         d_products = wallet.market_client.query_recommend_product()
         d_products.addCallback(get_items)
@@ -2430,7 +2431,7 @@ class FollowingSellTab(QScrollArea):
         def get_items(products):
             print("Getting items from backend......")
             for i in range(self.follow_item_num):
-                self.item_lists.append(Product(self, item=products[i]))
+                self.item_lists.append(Product2(self, item=products[i], navi="following"))
             set_layout()
 
         d_products = wallet.market_client.query_recommend_product()
@@ -2497,8 +2498,8 @@ class FollowingTab(QScrollArea):
             self.follow_tabs = follow_tabs = QTabWidget(self)
             follow_tabs.setObjectName("follow_tabs")
             #follow_tabs.tabBar().hide()
-            follow_tabs.addTab(FollowingTagTab(follow_tabs), "Tag")
-            follow_tabs.addTab(FollowingSellTab(follow_tabs), "Sell")
+            follow_tabs.addTab(FollowingTagTab(self.follow_tabs), "Tag")
+            follow_tabs.addTab(FollowingSellTab(self.follow_tabs), "Sell")
         add_content_tabs()
 
         def set_layout():
@@ -2679,13 +2680,14 @@ class Product(QScrollArea):
 
 class Product2(QScrollArea):
     tab_count = 0
-    def __init__(self, parent=None, item={}, mode=""):
-        super().__init__(parent)
+    def __init__(self, parent=None, item={}, mode="", navi=""):
+        super().__init__()
         self.parent = parent
         # self.content_tabs = parent.parent.content_tabs
         self.item = item
         self.mode = mode
         self.init_ui()
+        self.navi = navi
 
     def init_ui(self):
         #self.frame.setMinimumWidth(500)
@@ -2781,8 +2783,8 @@ class Product2(QScrollArea):
         # wid = main_wnd.content_tabs.findChild(QWidget, "productdetail_tab")
         # main_wnd.content_tabs.setCurrentWidget(wid)
         Product2.tab_count = Product2.tab_count + 1
-        content_tabs = self.parent.parent
-        product_detail_tab = ProductDetailTab(self, self.item)
+        content_tabs = main_wnd.content_tabs
+        product_detail_tab = ProductDetailTab(content_tabs, self.item)
         tab_index = content_tabs.addTab(product_detail_tab, "")
         content_tabs.setCurrentIndex(tab_index)
 
@@ -2798,7 +2800,7 @@ class Product2(QScrollArea):
 
 
 class PopularTab(QScrollArea):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("popular_tab")
