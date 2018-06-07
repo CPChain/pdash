@@ -752,12 +752,10 @@ class ProductDetailTab(QScrollArea):
             # self.main_layout.addWidget(self.may_like_label)
             # self.main_layout.addLayout(self.product_layout)
 
-            self.setLayout(self.product_layout)
-
-        set_layout()
-        # TODO: Loading stylesheet
-        logger.debug("loading stylesheet...")
-        load_stylesheet(self, "prductdetail.qss")
+            self.setLayout(self.content_layout)
+            # TODO: Loading stylesheet
+            logger.debug("loading stylesheet...")
+            load_stylesheet(self, "prductdetail.qss")
     
     def handle_collect(self):
         print("please handle collect here")
