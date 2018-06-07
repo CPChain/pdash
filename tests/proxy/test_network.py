@@ -29,7 +29,8 @@ def fake_bootstrap():
 def fake_pick_peer():
     msg = {
         'type': 'pick_peer',
-        'tid': generate_tid()
+        'tid': generate_tid(),
+        'sysconf': None
     }
 
     return msg
