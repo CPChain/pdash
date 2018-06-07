@@ -11,7 +11,7 @@ from twisted.internet import reactor, protocol, defer
 import msgpack
 
 from cpchain.proxy.account import sign_proxy_data, derive_proxy_data
-from cpchain.proxy.sysconf import get_cpu_info, get_mem_info, get_nic_info
+from cpchain.proxy.sysconf import get_cpu_info, get_mem_info, get_nic_info, search_peer
 
 logger = logging.getLogger(__name__)
 
@@ -134,13 +134,16 @@ class PeerProtocol(protocol.DatagramProtocol):
 
         elif msg['type'] == 'pick_peer':
             tid = msg['tid']
+            sysconf = msg['sysconf']
 
-            if self.peers_lat:
+            pick_peer = None
+
+            if sysconf:
+                pick_peer = search_peer(sysconf, self.peers_conf)
+            elif self.peers_lat:
                 peer_id = min(self.peers_lat.items(), key=operator.itemgetter(1))[0]
                 peer = self.peers[peer_id]
                 pick_peer = peer_id
-            else:
-                pick_peer = None
 
             response = {
                 'type': 'response',
@@ -178,10 +181,11 @@ class PeerProtocol(protocol.DatagramProtocol):
         d.callback((True, data))
         del self.request[tid]
 
-    def pick_peer(self, addr):
+    def pick_peer(self, addr, sysconf=None):
         msg = {
             'type': 'pick_peer',
-            'tid': generate_tid()
+            'tid': generate_tid(),
+            'sysconf': sysconf
         }
 
         return self.send_msg(msg, addr)

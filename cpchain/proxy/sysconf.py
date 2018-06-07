@@ -51,3 +51,35 @@ def get_nic_info(dst):
         nic_speed = 0
 
     return {'speed': nic_speed}
+
+def search_peer(sysconf, peers_conf):
+
+    pick_peer = None
+
+    for peer_id in peers_conf: # pylint: disable=too-many-nested-blocks
+        peer_conf = peers_conf[peer_id]
+        match = True
+        for hw in sysconf:
+            if hw in peer_conf:
+                try:
+                    for key in sysconf[hw]:
+                        if key in peer_conf[hw]:
+                            if sysconf[hw][key] > peer_conf[hw][key]:
+                                match = False
+                                break
+                        else:
+                            match = False
+                            break
+                except:
+                    match = False
+                    break
+            else:
+                match = False
+                break
+
+        if match:
+            # found the peer
+            pick_peer = peer_id
+            break
+
+    return pick_peer
