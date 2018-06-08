@@ -6,6 +6,7 @@ from cpchain.wallet.db import session, FileInfo, osp, create_engine, sessionmake
 from cpchain.crypto import AESCipher, RSACipher
 from cpchain.utils import Encoder, join_with_rc
 from cpchain.storage import IPFSStorage
+from cpchain.storage import S3Storage
 from cpchain import root_dir, config
 
 logger = logging.getLogger(__name__)  # pylint: disable=locally-disabled, invalid-name
@@ -120,6 +121,32 @@ def upload_file_ipfs(file_path):
     new_file_info = FileInfo(hashcode=str(file_hash), name=file_name, path=file_path, size=file_size,
                              remote_type="ipfs", remote_uri="/ipfs/" + file_hash,
                              is_published=False, aes_key=this_key)
+    add_file(new_file_info)
+    logger.debug('file id: %s', new_file_info.id)
+    file_id = new_file_info.id
+    return file_id
+
+
+def upload_file_s3(file_path):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        encrypted_path = os.path.join(tmpdirname, 'encrypted.txt')
+        logger.debug("start to encrypt")
+        this_key = encrypt_file(file_path, encrypted_path)
+        logger.debug("encrypt completed")
+        file_name = list(os.path.split(file_path))[-1]
+        s3_client = S3Storage()
+        try:
+            s3_client.upload_file(encrypted_path, file_name, "cpchain-bucket")
+        except Exception:
+            logger.exception("verify signature error")
+        else:
+            pass
+
+    file_name = list(os.path.split(file_path))[-1]
+    file_size = os.path.getsize(file_path)
+    logger.debug('start to write data into database')
+    new_file_info = FileInfo(hashcode=str("s3_hash"), name=file_name, path=file_path, size=file_size,
+                             remote_type="s3", remote_uri=file_name, is_published=False, aes_key=this_key)
     add_file(new_file_info)
     logger.debug('file id: %s', new_file_info.id)
     file_id = new_file_info.id

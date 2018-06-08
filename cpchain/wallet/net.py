@@ -11,11 +11,13 @@ from cpchain.utils import config, Encoder
 
 from cpchain.wallet.fs import publish_file_update
 
-from cpchain.utils import reactor
+from cpchain.wallet import utils
 
 from cpchain.proxy.node import start_proxy_request, pick_proxy
 
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
+
+from cpchain.storage import S3Storage
 
 
 logger = logging.getLogger(__name__)  # pylint: disable=locally-disabled, invalid-name
@@ -55,7 +57,7 @@ class ProxyClient:
         self.message = Message()
         self.seller_data = self.message.seller_data
         self.message.type = Message.SELLER_DATA
-        self.seller_data.order_id = 3
+        self.seller_data.order_id = 9
         self.seller_data.seller_addr = self.seller_addr
         self.seller_data.buyer_addr = self.buyer_addr
         self.seller_data.market_hash = product_info['market_hash']
@@ -83,30 +85,14 @@ class ProxyClient:
 
         log.startLogging(sys.stdout)
 
-
-        # def pick_proxy_done(result):
-        #
-        #     logger.debug("xxxxxxxxxxxxxxxxxxxxxPROXYxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-        #     logger.debug(result)
-        #     logger.debug("xxxxxxxxxxxxxxxxxxxxxPROXYxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-        # logger.debug("-----------------------------------------------------------")
-        # pick_proxy().addCallback(pick_proxy_done)
-
-        def request_done(proxy_reply):
-            logger.debug('------------------')
-            if proxy_reply.error:
-
-                logger.debug(proxy_reply.error)
-            else:
-                logger.debug(proxy_reply.file_uri)
-                logger.debug(proxy_reply.AES_key.decode())
-
-            logger.debug('++++++++++++++++++++')
-
-
-        start_proxy_request(self.seller_sign_message, proxy_id=self.proxy_id).addCallback(request_done)
-
-
+        proxy_response = yield start_proxy_request(self.seller_sign_message, proxy_id=self.proxy_id)
+        if proxy_response.error:
+            logger.debug(proxy_response.error)
+            return False
+        else:
+            logger.debug(proxy_response.file_uri)
+            logger.debug(proxy_response.AES_key.decode())
+            return True
 
 
 class MarketClient:
@@ -413,8 +399,10 @@ class MarketClient:
         logger.debug("xxxxxxxxxxxxxxxxxxxxxxxx query comment ...")
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
                   'Content-Type': 'application/json'}
-        url = self.url + '/comment/v1/comment/list/?market_hash=' + market_hash
+        url = utils.build_url(self.url + "comment/v1/comment/list/", {'market_hash': market_hash})
+        logger.debug(url)
         resp = yield treq.get(url, headers=header)
+        logger.debug(resp)
         comment_info = yield treq.json_content(resp)
         logger.debug('upload file info to market confirm: %s', comment_info)
         return comment_info['data']

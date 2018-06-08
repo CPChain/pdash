@@ -7,6 +7,7 @@ from cpchain.wallet.wallet import Wallet
 
 import os.path as osp
 import string
+import hashlib
 import logging
 
 
@@ -482,8 +483,14 @@ class ProductDetailTab(QScrollArea):
             def create_labels():
                 self.avatar_label = QLabel("")
                 self.avatar_label.setObjectName("avatar_label")
+                pixmap = get_pixm('avatar.jpeg')
+                pixmap = pixmap.scaled(40, 40)
+                self.avatar_label.setPixmap(pixmap)
 
-                self.name_label = QLabel(self.comment['user_name'])
+                username = self.comment['username']
+                if self.comment['username'] == "":
+                    username = "Dcda Ali"
+                self.name_label = QLabel(username)
                 self.name_label.setObjectName('name_label')
 
                 self.rating_label = QLabel("{}".format(self.comment['rating']))
@@ -491,6 +498,7 @@ class ProductDetailTab(QScrollArea):
 
                 self.description_label = QLabel(self.comment['content'])
                 self.description_label.setObjectName("description_label")
+            create_labels()
 
             def setlayout():
                 self.main_layout = main_layout = QVBoxLayout(self)
@@ -501,10 +509,10 @@ class ProductDetailTab(QScrollArea):
                 self.basic_layout.setContentsMargins(0, 5, 0, 5)
                 self.basic_layout.addSpacing(1)
                 self.basic_layout.addWidget(self.avatar_label)
-                self.basic_layout.addSpacing(1)
+                self.basic_layout.addSpacing(0)
                 self.basic_layout.addWidget(self.name_label)
-                self.basic_layout.addSpacing(10)
-                self.basic_layout.addWidget(self.description_label)
+                self.basic_layout.addSpacing(60)
+                self.basic_layout.addWidget(self.rating_label)
 
                 self.main_layout.addLayout(self.basic_layout)
                 self.main_layout.addSpacing(1)
@@ -523,10 +531,10 @@ class ProductDetailTab(QScrollArea):
         # self.key_words = key_words
         #self.setObjectName("cart_tab")
         self.setObjectName("productdetail_tab")
-        self.product_info = {}
+        self.product_info = item
         self.search_promo_num = 4
         self.promo_lists = []
-        # self.init_ui()
+        self.init_ui()
 
     def update_page(self, product_info, promo_list):
         if len(promo_list) == 0:
@@ -575,27 +583,35 @@ class ProductDetailTab(QScrollArea):
             self.may_like_label = QLabel("You may like")
             self.may_like_label.setObjectName("may_like_label")
 
+
             # TODO: to get info from backend
-            # d_comments = wallet.market_client.query_comment_by_hash(self.item['market_hash'])
-            def add_comment():
-                self.buyer_avatar = QLabel("")
-                self.buyer_avatar.setObjectName("buyer_avatar")
-
-                self.buyer_name = QLabel("Ross Geller")
-                self.buyer_name.setObjectName("buyer_name")
-
-                self.data_label = QLabel("May 4, 2018")
-                self.data_label.setObjectName("data_label")
-
-                self.buyer_rating = QLabel("4.5")
-                self.buyer_rating.setObjectName("buyer_rating")
-
-                self.buyer_comment = QLabel("Lorem ipsim dolor sit amet, consectetur adipiscing elit. Aenean euismod bibendum laoreet.")
-                self.buyer_comment.setObjectName("buyer_comment")
-                self.buyer_comment.setWordWrap(True)
-                self.buyer_comment.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-            add_comment()
-
+            self.data_label = QLabel("May 4, 2018")
+            self.data_label.setObjectName("data_label")
+            # # d_comments = wallet.market_client.query_comment_by_hash(self.item['market_hash'])
+            # def add_comment():
+            #     self.buyer_avatar = QLabel("")
+            #     self.buyer_avatar.setObjectName("buyer_avatar")
+            #
+            #     self.buyer_name = QLabel("Ross Geller")
+            #     self.buyer_name.setObjectName("buyer_name")
+            #
+                # self.data_label = QLabel("May 4, 2018")
+                # self.data_label.setObjectName("data_label")
+            #
+            #     self.buyer_rating = QLabel("4.5")
+            #     self.buyer_rating.setObjectName("buyer_rating")
+            #
+            #     self.buyer_comment = QLabel("Lorem ipsim dolor sit amet, consectetur adipiscing elit. Aenean euismod bibendum laoreet.")
+            #     self.buyer_comment.setObjectName("buyer_comment")
+            #     self.buyer_comment.setWordWrap(True)
+            #     self.buyer_comment.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+            # add_comment()
+            # self.comment_list = []
+            # d_comments = wallet.market_client.query_comment_by_hash(self.item['msg_hash'])
+            # def add_comment(comments):
+            #     for i in range(len(comments)):
+            #         self.comment_list.append(ProductDetailTab.ProductComment(self, comments[i]))
+            # d_comments.addCallback(add_comment)
 
             des_text = "In 2012, OWSLA launched a monthly subscription, The Nest, with benefits including early access to OWSLA releases.[12] In 2013, Bromance Records partners up with OWSLA to create an American branch titled BromanceUS with releases from Gesaffelstein, Illangelo."
 
@@ -651,10 +667,30 @@ class ProductDetailTab(QScrollArea):
         self.hline_1 = HorizontalLine(self, 2)
         self.hline_2 = HorizontalLine(self, 2)
 
-        def set_layout():
+        def get_promotion(item={}):
+            for i in range(self.search_promo_num):
+                self.promo_lists.append(Product(self, item, "simple"))
+        # TODO: Problems not solved here: list out of range for self.promo_lists
+        # TODO: Most likely the wrong usage of addCallback
+        @inlineCallbacks
+        def get_product_info():
+            promo_list = yield wallet.market_client.query_promotion()
+            if len(promo_list) == 0:
+                item = {"title": "Medical data from NHIS", "none": "none"}
+                get_promotion(item)
+            else:
+                for i in range(self.search_promo_num):
+                    if i == len(promo_list) - 1:
+                        break
+                    self.promo_lists.append(Product2(self, promo_list[i], 'simple'))
+            self.comment_list = []
+            comments = yield wallet.market_client.query_comment_by_hash(self.item['msg_hash'])
+            for j in range(len(comments)):
+                self.comment_list.append(ProductDetailTab.ProductComment(self, comments[j]))
+            set_layout()
+        get_product_info()
 
-            # self.main_layout = main_layout = QVBoxLayout(self)
-            # main_layout.addSpacing(0)
+        def set_layout():
 
             self.content_layout = QHBoxLayout(self)
             self.content_layout.addSpacing(0)
@@ -699,16 +735,19 @@ class ProductDetailTab(QScrollArea):
             self.product_layout.addLayout(self.rating_all, 12, 1, 1, 10) 
 
             self.comment_layout = QVBoxLayout(self)
-            self.buyer_layout = QHBoxLayout(self)
-            self.buyer_layout.addWidget(self.buyer_avatar)
-            self.buyer_layout.addWidget(self.buyer_name)
-            self.buyer_layout.addSpacing(10)
-            self.buyer_layout.addWidget(self.data_label)
-            self.buyer_layout.addStretch(1)
-            self.buyer_layout.addWidget(self.buyer_rating)
-
-            self.comment_layout.addLayout(self.buyer_layout)
-            self.comment_layout.addWidget(self.buyer_comment)
+            for i in range(len(self.comment_list)):
+                self.comment_layout.addWidget(self.comment_list[i])
+                self.comment_layout.addSpacing(0)
+            # self.buyer_layout = QHBoxLayout(self)
+            # self.buyer_layout.addWidget(self.buyer_avatar)
+            # self.buyer_layout.addWidget(self.buyer_name)
+            # self.buyer_layout.addSpacing(10)
+            # self.buyer_layout.addWidget(self.data_label)
+            # self.buyer_layout.addStretch(1)
+            # self.buyer_layout.addWidget(self.buyer_rating)
+            #
+            # self.comment_layout.addLayout(self.buyer_layout)
+            # self.comment_layout.addWidget(self.buyer_comment)
             self.product_layout.addLayout(self.comment_layout, 14, 1, 3, 10)    
 
             self.promotion_layout = QVBoxLayout(self)
@@ -719,6 +758,8 @@ class ProductDetailTab(QScrollArea):
             self.promotion_layout.addWidget(self.hline_2)
             self.promotion_layout.addSpacing(0)
             for i in range(self.search_promo_num):
+                if i == len(self.promo_lists) - 1:
+                    break
                 self.promotion_layout.addWidget(self.promo_lists[i])
                 self.promotion_layout.addSpacing(0)
 
@@ -727,15 +768,10 @@ class ProductDetailTab(QScrollArea):
             self.content_layout.addLayout(self.product_layout, 2)
             self.content_layout.addLayout(self.promotion_layout, 1)
 
-            # self.main_layout.addWidget(self.may_like_label)
-            # self.main_layout.addLayout(self.product_layout)
-
-            self.setLayout(self.product_layout)
-
-        set_layout()
-        # TODO: Loading stylesheet
-        logger.debug("loading stylesheet...")
-        load_stylesheet(self, "prductdetail.qss")
+            self.setLayout(self.content_layout)
+            # TODO: Loading stylesheet
+            logger.debug("loading stylesheet...")
+            load_stylesheet(self, "prductdetail.qss")
     
     def handle_collect(self):
         print("please handle collect here")
@@ -1998,10 +2034,13 @@ class PublishDialog(QDialog):
             logger.debug("product info id: %s", self.product_id)
 
             #TODO: Get following attributes from fileinfo table
-            self.size = 17
+            file_info = fs.get_file_by_id(self.product_id)
+            self.size = file_info.size
             self.start_date = '2018-04-01 10:10:10'
             self.end_date = '2018-04-01 10:10:10'
-            self.file_md5 = '123456'
+            self.path = file_info.path
+            self.file_md5 = hashlib.md5(open(self.path, "rb").read()).hexdigest()
+            logger.debug(self.file_md5)
             d_publish = wallet.market_client.publish_product(self.product_id, self.pinfo_title,
                                                              self.pinfo_descrip, self.pinfo_price,
                                                              self.pinfo_tag, self.start_date,
@@ -2018,13 +2057,20 @@ class PublishDialog(QDialog):
                 def update_proxy(markethash):
                     file_info = fs.get_file_by_id(self.product_id)
                     file_hash = file_info.hashcode
-                    # TODO: Amazon S3 is not supported at the time
+                    # TODO: remote_uri is currently defined as the file name
                     s3_key = file_info.remote_uri
                     storage_type = file_info.remote_type
                     product_info = {'storage_type': storage_type, 'file_hash': file_hash, 's3_key': s3_key,
                                     'market_hash': markethash}
-                    wallet.proxy_client.publish_to_proxy(product_info, 'recommended')
+                    d_status = wallet.proxy_client.publish_to_proxy(product_info, 'recommended')
+                    def status_check_proxy(status):
+                        if status == True:
+                            QMessageBox.information(self, "Tips", "Successfully passed info to proxy (Seller)")
+                        else:
+                            QMessageBox.information(self, "Tips", "Failed to pass info to proxy (Seller)")
+                    d_status.addCallback(status_check_proxy)
                 update_proxy(market_hash)
+
             d_publish.addCallback(update_table)
 
             self.close()
@@ -2281,7 +2327,7 @@ class SellTab(QScrollArea):
 
 class FollowingTagTab(QScrollArea):
     def __init__(self, parent=None):
-        super().__init__(parent)
+        super().__init__()
         self.parent = parent
         self.setObjectName("follow_tab_tag")
         self.init_ui()
@@ -2303,8 +2349,9 @@ class FollowingTagTab(QScrollArea):
         def get_items(products):
             print("Getting items from backend......")
             for i in range(self.follow_item_num):
-                self.item_lists.append(Product(self, item=products[i]))
+                self.item_lists.append(Product2(self, item=products[i], navi="following"))
             set_layout()
+
 
         d_products = wallet.market_client.query_recommend_product()
         d_products.addCallback(get_items)
@@ -2384,7 +2431,7 @@ class FollowingSellTab(QScrollArea):
         def get_items(products):
             print("Getting items from backend......")
             for i in range(self.follow_item_num):
-                self.item_lists.append(Product(self, item=products[i]))
+                self.item_lists.append(Product2(self, item=products[i], navi="following"))
             set_layout()
 
         d_products = wallet.market_client.query_recommend_product()
@@ -2451,8 +2498,8 @@ class FollowingTab(QScrollArea):
             self.follow_tabs = follow_tabs = QTabWidget(self)
             follow_tabs.setObjectName("follow_tabs")
             #follow_tabs.tabBar().hide()
-            follow_tabs.addTab(FollowingTagTab(follow_tabs), "Tag")
-            follow_tabs.addTab(FollowingSellTab(follow_tabs), "Sell")
+            follow_tabs.addTab(FollowingTagTab(self.follow_tabs), "Tag")
+            follow_tabs.addTab(FollowingSellTab(self.follow_tabs), "Sell")
         add_content_tabs()
 
         def set_layout():
@@ -2632,13 +2679,15 @@ class Product(QScrollArea):
 
 
 class Product2(QScrollArea):
-    def __init__(self, parent=None, item={}, mode=""):
-        super().__init__(parent)
+    tab_count = 0
+    def __init__(self, parent=None, item={}, mode="", navi=""):
+        super().__init__()
         self.parent = parent
         # self.content_tabs = parent.parent.content_tabs
         self.item = item
         self.mode = mode
         self.init_ui()
+        self.navi = navi
 
     def init_ui(self):
         #self.frame.setMinimumWidth(500)
@@ -2719,20 +2768,25 @@ class Product2(QScrollArea):
         load_stylesheet(self, "product.qss")
         logger.debug("Loading stylesheet of item")
 
-    @inlineCallbacks
-    def get_product_info(self):
-        product_info = self.item
-        promo_list = yield wallet.market_client.query_promotion()
-        main_wnd.findChild(QWidget, 'productdetail_tab').update_page(product_info, promo_list)
+    # @inlineCallbacks
+    # def get_product_info(self):
+    #     product_info = self.item
+    #     promo_list = yield wallet.market_client.query_promotion()
+    #     main_wnd.findChild(QWidget, 'productdetail_tab').update_page(product_info, promo_list)
 
 
     def title_clicked_act(self):
         # wid = self.parent.parent.findChild(QWidget, "productdetail_tab")
         # self.parent.parent.content_tabs.setCurrentWidget(wid)
-        print("title_clicked_act")
-        self.get_product_info()
-        wid = main_wnd.content_tabs.findChild(QWidget, "productdetail_tab")
-        main_wnd.content_tabs.setCurrentWidget(wid)
+        # print("title_clicked_act")
+        # self.get_product_info()
+        # wid = main_wnd.content_tabs.findChild(QWidget, "productdetail_tab")
+        # main_wnd.content_tabs.setCurrentWidget(wid)
+        Product2.tab_count = Product2.tab_count + 1
+        content_tabs = main_wnd.content_tabs
+        product_detail_tab = ProductDetailTab(content_tabs, self.item)
+        tab_index = content_tabs.addTab(product_detail_tab, "")
+        content_tabs.setCurrentIndex(tab_index)
 
     def seller_clicked_act(self):
         print("seller_clicked_act")
@@ -2746,7 +2800,7 @@ class Product2(QScrollArea):
 
 
 class PopularTab(QScrollArea):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("popular_tab")
@@ -2837,11 +2891,11 @@ class PopularTab(QScrollArea):
 
         # TODO: Get promotion products based on products returned above or the keywords provided
 
-        d_promotion = wallet.market_client.query_promotion()
-        def get_promotion(products):
-            for i in range(self.promo_num_max):
-                self.promo_lists.append(Product2(parent=self, item=products[i], mode="simple"))
-        d_promotion.addCallback(get_promotion)
+        # d_promotion = wallet.market_client.query_promotion()
+        # def get_promotion(products):
+        #     for i in range(self.promo_num_max):
+        #         self.promo_lists.append(Product2(parent=self, item=products[i], mode="simple"))
+        # d_promotion.addCallback(get_promotion)
 
 
         # d_promotion = wallet.market_client.query_promotion()
@@ -2851,7 +2905,12 @@ class PopularTab(QScrollArea):
             print("Getting items from backend......")
             for i in range(self.item_num_max):
                 self.item_lists.append(Product2(parent=self, item=products[i]))
-            set_layout()
+            d_promotion = wallet.market_client.query_promotion()
+            def get_promotion(products):
+                for i in range(self.promo_num_max):
+                    self.promo_lists.append(Product2(parent=self, item=products[i], mode="simple"))
+                set_layout()
+            d_promotion.addCallback(get_promotion)
         d_products.addCallback(get_items)
 
         def set_layout():
@@ -2908,6 +2967,8 @@ class PopularTab(QScrollArea):
             # self.promo_layout.addSpacing(0)
 
             for i in range(self.promo_num_max):
+                if i == len(self.promo_lists) - 1:
+                    break
                 self.promo_layout.addWidget(self.promo_lists[i])
                 self.promo_layout.addSpacing(0)
 
@@ -2918,7 +2979,7 @@ class PopularTab(QScrollArea):
             #self.bottom_layout.setStretch(promo_layout,1)
 
             self.main_layout.addLayout(self.bottom_layout)
-        load_stylesheet(self, "popular.qss")
+            load_stylesheet(self, "popular.qss")
         print("Loading stylesheet of cloud tab widget")
 
     def handld_hotindustry_clicked(self):
@@ -3233,7 +3294,8 @@ class CloudTab(QScrollArea):
                     d_upload.addCallback(self.handle_ok_callback)
                 if self.s3_btn.isChecked():
                     print("upload to s3")
-                    # encrypt and uoload self.file_choice
+                    d_upload = deferToThread(fs.upload_file_s3, self.file_choice)
+                    d_upload.addCallback(self.handle_ok_callback)
 
             print("Uploading files to....")
             self.close()
@@ -3770,7 +3832,7 @@ class MainWindow(QMainWindow):
             content_tabs.addTab(PersonalProfileTab(content_tabs), "")
             content_tabs.addTab(TagHPTab(content_tabs), "")
             content_tabs.addTab(SellerHPTab(content_tabs), "") 
-            content_tabs.addTab(ProductDetailTab(content_tabs), "") 
+            # content_tabs.addTab(ProductDetailTab(content_tabs), "")
             content_tabs.addTab(SearchProductTab(content_tabs), "")
             content_tabs.addTab(SecurityTab(content_tabs), "") 
             content_tabs.addTab(PreferenceTab(content_tabs), "")
