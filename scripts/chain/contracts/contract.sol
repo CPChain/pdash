@@ -136,25 +136,23 @@ contract Contract {
     }
 
     // Some events that help tracking the status of the chain
-    event OrderInitiated(
-        address from,
-        uint orderId,
-        uint value
-    );
-    event OrderWithdrawn(address from, uint orderId);
-    event SellerConfirmed(address from, uint orderId, uint value);
-    event ProxyFetched(address from, uint orderId);
-    event ProxyDelivered(address from, uint orderId);
-    event BuyerConfirmed(address from, uint orderId);
-    event BuyerDisputed(address from, uint orderId);
-    event DisputeProcessed(address from, uint orderId);
-    event ProxyHandledDispute(address from, uint orderId);
-    event TrentHandledDispute(address from, uint orderId);
-    event SellerClaimTimeout(address from, uint orderId);
-    event BuyerRatedProxy(address from, uint orderId);
-    event SellerRatedProxy(address from, uint orderId);
-    event OrderFinished(uint id);
+    event OrderInitiated(address from, uint orderId, uint value);
+    event OrderWithdrawn(uint orderId);
 
+    event SellerConfirmed(uint orderId, uint value);
+
+    event ProxyFetched(uint orderId);
+    event ProxyDelivered(uint orderId);
+
+    event BuyerConfirmed(uint orderId);
+    event BuyerDisputed(uint orderId);
+
+    event SellerClaimTimeout(uint orderId);
+
+    event OrderFinished(uint orderId);
+
+    event ProxyDeposited(address from, uint value);
+    event ProxyWithdrawn(address from, uint value);
 
     function placeOrder(
         bytes32 descHash,
@@ -203,7 +201,7 @@ contract Contract {
             orderRecords[id].buyerAddress.transfer(orderRecords[id].offeredPrice);
             orderRecords[id].sellerAddress.transfer(orderRecords[id].offeredPrice);
         }
-        emit OrderWithdrawn(msg.sender, id);
+        emit OrderWithdrawn(id);
     }
 
     function buyerClaimTimeOut(uint id)
@@ -214,6 +212,7 @@ contract Contract {
     {
         orderRecords[id].state = State.Withdrawn;
         orderRecords[id].buyerAddress.transfer(orderRecords[id].offeredPrice);
+        emit OrderWithdrawn(id);
     }
 
 
@@ -233,6 +232,7 @@ contract Contract {
         orderRecords[id].sellerAddress.transfer(paySeller);
         orderRecords[id].state = State.Finished;
 
+        emit BuyerConfirmed(id);
     }
 
     function buyerDispute(uint id)
@@ -254,6 +254,7 @@ contract Contract {
             endTime: now.add(DisputeTimeAllowed),
             disputeState: DisputeState.Proposed
         });
+        emit BuyerDisputed(id);
 
     }
 
@@ -269,7 +270,8 @@ contract Contract {
         if (disputeRecords[disputeId].buyerAgree && disputeRecords[disputeId].sellerAgree)
         {
             // handle dispute
-            finishDispute(id, disputeId, disputeRecords[disputeId].badBuyer, disputeRecords[disputeId].badSeller,disputeRecords[disputeId].badProxy);
+            finishDispute(id, disputeId, disputeRecords[disputeId].badBuyer, disputeRecords[disputeId].badSeller, disputeRecords[disputeId].badProxy);
+            emit OrderFinished(id);
         }
 
     }
@@ -287,6 +289,7 @@ contract Contract {
         proxyCredits[orderRecords[id].secondaryProxyAddress] = proxyCredits[orderRecords[id].secondaryProxyAddress].div(2);
 
         orderRecords[id].state = State.BuyerRated;
+
     }
 
     function sellerConfirm(uint id)
@@ -299,6 +302,7 @@ contract Contract {
         require(msg.value == orderRecords[id].offeredPrice);
         orderRecords[id].state = State.SellerConfirmed;
 
+        emit SellerConfirmed(id, msg.value);
     }
 
     function sellerAgreeOrNot(uint id, bool if_agree)
@@ -314,6 +318,7 @@ contract Contract {
         {
             // handle dispute.
             finishDispute(id, disputeId, disputeRecords[disputeId].badBuyer, disputeRecords[disputeId].badSeller,disputeRecords[disputeId].badProxy);
+            emit OrderFinished(id);
         }
 
     }
@@ -335,6 +340,7 @@ contract Contract {
         uint paySeller = orderRecords[id].offeredPrice.sub(payProxy.mul(2));
         orderRecords[id].sellerAddress.transfer(paySeller); // pay seller.
 
+        emit SellerClaimTimeout(id);
     }
 
     function sellerRateProxy(uint id, uint rate)
@@ -358,8 +364,10 @@ contract Contract {
         public
         payable
     {
+        require(msg.value > 0);
         proxyDeposits[msg.sender] = proxyDeposits[msg.sender].add(msg.value);
 
+        emit ProxyDeposited(msg.sender, msg.value);
     }
 
     function proxyWithdraw(uint value)
@@ -369,6 +377,7 @@ contract Contract {
         proxyDeposits[msg.sender] = proxyDeposits[msg.sender].sub(value);
         (msg.sender).transfer(value);
 
+        emit ProxyWithdrawn(msg.sender, value);
     }
 
     function proxyFetched(uint id)
@@ -379,6 +388,7 @@ contract Contract {
     {
         orderRecords[id].state = State.ProxyFetched;
 
+        emit ProxyFetched(id);
     }
 
     function proxyDelivered(bytes32 deliverHash, uint id)
@@ -390,6 +400,7 @@ contract Contract {
         orderRecords[id].state = State.ProxyDelivered;
         orderRecords[id].deliverHash = deliverHash;
 
+        emit ProxyDelivered(id);
     }
 
     function proxyProcessDispute(uint id, bool decision)
@@ -409,7 +420,6 @@ contract Contract {
             disputeRecords[disputeId].badBuyer = true;
             disputeRecords[disputeId].badSeller = false;
         }
-
     }
 
     function trentHandleDispute(uint id, bool badBuyer, bool badSeller, bool badProxy)
@@ -422,20 +432,21 @@ contract Contract {
 
         require(disputeRecords[disputeId].disputeState == DisputeState.Processed);
         require(badBuyer && badSeller && badProxy == false);
-        require((badBuyer && !badSeller) || (!badBuyer && badSeller));
-        require(disputeRecords[disputeId].endTime < now);
-
+//        require((badBuyer && !badSeller) || (!badBuyer && badSeller));
+//        require(disputeRecords[disputeId].endTime < now);
         disputeRecords[disputeId].badBuyer = badBuyer;
         disputeRecords[disputeId].badSeller = badSeller;
         disputeRecords[disputeId].badProxy = badProxy;
 
         finishDispute(orderId, disputeId, badBuyer, badSeller, badProxy);
-    
+
     }
 
     function finishDispute(uint orderId, uint disputeId, bool badBuyer, bool badSeller, bool badProxy)
         private
     {
+        orderRecords[orderId].state = State.Finished;
+        disputeRecords[disputeId].disputeState = DisputeState.Handled;
         address buyerAddress = orderRecords[orderId].buyerAddress;
         address sellerAddress = orderRecords[orderId].sellerAddress;
         address proxyAddress = orderRecords[orderId].proxyAddress;
@@ -443,47 +454,41 @@ contract Contract {
         uint offeredPrice = orderRecords[orderId].offeredPrice;
         uint proxyFee = orderRecords[orderId].proxyFee;
 
-        if (badBuyer && badProxy)
+        if (badBuyer)
         {
-            sellerAddress.transfer(offeredPrice); // pay back seller's deposit.
+            sellerAddress.transfer(offeredPrice.add(offeredPrice.sub(proxyFee.mul(2)))); // pay back seller's deposit.
+            if (badProxy)
+            {
+                proxyDeposits[proxyAddress].sub(proxyFee); // punish bad proxy.
+                proxyDeposits[secondaryProxyAddress].sub(proxyFee);
 
-            proxyDeposits[proxyAddress].sub(proxyFee); // punish bad proxy.
-            proxyDeposits[secondaryProxyAddress].sub(proxyFee); 
-
-            sellerAddress.transfer(offeredPrice); // send another half to seller.
-            trentAddress.transfer(proxyFee.mul(2));
+                sellerAddress.transfer(proxyFee.mul(2));
+                trentAddress.transfer(proxyFee.mul(2));
+            }
+            else {
+                proxyAddress.transfer(proxyFee);
+                secondaryProxyAddress.transfer(proxyFee);
+            }
         }
-        else if (badBuyer && !badProxy)
-        {
-            sellerAddress.transfer(offeredPrice); // pay back seller's deposit.
-
-            proxyAddress.transfer(proxyFee);
-            secondaryProxyAddress.transfer(proxyFee);
-
-            sellerAddress.transfer(offeredPrice.sub(proxyFee.mul(2)));
-        }
-        else if (badSeller && badProxy)
+        else if (badSeller)
         {
             buyerAddress.transfer(offeredPrice);
-
-            proxyDeposits[proxyAddress].sub(proxyFee); // punish bad proxy.
-            proxyDeposits[secondaryProxyAddress].sub(proxyFee); 
-
             sellerAddress.transfer(offeredPrice.div(2));
-            trentAddress.transfer(offeredPrice.div(2).add(proxyFee.mul(2)));
-        }
-        else if (badSeller && !badProxy)
-        {
-            buyerAddress.transfer(offeredPrice);
+            if (badProxy)
+            {
+                proxyDeposits[proxyAddress].sub(proxyFee); // punish bad proxy.
+                proxyDeposits[secondaryProxyAddress].sub(proxyFee);
 
-            proxyAddress.transfer(proxyFee);
-            secondaryProxyAddress.transfer(proxyFee);
+                trentAddress.transfer(offeredPrice.div(2).add(proxyFee.mul(2)));
+            }
+            else {
+                proxyAddress.transfer(proxyFee);
+                secondaryProxyAddress.transfer(proxyFee);
 
-            sellerAddress.transfer(offeredPrice.div(2));
-            trentAddress.transfer(offeredPrice.div(2).sub(proxyFee.mul(2)));
+                trentAddress.transfer(offeredPrice.div(2).sub(proxyFee.mul(2)));
+            }
         }
-        orderRecords[orderId].state = State.Finished;
-        disputeRecords[disputeId].disputeState = DisputeState.Handled;
+        emit OrderFinished(orderId);
     }
 
 }
