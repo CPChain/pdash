@@ -642,6 +642,12 @@ class ProductDetailTab(QScrollArea):
             self.seller_btn.clicked.connect(self.seller_clicked_act)
             self.seller_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
+            self.comment_btn = QPushButton(self)
+            self.comment_btn.setObjectName("comment_btn")
+            self.comment_btn.setText("Comment")
+            self.comment_btn.clicked.connect(self.handle_comment)
+            self.comment_btn.setCursor(QCursor(Qt.PointingHandCursor))
+
             self.collect_btn = QPushButton(self)
             self.collect_btn.setObjectName("collect_btn")
             self.collect_btn.setText("Collect")
@@ -722,6 +728,8 @@ class ProductDetailTab(QScrollArea):
             self.btn_layout.addWidget(self.collect_btn)
             self.btn_layout.addSpacing(12)
             self.btn_layout.addWidget(self.buynow_btn)
+            self.btn_layout.addSpacing(12)
+            self.btn_layout.addWidget(self.comment_btn)
             self.product_layout.addLayout(self.btn_layout, 10, 1, 1, 6)
 
             self.rating_all = QVBoxLayout(self)
@@ -787,6 +795,18 @@ class ProductDetailTab(QScrollArea):
         wid = main_wnd.content_tabs.findChild(QWidget, "sellerHP_tab")
         main_wnd.content_tabs.setCurrentWidget(wid)
 
+    def handle_comment(self):
+        if wallet.market_client.token == '':
+            QMessageBox.information(self, "Tips", "Please login first !")
+        else:
+            market_hash = self.product_info['msg_hash']
+            d_status = wallet.market_client.add_comment_by_hash(market_hash)
+            def handle_state(status):
+                if status == 1:
+                    QMessageBox.information(self, "Tips", "Comment successfully!")
+                else:
+                    QMessageBox.information(self, "Tips", "Failed to comment the products !")
+            d_status.addCallback(handle_state)
 
 
 class SearchProductTab(QScrollArea):

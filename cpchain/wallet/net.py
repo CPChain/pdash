@@ -407,6 +407,24 @@ class MarketClient:
         logger.debug('upload file info to market confirm: %s', comment_info)
         return comment_info['data']
 
+
+    @inlineCallbacks
+    def add_comment_by_hash(self, market_hash):
+        logger.debug("xxxxxxxxxxxxxxxxxxxxxxxx add comment ....")
+        comment_address = ECCipher.get_address_from_public_key(self.account.public_key)
+        logger.debug(comment_address)
+        # from cpchain.market.transaction.models import TransactionDetail
+        # TransactionDetail.objects.create(seller_address=comment_address, market_hash=market_hash,
+        #                                  buyer_address=comment_address)
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token, 'Content-Type': 'application/json'}
+        data = {'public_key': self.public_key, 'market_hash': market_hash, 'content': 'test111fasldjfk'}
+        url = utils.build_url(self.url + "comment/v1/comment/add/", {'market_hash': market_hash})
+
+        resp = yield treq.post(url, headers=header, json=data, persistent=False)
+        comment_info = yield treq.json_content(resp)
+        logger.debug('upload file info to market confirm: %s', comment_info)
+        return comment_info['status']
+
     @inlineCallbacks
     def delete_file_info(self, product_id):
         logger.debug("delete file info in market")
