@@ -2239,9 +2239,9 @@ class SellTab(QScrollArea):
                 checkbox_item.setCheckState(Qt.Unchecked)
                 self.file_table.setItem(cur_row, 0, checkbox_item)
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row]["title"]))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(self.file_list[cur_row]["price"]))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row]["sales_number"]))
-                self.file_table.setItem(cur_row, 4, QTableWidgetItem(self.file_list[cur_row]["avg_rating"]))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(self.file_list[cur_row]["price"])))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(self.file_list[cur_row]["sales_number"])))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(self.file_list[cur_row]["avg_rating"])))
                 self.file_table.setItem(cur_row, 5, QTableWidgetItem(self.file_list[cur_row]["end_date"]))
                 self.check_record_list.append(False)
 
