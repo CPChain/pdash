@@ -2376,11 +2376,12 @@ class SelectionDialog(QDialog):
         self.show()
 
     def handle_publish(self):
-        QMessageBox.information(self, "Tips", "Product published successfuly")
+        cur_row = self.list_widget.currentRow()
+        product_id = self.file_list[cur_row].id
+        publish_dlg = PublishDialog(self, product_id)
         self.close()
 
     def handle_cancel(self):
-        QMessageBox.information(self, "Tips", "Product published successfuly")
         self.close()
 
 class FollowingTagTab(QScrollArea):
