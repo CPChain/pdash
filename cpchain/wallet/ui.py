@@ -2310,6 +2310,7 @@ class SellTab(QScrollArea):
         for i in range(len(self.check_record_list)):
             if self.check_record_list[i] == True:
                 self.file_table.removeRow(i)
+                # TODO: delete files permanetly from the market side and change local state to "unpublished"
                 print("Deleting files permanently from the cloud...")
                 self.update_table()
 
@@ -2319,11 +2320,66 @@ class SellTab(QScrollArea):
 
     def handle_publish(self):
         item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
-        self.publish_dialog = PublishDialog(self, item)
+        self.file_selection_dlg = SelectionDialog(self)
         # self.file_list[self.cur_clicked]
         print("handle publish act....")
 
-        
+class SelectionDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+        self.resize(300, 400)
+        self.setObjectName("selection_dialog")
+        self.setWindowTitle("Select which file to publish")
+
+        self.init_ui()
+
+    def init_ui(self):
+
+        self.list_widget = QListWidget()
+        self.list_widget.setObjectName("unpublished_list")
+        self.file_list = fs.get_file_list()
+
+        for i in range(len(self.file_list)):
+            if not self.file_list[i].is_published:
+                item = QListWidgetItem(self.file_list[i].name)
+                # text = self.file_list[i].name + "    " + str(self.file_list[i].size) + "    " + str(self.file_list[i].remote_type)
+                # item.setText(text)
+                self.list_widget.addItem(item)
+        self.publish_btn = QPushButton("Publish")
+        self.publish_btn.setObjectName("publish_btn")
+        self.cancel_btn = QPushButton("Cancel")
+        self.cancel_btn.setObjectName("cancel_btn")
+
+        self.publish_btn.clicked.connect(self.handle_publish)
+        self.cancel_btn.clicked.connect(self.handle_cancel)
+
+        def set_layout():
+            self.main_layout = QVBoxLayout()
+            self.main_layout.addSpacing(0)
+
+            self.main_layout.addWidget(self.list_widget)
+            self.main_layout.addSpacing(0)
+
+            self.btn_layout = QHBoxLayout()
+            self.btn_layout.addSpacing(30)
+            self.btn_layout.addWidget(self.cancel_btn)
+            self.btn_layout.addSpacing(2)
+            self.btn_layout.addWidget(self.publish_btn)
+
+            self.main_layout.addLayout(self.btn_layout)
+            self.setLayout(self.main_layout)
+        set_layout()
+        logger.debug("Loading stylesheets of SelectionDialog")
+        self.show()
+
+    def handle_publish(self):
+        QMessageBox.information(self, "Tips", "Product published successfuly")
+        self.close()
+
+    def handle_cancel(self):
+        QMessageBox.information(self, "Tips", "Product published successfuly")
+        self.close()
 
 class FollowingTagTab(QScrollArea):
     def __init__(self, parent=None):
