@@ -2150,6 +2150,10 @@ class SellTab(QScrollArea):
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(products[cur_row]["avg_rating"])))
                 self.file_table.setItem(cur_row, 5, QTableWidgetItem(products[cur_row]["end_date"]))
 
+                hidden_item = QTableWidgetItem()
+                hidden_item.setData(Qt.UserRole, self.file_list[cur_row]['market_hash'])
+                self.file_table.setItem(cur_row, 6, hidden_item)
+
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
 
@@ -2221,11 +2225,11 @@ class SellTab(QScrollArea):
             file_table.setFocusPolicy(Qt.NoFocus) 
             # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
-            file_table.setColumnCount(6)
+            file_table.setColumnCount(7)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
 
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price ($)', 'Sales', 'Rating', 'Update Time'])
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price ($)', 'Sales', 'Rating', 'Update Time', ''])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.verticalHeader().setDefaultSectionSize(30)
             file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
@@ -2245,6 +2249,9 @@ class SellTab(QScrollArea):
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(self.file_list[cur_row]["sales_number"])))
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(self.file_list[cur_row]["avg_rating"])))
                 self.file_table.setItem(cur_row, 5, QTableWidgetItem(self.file_list[cur_row]["end_date"]))
+                hidden_item = QTableWidgetItem()
+                hidden_item.setData(Qt.UserRole, self.file_list[cur_row]['market_hash'])
+                self.file_table.setItem(cur_row, 6, hidden_item)
                 self.check_record_list.append(False)
 
         d = wallet.market_client.query_by_seller(wallet.market_client.public_key)
@@ -2317,6 +2324,7 @@ class SellTab(QScrollArea):
                 # TODO: delete files permanetly from the market side and change local state to "unpublished"
                 print("Deleting files permanently from the cloud...")
                 self.update_table()
+
 
     def handle_delete_act(self):
         self.file_table.removeRow(self.cur_clicked)
