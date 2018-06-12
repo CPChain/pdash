@@ -2248,6 +2248,8 @@ class SellTab(QScrollArea):
                 self.check_record_list.append(False)
 
         d = wallet.market_client.query_by_seller(wallet.market_client.public_key)
+        # TODO: Seems public key here is not consistent with account1 or account 2 that is used for login, leading to
+        # TODO: incomplete display
         def handle_query_by_seller(products):
             self.file_list = []
             if len(products) == 0:
@@ -2321,10 +2323,13 @@ class SellTab(QScrollArea):
         print("row {} has been removed...".format(self.cur_clicked))
 
     def handle_publish(self):
-        item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
-        self.file_selection_dlg = SelectionDialog(self)
-        # self.file_list[self.cur_clicked]
-        print("handle publish act....")
+        # item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
+        if wallet.market_client.token == '':
+            QMessageBox.information(self, "Tips", "Please login first !")
+        else:
+            self.file_selection_dlg = SelectionDialog(self)
+            # self.file_list[self.cur_clicked]
+            print("handle publish act....")
 
 class SelectionDialog(QDialog):
     def __init__(self, parent=None):
@@ -2333,7 +2338,7 @@ class SelectionDialog(QDialog):
         self.resize(300, 400)
         self.setObjectName("selection_dialog")
         self.setWindowTitle("Select which file to publish")
-
+        self.pub_list = []
         self.init_ui()
 
     def init_ui(self):
@@ -2344,6 +2349,7 @@ class SelectionDialog(QDialog):
 
         for i in range(len(self.file_list)):
             if not self.file_list[i].is_published:
+                self.pub_list.append(self.file_list[i])
                 item = QListWidgetItem(self.file_list[i].name)
                 # text = self.file_list[i].name + "    " + str(self.file_list[i].size) + "    " + str(self.file_list[i].remote_type)
                 # item.setText(text)
@@ -2377,7 +2383,7 @@ class SelectionDialog(QDialog):
 
     def handle_publish(self):
         cur_row = self.list_widget.currentRow()
-        product_id = self.file_list[cur_row].id
+        product_id = self.pub_list[cur_row].id
         publish_dlg = PublishDialog(self, product_id)
         self.close()
 
