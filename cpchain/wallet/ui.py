@@ -2050,26 +2050,28 @@ class PublishDialog(QDialog):
                 def handle_update_file(status):
                     if status == 1:
                         QMessageBox.information(self, "Tips", "Update market side product successfully !")
-                        self.parent.update_table()
-                        self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
+                        # self.parent.update_table()
+                        # self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
+                        main_wnd.findChild(QWidget, 'cloud_tab').update_table()
+                        main_wnd.findChild(QWidget, 'selling_tab').update_table()
                 d.addCallback(handle_update_file)
-                # TODO: This is only for test purpose. Will be replaced in this week later.
-                def update_proxy(markethash):
-                    file_info = fs.get_file_by_id(self.product_id)
-                    file_hash = file_info.hashcode
-                    # TODO: remote_uri is currently defined as the file name
-                    s3_key = file_info.remote_uri
-                    storage_type = file_info.remote_type
-                    product_info = {'storage_type': storage_type, 'file_hash': file_hash, 's3_key': s3_key,
-                                    'market_hash': markethash}
-                    d_status = wallet.proxy_client.publish_to_proxy(product_info, 'recommended')
-                    def status_check_proxy(status):
-                        if status == True:
-                            QMessageBox.information(self, "Tips", "Successfully passed info to proxy (Seller)")
-                        else:
-                            QMessageBox.information(self, "Tips", "Failed to pass info to proxy (Seller)")
-                    d_status.addCallback(status_check_proxy)
-                update_proxy(market_hash)
+                # # TODO: This is only for test purpose. Will be replaced in this week later.
+                # def update_proxy(markethash):
+                #     file_info = fs.get_file_by_id(self.product_id)
+                #     file_hash = file_info.hashcode
+                #     # TODO: remote_uri is currently defined as the file name
+                #     s3_key = file_info.remote_uri
+                #     storage_type = file_info.remote_type
+                #     product_info = {'storage_type': storage_type, 'file_hash': file_hash, 's3_key': s3_key,
+                #                     'market_hash': markethash}
+                #     d_status = wallet.proxy_client.publish_to_proxy(product_info, 'recommended')
+                #     def status_check_proxy(status):
+                #         if status == True:
+                #             QMessageBox.information(self, "Tips", "Successfully passed info to proxy (Seller)")
+                #         else:
+                #             QMessageBox.information(self, "Tips", "Failed to pass info to proxy (Seller)")
+                #     d_status.addCallback(status_check_proxy)
+                # update_proxy(market_hash)
 
             d_publish.addCallback(update_table)
 
