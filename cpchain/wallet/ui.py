@@ -2143,9 +2143,9 @@ class SellTab(QScrollArea):
                 checkbox_item.setCheckState(Qt.Unchecked)
                 self.file_table.setItem(cur_row, 0, checkbox_item)
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(products[cur_row]["title"]))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(products[cur_row]["price"]))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(products[cur_row]["sales_number"]))
-                self.file_table.setItem(cur_row, 4, QTableWidgetItem(products[cur_row]["avg_rating"]))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(products[cur_row]["price"])))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(products[cur_row]["sales_number"])))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(products[cur_row]["avg_rating"])))
                 self.file_table.setItem(cur_row, 5, QTableWidgetItem(products[cur_row]["end_date"]))
 
     def set_right_menu(self, func):
