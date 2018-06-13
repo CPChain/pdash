@@ -1583,7 +1583,7 @@ class CollectedTab(QScrollArea):
 
 
 class PurchasedTab(QScrollArea):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("purchase_tab")
@@ -3328,9 +3328,6 @@ class CloudTab(QScrollArea):
                 # delete corresponding record from local FileInfo
                 file_id = self.file_table.item(i, 5).text()
                 fs.delete_file_by_id(file_id)
-                # Set check box state to false
-                self.check_record_list[i] = False
-
                 self.file_table.removeRow(i)
                 # TODO: delete corresponding record from market database
                 d_status = wallet.market_client.delete_file_info(file_id)
@@ -3340,6 +3337,7 @@ class CloudTab(QScrollArea):
                     else:
                         QMessageBox.information(self, "Tips", "Failed to delete record from market backup!")
                 d_status.addCallback(update_market_backup)
+        self.check_record_list = [False for i in range(self.file_table.rowCount())]
 
     class UploadDialog(QDialog):
         def __init__(self, parent=None):
@@ -3479,8 +3477,7 @@ class CloudTab(QScrollArea):
                     # TODO: To test if there are bugs with check_record_list, esp. when the row number has changed
                     # TODO: or is influenced by the order
 
-                    check_record_list = self.parent.check_record_list
-                    check_record_list.append(False)
+                    self.parent.check_record_list = [False for i in range(self.parent.file_table.rowCount())]
 
                     logger.debug("update table successfully !")
                 else:
