@@ -58,6 +58,18 @@ class BuyerAgent(Agent):
             'value': offered_price,
             'from': self.account,
         }
+
+        gas_estimate = self.contract.functions.placeOrder(
+            order_info.desc_hash,
+            order_info.buyer_rsa_pubkey,
+            order_info.seller,
+            order_info.proxy,
+            order_info.secondary_proxy,
+            order_info.proxy_value,
+            order_info.time_allowed
+        ).estimateGas(transaction)
+        transaction['gas'] = gas_estimate + 100000
+
         tx_hash = self.contract.functions.placeOrder(
             order_info.desc_hash,
             order_info.buyer_rsa_pubkey,
@@ -67,6 +79,7 @@ class BuyerAgent(Agent):
             order_info.proxy_value,
             order_info.time_allowed
         ).transact(transaction)
+
         logger.debug("Thank you for using CPChain! Initiated Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash)
         # Get order id through emitted event
@@ -220,7 +233,8 @@ class TrentAgent(Agent):
 
     def handle_dispute(self, order_id, badBuyer, badSeller, badProxy, ):
         transaction = {'value': 0, 'from': self.account,}
+        gas_estimate = self.contract.functions.trentHandleDispute(order_id, badBuyer, badSeller, badProxy).estimateGas(transaction)
+        transaction['gas'] = gas_estimate + 10000
         tx_hash = self.contract.functions.trentHandleDispute(order_id, badBuyer, badSeller, badProxy).transact(transaction)
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
-
