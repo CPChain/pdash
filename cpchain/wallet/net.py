@@ -454,3 +454,5 @@ class MarketClient:
         confirm_info = yield treq.json_content(resp)
         logger.debug('upload file info to market confirm: %s', confirm_info)
         return confirm_info['status']
+
+

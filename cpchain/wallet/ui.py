@@ -136,6 +136,7 @@ class TagHPTab(QScrollArea):
 
             self.followthis_label = QPushButton("Follow this tag")
             self.followthis_label.setObjectName("followthis_label")
+            self.followthis_label.clicked.connect(self.handle_follow_tag)
 
             self.related_label = QLabel("Related Tags")
             self.related_label.setObjectName("related_label")
@@ -195,6 +196,20 @@ class TagHPTab(QScrollArea):
         # TODO: Loading stylesheet
         logger.debug("loading stylesheet...")
         load_stylesheet(self, "tagpage.qss")
+
+    def handle_follow_tag(self):
+        if wallet.market_client.token == '':
+            QMessageBox.information(self, "Tips", "Please login first !")
+            return
+        self.tag = 'tag1'
+        d_status = wallet.market_client.add_follow_tag(self.tag)
+        def handle_state(status):
+            if status == 1:
+                QMessageBox.information(self, "Tips", "Successfully followed this tag")
+            else:
+                QMessageBox.information(self, "Tips", "Problem occurred when following seller")
+        d_status.addCallback(handle_state)
+
 
 class SellerHPTab(QScrollArea):
     class SearchBar(QLineEdit):
