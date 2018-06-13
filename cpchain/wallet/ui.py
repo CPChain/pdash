@@ -230,6 +230,7 @@ class SellerHPTab(QScrollArea):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
+        self.seller_addr = "2af2e6a7da5c788f6a73abf67bb8acb809d7ff54"
         self.setObjectName("sellerHP_tab")
         #self.setObjectName("cart_tab")
         self.init_ui()
@@ -262,6 +263,7 @@ class SellerHPTab(QScrollArea):
             self.follow_btn = QPushButton(self)
             self.follow_btn.setObjectName("follow_btn")
             self.follow_btn.setText("Follow")
+            self.follow_btn.clicked.connect(self.handle_follow)
 
         create_btns()
 
@@ -329,6 +331,20 @@ class SellerHPTab(QScrollArea):
             self.setLayout(self.main_layout)
         set_layout()
         load_stylesheet(self, "sellerhomepage.qss")
+
+    def handle_follow(self):
+        if wallet.market_client.token == '':
+            QMessageBox.information(self, "Tips", "Please login first !")
+            return
+        self.seller_publick_key = '040ceb41bf5f9a96c16b1441f5edc0277bfa2d0ce6a10b481b14de96b0d03cdc5a43668c6f2fb35ac79f70ba7ea86f036cc37ec814f67e066c4ff65648f829dfe7'
+        d_status = wallet.market_client.add_follow_seller(self.seller_publick_key)
+        def handle_state(status):
+            if status == 1:
+                self.follow_btn.setText("Unfollow")
+            else:
+                QMessageBox.information(self, "Tips", "Problem occurred when following seller")
+        d_status.addCallback(handle_state)
+
 
 class Seller(QScrollArea):
     def __init__(self, parent=None, sellerid={}, mode=""):
