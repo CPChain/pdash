@@ -1679,6 +1679,8 @@ class PurchasedDownloadedTab(QScrollArea):
         for cur_row in range(self.row_number):
             if cur_row == len(file_list):
                 break
+            if not file_list[cur_row].is_downloaded:
+                break
             checkbox_item = QTableWidgetItem()
             checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
             checkbox_item.setCheckState(Qt.Unchecked)
@@ -1743,6 +1745,8 @@ class PurchasedDownloadedTab(QScrollArea):
             self.checkbox_list = []
             for cur_row in range(self.row_number):
                 if cur_row == len(file_list):
+                    break
+                if not file_list[cur_row].is_downloaded:
                     break
                 checkbox_item = QTableWidgetItem()
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
