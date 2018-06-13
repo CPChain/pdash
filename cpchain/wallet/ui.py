@@ -3780,6 +3780,7 @@ class Header(QFrame):
 
             self.download_btn = QPushButton("", self)
             self.download_btn.setObjectName("download_btn")
+            self.download_btn.clicked.connect(self.handle_download)
 
             self.upload_btn = QPushButton("", self)
             self.upload_btn.setObjectName("upload_btn")
@@ -3933,6 +3934,11 @@ class Header(QFrame):
         wid = self.content_tabs.findChild(QWidget, "personalprofile_tab")
         self.content_tabs.setCurrentWidget(wid)
         self.parent.findChild(QWidget, 'personalprofile_tab').set_three_index()
+    def handle_download(self):
+        wid = self.content_tabs.findChild(QWidget, "purchase_tab")
+        wid.purchased_main_tab.setCurrentIndex(1)
+        self.content_tabs.setCurrentWidget(wid)
+
 
 class MainWindow(QMainWindow):
     def __init__(self, reactor):
