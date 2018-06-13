@@ -1667,22 +1667,15 @@ class PurchasedDownloadedTab(QScrollArea):
                 self.setLayout(main_layout)
             set_layout()
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
-        #self.setObjectName("purchase_tab")
         self.setObjectName("purchased_downloaded_tab")
         self.init_ui()
 
     def update_table(self):
-        #file_list = get_file_list()
-        print("Updating file list......")
-        file_list = []
-        # single element data structure (assumed); to be changed 
-        dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "ordertime": "2018/2/4 08:30", "price": "36"}
-        for i in range(self.row_number):
-            file_list.append(dict_exa)
 
+        self.file_list = file_list = fs.get_buyer_file_list()
         for cur_row in range(self.row_number):
             if cur_row == len(file_list):
                 break
@@ -1690,18 +1683,10 @@ class PurchasedDownloadedTab(QScrollArea):
             checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
             checkbox_item.setCheckState(Qt.Unchecked)
             self.file_table.setItem(cur_row, 0, checkbox_item)
-            self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["name"]))
-            self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["price"]))
-            self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
-            self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["price"]))
-
-    # def set_right_menu(self, func):
-    #     self.customContextMenuRequested[QPoint].connect(func)
-
-    # def handle_upload(self):
-    #         self.local_file = QFileDialog.getOpenFileName()[0]
-            #defered = threads.deferToThread(upload_file_ipfs, self.local_file)
-            #defered.addCallback(handle_callback_upload)
+            self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].file_title))
+            self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].size)))
+            self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].path))
+            self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].file_uuid))
 
     def init_ui(self):
 
@@ -1745,18 +1730,14 @@ class PurchasedDownloadedTab(QScrollArea):
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             #file_table.set_right_menu(right_menu)
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price', 'Size', 'Order Time'])
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Size', 'Path', 'Remote URI'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.verticalHeader().setDefaultSectionSize(30)
             file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
             file_table.setSortingEnabled(True)
 
-            #file_list = get_file_list()
-            file_list = []
-            print("Getting file list.......")
-            dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "ordertime": "2018/2/4 08:30", "price": "36"}
-            for i in range(self.row_number):
-                file_list.append(dict_exa)
+
+            self.file_list = file_list = fs.get_buyer_file_list()
 
             self.check_record_list = []
             self.checkbox_list = []
@@ -1767,10 +1748,10 @@ class PurchasedDownloadedTab(QScrollArea):
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 checkbox_item.setCheckState(Qt.Unchecked)
                 self.file_table.setItem(cur_row, 0, checkbox_item)
-                self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["name"]))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["price"]))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
-                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["ordertime"]))
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].file_title))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].size)))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].path))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].file_uuid))
                 self.check_record_list.append(False)
         create_file_table()    
         self.file_table.sortItems(2)
