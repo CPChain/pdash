@@ -642,6 +642,12 @@ class ProductDetailTab(QScrollArea):
             self.seller_btn.clicked.connect(self.seller_clicked_act)
             self.seller_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
+            self.comment_btn = QPushButton(self)
+            self.comment_btn.setObjectName("comment_btn")
+            self.comment_btn.setText("Comment")
+            self.comment_btn.clicked.connect(self.handle_comment)
+            self.comment_btn.setCursor(QCursor(Qt.PointingHandCursor))
+
             self.collect_btn = QPushButton(self)
             self.collect_btn.setObjectName("collect_btn")
             self.collect_btn.setText("Collect")
@@ -722,6 +728,8 @@ class ProductDetailTab(QScrollArea):
             self.btn_layout.addWidget(self.collect_btn)
             self.btn_layout.addSpacing(12)
             self.btn_layout.addWidget(self.buynow_btn)
+            self.btn_layout.addSpacing(12)
+            self.btn_layout.addWidget(self.comment_btn)
             self.product_layout.addLayout(self.btn_layout, 10, 1, 1, 6)
 
             self.rating_all = QVBoxLayout(self)
@@ -787,6 +795,18 @@ class ProductDetailTab(QScrollArea):
         wid = main_wnd.content_tabs.findChild(QWidget, "sellerHP_tab")
         main_wnd.content_tabs.setCurrentWidget(wid)
 
+    def handle_comment(self):
+        if wallet.market_client.token == '':
+            QMessageBox.information(self, "Tips", "Please login first !")
+        else:
+            market_hash = self.product_info['msg_hash']
+            d_status = wallet.market_client.add_comment_by_hash(market_hash)
+            def handle_state(status):
+                if status == 1:
+                    QMessageBox.information(self, "Tips", "Comment successfully!")
+                else:
+                    QMessageBox.information(self, "Tips", "Failed to comment the products !")
+            d_status.addCallback(handle_state)
 
 
 class SearchProductTab(QScrollArea):
@@ -2050,26 +2070,28 @@ class PublishDialog(QDialog):
                 def handle_update_file(status):
                     if status == 1:
                         QMessageBox.information(self, "Tips", "Update market side product successfully !")
-                        self.parent.update_table()
-                        self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
+                        # self.parent.update_table()
+                        # self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
+                        main_wnd.findChild(QWidget, 'cloud_tab').update_table()
+                        main_wnd.findChild(QWidget, 'selling_tab').update_table()
                 d.addCallback(handle_update_file)
-                # TODO: This is only for test purpose. Will be replaced in this week later.
-                def update_proxy(markethash):
-                    file_info = fs.get_file_by_id(self.product_id)
-                    file_hash = file_info.hashcode
-                    # TODO: remote_uri is currently defined as the file name
-                    s3_key = file_info.remote_uri
-                    storage_type = file_info.remote_type
-                    product_info = {'storage_type': storage_type, 'file_hash': file_hash, 's3_key': s3_key,
-                                    'market_hash': markethash}
-                    d_status = wallet.proxy_client.publish_to_proxy(product_info, 'recommended')
-                    def status_check_proxy(status):
-                        if status == True:
-                            QMessageBox.information(self, "Tips", "Successfully passed info to proxy (Seller)")
-                        else:
-                            QMessageBox.information(self, "Tips", "Failed to pass info to proxy (Seller)")
-                    d_status.addCallback(status_check_proxy)
-                update_proxy(market_hash)
+                # # TODO: This is only for test purpose. Will be replaced in this week later.
+                # def update_proxy(markethash):
+                #     file_info = fs.get_file_by_id(self.product_id)
+                #     file_hash = file_info.hashcode
+                #     # TODO: remote_uri is currently defined as the file name
+                #     s3_key = file_info.remote_uri
+                #     storage_type = file_info.remote_type
+                #     product_info = {'storage_type': storage_type, 'file_hash': file_hash, 's3_key': s3_key,
+                #                     'market_hash': markethash}
+                #     d_status = wallet.proxy_client.publish_to_proxy(product_info, 'recommended')
+                #     def status_check_proxy(status):
+                #         if status == True:
+                #             QMessageBox.information(self, "Tips", "Successfully passed info to proxy (Seller)")
+                #         else:
+                #             QMessageBox.information(self, "Tips", "Failed to pass info to proxy (Seller)")
+                #     d_status.addCallback(status_check_proxy)
+                # update_proxy(market_hash)
 
             d_publish.addCallback(update_table)
 
@@ -2143,10 +2165,14 @@ class SellTab(QScrollArea):
                 checkbox_item.setCheckState(Qt.Unchecked)
                 self.file_table.setItem(cur_row, 0, checkbox_item)
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(products[cur_row]["title"]))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(products[cur_row]["price"]))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(products[cur_row]["sales_number"]))
-                self.file_table.setItem(cur_row, 4, QTableWidgetItem(products[cur_row]["avg_rating"]))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(products[cur_row]["price"])))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(products[cur_row]["sales_number"])))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(products[cur_row]["avg_rating"])))
                 self.file_table.setItem(cur_row, 5, QTableWidgetItem(products[cur_row]["end_date"]))
+
+                hidden_item = QTableWidgetItem()
+                hidden_item.setData(Qt.UserRole, self.file_list[cur_row]['market_hash'])
+                self.file_table.setItem(cur_row, 6, hidden_item)
 
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
@@ -2219,11 +2245,11 @@ class SellTab(QScrollArea):
             file_table.setFocusPolicy(Qt.NoFocus) 
             # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
-            file_table.setColumnCount(6)
+            file_table.setColumnCount(7)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
 
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price ($)', 'Sales', 'Rating', 'Update Time'])
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price ($)', 'Sales', 'Rating', 'Update Time', ''])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.verticalHeader().setDefaultSectionSize(30)
             file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
@@ -2239,13 +2265,18 @@ class SellTab(QScrollArea):
                 checkbox_item.setCheckState(Qt.Unchecked)
                 self.file_table.setItem(cur_row, 0, checkbox_item)
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row]["title"]))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(self.file_list[cur_row]["price"]))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row]["sales_number"]))
-                self.file_table.setItem(cur_row, 4, QTableWidgetItem(self.file_list[cur_row]["avg_rating"]))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(self.file_list[cur_row]["price"])))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(self.file_list[cur_row]["sales_number"])))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(self.file_list[cur_row]["avg_rating"])))
                 self.file_table.setItem(cur_row, 5, QTableWidgetItem(self.file_list[cur_row]["end_date"]))
+                hidden_item = QTableWidgetItem()
+                hidden_item.setData(Qt.UserRole, self.file_list[cur_row]['market_hash'])
+                self.file_table.setItem(cur_row, 6, hidden_item)
                 self.check_record_list.append(False)
 
         d = wallet.market_client.query_by_seller(wallet.market_client.public_key)
+        # TODO: Seems public key here is not consistent with account1 or account 2 that is used for login, leading to
+        # TODO: incomplete display
         def handle_query_by_seller(products):
             self.file_list = []
             if len(products) == 0:
@@ -2310,20 +2341,82 @@ class SellTab(QScrollArea):
         for i in range(len(self.check_record_list)):
             if self.check_record_list[i] == True:
                 self.file_table.removeRow(i)
+                # TODO: delete files permanetly from the market side and change local state to "unpublished"
                 print("Deleting files permanently from the cloud...")
                 self.update_table()
+
 
     def handle_delete_act(self):
         self.file_table.removeRow(self.cur_clicked)
         print("row {} has been removed...".format(self.cur_clicked))
 
     def handle_publish(self):
-        item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
-        self.publish_dialog = PublishDialog(self, item)
-        # self.file_list[self.cur_clicked]
-        print("handle publish act....")
+        # item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
+        if wallet.market_client.token == '':
+            QMessageBox.information(self, "Tips", "Please login first !")
+        else:
+            self.file_selection_dlg = SelectionDialog(self)
+            # self.file_list[self.cur_clicked]
+            print("handle publish act....")
 
-        
+class SelectionDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+        self.resize(300, 400)
+        self.setObjectName("selection_dialog")
+        self.setWindowTitle("Select which file to publish")
+        self.pub_list = []
+        self.init_ui()
+
+    def init_ui(self):
+
+        self.list_widget = QListWidget()
+        self.list_widget.setObjectName("unpublished_list")
+        self.file_list = fs.get_file_list()
+
+        for i in range(len(self.file_list)):
+            if not self.file_list[i].is_published:
+                self.pub_list.append(self.file_list[i])
+                item = QListWidgetItem(self.file_list[i].name)
+                # text = self.file_list[i].name + "    " + str(self.file_list[i].size) + "    " + str(self.file_list[i].remote_type)
+                # item.setText(text)
+                self.list_widget.addItem(item)
+        self.publish_btn = QPushButton("Publish")
+        self.publish_btn.setObjectName("publish_btn")
+        self.cancel_btn = QPushButton("Cancel")
+        self.cancel_btn.setObjectName("cancel_btn")
+
+        self.publish_btn.clicked.connect(self.handle_publish)
+        self.cancel_btn.clicked.connect(self.handle_cancel)
+
+        def set_layout():
+            self.main_layout = QVBoxLayout()
+            self.main_layout.addSpacing(0)
+
+            self.main_layout.addWidget(self.list_widget)
+            self.main_layout.addSpacing(0)
+
+            self.btn_layout = QHBoxLayout()
+            self.btn_layout.addSpacing(30)
+            self.btn_layout.addWidget(self.cancel_btn)
+            self.btn_layout.addSpacing(2)
+            self.btn_layout.addWidget(self.publish_btn)
+
+            self.main_layout.addLayout(self.btn_layout)
+            self.setLayout(self.main_layout)
+        set_layout()
+        logger.debug("Loading stylesheets of SelectionDialog")
+        self.show()
+
+    def handle_publish(self):
+        cur_row = self.list_widget.currentRow()
+        product_id = self.pub_list[cur_row].id
+        publish_dlg = PublishDialog(self, product_id)
+        self.close()
+
+    def handle_cancel(self):
+        self.close()
 
 class FollowingTagTab(QScrollArea):
     def __init__(self, parent=None):
