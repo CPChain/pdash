@@ -795,18 +795,84 @@ class ProductDetailTab(QScrollArea):
         wid = main_wnd.content_tabs.findChild(QWidget, "sellerHP_tab")
         main_wnd.content_tabs.setCurrentWidget(wid)
 
+    class CommentDialog(QDialog):
+        def __init__(self, parent=None, market_hash=""):
+            super().__init__(parent)
+            self.parent = parent
+            self.market_hash = market_hash
+            self.resize(300, 400)
+            self.setObjectName("comment_dialog")
+            self.init_ui()
+
+        def init_ui(self):
+
+            # Labels def
+            self.comment_label = QLabel("Please input your comment here:")
+
+            # TextEdit def
+            self.comment_edit = QTextEdit()
+            self.comment_edit.setObjectName("comment_edit")
+
+            self.cancel_btn = cancel_btn = QPushButton(self)
+            self.cancel_btn.setObjectName("comment_cancel_btn")
+            self.cancel_btn.setText("Cancel")
+            self.cancel_btn.setCursor(QCursor(Qt.PointingHandCursor))
+            self.cancel_btn.clicked.connect(self.handle_cancel)
+
+            self.confirm_btn = confirm_btn = QPushButton(self)
+            self.confirm_btn.setObjectName("pinfo_publish_btn")
+            self.confirm_btn.setText("OK")
+            self.confirm_btn.setCursor(QCursor(Qt.PointingHandCursor))
+            self.confirm_btn.clicked.connect(self.handle_confirm)
+
+            def set_layout():
+                self.main_layout = QVBoxLayout()
+                self.main_layout.addSpacing(0)
+                self.main_layout.addWidget(self.comment_label)
+                self.main_layout.addSpacing(2)
+                self.main_layout.addWidget(self.comment_edit)
+                self.main_layout.addSpacing(2)
+
+                self.button_layout = QHBoxLayout()
+                self.button_layout.addSpacing(2)
+                self.button_layout.addWidget(self.cancel_btn)
+                self.button_layout.addSpacing(2)
+                self.button_layout.addWidget(self.confirm_btn)
+
+                self.main_layout.addLayout(self.button_layout)
+
+                self.setLayout(self.main_layout)
+
+            set_layout()
+            logger.debug("Loading stylesheet of comment dialog")
+            self.show()
+
+        def handle_confirm(self):
+            self.comment_content = self.comment_edit.toPlainText()
+            if self.comment_content:
+                d_status = wallet.market_client.add_comment_by_hash(self.market_hash, self.comment_content)
+                def handle_state(status):
+                    if status == 1:
+                        QMessageBox.information(self, "Tips", "Comment successfully!")
+                    else:
+                        QMessageBox.information(self, "Tips", "Failed to comment the products !")
+                d_status.addCallback(handle_state)
+                self.close()
+            else:
+                QMessageBox.warning(self, "Warning", "No comment provided!")
+                self.close()
+
+        def handle_cancel(self):
+            print("exiting the current dialog")
+            self.close()
+
+
     def handle_comment(self):
         if wallet.market_client.token == '':
             QMessageBox.information(self, "Tips", "Please login first !")
         else:
             market_hash = self.product_info['msg_hash']
-            d_status = wallet.market_client.add_comment_by_hash(market_hash)
-            def handle_state(status):
-                if status == 1:
-                    QMessageBox.information(self, "Tips", "Comment successfully!")
-                else:
-                    QMessageBox.information(self, "Tips", "Failed to comment the products !")
-            d_status.addCallback(handle_state)
+            comment_dlg = ProductDetailTab.CommentDialog(self, market_hash)
 
 
 class SearchProductTab(QScrollArea):
