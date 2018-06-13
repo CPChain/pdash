@@ -3474,12 +3474,10 @@ class CloudTab(QScrollArea):
                     file_table.setItem(row_count, 4, QTableWidgetItem('False'))
                     file_table.setItem(row_count, 5, QTableWidgetItem(str(product_id)))
 
-                    # TODO: To test if there are bugs with check_record_list, esp. when the row number has changed
-                    # TODO: or is influenced by the order
-
                     self.parent.check_record_list = [False for i in range(self.parent.file_table.rowCount())]
 
                     logger.debug("update table successfully !")
+                    QMessageBox.information(self, "Tips", "Uploaded successfuly")
                 else:
                     logger.debug('upload file info to market failed')
             d.addCallback(handle_upload_resp)
@@ -3784,6 +3782,7 @@ class Header(QFrame):
 
             self.upload_btn = QPushButton("", self)
             self.upload_btn.setObjectName("upload_btn")
+            self.upload_btn.clicked.connect(self.handle_upload)
             self.upload_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
             self.message_btn = QPushButton("", self)
@@ -3934,10 +3933,21 @@ class Header(QFrame):
         wid = self.content_tabs.findChild(QWidget, "personalprofile_tab")
         self.content_tabs.setCurrentWidget(wid)
         self.parent.findChild(QWidget, 'personalprofile_tab').set_three_index()
+
     def handle_download(self):
         wid = self.content_tabs.findChild(QWidget, "purchase_tab")
         wid.purchased_main_tab.setCurrentIndex(1)
         self.content_tabs.setCurrentWidget(wid)
+
+    def handle_upload(self):
+        if wallet.market_client.token == '':
+            QMessageBox.information(self, "Tips", "Please login first !")
+            return
+        logger.debug("Uploading local files....")
+        wid = main_wnd.content_tabs.findChild(QWidget, "cloud_tab")
+        self.upload_dlg = CloudTab.UploadDialog(wid)
+        self.upload_dlg.show()
+
 
 
 class MainWindow(QMainWindow):
