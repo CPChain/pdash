@@ -455,4 +455,17 @@ class MarketClient:
         logger.debug('upload file info to market confirm: %s', confirm_info)
         return confirm_info['status']
 
+    @inlineCallbacks
+    def add_follow_tag(self, tag="tag1"):
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        logger.debug(self.public_key)
+        data = {'public_key': self.public_key, 'tag': tag}
+        url = self.url + 'product/v1/my_tag/subscribe/'
+        logger.debug('upload file info payload: %s', data)
+        logger.debug('upload file info url: %s', url)
+        resp = yield treq.post(url, headers=header, json=data, persistent=False)
+        confirm_info = yield treq.json_content(resp)
+        logger.debug('upload file info to market confirm: %s', confirm_info)
+        return confirm_info['status']
 
