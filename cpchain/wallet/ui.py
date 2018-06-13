@@ -1789,15 +1789,15 @@ class PurchasedDownloadedTab(QScrollArea):
             self.main_layout.addSpacing(2)
             self.setLayout(self.main_layout)
         set_layout()
-        #print("Loading stylesheet of cloud tab widget")
-        #load_stylesheet(self, "cloud.qss")
+
 
     def handle_delete(self):
         for i in range(len(self.check_record_list)):
             if self.check_record_list[i] == True:
+                file_path = self.file_table.item(i, 3).text()
+                fs.delete_buyer_file(file_path)
                 self.file_table.removeRow(i)
-                print("Deleting files permanently from the cloud...")
-                self.update_table()
+        self.check_record_list = [False for i in range(self.file_table.rowCount())]
 
 class PurchasedDownloadingTab(QScrollArea):
     def __init__(self, parent = None):
