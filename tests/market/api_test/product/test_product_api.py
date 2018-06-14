@@ -62,7 +62,7 @@ class TestProductApi(BaseApiTest):
             self.assertGreater(p['size'], 1)
 
     def test_query_es_by_seller_with_limit(self):
-        url = '%s/product/v1/es_product/search/?offset=0&limit=2&status=0&seller=045cfdf7cc44281ece607c85adbc2a2c17682e476a5b5f4ead5461a92aa078ffb46173d1949f4ea3e2d16658f6cf8eb92bab0f33811291bd79bdeca60d5a053a80' % HOST
+        url = '%s/product/v1/es_product/search/?ordering=-created&offset=0&limit=2&status=0&seller=045cfdf7cc44281ece607c85adbc2a2c17682e476a5b5f4ead5461a92aa078ffb46173d1949f4ea3e2d16658f6cf8eb92bab0f33811291bd79bdeca60d5a053a80' % HOST
         response = requests.get(url)
         print("products:%s" % response)
         print(response.text)
@@ -70,7 +70,7 @@ class TestProductApi(BaseApiTest):
 
         result = parsed_json['results']
         for p in result:
-            print("title:%s" % p["title"])
+            print("title:%s,created:%s" % (p["title"], p["created"]))
             self.assertGreater(p['size'], 1)
 
     def test_query_es_by_seller(self):
