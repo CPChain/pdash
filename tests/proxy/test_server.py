@@ -11,6 +11,12 @@ from cpchain.utils import reactor, join_with_rc
 
 from cpchain.account import Accounts
 from cpchain.crypto import ECCipher
+
+from cpchain.proxy import chain
+chain.order_is_ready_on_chain = lambda _: True
+chain.claim_data_fetched_to_chain = lambda _: True
+chain.claim_data_delivered_to_chain = lambda _: True
+
 from cpchain.proxy.server import SSLServerFactory
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.db import ProxyDB
