@@ -62,6 +62,16 @@ class BuyerFileInfo(Base):
     def __repr__(self):
         return "<BuyerFileInfo(path='%s', remote_uri='%s')>" % (self.path, self.remote_uri)
 
+class CollectInfo(Base):
+    __tablename__ = 'collectinfo'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    price = Column(Integer)
+    size = Column(Integer)
+
+    def __repr__(self):
+        return "<CollectInfo(path='%s', remote_uri='%s')>" % (self.path, self.remote_uri)
+
 
 def create_table():
     """Use this to create all tables.
