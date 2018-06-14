@@ -136,6 +136,7 @@ class TagHPTab(QScrollArea):
 
             self.followthis_label = QPushButton("Follow this tag")
             self.followthis_label.setObjectName("followthis_label")
+            self.followthis_label.clicked.connect(self.handle_follow_tag)
 
             self.related_label = QLabel("Related Tags")
             self.related_label.setObjectName("related_label")
@@ -196,6 +197,20 @@ class TagHPTab(QScrollArea):
         logger.debug("loading stylesheet...")
         load_stylesheet(self, "tagpage.qss")
 
+    def handle_follow_tag(self):
+        if wallet.market_client.token == '':
+            QMessageBox.information(self, "Tips", "Please login first !")
+            return
+        self.tag = 'tag1'
+        d_status = wallet.market_client.add_follow_tag(self.tag)
+        def handle_state(status):
+            if status == 1:
+                QMessageBox.information(self, "Tips", "Successfully followed this tag")
+            else:
+                QMessageBox.information(self, "Tips", "Problem occurred when following seller")
+        d_status.addCallback(handle_state)
+
+
 class SellerHPTab(QScrollArea):
     class SearchBar(QLineEdit):
         def __init__(self, parent=None):
@@ -230,6 +245,7 @@ class SellerHPTab(QScrollArea):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
+        self.seller_addr = "2af2e6a7da5c788f6a73abf67bb8acb809d7ff54"
         self.setObjectName("sellerHP_tab")
         #self.setObjectName("cart_tab")
         self.init_ui()
@@ -262,6 +278,7 @@ class SellerHPTab(QScrollArea):
             self.follow_btn = QPushButton(self)
             self.follow_btn.setObjectName("follow_btn")
             self.follow_btn.setText("Follow")
+            self.follow_btn.clicked.connect(self.handle_follow)
 
         create_btns()
 
@@ -329,6 +346,20 @@ class SellerHPTab(QScrollArea):
             self.setLayout(self.main_layout)
         set_layout()
         load_stylesheet(self, "sellerhomepage.qss")
+
+    def handle_follow(self):
+        if wallet.market_client.token == '':
+            QMessageBox.information(self, "Tips", "Please login first !")
+            return
+        self.seller_publick_key = '040ceb41bf5f9a96c16b1441f5edc0277bfa2d0ce6a10b481b14de96b0d03cdc5a43668c6f2fb35ac79f70ba7ea86f036cc37ec814f67e066c4ff65648f829dfe7'
+        d_status = wallet.market_client.add_follow_seller(self.seller_publick_key)
+        def handle_state(status):
+            if status == 1:
+                self.follow_btn.setText("Unfollow")
+            else:
+                QMessageBox.information(self, "Tips", "Problem occurred when following seller")
+        d_status.addCallback(handle_state)
+
 
 class Seller(QScrollArea):
     def __init__(self, parent=None, sellerid={}, mode=""):
@@ -795,18 +826,84 @@ class ProductDetailTab(QScrollArea):
         wid = main_wnd.content_tabs.findChild(QWidget, "sellerHP_tab")
         main_wnd.content_tabs.setCurrentWidget(wid)
 
+    class CommentDialog(QDialog):
+        def __init__(self, parent=None, market_hash=""):
+            super().__init__(parent)
+            self.parent = parent
+            self.market_hash = market_hash
+            self.resize(300, 400)
+            self.setObjectName("comment_dialog")
+            self.init_ui()
+
+        def init_ui(self):
+
+            # Labels def
+            self.comment_label = QLabel("Please input your comment here:")
+
+            # TextEdit def
+            self.comment_edit = QTextEdit()
+            self.comment_edit.setObjectName("comment_edit")
+
+            self.cancel_btn = cancel_btn = QPushButton(self)
+            self.cancel_btn.setObjectName("comment_cancel_btn")
+            self.cancel_btn.setText("Cancel")
+            self.cancel_btn.setCursor(QCursor(Qt.PointingHandCursor))
+            self.cancel_btn.clicked.connect(self.handle_cancel)
+
+            self.confirm_btn = confirm_btn = QPushButton(self)
+            self.confirm_btn.setObjectName("pinfo_publish_btn")
+            self.confirm_btn.setText("OK")
+            self.confirm_btn.setCursor(QCursor(Qt.PointingHandCursor))
+            self.confirm_btn.clicked.connect(self.handle_confirm)
+
+            def set_layout():
+                self.main_layout = QVBoxLayout()
+                self.main_layout.addSpacing(0)
+                self.main_layout.addWidget(self.comment_label)
+                self.main_layout.addSpacing(2)
+                self.main_layout.addWidget(self.comment_edit)
+                self.main_layout.addSpacing(2)
+
+                self.button_layout = QHBoxLayout()
+                self.button_layout.addSpacing(2)
+                self.button_layout.addWidget(self.cancel_btn)
+                self.button_layout.addSpacing(2)
+                self.button_layout.addWidget(self.confirm_btn)
+
+                self.main_layout.addLayout(self.button_layout)
+
+                self.setLayout(self.main_layout)
+
+            set_layout()
+            logger.debug("Loading stylesheet of comment dialog")
+            self.show()
+
+        def handle_confirm(self):
+            self.comment_content = self.comment_edit.toPlainText()
+            if self.comment_content:
+                d_status = wallet.market_client.add_comment_by_hash(self.market_hash, self.comment_content)
+                def handle_state(status):
+                    if status == 1:
+                        QMessageBox.information(self, "Tips", "Comment successfully!")
+                    else:
+                        QMessageBox.information(self, "Tips", "Failed to comment the products !")
+                d_status.addCallback(handle_state)
+                self.close()
+            else:
+                QMessageBox.warning(self, "Warning", "No comment provided!")
+                self.close()
+
+        def handle_cancel(self):
+            print("exiting the current dialog")
+            self.close()
+
+
     def handle_comment(self):
         if wallet.market_client.token == '':
             QMessageBox.information(self, "Tips", "Please login first !")
         else:
             market_hash = self.product_info['msg_hash']
-            d_status = wallet.market_client.add_comment_by_hash(market_hash)
-            def handle_state(status):
-                if status == 1:
-                    QMessageBox.information(self, "Tips", "Comment successfully!")
-                else:
-                    QMessageBox.information(self, "Tips", "Failed to comment the products !")
-            d_status.addCallback(handle_state)
+            comment_dlg = ProductDetailTab.CommentDialog(self, market_hash)
 
 
 class SearchProductTab(QScrollArea):
@@ -1517,7 +1614,7 @@ class CollectedTab(QScrollArea):
 
 
 class PurchasedTab(QScrollArea):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("purchase_tab")
@@ -1601,41 +1698,28 @@ class PurchasedDownloadedTab(QScrollArea):
                 self.setLayout(main_layout)
             set_layout()
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
-        #self.setObjectName("purchase_tab")
         self.setObjectName("purchased_downloaded_tab")
         self.init_ui()
 
     def update_table(self):
-        #file_list = get_file_list()
-        print("Updating file list......")
-        file_list = []
-        # single element data structure (assumed); to be changed 
-        dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "ordertime": "2018/2/4 08:30", "price": "36"}
-        for i in range(self.row_number):
-            file_list.append(dict_exa)
 
+        self.file_list = file_list = fs.get_buyer_file_list()
         for cur_row in range(self.row_number):
             if cur_row == len(file_list):
+                break
+            if not file_list[cur_row].is_downloaded:
                 break
             checkbox_item = QTableWidgetItem()
             checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
             checkbox_item.setCheckState(Qt.Unchecked)
             self.file_table.setItem(cur_row, 0, checkbox_item)
-            self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["name"]))
-            self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["price"]))
-            self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
-            self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["price"]))
-
-    # def set_right_menu(self, func):
-    #     self.customContextMenuRequested[QPoint].connect(func)
-
-    # def handle_upload(self):
-    #         self.local_file = QFileDialog.getOpenFileName()[0]
-            #defered = threads.deferToThread(upload_file_ipfs, self.local_file)
-            #defered.addCallback(handle_callback_upload)
+            self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].file_title))
+            self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].size)))
+            self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].path))
+            self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].file_uuid))
 
     def init_ui(self):
 
@@ -1679,32 +1763,30 @@ class PurchasedDownloadedTab(QScrollArea):
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             #file_table.set_right_menu(right_menu)
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price', 'Size', 'Order Time'])
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Size', 'Path', 'Remote URI'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.verticalHeader().setDefaultSectionSize(30)
             file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
             file_table.setSortingEnabled(True)
 
-            #file_list = get_file_list()
-            file_list = []
-            print("Getting file list.......")
-            dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "ordertime": "2018/2/4 08:30", "price": "36"}
-            for i in range(self.row_number):
-                file_list.append(dict_exa)
+
+            self.file_list = file_list = fs.get_buyer_file_list()
 
             self.check_record_list = []
             self.checkbox_list = []
             for cur_row in range(self.row_number):
                 if cur_row == len(file_list):
                     break
+                if not file_list[cur_row].is_downloaded:
+                    break
                 checkbox_item = QTableWidgetItem()
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 checkbox_item.setCheckState(Qt.Unchecked)
                 self.file_table.setItem(cur_row, 0, checkbox_item)
-                self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["name"]))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["price"]))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
-                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row]["ordertime"]))
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].file_title))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].size)))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].path))
+                self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].file_uuid))
                 self.check_record_list.append(False)
         create_file_table()    
         self.file_table.sortItems(2)
@@ -1742,15 +1824,15 @@ class PurchasedDownloadedTab(QScrollArea):
             self.main_layout.addSpacing(2)
             self.setLayout(self.main_layout)
         set_layout()
-        #print("Loading stylesheet of cloud tab widget")
-        #load_stylesheet(self, "cloud.qss")
+
 
     def handle_delete(self):
         for i in range(len(self.check_record_list)):
             if self.check_record_list[i] == True:
+                file_path = self.file_table.item(i, 3).text()
+                fs.delete_buyer_file(file_path)
                 self.file_table.removeRow(i)
-                print("Deleting files permanently from the cloud...")
-                self.update_table()
+        self.check_record_list = [False for i in range(self.file_table.rowCount())]
 
 class PurchasedDownloadingTab(QScrollArea):
     def __init__(self, parent = None):
@@ -3277,9 +3359,6 @@ class CloudTab(QScrollArea):
                 # delete corresponding record from local FileInfo
                 file_id = self.file_table.item(i, 5).text()
                 fs.delete_file_by_id(file_id)
-                # Set check box state to false
-                self.check_record_list[i] = False
-
                 self.file_table.removeRow(i)
                 # TODO: delete corresponding record from market database
                 d_status = wallet.market_client.delete_file_info(file_id)
@@ -3289,6 +3368,7 @@ class CloudTab(QScrollArea):
                     else:
                         QMessageBox.information(self, "Tips", "Failed to delete record from market backup!")
                 d_status.addCallback(update_market_backup)
+        self.check_record_list = [False for i in range(self.file_table.rowCount())]
 
     class UploadDialog(QDialog):
         def __init__(self, parent=None):
@@ -3425,13 +3505,10 @@ class CloudTab(QScrollArea):
                     file_table.setItem(row_count, 4, QTableWidgetItem('False'))
                     file_table.setItem(row_count, 5, QTableWidgetItem(str(product_id)))
 
-                    # TODO: To test if there are bugs with check_record_list, esp. when the row number has changed
-                    # TODO: or is influenced by the order
-
-                    check_record_list = self.parent.check_record_list
-                    check_record_list.append(False)
+                    self.parent.check_record_list = [False for i in range(self.parent.file_table.rowCount())]
 
                     logger.debug("update table successfully !")
+                    QMessageBox.information(self, "Tips", "Uploaded successfuly")
                 else:
                     logger.debug('upload file info to market failed')
             d.addCallback(handle_upload_resp)
@@ -3732,9 +3809,11 @@ class Header(QFrame):
 
             self.download_btn = QPushButton("", self)
             self.download_btn.setObjectName("download_btn")
+            self.download_btn.clicked.connect(self.handle_download)
 
             self.upload_btn = QPushButton("", self)
             self.upload_btn.setObjectName("upload_btn")
+            self.upload_btn.clicked.connect(self.handle_upload)
             self.upload_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
             self.message_btn = QPushButton("", self)
@@ -3885,6 +3964,22 @@ class Header(QFrame):
         wid = self.content_tabs.findChild(QWidget, "personalprofile_tab")
         self.content_tabs.setCurrentWidget(wid)
         self.parent.findChild(QWidget, 'personalprofile_tab').set_three_index()
+
+    def handle_download(self):
+        wid = self.content_tabs.findChild(QWidget, "purchase_tab")
+        wid.purchased_main_tab.setCurrentIndex(1)
+        self.content_tabs.setCurrentWidget(wid)
+
+    def handle_upload(self):
+        if wallet.market_client.token == '':
+            QMessageBox.information(self, "Tips", "Please login first !")
+            return
+        logger.debug("Uploading local files....")
+        wid = main_wnd.content_tabs.findChild(QWidget, "cloud_tab")
+        self.upload_dlg = CloudTab.UploadDialog(wid)
+        self.upload_dlg.show()
+
+
 
 class MainWindow(QMainWindow):
     def __init__(self, reactor):
