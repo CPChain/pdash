@@ -86,7 +86,7 @@ def delete_file_by_id(file_id):
 
 
 def delete_buyer_file(file_name):
-    session.query(FileInfo).filter(BuyerFileInfo.name == file_name). \
+    session.query(BuyerFileInfo).filter(BuyerFileInfo.file_title == file_name). \
         delete(synchronize_session=False)
     session.commit()
 

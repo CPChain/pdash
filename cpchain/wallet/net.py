@@ -409,7 +409,7 @@ class MarketClient:
 
 
     @inlineCallbacks
-    def add_comment_by_hash(self, market_hash):
+    def add_comment_by_hash(self, market_hash, comment=""):
         logger.debug("xxxxxxxxxxxxxxxxxxxxxxxx add comment ....")
         comment_address = ECCipher.get_address_from_public_key(self.account.public_key)
         logger.debug(comment_address)
@@ -417,7 +417,7 @@ class MarketClient:
         # TransactionDetail.objects.create(seller_address=comment_address, market_hash=market_hash,
         #                                  buyer_address=comment_address)
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token, 'Content-Type': 'application/json'}
-        data = {'public_key': self.public_key, 'market_hash': market_hash, 'content': 'test111fasldjfk'}
+        data = {'public_key': self.public_key, 'market_hash': market_hash, 'content': comment}
         url = utils.build_url(self.url + "comment/v1/comment/add/", {'market_hash': market_hash})
 
         resp = yield treq.post(url, headers=header, json=data, persistent=False)
@@ -439,3 +439,33 @@ class MarketClient:
         confirm_info = yield treq.json_content(resp)
         logger.debug('upload file info to market confirm: %s', confirm_info)
         return confirm_info['status']
+
+    @inlineCallbacks
+    def add_follow_seller(self, seller_public_key=""):
+        logger.debug("add seller following info to market")
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        logger.debug(self.public_key)
+        data = {'public_key': self.public_key, 'seller_public_key': seller_public_key}
+        url = self.url + 'product/v1/my_seller/subscribe/'
+        logger.debug('upload file info payload: %s', data)
+        logger.debug('upload file info url: %s', url)
+        resp = yield treq.post(url, headers=header, json=data, persistent=False)
+        confirm_info = yield treq.json_content(resp)
+        logger.debug('upload file info to market confirm: %s', confirm_info)
+        return confirm_info['status']
+
+    @inlineCallbacks
+    def add_follow_tag(self, tag="tag1"):
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        logger.debug(self.public_key)
+        data = {'public_key': self.public_key, 'tag': tag}
+        url = self.url + 'product/v1/my_tag/subscribe/'
+        logger.debug('upload file info payload: %s', data)
+        logger.debug('upload file info url: %s', url)
+        resp = yield treq.post(url, headers=header, json=data, persistent=False)
+        confirm_info = yield treq.json_content(resp)
+        logger.debug('upload file info to market confirm: %s', confirm_info)
+        return confirm_info['status']
+
