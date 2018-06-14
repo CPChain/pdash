@@ -2,7 +2,7 @@ import tempfile
 import os
 import logging
 
-from cpchain.wallet.db import session, FileInfo, osp, create_engine, sessionmaker, BuyerFileInfo
+from cpchain.wallet.db import session, FileInfo, osp, create_engine, sessionmaker, BuyerFileInfo, CollectInfo, FileInfoVersion
 from cpchain.crypto import AESCipher, RSACipher
 from cpchain.utils import Encoder, join_with_rc
 from cpchain.storage import IPFSStorage
@@ -175,6 +175,12 @@ def decrypt_file_aes(file_path, aes_key):
     decrypted_path = file_path + "_decrypted"
     decrypter.decrypt(file_path, decrypted_path)
     return decrypted_path
+
+def add_record_collect(product_info):
+    new_collect_info = CollectInfo(name=product_info['title'], price=product_info['price'], size=product_info['size'])
+    add_file(new_collect_info)
+    logger.debug("Adding new record to collectinfo successfully!")
+
 
 #
 # # TODO Integrate download later
