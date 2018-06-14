@@ -84,6 +84,11 @@ def delete_file_by_id(file_id):
         delete(synchronize_session=False)
     session.commit()
 
+def delete_file_by_msh(market_hash):
+    session.query(FileInfo).filter(FileInfo.market_hash == market_hash).\
+        delete(synchronize_session=False)
+    session.commit()
+
 
 def delete_buyer_file(file_name):
     session.query(BuyerFileInfo).filter(BuyerFileInfo.file_title == file_name). \
