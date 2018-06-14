@@ -100,6 +100,7 @@ def test_seller_agree(strans):
     assert test_record[10] == 8
 
 def test_trent_fetch(ttrans):
+    test_trans_id = ttrans.fetch_unhandled_disputes(0, ttrans.get_order_num())[-1]
     ttrans.handle_dispute(test_trans_id, True, False, True)
 
     test_record = ttrans.query_order(test_trans_id)
