@@ -17,6 +17,8 @@ sign_message_verify, is_address_from_key
 from cpchain.storage import IPFSStorage, S3Storage
 from cpchain.proxy.db import Trade, ProxyDB
 from cpchain.utils import join_with_rc
+from cpchain.proxy.chain import order_is_ready_on_chain, \
+claim_data_delivered_to_chain, claim_data_fetched_to_chain
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +82,10 @@ class SSLServerProtocol(NetstringReceiver):
                 error = "trade record already in database"
                 return self.proxy_reply_error(error)
 
+            if not order_is_ready_on_chain(trade.order_id):
+                error = "order is not ready on chain"
+                return self.proxy_reply_error(error)
+
             trade.seller_addr = data.seller_addr
             trade.buyer_addr = data.buyer_addr
             trade.market_hash = data.market_hash
@@ -99,6 +105,11 @@ class SSLServerProtocol(NetstringReceiver):
                 if os.path.isfile(file_path):
                     mtime = time.time()
                     os.utime(file_path, (mtime, mtime))
+
+                    if not claim_data_fetched_to_chain(trade.order_id):
+                        error = "failed to claim data fetched to chain"
+                        return self.proxy_reply_error(error)
+
                     proxy_db.insert(trade)
 
                     return self.proxy_reply_success(trade)
@@ -153,15 +164,23 @@ class SSLServerProtocol(NetstringReceiver):
 
             if proxy_db.count(trade):
                 trade = proxy_db.query(trade)
-                self.proxy_reply_success(trade)
+                if not claim_data_delivered_to_chain(trade.order_id):
+                    error = "failed to claim data delivered to chain"
+                    self.proxy_reply_error(error)
+                else:
+                    self.proxy_reply_success(trade)
             else:
                 error = "trade record not found in database"
                 self.proxy_reply_error(error)
 
     def file_download_finished(self, success, trade):
         if success:
-            self.proxy_db.insert(trade)
-            self.proxy_reply_success(trade)
+            if not claim_data_fetched_to_chain(trade.order_id):
+                error = "failed to claim data fetched to chain"
+                self.proxy_reply_error(error)
+            else:
+                self.proxy_db.insert(trade)
+                self.proxy_reply_success(trade)
         else:
             error = "failed to download file"
             self.proxy_reply_error(error)
