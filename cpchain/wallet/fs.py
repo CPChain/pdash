@@ -16,6 +16,7 @@ def get_file_list():
     """
     return session.query(FileInfo).all()
 
+
 def get_file_by_id(file_id):
     return session.query(FileInfo).filter(FileInfo.id == file_id).all()[0]
 
@@ -181,6 +182,10 @@ def add_record_collect(product_info):
     add_file(new_collect_info)
     logger.debug("Adding new record to collectinfo successfully!")
 
+def get_collect_list():
+    """This returns a list of files.
+    """
+    return session.query(CollectInfo).all()
 
 #
 # # TODO Integrate download later
