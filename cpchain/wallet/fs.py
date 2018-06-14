@@ -187,6 +187,12 @@ def get_collect_list():
     """
     return session.query(CollectInfo).all()
 
+def delete_collect_id(file_id):
+    session.query(CollectInfo).filter(CollectInfo.id == file_id).\
+        delete(synchronize_session=False)
+    session.commit()
+    logger.debug("Collect record (id = {}) has been deleted !".format(file_id))
+
 #
 # # TODO Integrate download later
 # def get_file_from_proxy(order_id, seller_public_key):
