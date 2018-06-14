@@ -15,12 +15,15 @@ class Agent:
 
     # NB contract object belongs to web3, and so does account.
     # we shouldn't pass params like this.)
-    def __init__(self, web3, bin_path, contract_name):
+    def __init__(self, web3, bin_path, contract_name, account=None):
         self.web3 = web3
         contract_interface = utils.read_contract_interface(bin_path, contract_name)
         self.contract = web3.eth.contract(address=utils.read_contract_address(contract_name),
                                           abi=contract_interface['abi'],
                                           bytecode=contract_interface['evm']['bytecode']['object'])
+        if account:
+            account = self.web3.toChecksumAddress(account)
+        self.account = account or self.web3.eth.defaultAccount
 
     def query_order(self, order_id) -> models.OrderInfo:
         order_record = self.contract.call().orderRecords(order_id)
@@ -47,15 +50,26 @@ class Agent:
 class BuyerAgent(Agent):
 
     # order_info is a dictionary that contains parameters for an order
-    def place_order(self, order_info: models.OrderInfo, account=None) -> "order id":
-        account = account or self.web3.eth.defaultAccount
-        event_filter = self.contract.eventFilter('OrderInitiated', {'filter': {'from': account}})
+    def place_order(self, order_info: models.OrderInfo,) -> "order id":
+        event_filter = self.contract.eventFilter('OrderInitiated', {'filter': {'from': self.account}})
         # Initiate an order
         offered_price = self.ONE_ETH_IN_WEI * order_info.value
         transaction = {
             'value': offered_price,
-            'from': account
+            'from': self.account,
         }
+
+        gas_estimate = self.contract.functions.placeOrder(
+            order_info.desc_hash,
+            order_info.buyer_rsa_pubkey,
+            order_info.seller,
+            order_info.proxy,
+            order_info.secondary_proxy,
+            order_info.proxy_value,
+            order_info.time_allowed
+        ).estimateGas(transaction)
+        transaction['gas'] = gas_estimate + 100000
+
         tx_hash = self.contract.functions.placeOrder(
             order_info.desc_hash,
             order_info.buyer_rsa_pubkey,
@@ -65,6 +79,7 @@ class BuyerAgent(Agent):
             order_info.proxy_value,
             order_info.time_allowed
         ).transact(transaction)
+
         logger.debug("Thank you for using CPChain! Initiated Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash)
         # Get order id through emitted event
@@ -76,93 +91,82 @@ class BuyerAgent(Agent):
         logger.debug("TransactionID: {:d}".format(order_id))
         return order_id
 
-    def withdraw_order(self, order_id, account=None):
-        account = account or self.web3.eth.defaultAccount
-        transaction = {'value': 0, 'from': account}
-        tx_hash = self.contract.transact(transaction).buyerWithdraw(order_id)
+    def withdraw_order(self, order_id,):
+        transaction = {'value': 0, 'from': self.account,}
+        tx_hash = self.contract.functions.buyerWithdraw(order_id).transact(transaction)
         logger.debug("Thank you for your using! Order is withdrawn, Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
-    def confirm_order(self, order_id, account=None):
-        account = account or self.web3.eth.defaultAccount
-        transaction = {'value': 0, 'from': account}
-        tx_hash = self.contract.transact(transaction).buyerConfirmDeliver(order_id)
+    def confirm_order(self, order_id,):
+        transaction = {'value': 0, 'from': self.account,}
+        tx_hash = self.contract.functions.buyerConfirmDeliver(order_id).transact(transaction)
         logger.debug("Thank you for confirming deliver! Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
-    def dispute(self, order_id, account=None):
-        account = account or self.web3.eth.defaultAccount
-        transaction = {'value': 0, 'from': account}
-        tx_hash = self.contract.transact(transaction).buyerDispute(order_id)
+    def dispute(self, order_id,):
+        transaction = {'value': 0, 'from': self.account,}
+        tx_hash = self.contract.functions.buyerDispute(order_id).transact(transaction)
         logger.debug("You have started a dispute! Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
-    def check_proxy_is_ready(self, order_id, account=None):
-        account = account or self.web3.eth.defaultAccount
+    def check_proxy_is_ready(self, order_id,):
         order = self.query_order(order_id)
         return order[10] == 2 # order.state == ProxyFetched
 
-    def confirm_dispute(self, order_id, if_agree, account=None):
-        account = account or self.web3.eth.defaultAccount
-        transaction = {'value': 0, 'from': account}
-        tx_hash = self.contract.transact(transaction).buyerAgreeOrNot(order_id, if_agree)
+    def confirm_dispute(self, order_id, if_agree,):
+        transaction = {'value': 0, 'from': self.account,}
+        tx_hash = self.contract.functions.buyerAgreeOrNot(order_id, if_agree).transact(transaction)
         logger.debug("You are {} agree with the dispute result".format(if_agree))
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
-    def rate_proxy(self, order_id, rate, account=None):
-        account = account or self.web3.eth.defaultAccount
-        transaction = {'value': 0, 'from': account}
-        tx_hash = self.contract.transact(transaction).buyerRateProxy(order_id, rate)
+    def rate_proxy(self, order_id, rate,):
+        transaction = {'value': 0, 'from': self.account,}
+        tx_hash = self.contract.functions.buyerRateProxy(order_id, rate).transact(transaction)
         logger.debug("You rated the proxy with {}".format(rate))
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
 
 class SellerAgent(Agent):
-    def claim_timeout(self, order_id, account=None):
-        account = account or self.web3.eth.defaultAccount
-        transaction = {'value': 0, 'from': account, 'gas': 100000}
-        tx_hash = self.contract.transact(transaction).sellerClaimTimeOut(order_id)
+    def claim_timeout(self, order_id,):
+        transaction = {'value': 0, 'from': self.account,}
+        tx_hash = self.contract.functions.sellerClaimTimeOut(order_id).transact(transaction)
         logger.debug("Your money is claimed because of time out! Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
-    def filter_seller_range(self, start_id, end_id, account=None):
-        account = account or self.web3.eth.defaultAccount
+    def filter_seller_range(self, start_id, end_id,):
         id_list = []
         for current_id in range(start_id, end_id):
             current_seller = self.query_order(current_id)[2]
-            if current_seller == account:
+            if current_seller == self.account:
                 id_list.append(current_id)
         return id_list
 
-    def confirm_order(self, order_id, account=None):
-        account = account or self.web3.eth.defaultAccount
+    def confirm_order(self, order_id,):
         offered_price = self.query_order(order_id)[6]
         if offered_price < 0:
             return None
-        transaction = {'value': offered_price, 'from': account}
-        tx_hash = self.contract.transact(transaction).sellerConfirm(order_id)
+        transaction = {'value': offered_price, 'from': self.account,}
+        tx_hash = self.contract.functions.sellerConfirm(order_id).transact(transaction)
         logger.debug("You have confirmed the order:{order_id} and deposited {value} to contract {address}".format(order_id=order_id, value=offered_price, address=self.contract.address))
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
-    def confirm_dispute(self, order_id, if_agree, account=None):
-        account = account or self.web3.eth.defaultAccount
-        transaction = {'value': 0, 'from': account}
-        tx_hash = self.contract.transact(transaction).sellerAgreeOrNot(order_id, if_agree)
+    def confirm_dispute(self, order_id, if_agree,):
+        transaction = {'value': 0, 'from': self.account, 'gas': 100000}
+        tx_hash = self.contract.functions.sellerAgreeOrNot(order_id, if_agree).transact(transaction)
         logger.debug("You are {} agree with the dispute result".format(if_agree))
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
-    def rate_proxy(self, order_id, rate, account=None):
-        account = account or self.web3.eth.defaultAccount
-        transaction = {'value': 0, 'from': account}
-        tx_hash = self.contract.transact(transaction).sellerRateProxy(order_id, rate)
+    def rate_proxy(self, order_id, rate,):
+        transaction = {'value': 0, 'from': self.account,}
+        tx_hash = self.contract.functions.sellerRateProxy(order_id, rate).transact(transaction)
         logger.debug("You rated the proxy with {}".format(rate))
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
@@ -170,62 +174,54 @@ class SellerAgent(Agent):
 
 class ProxyAgent(Agent):
 
-    def deposit(self, value, account=None):
-        account = account or self.web3.eth.defaultAccount
+    def deposit(self, value,):
         if value < 0:
             return None
-        transaction = {'value': value, 'from': account}
-        tx_hash = self.contract.transact(transaction).proxyDeposit()
+        transaction = {'value': value, 'from': self.account,}
+        tx_hash = self.contract.functions.proxyDeposit().transact(transaction)
         logger.debug("You have deposited {value} to contract {address}! Tx hash {tx}".format(value=value, address=self.contract.address, tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
-    def query_deposit(self, account=None):
-        account = account or self.web3.eth.defaultAccount
-        deposit = self.contract.call().proxyDeposits(account)
+    def query_deposit(self,):
+        deposit = self.contract.call().proxyDeposits(self.account)
         return deposit
 
-    def withdraw(self, value, account=None):
-        account = account or self.web3.eth.defaultAccount
-        if value > self.query_deposit(account):
+    def withdraw(self, value,):
+        if value > self.query_deposit():
             return None
-        transaction = {'value': 0, 'from': account}
-        tx_hash = self.contract.transact(transaction).proxyWithdraw(value)
+        transaction = {'value': 0, 'from': self.account,}
+        tx_hash = self.contract.functions.proxyWithdraw(value).transact(transaction)
         logger.debug("You have withdrawn {value} from contract {address}! Tx hash {tx}".format(value=value, address=self.contract.address, tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
-    def check_order_is_ready(self, order_id, account=None):
-        account = account or self.web3.eth.defaultAccount
+    def check_order_is_ready(self, order_id,):
         order_state = self.query_order(order_id)[10]
         return order_state == 1
 
-    def claim_fetched(self, order_id, account=None):
-        account = account or self.web3.eth.defaultAccount
-        transaction = {'value': 0, 'from': account}
-        tx_hash = self.contract.transact(transaction).proxyFetched(order_id)
+    def claim_fetched(self, order_id,):
+        transaction = {'value': 0, 'from': self.account, 'gas': 200000}
+        tx_hash = self.contract.functions.proxyFetched(order_id).transact(transaction)
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
-    def claim_delivered(self, order_id, relay_hash, account=None):
-        account = account or self.web3.eth.defaultAccount
-        transaction = {'value': 0, 'from': account, 'gas':100000}
-        tx_hash = self.contract.transact(transaction).proxyDelivered(relay_hash, order_id)
+    def claim_delivered(self, order_id, relay_hash, ):
+        transaction = {'value': 0, 'from': self.account,}
+        tx_hash = self.contract.functions.proxyDelivered(relay_hash, order_id).transact(transaction)
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
-    def handle_dispute(self, order_id, result, account=None):
-        account = account or self.web3.eth.defaultAccount
-        transaction = {'value': 0, 'from': account, 'gas': 100000}
-        tx_hash = self.contract.transact(transaction).proxyProcessDispute(order_id, result)
+    def handle_dispute(self, order_id, result,):
+        transaction = {'value': 0, 'from': self.account,}
+        tx_hash = self.contract.functions.proxyProcessDispute(order_id, result).transact(transaction)
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
 
 class TrentAgent(Agent):
 
-    def fetch_unhandled_disputes(self, start_id, end_id, account=None) -> "list of order_id":
-        account = account or self.web3.eth.defaultAccount
+    def fetch_unhandled_disputes(self, start_id, end_id, ) -> "list of order_id":
         disputed_order_ids= []
         for id in range(start_id, end_id):
             order_state = self.query_order(id)[10]
@@ -235,10 +231,10 @@ class TrentAgent(Agent):
                     disputed_order_ids.append(id)
         return disputed_order_ids
 
-    def handle_dispute(self, order_id, badBuyer, badSeller, badProxy, account=None):
-        account = account or self.web3.eth.defaultAccount
-        transaction = {'value': 0, 'from': account, 'gas': 100000}
-        tx_hash = self.contract.transact(transaction).trentHandleDispute(order_id, badBuyer, badSeller, badProxy)
+    def handle_dispute(self, order_id, badBuyer, badSeller, badProxy, ):
+        transaction = {'value': 0, 'from': self.account,}
+        gas_estimate = self.contract.functions.trentHandleDispute(order_id, badBuyer, badSeller, badProxy).estimateGas(transaction)
+        transaction['gas'] = gas_estimate + 10000
+        tx_hash = self.contract.functions.trentHandleDispute(order_id, badBuyer, badSeller, badProxy).transact(transaction)
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
-

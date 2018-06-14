@@ -431,7 +431,7 @@ contract Contract {
         uint disputeId = orderRecords[orderId].disputeId;
 
         require(disputeRecords[disputeId].disputeState == DisputeState.Processed);
-        require(badBuyer && badSeller && badProxy == false);
+//        require(badBuyer && badSeller && badProxy == false);
 //        require((badBuyer && !badSeller) || (!badBuyer && badSeller));
 //        require(disputeRecords[disputeId].endTime < now);
         disputeRecords[disputeId].badBuyer = badBuyer;

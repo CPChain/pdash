@@ -3,29 +3,22 @@
 import os, time
 import logging
 
-# from cryptography.hazmat.backends import default_backend
-# from cryptography.hazmat.primitives import hashes
-
 from twisted.internet import threads, protocol
 from twisted.protocols.basic import NetstringReceiver
 
 from twisted.web.resource import Resource, ForbiddenResource
 from twisted.web.static import File
 
-# from eth_utils import to_bytes
-
 from cpchain import config
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.message import message_sanity_check, \
 sign_message_verify, is_address_from_key
-# from cpchain.crypto import ECCipher
 
 from cpchain.storage import IPFSStorage, S3Storage
 from cpchain.proxy.db import Trade, ProxyDB
-# from cpchain.chain.agents import ProxyAgent
-# from cpchain.chain.utils import default_w3
-# from cpchain.utils import join_with_root, join_with_rc, Encoder
 from cpchain.utils import join_with_rc
+from cpchain.proxy.chain import order_is_ready_on_chain, \
+claim_data_delivered_to_chain, claim_data_fetched_to_chain
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +82,10 @@ class SSLServerProtocol(NetstringReceiver):
                 error = "trade record already in database"
                 return self.proxy_reply_error(error)
 
+            if not order_is_ready_on_chain(trade.order_id):
+                error = "order is not ready on chain"
+                return self.proxy_reply_error(error)
+
             trade.seller_addr = data.seller_addr
             trade.buyer_addr = data.buyer_addr
             trade.market_hash = data.market_hash
@@ -108,9 +105,13 @@ class SSLServerProtocol(NetstringReceiver):
                 if os.path.isfile(file_path):
                     mtime = time.time()
                     os.utime(file_path, (mtime, mtime))
+
+                    if not claim_data_fetched_to_chain(trade.order_id):
+                        error = "failed to claim data fetched to chain"
+                        return self.proxy_reply_error(error)
+
                     proxy_db.insert(trade)
 
-                    # self.proxy_claim_relay()
                     return self.proxy_reply_success(trade)
 
 
@@ -163,32 +164,23 @@ class SSLServerProtocol(NetstringReceiver):
 
             if proxy_db.count(trade):
                 trade = proxy_db.query(trade)
-                self.proxy_reply_success(trade)
+                if not claim_data_delivered_to_chain(trade.order_id):
+                    error = "failed to claim data delivered to chain"
+                    self.proxy_reply_error(error)
+                else:
+                    self.proxy_reply_success(trade)
             else:
                 error = "trade record not found in database"
                 self.proxy_reply_error(error)
 
-    def proxy_claim_relay(self):
-        pass
-        # TODO: Some thing changed since last merge, need to update accordingly
-        # proxy_trans = ProxyAgent(default_w3, config.chain.core_contract)
-        # private_key_file_path = join_with_root(config.wallet.private_key_file)
-        # password_path = join_with_root(config.wallet.private_key_password_file)
-        # with open(password_path) as f:
-        #     password = f.read()
-        # priv_key, _ = ECCipher.load_key_pair_from_keystore(private_key_file_path, password)
-        # priv_key_bytes = Encoder.str_to_base64_byte(priv_key)
-        # digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
-        # digest.update(ECCipher.generate_signature(priv_key_bytes, to_bytes(self.trade.order_id)))
-        # deliver_hash = digest.finalize()
-        # tx_hash = proxy_trans.claim_relay(self.trade.order_id, deliver_hash)
-        # return tx_hash
-
     def file_download_finished(self, success, trade):
         if success:
-            self.proxy_db.insert(trade)
-            self.proxy_reply_success(trade)
-            # self.proxy_claim_relay()
+            if not claim_data_fetched_to_chain(trade.order_id):
+                error = "failed to claim data fetched to chain"
+                self.proxy_reply_error(error)
+            else:
+                self.proxy_db.insert(trade)
+                self.proxy_reply_success(trade)
         else:
             error = "failed to download file"
             self.proxy_reply_error(error)
