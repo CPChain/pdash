@@ -158,7 +158,9 @@ class SellerAgent(Agent):
         return tx_hash
 
     def confirm_dispute(self, order_id, if_agree,):
-        transaction = {'value': 0, 'from': self.account, 'gas': 100000}
+        transaction = {'value': 0, 'from': self.account,}
+        gas_estimate = self.contract.functions.sellerAgreeOrNot(order_id, if_agree).estimateGas(transaction)
+        transaction['gas'] = gas_estimate + 10000
         tx_hash = self.contract.functions.sellerAgreeOrNot(order_id, if_agree).transact(transaction)
         logger.debug("You are {} agree with the dispute result".format(if_agree))
         wait_for_transaction_receipt(self.web3, tx_hash)
@@ -201,9 +203,12 @@ class ProxyAgent(Agent):
         return order_state == 1
 
     def claim_fetched(self, order_id,):
-        transaction = {'value': 0, 'from': self.account, 'gas': 200000}
+        transaction = {'value': 0, 'from': self.account,}
+        gas_estimate = self.contract.functions.proxyFetched(order_id).estimateGas(transaction)
+        transaction['gas'] = gas_estimate + 10000
         tx_hash = self.contract.functions.proxyFetched(order_id).transact(transaction)
         wait_for_transaction_receipt(self.web3, tx_hash)
+        
         return tx_hash
 
     def claim_delivered(self, order_id, relay_hash, ):
@@ -227,7 +232,7 @@ class TrentAgent(Agent):
             order_state = self.query_order(id)[10]
             if order_state == 8: # order.state == Disputed
                 dispute_record = self.fetch_dispute_result(id)
-                if dispute_record[7] == 1 and (not (dispute_record[5] and dispute_record[6])):
+                if dispute_record[7] == 1 and (not (dispute_record[4] and dispute_record[5])):
                     disputed_order_ids.append(id)
         return disputed_order_ids
 
