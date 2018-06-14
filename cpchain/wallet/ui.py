@@ -1542,11 +1542,11 @@ class CollectedTab(QScrollArea):
             file_table.setFocusPolicy(Qt.NoFocus)
             # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
-            file_table.setColumnCount(4)
+            file_table.setColumnCount(5)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             # file_table.set_right_menu(right_menu)
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price', 'Size'])
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price', 'Size', ''])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.setSortingEnabled(True)
 
@@ -1571,6 +1571,12 @@ class CollectedTab(QScrollArea):
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].name))
                 self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].price)))
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].size)))
+                # self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(file_list[cur_row].id)))
+
+                hidden_item = QTableWidgetItem()
+                hidden_item.setData(Qt.UserRole, str(self.file_list[cur_row].id))
+                self.file_table.setItem(cur_row, 4, hidden_item)
+
                 self.check_record_list.append(False)
 
         create_file_table()
@@ -1611,10 +1617,10 @@ class CollectedTab(QScrollArea):
         for i in range(len(self.check_record_list)):
             if self.check_record_list[i] == True:
                 self.file_table.removeRow(i)
-                print("handle_uncollect files permanently from the collection...")
-                self.update_table()
-
-
+                file_id = self.file_table.item(i, 4).data(Qt.UserRole)
+                fs.delete_collect_id(file_id)
+                logger.debug("file id in collect info is: {}".format(file_id))
+                logger.debug("uncollect files permanently from the collection...")
 
 class PurchasedTab(QScrollArea):
     def __init__(self, parent=None):
