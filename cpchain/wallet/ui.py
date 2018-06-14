@@ -2428,7 +2428,6 @@ class SellTab(QScrollArea):
                 self.file_table.removeRow(i)
                 # TODO: delete files permanently from the market side and change local state to "unpublished"
                 market_hash = self.file_table.item(self.cur_clicked, 6).data(Qt.UserRole)
-                # fs.delete_file_by_msh(market_hash)
                 logger.debug("Product deleted from local db")
                 d_status = wallet.market_client.hide_product(market_hash)
                 def handle_state(status):
