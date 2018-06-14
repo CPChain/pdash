@@ -2420,12 +2420,27 @@ class SellTab(QScrollArea):
         # load_stylesheet(self, "sell.qss")
 
     def handle_delete(self):
+        if wallet.market_client.token == "":
+            QMessageBox.information(self, "Tips", "Please login first !")
+            return
         for i in range(len(self.check_record_list)):
             if self.check_record_list[i] == True:
                 self.file_table.removeRow(i)
-                # TODO: delete files permanetly from the market side and change local state to "unpublished"
-                print("Deleting files permanently from the cloud...")
-                self.update_table()
+                # TODO: delete files permanently from the market side and change local state to "unpublished"
+                market_hash = self.file_table.item(self.cur_clicked, 6).data(Qt.UserRole)
+                # fs.delete_file_by_msh(market_hash)
+                logger.debug("Product deleted from local db")
+                d_status = wallet.market_client.hide_product(market_hash)
+                def handle_state(status):
+                    if status == 1:
+                        logger.debug("Product has been deleted from market db")
+                        QMessageBox.information(self, "Tips", "Successfully deleted the product")
+                    else:
+                        QMessageBox.information(self, "Tips", "Problem occurred when deleting the file")
+                        logger.debug("Failed to delete product from market db")
+                d_status.addCallback(handle_state)
+        self.check_record_list = [False for i in range(self.file_table.rowCount())]
+        logger.debug("Reset check_record_list for later operations")
 
 
     def handle_delete_act(self):
