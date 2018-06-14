@@ -164,10 +164,15 @@ class SSLServerProtocol(NetstringReceiver):
 
             if proxy_db.count(trade):
                 trade = proxy_db.query(trade)
-                if not claim_data_delivered_to_chain(trade.order_id):
+
+                if trade.order_delivered:
+                    self.proxy_reply_success(trade)
+                elif not claim_data_delivered_to_chain(trade.order_id):
                     error = "failed to claim data delivered to chain"
                     self.proxy_reply_error(error)
                 else:
+                    trade.order_delivered = True
+                    proxy_db.update()
                     self.proxy_reply_success(trade)
             else:
                 error = "trade record not found in database"
