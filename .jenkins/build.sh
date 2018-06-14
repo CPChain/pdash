@@ -46,10 +46,10 @@ echo "unit test for $modulename"
 # setup env
 if [ "$modulename" = "chain" ];
 then
+    export CPCHAIN_HOME_CONFIG_PATH="~/.cpchain/cpchain_$modulename.toml"
     if ! pgrep geth > /dev/null
     then
         echo "init chain"
-        export CPCHAIN_HOME_CONFIG_PATH="~/.cpchain/cpchain_$modulename.toml"
         nohup ./bin/eth-init-chain > /dev/null 2>&1 &
         sleep 5s
         nohup ./bin/eth-run-geth > /dev/null 2>&1 &
