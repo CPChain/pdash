@@ -813,8 +813,8 @@ class ProductDetailTab(QScrollArea):
             load_stylesheet(self, "prductdetail.qss")
     
     def handle_collect(self):
-        print("please handle collect here")
-        pass
+        fs.add_record_collect(self.product_info)
+        self.collect_btn.setText("Collected")
 
     def handle_buynow(self):
         item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
