@@ -147,6 +147,7 @@ class MarketClient:
         header['MARKET-KEY'] = self.public_key
         header['MARKET-TOKEN'] = self.token
         logger.debug('header token: %s', self.token)
+        # owner_address = ECCipher.get_address_from_public_key(self.account.public_key)
         data = {'owner_address': self.public_key, 'title': title, 'description': description,
                 'price': price, 'tags': tags, 'start_date': start_date, 'end_date': end_date,
                 'file_md5': file_md5, 'size': size}
