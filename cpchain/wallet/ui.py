@@ -4017,6 +4017,7 @@ class MainWindow(QMainWindow):
         self.setObjectName("main_window")
         # no borders.  we make our own header panel.
         self.setWindowFlags(Qt.FramelessWindowHint)
+        self.main_tab_index = {}
 
         def set_geometry():
             self.resize(1002, 710)  # resize before centering.
@@ -4033,10 +4034,10 @@ class MainWindow(QMainWindow):
             content_tabs.tabBar().hide()
             content_tabs.setContentsMargins(0, 0, 0, 0)
             # Temporily modified for easy test by @hyiwr
-            content_tabs.addTab(PopularTab(content_tabs), "")
-            content_tabs.addTab(CloudTab(content_tabs), "")
-            content_tabs.addTab(FollowingTab(content_tabs), "")
-            content_tabs.addTab(SellTab(content_tabs), "")
+            pop_index = content_tabs.addTab(PopularTab(content_tabs), "")
+            cloud_index = content_tabs.addTab(CloudTab(content_tabs), "")
+            follow_index = content_tabs.addTab(FollowingTab(content_tabs), "")
+            sell_index = content_tabs.addTab(SellTab(content_tabs), "")
             #content_tabs.addTab(ProductInfoEdit(content_tabs), "")
             #content_tabs.addTab(PurchasedDownloadedTab(content_tabs), "") 
             #content_tabs.addTab(PurchasedDownloadingTab(content_tabs), "")
@@ -4048,8 +4049,16 @@ class MainWindow(QMainWindow):
             content_tabs.addTab(SecurityTab(content_tabs), "") 
             content_tabs.addTab(PreferenceTab(content_tabs), "")
             content_tabs.addTab(PersonalInfoPage(content_tabs), "") 
-            content_tabs.addTab(PurchasedTab(content_tabs), "")
-            content_tabs.addTab(CollectedTab(content_tabs), "")
+            purchase_index = content_tabs.addTab(PurchasedTab(content_tabs), "")
+            collect_index = content_tabs.addTab(CollectedTab(content_tabs), "")
+            self.main_tab_index = {
+                "popular_tab": pop_index,
+                "cloud_tab": cloud_index,
+                "follow_tab": follow_index,
+                "selling_tab": sell_index,
+                "purchase_tab": purchase_index,
+                "collect_tab": collect_index
+            }
             print("Adding tabs(shopping cart tab, etc.) to content_tabs")
             print("Loading stylesheet to content_tabs")
         add_content_tabs()
