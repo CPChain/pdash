@@ -13,7 +13,7 @@ from cpchain.crypto import Encoder, RSACipher, ECCipher
 
 from cpchain.chain.models import OrderInfo
 from cpchain.chain.agents import BuyerAgent, SellerAgent
-from cpchain.chain.utils import default_w3, join_with_root, deploy_contract
+from cpchain.chain.utils import default_w3, join_with_root
 from cpchain.chain.poll_chain import OrderMonitor
 
 from cpchain.wallet.db import BuyerFileInfo
@@ -35,7 +35,7 @@ class Broker:
         self.ready_order_queue = Queue()
         self.confirmed_order_queue = Queue()
         bin_path = join_with_root(config.chain.contract_bin_path)
-        deploy_contract(bin_path, config.chain.contract_name, default_w3)
+        # deploy_contract(bin_path, config.chain.contract_name, default_w3)
         self.buyer = BuyerAgent(default_w3, bin_path, config.chain.contract_name)
         self.seller = SellerAgent(default_w3, bin_path, config.chain.contract_name)
         self.handler = Handler(self)
@@ -253,20 +253,29 @@ class Handler:
     def __init__(self, broker):
         self.broker = broker
 
+    def get_address_from_public_key_object(self, pub_key_string):
+        pub_key = self.get_public_key(pub_key_string)
+        return ECCipher.get_address_from_public_key(pub_key)
+
+    def get_public_key(self, public_key_string):
+        pub_key_bytes = Encoder.hex_to_bytes(public_key_string)
+        return ECCipher.create_public_key(pub_key_bytes)
+
 
     def buy_product(self, msg_hash, file_title, proxy, seller):
         # fixme: format of hash value need to change
         logger.debug("start to buy product")
+        seller_addr = self.get_address_from_public_key_object(seller)
         desc_hash = Encoder.str_to_base64_byte(msg_hash)
         rsa_key = RSACipher.load_public_key()
         logger.debug("desc hash: %s", desc_hash)
         product = OrderInfo(
             desc_hash=desc_hash,
             buyer_rsa_pubkey=rsa_key,
-            seller=seller,
+            seller=self.broker.buyer.web3.toChecksumAddress(seller_addr),
             # fixme: proxy should not be seller
-            proxy=proxy,
-            secondary_proxy=proxy,
+            proxy=self.broker.buyer.web3.toChecksumAddress(proxy),
+            secondary_proxy=self.broker.buyer.web3.toChecksumAddress(proxy),
             proxy_value=10,
             value=20,
             time_allowed=1000

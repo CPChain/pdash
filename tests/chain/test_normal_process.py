@@ -4,7 +4,6 @@ from cpchain.account import Accounts
 
 order_id = 0
 time_allowed = 200000
-
 def test_proxy_deposit(pAgent):
 
     balance = pAgent.query_deposit()

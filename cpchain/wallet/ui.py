@@ -4120,8 +4120,11 @@ def initialize_system():
     initialize_net()
     
     def monitor_chain_event():
-        # Temporily modified for easy test by @hyiwr
-        print("Monitoring chain event......")
+        monitor_new_order = LoopingCall(wallet.chain_broker.monitor.monitor_new_order)
+        monitor_new_order.start(5)
+
+        handle_new_order = LoopingCall(wallet.chain_broker.handler.handle_new_order)
+        handle_new_order.start(10)
     monitor_chain_event()
 
 
