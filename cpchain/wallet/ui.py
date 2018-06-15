@@ -2164,6 +2164,11 @@ class PublishDialog(QDialog):
                         # self.parent.update_table()
                         # self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
                         main_wnd.findChild(QWidget, 'cloud_tab').update_table()
+                        tab_index = main_wnd.main_tab_index["cloud_tab"]
+                        main_wnd.content_tabs.removeTab(tab_index)
+                        tab_index = main_wnd.content_tabs.addTab(CloudTab(main_wnd.content_tabs), "")
+                        main_wnd.main_tab_index["cloud_tab"] = tab_index
+                        main_wnd.content_tabs.setCurrentIndex(tab_index)
                         main_wnd.findChild(QWidget, 'selling_tab').update_table()
                 d.addCallback(handle_update_file)
                 # # TODO: This is only for test purpose. Will be replaced in this week later.
@@ -3223,30 +3228,37 @@ class CloudTab(QScrollArea):
         self.init_ui()
 
     def update_table(self):
-        print("Updating file list......")
-        self.file_list = fs.get_file_list()
-        logger.debug(len(self.file_list))
-        self.file_table.clearContents()
-        self.row_number = len(self.file_list)
-        self.file_table.setRowCount(self.row_number)
-        for cur_row in range(self.row_number):
-            logger.debug('current file id: %s', self.file_list[cur_row].id)
-            logger.debug('current file name: %s', self.file_list[cur_row].name)
-            logger.debug('current file size: %s', str(self.file_list[cur_row].size))
-            logger.debug('current file remote type: %s', self.file_list[cur_row].remote_type)
-            logger.debug('current file publish: %s', str(self.file_list[cur_row].is_published))
+        tab_index = main_wnd.main_tab_index["cloud_tab"]
+        main_wnd.content_tabs.removeTab(tab_index)
+        tab_index = main_wnd.content_tabs.addTab(CloudTab(main_wnd.content_tabs), "")
+        main_wnd.main_tab_index["cloud_tab"] = tab_index
+        main_wnd.content_tabs.setCurrentIndex(tab_index)
+        # print("Updating file list......")
+        # self.file_list = fs.get_file_list()
+        # logger.debug(len(self.file_list))
+        # self.file_table.clearContents()
+        # self.row_number = len(self.file_list)
+        # self.file_table.setRowCount(self.row_number)
+        # for cur_row in range(self.row_number):
+        #     logger.debug('current file id: %s', self.file_list[cur_row].id)
+        #     logger.debug('current file name: %s', self.file_list[cur_row].name)
+        #     logger.debug('current file size: %s', str(self.file_list[cur_row].size))
+        #     logger.debug('current file remote type: %s', self.file_list[cur_row].remote_type)
+        #     logger.debug('current file publish: %s', str(self.file_list[cur_row].is_published))
+        #
+        #     print(str(cur_row) + " row")
+        #     checkbox_item = QTableWidgetItem()
+        #     checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+        #     checkbox_item.setCheckState(Qt.Unchecked)
+        #     #self.file_table.insertRow(cur_row)
+        #     self.file_table.setItem(cur_row, 0, checkbox_item)
+        #     self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row].name))
+        #     self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(self.file_list[cur_row].size)))
+        #     self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row].remote_type))
+        #     self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(self.file_list[cur_row].is_published)))
+        #     self.file_table.setItem(cur_row, 5, QTableWidgetItem(str(self.file_list[cur_row].id)))
 
-            print(str(cur_row) + " row")
-            checkbox_item = QTableWidgetItem()
-            checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-            checkbox_item.setCheckState(Qt.Unchecked)
-            #self.file_table.insertRow(cur_row)
-            self.file_table.setItem(cur_row, 0, checkbox_item)
-            self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row].name))
-            self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(self.file_list[cur_row].size)))
-            self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row].remote_type))
-            self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(self.file_list[cur_row].is_published)))
-            self.file_table.setItem(cur_row, 5, QTableWidgetItem(str(self.file_list[cur_row].id)))
+
 
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
