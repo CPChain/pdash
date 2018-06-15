@@ -314,8 +314,9 @@ class MarketClient:
 
     @inlineCallbacks
     def query_by_seller(self, public_key):
-        public_key = '040ceb41bf5f9a96c16b1441f5edc0277bfa2d0ce6a10b481b14de96b0d03cdc5a43668c6f2fb35ac79f70ba7ea86f036cc37ec814f67e066c4ff65648f829dfe7'
-        url = self.url + 'product/v1/es_product/search/?status=0&seller=' + str(public_key)
+        # public_key = '040ceb41bf5f9a96c16b1441f5edc0277bfa2d0ce6a10b481b14de96b0d03cdc5a43668c6f2fb35ac79f70ba7ea86f036cc37ec814f67e066c4ff65648f829dfe7'
+        url = self.url + 'product/v1/es_product/search/?ordering=-created&offset=0&limit=100&status=0&seller=' + str(
+            public_key)
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token, 'Content-Type': 'application/json'}
         resp = yield treq.get(url, headers=header)
         confirm_info = yield treq.json_content(resp)

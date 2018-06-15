@@ -489,8 +489,10 @@ class BuyNowDialog(QDialog):
 
     def handle_confirm(self):
         logger.debug("handle the confirm of payment")
+        logger.debug("buyer select proxy ...")
         d = pick_proxy()
         def get_proxy_address(proxy_addr):
+            logger.debug("buyer selected proxy, proxy id: %s", proxy_addr)
             msg_hash = self.item['market_hash']
             file_title = self.item['title']
             proxy = proxy_addr
