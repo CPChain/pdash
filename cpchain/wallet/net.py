@@ -147,6 +147,7 @@ class MarketClient:
         header['MARKET-KEY'] = self.public_key
         header['MARKET-TOKEN'] = self.token
         logger.debug('header token: %s', self.token)
+        # owner_address = ECCipher.get_address_from_public_key(self.account.public_key)
         data = {'owner_address': self.public_key, 'title': title, 'description': description,
                 'price': price, 'tags': tags, 'start_date': start_date, 'end_date': end_date,
                 'file_md5': file_md5, 'size': size}
@@ -386,7 +387,7 @@ class MarketClient:
 
     @inlineCallbacks
     def query_by_seller(self, public_key):
-        url = self.url + 'product/v1/es_product/search/?status=0&seller=' + str(public_key)
+        url = self.url + 'product/v1/es_product/search/?ordering=-created&offset=0&limit=100&status=0&seller=' + str(public_key)
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token, 'Content-Type': 'application/json'}
         resp = yield treq.get(url, headers=header)
         confirm_info = yield treq.json_content(resp)
@@ -462,6 +463,20 @@ class MarketClient:
         logger.debug(self.public_key)
         data = {'public_key': self.public_key, 'tag': tag}
         url = self.url + 'product/v1/my_tag/subscribe/'
+        logger.debug('upload file info payload: %s', data)
+        logger.debug('upload file info url: %s', url)
+        resp = yield treq.post(url, headers=header, json=data, persistent=False)
+        confirm_info = yield treq.json_content(resp)
+        logger.debug('upload file info to market confirm: %s', confirm_info)
+        return confirm_info['status']
+
+    @inlineCallbacks
+    def hide_product(self, market_hash=''):
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        logger.debug(self.public_key)
+        data = {'market_hash': market_hash}
+        url = self.url + 'product/v1/product/hide/'
         logger.debug('upload file info payload: %s', data)
         logger.debug('upload file info url: %s', url)
         resp = yield treq.post(url, headers=header, json=data, persistent=False)
