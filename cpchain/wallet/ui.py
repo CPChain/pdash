@@ -3515,21 +3515,25 @@ class CloudTab(QScrollArea):
                     # self.parent.update_table()
                     # TODO: add new row instead of refeshing the whole table
                     # TODO: display problem not solved: checkbox item is the key
-                    file_table = self.parent.file_table
-                    row_count = file_table.rowCount()
-                    file_table.insertRow(row_count)
-                    checkbox_item = QTableWidgetItem()
-                    checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-                    checkbox_item.setCheckState(Qt.Unchecked)
-                    file_table.setItem(row_count, 0, checkbox_item)
-                    file_table.setItem(row_count, 1, QTableWidgetItem(name))
-                    file_table.setItem(row_count, 2, QTableWidgetItem(str(size)))
-                    file_table.setItem(row_count, 3, QTableWidgetItem(remote_type))
-                    file_table.setItem(row_count, 4, QTableWidgetItem('False'))
-                    file_table.setItem(row_count, 5, QTableWidgetItem(str(product_id)))
-
-                    self.parent.check_record_list = [False for i in range(self.parent.file_table.rowCount())]
-
+                    # file_table = self.parent.file_table
+                    # row_count = file_table.rowCount()
+                    # file_table.insertRow(row_count)
+                    # checkbox_item = QTableWidgetItem()
+                    # checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+                    # checkbox_item.setCheckState(Qt.Unchecked)
+                    # file_table.setItem(row_count, 0, checkbox_item)
+                    # file_table.setItem(row_count, 1, QTableWidgetItem(name))
+                    # file_table.setItem(row_count, 2, QTableWidgetItem(str(size)))
+                    # file_table.setItem(row_count, 3, QTableWidgetItem(remote_type))
+                    # file_table.setItem(row_count, 4, QTableWidgetItem('False'))
+                    # file_table.setItem(row_count, 5, QTableWidgetItem(str(product_id)))
+                    #
+                    # self.parent.check_record_list = [False for i in range(self.parent.file_table.rowCount())]
+                    tab_index = main_wnd.main_tab_index["cloud_tab"]
+                    main_wnd.content_tabs.removeTab(tab_index)
+                    tab_index = main_wnd.content_tabs.addTab(CloudTab(main_wnd.content_tabs), "")
+                    main_wnd.main_tab_index["cloud_tab"] = tab_index
+                    main_wnd.content_tabs.setCurrentIndex(tab_index)
                     logger.debug("update table successfully !")
                     QMessageBox.information(self, "Tips", "Uploaded successfuly")
                 else:
