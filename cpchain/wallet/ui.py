@@ -2018,9 +2018,10 @@ class PurchasedDownloadingTab(QScrollArea):
 
 
 class PublishDialog(QDialog):
-    def __init__(self, parent=None, id=None):
+    def __init__(self, parent=None, id=None, tab='cloud'):
         super().__init__(parent)
         self.parent = parent
+        self.tab = tab
         self.resize(300, 400)
         #for testing this Tab @rayhueng
         #self.setObjectName("cart_tab")
@@ -2163,13 +2164,22 @@ class PublishDialog(QDialog):
                         QMessageBox.information(self, "Tips", "Update market side product successfully !")
                         # self.parent.update_table()
                         # self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
-                        main_wnd.findChild(QWidget, 'cloud_tab').update_table()
-                        tab_index = main_wnd.main_tab_index["cloud_tab"]
+                        tab_index = main_wnd.cloud_index
                         main_wnd.content_tabs.removeTab(tab_index)
-                        tab_index = main_wnd.content_tabs.addTab(CloudTab(main_wnd.content_tabs), "")
-                        main_wnd.main_tab_index["cloud_tab"] = tab_index
-                        main_wnd.content_tabs.setCurrentIndex(tab_index)
-                        main_wnd.findChild(QWidget, 'selling_tab').update_table()
+                        main_wnd.cloud_index = main_wnd.content_tabs.addTab(CloudTab(main_wnd.content_tabs), "")
+                        if self.tab == 'cloud':
+                            main_wnd.content_tabs.setCurrentIndex(main_wnd.cloud_index)
+
+                        # tab_index = main_wnd.main_tab_index["selling_tab"]
+                        # main_wnd.content_tabs.removeTab(tab_index)
+                        # tab_index = main_wnd.content_tabs.addTab(SellTab(main_wnd.content_tabs), "")
+                        # main_wnd.main_tab_index["selling_tab"] = tab_index
+                        # if self.tab == 'sell':
+                        #     main_wnd.content_tabs.setCurrentIndex(tab_index)
+                        #
+                        # if self.tab != 'cloud' and self.tab != 'sell':
+                        #     QMessageBox.information("Wrong parameters!")
+
                 d.addCallback(handle_update_file)
                 # # TODO: This is only for test purpose. Will be replaced in this week later.
                 # def update_proxy(markethash):
@@ -2522,7 +2532,7 @@ class SelectionDialog(QDialog):
     def handle_publish(self):
         cur_row = self.list_widget.currentRow()
         product_id = self.pub_list[cur_row].id
-        publish_dlg = PublishDialog(self, product_id)
+        publish_dlg = PublishDialog(self, id=product_id, tab='sell')
         self.close()
 
     def handle_cancel(self):
@@ -3541,11 +3551,19 @@ class CloudTab(QScrollArea):
                     # file_table.setItem(row_count, 5, QTableWidgetItem(str(product_id)))
                     #
                     # self.parent.check_record_list = [False for i in range(self.parent.file_table.rowCount())]
-                    tab_index = main_wnd.main_tab_index["cloud_tab"]
+                    # tab_index = main_wnd.cloud_index
+                    # main_wnd.content_tabs.removeTab(tab_index)
+                    # main_wnd.cloud_index = main_wnd.content_tabs.addTab(CloudTab(main_wnd.content_tabs), "")
+                    # main_wnd.content_tabs.setCurrentIndex(main_wnd.cloud_index)
+                    tab_index = main_wnd.main_tab_index['cloud_tab']
+                    for key in main_wnd.main_tab_index:
+                        if main_wnd.main_tab_index[key] > tab_index:
+                            main_wnd.main_tab_index[key] -= 1
                     main_wnd.content_tabs.removeTab(tab_index)
                     tab_index = main_wnd.content_tabs.addTab(CloudTab(main_wnd.content_tabs), "")
-                    main_wnd.main_tab_index["cloud_tab"] = tab_index
+                    main_wnd.main_tab_index['cloud_tab'] = tab_index
                     main_wnd.content_tabs.setCurrentIndex(tab_index)
+
                     logger.debug("update table successfully !")
                     QMessageBox.information(self, "Tips", "Uploaded successfuly")
                 else:
@@ -3569,7 +3587,7 @@ class CloudTab(QScrollArea):
             QMessageBox.information(self, "Tips", "Please login first !")
         else:
             product_id = self.file_table.item(self.cur_clicked, 5).text()
-            self.publish_dialog = PublishDialog(self, product_id)
+            self.publish_dialog = PublishDialog(self, id=product_id, tab='cloud')
             # self.file_list[self.cur_clicked]
             logger.debug("handle publish act....")
 
@@ -3649,8 +3667,15 @@ class SideBar(QScrollArea):
                     "Cloud": "cloud_tab",
                     "Selling": "selling_tab",
                 }
-                wid = self.content_tabs.findChild(QWidget, item_to_tab_name[item.text()])
-                self.content_tabs.setCurrentWidget(wid)
+                tab_index = main_wnd.main_tab_index[item_to_tab_name[item.text()]]
+                main_wnd.content_tabs.setCurrentIndex(tab_index)
+                # if item.text() == 'Cloud':
+                #     main_wnd.content_tabs.setCurrentIndex(main_wnd.cloud_index)
+                # elif item.text() == 'Selling':
+                #     main_wnd.content_tabs.setCurrentIndex(main_wnd.sell_index)
+                # else:
+                #     logger.debug("Invalid parameters in mine list widget")
+
                 self.trending_list.setCurrentRow(-1);
                 self.treasure_list.setCurrentRow(-1);
             self.mine_list.itemPressed.connect(mine_list_clicked)
@@ -4050,10 +4075,10 @@ class MainWindow(QMainWindow):
             content_tabs.tabBar().hide()
             content_tabs.setContentsMargins(0, 0, 0, 0)
             # Temporily modified for easy test by @hyiwr
-            pop_index = content_tabs.addTab(PopularTab(content_tabs), "")
-            cloud_index = content_tabs.addTab(CloudTab(content_tabs), "")
-            follow_index = content_tabs.addTab(FollowingTab(content_tabs), "")
-            sell_index = content_tabs.addTab(SellTab(content_tabs), "")
+            self.pop_index = content_tabs.addTab(PopularTab(content_tabs), "")
+            self.cloud_index = content_tabs.addTab(CloudTab(content_tabs), "")
+            self.follow_index = content_tabs.addTab(FollowingTab(content_tabs), "")
+            self.sell_index = content_tabs.addTab(SellTab(content_tabs), "")
             #content_tabs.addTab(ProductInfoEdit(content_tabs), "")
             #content_tabs.addTab(PurchasedDownloadedTab(content_tabs), "") 
             #content_tabs.addTab(PurchasedDownloadingTab(content_tabs), "")
@@ -4065,15 +4090,13 @@ class MainWindow(QMainWindow):
             content_tabs.addTab(SecurityTab(content_tabs), "") 
             content_tabs.addTab(PreferenceTab(content_tabs), "")
             content_tabs.addTab(PersonalInfoPage(content_tabs), "") 
-            purchase_index = content_tabs.addTab(PurchasedTab(content_tabs), "")
-            collect_index = content_tabs.addTab(CollectedTab(content_tabs), "")
+            self.purchase_index = content_tabs.addTab(PurchasedTab(content_tabs), "")
+            self.collect_index = content_tabs.addTab(CollectedTab(content_tabs), "")
             self.main_tab_index = {
-                "popular_tab": pop_index,
-                "cloud_tab": cloud_index,
-                "follow_tab": follow_index,
-                "selling_tab": sell_index,
-                "purchase_tab": purchase_index,
-                "collect_tab": collect_index
+                "cloud_tab": self.cloud_index,
+                "selling_tab": self.sell_index,
+                "purchase_tab": self.purchase_index,
+                "collect_tab": self.collect_index
             }
             print("Adding tabs(shopping cart tab, etc.) to content_tabs")
             print("Loading stylesheet to content_tabs")
