@@ -17,7 +17,7 @@ contract_name = "Contract"
 registrar_json = "cpchain/assets/chain/registrar.json"
 
 # mode can be "test", "falcon", "local"
-mode = "dummy"
+mode = "test"
 falcon_provider_addr = "http://192.168.0.132:8545"
 local_provider_addr = "http://127.0.0.1:8545"
 
@@ -65,7 +65,7 @@ dbpath = "cpchain/market/market.db"
 server_addr = "192.168.0.132"
 server_port = 8083
 es_hosts = '192.168.0.132:9200'
-market_url = "http://192.168.0.132:8083/api/v1/"
+market_url = "http://192.168.0.132:8083/"
 market_url_test = "http://localhost:8083/"
 default_password = "^-_-^cpchain@2018^-_-^"
 

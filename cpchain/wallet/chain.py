@@ -13,7 +13,7 @@ from cpchain.crypto import Encoder, RSACipher, ECCipher
 
 from cpchain.chain.models import OrderInfo
 from cpchain.chain.agents import BuyerAgent, SellerAgent
-from cpchain.chain.utils import default_w3
+from cpchain.chain.utils import default_w3, join_with_root
 from cpchain.chain.poll_chain import OrderMonitor
 
 from cpchain.wallet.db import BuyerFileInfo
@@ -29,13 +29,16 @@ logger = logging.getLogger(__name__) # pylint: disable=locally-disabled, invalid
 class Broker:
     def __init__(self, wallet):
         self.wallet = wallet
-        # order_queue: info, ready_order_queue: info, bought_order_queue: id, confirmed_order: id
+        # order_queue: info, ready_order_queue: info, bought_order_queue: id, confirmed_order_queue: id
         self.order_queue = Queue()
         self.bought_order_queue = Queue()
         self.ready_order_queue = Queue()
         self.confirmed_order_queue = Queue()
-        self.buyer = BuyerAgent(default_w3, config.chain.core_contract)
-        self.seller = SellerAgent(default_w3, config.chain.core_contract)
+        bin_path = join_with_root(config.chain.contract_bin_path)
+        self.buyer = BuyerAgent(default_w3, bin_path, config.chain.contract_name)
+        self.seller = SellerAgent(default_w3, bin_path, config.chain.contract_name)
+        self.handler = Handler(self)
+        self.monitor = Monitor(self)
 
 
     # batch process
@@ -185,26 +188,35 @@ class Monitor:
     # get new order info from chain through web3
     # order list: [{order_id: (xxx, xxx, xxx)}, {order_id: (xxx, xxx, xxx)}]
     def get_new_order_info(self):
+        logger.debug("in get new order info")
         new_order_id_list = self.chain_monitor.get_new_order()
         new_order_info_list = []
         for current_id in new_order_id_list:
+            logger.debug("process order: %s", current_id)
             new_order_info_list.append({current_id: self.broker.seller.query_order(current_id)})
+            logger.debug("order info got, order id: %s", current_id)
         return new_order_info_list
 
 
     # this method should be called periodically in the main thread(reactor)
     def monitor_new_order(self):
+        logger.debug("in monitor new order")
+        logger.debug("order queue size: %s", self.broker.order_queue.qsize())
         new_order_list = deferToThread(self.get_new_order_info)
 
         def add_order(order_list):
             for current_order in order_list:
+                logger.debug("start to put new order info into queue, current order: %s", current_order)
                 self.broker.order_queue.put(current_order)
+                logger.debug("order queue size: %s", self.broker.order_queue.qsize())
+
 
         new_order_list.addCallback(add_order)
         return self.broker.order_queue
 
 
     def monitor_ready_order(self):
+        logger.debug("in monitor ready order")
         bought_order_list = []
         while True:
             if self.broker.bought_order_queue.empty():
@@ -212,14 +224,16 @@ class Monitor:
             else:
                 order = self.broker.bought_order_queue.get()
                 bought_order_list.append(order)
+        if len(bought_order_list) == 0:
+            logger.debug("no ready order")
+        else:
+            d_unready_order = deferToThread(self.broker.query_order_state, bought_order_list)
 
-        d_unready_order = deferToThread(self.broker.query_order_state, bought_order_list)
+            def reset_bought_order_queue(unready_order_list):
+                for current_id in unready_order_list:
+                    self.broker.bought_order_queue.put(current_id)
 
-        def reset_bought_order_queue(unready_order_list):
-            for current_id in unready_order_list:
-                self.broker.bought_order_queue.put(current_id)
-
-        d_unready_order.addCallback(reset_bought_order_queue)
+            d_unready_order.addCallback(reset_bought_order_queue)
 
 
     def monitor_confirmed_order(self):
@@ -240,29 +254,40 @@ class Handler:
         self.broker = broker
 
 
-    def buy_product(self, msg_hash, file_title):
+    def buy_product(self, msg_hash, file_title, proxy, seller):
         # fixme: format of hash value need to change
+        logger.debug("start to buy product")
         desc_hash = Encoder.str_to_base64_byte(msg_hash)
         rsa_key = RSACipher.load_public_key()
+        logger.debug("desc hash: %s", desc_hash)
         product = OrderInfo(
             desc_hash=desc_hash,
             buyer_rsa_pubkey=rsa_key,
-            seller=self.broker.buyer.web3.eth.defaultAccount,
+            seller=seller,
             # fixme: proxy should not be seller
-            proxy=self.broker.buyer.web3.eth.defaultAccount,
-            secondary_proxy=self.broker.buyer.web3.eth.defaultAccount,
+            proxy=proxy,
+            secondary_proxy=proxy,
             proxy_value=10,
             value=20,
             time_allowed=1000
         )
+        logger.debug("product info has been created")
+        logger.debug("product info: %s", product)
+        logger.debug("bought order queue size: %s", self.broker.bought_order_queue.qsize())
         d_placed_order = deferToThread(self.broker.buyer.place_order, product)
 
         def add_bought_order(order_id):
+            logger.debug("order has been placed to chain")
             self.broker.bought_order_queue.put(order_id)
+            logger.debug("new order has been put into bought order queue")
+            logger.debug("bought order queue size: %s", self.broker.bought_order_queue.qsize())
+            logger.debug("start to update local database")
             new_buyer_file_info = BuyerFileInfo(order_id=order_id,
                                                 market_hash=Encoder.bytes_to_base64_str(desc_hash),
                                                 file_title=file_title, is_downloaded=False)
             add_file(new_buyer_file_info)
+            logger.debug("update local db completed")
+
             # fixme: update UI pane
             # self.update_treasure_pane()
 
@@ -272,13 +297,19 @@ class Handler:
 
 
     def handle_new_order(self):
+        logger.debug("in handle new order")
+        logger.debug("before process new order, order queue size: %s", self.broker.order_queue.qsize())
         while True:
             if self.broker.order_queue.empty():
+                logger.debug("no new order")
                 break
 
             else:
                 order_info = self.broker.order_queue.get()
-                self.broker.seller_send_request(order_info)
+                logger.debug("process new order, order info: %s", order_info)
+                logger.debug("seller send request to proxy ...")
+                # self.broker.seller_send_request(order_info)
+        logger.debug("new order process completed, order queue size: %s", self.broker.order_queue.qsize())
 
 
     def handle_ready_order(self):

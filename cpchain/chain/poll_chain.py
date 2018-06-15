@@ -8,10 +8,9 @@ class OrderMonitor:
         self.trans = seller_trans
 
     # returns a list of new orders generated since last update
-    def get_new_order(self, account=None):
-        account = account or self.trans.web3.eth.defaultAccount
+    def get_new_order(self):
         end_id = self.trans.get_order_num()
-        new_orders = self.trans.filter_seller_range(self.start_id, end_id, account)
+        new_orders = self.trans.filter_seller_range(self.start_id, end_id)
         self.update_start_id(end_id)
         return new_orders
 
