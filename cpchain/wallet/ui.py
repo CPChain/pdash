@@ -2164,11 +2164,11 @@ class PublishDialog(QDialog):
                         QMessageBox.information(self, "Tips", "Update market side product successfully !")
                         # self.parent.update_table()
                         # self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
-                        tab_index = main_wnd.cloud_index
-                        main_wnd.content_tabs.removeTab(tab_index)
-                        main_wnd.cloud_index = main_wnd.content_tabs.addTab(CloudTab(main_wnd.content_tabs), "")
-                        if self.tab == 'cloud':
-                            main_wnd.content_tabs.setCurrentIndex(main_wnd.cloud_index)
+                        # tab_index = main_wnd.cloud_index
+                        # main_wnd.content_tabs.removeTab(tab_index)
+                        # main_wnd.cloud_index = main_wnd.content_tabs.addTab(CloudTab(main_wnd.content_tabs), "")
+                        # if self.tab == 'cloud':
+                        #     main_wnd.content_tabs.setCurrentIndex(main_wnd.cloud_index)
 
                         # tab_index = main_wnd.main_tab_index["selling_tab"]
                         # main_wnd.content_tabs.removeTab(tab_index)
@@ -2177,8 +2177,29 @@ class PublishDialog(QDialog):
                         # if self.tab == 'sell':
                         #     main_wnd.content_tabs.setCurrentIndex(tab_index)
                         #
-                        # if self.tab != 'cloud' and self.tab != 'sell':
-                        #     QMessageBox.information("Wrong parameters!")
+
+                        tab_index = main_wnd.main_tab_index['cloud_tab']
+                        main_wnd.content_tabs.removeTab(tab_index)
+                        for key in main_wnd.main_tab_index:
+                            if main_wnd.main_tab_index[key] > tab_index:
+                                main_wnd.main_tab_index[key] -= 1
+                        tab_index = main_wnd.content_tabs.addTab(CloudTab(main_wnd.content_tabs), "")
+                        main_wnd.main_tab_index['cloud_tab'] = tab_index
+                        if self.tab == 'cloud':
+                            main_wnd.content_tabs.setCurrentIndex(tab_index)
+
+                        tab_index = main_wnd.main_tab_index['selling_tab']
+                        main_wnd.content_tabs.removeTab(tab_index)
+                        for key in main_wnd.main_tab_index:
+                            if main_wnd.main_tab_index[key] > tab_index:
+                                main_wnd.main_tab_index[key] -= 1
+                        tab_index = main_wnd.content_tabs.addTab(SellTab(main_wnd.content_tabs), "")
+                        main_wnd.main_tab_index['selling_tab'] = tab_index
+                        if self.tab == 'sell':
+                            main_wnd.content_tabs.setCurrentIndex(tab_index)
+
+                        if self.tab != 'cloud' and self.tab != 'sell':
+                            QMessageBox.information("Wrong parameters for publishing products!")
 
                 d.addCallback(handle_update_file)
                 # # TODO: This is only for test purpose. Will be replaced in this week later.
@@ -3669,12 +3690,6 @@ class SideBar(QScrollArea):
                 }
                 tab_index = main_wnd.main_tab_index[item_to_tab_name[item.text()]]
                 main_wnd.content_tabs.setCurrentIndex(tab_index)
-                # if item.text() == 'Cloud':
-                #     main_wnd.content_tabs.setCurrentIndex(main_wnd.cloud_index)
-                # elif item.text() == 'Selling':
-                #     main_wnd.content_tabs.setCurrentIndex(main_wnd.sell_index)
-                # else:
-                #     logger.debug("Invalid parameters in mine list widget")
 
                 self.trending_list.setCurrentRow(-1);
                 self.treasure_list.setCurrentRow(-1);
