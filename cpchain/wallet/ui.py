@@ -4125,6 +4125,15 @@ def initialize_system():
 
         handle_new_order = LoopingCall(wallet.chain_broker.handler.handle_new_order)
         handle_new_order.start(10)
+
+        monitor_ready_order = LoopingCall(wallet.chain_broker.monitor.monitor_ready_order)
+        monitor_ready_order.start(7)
+
+        handle_ready_order = LoopingCall(wallet.chain_broker.handler.handle_ready_order)
+        handle_ready_order.start(14)
+
+        monitor_confirmed_order = LoopingCall(wallet.chain_broker.monitor.monitor_confirmed_order)
+        monitor_confirmed_order.start(10)
     monitor_chain_event()
 
 

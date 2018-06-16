@@ -20,8 +20,8 @@ from cpchain.wallet.db import BuyerFileInfo
 from cpchain.wallet.fs import add_file
 from cpchain.wallet.fs import session, FileInfo, decrypt_file_aes
 
+from cpchain.proxy.node import start_proxy_request
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
-from cpchain.proxy.client import start_client
 
 logger = logging.getLogger(__name__) # pylint: disable=locally-disabled, invalid-name
 
@@ -46,7 +46,7 @@ class Broker:
         unready_order_list = []
         for current_id in order_id_list:
             state = self.buyer.query_order(current_id)[10]
-            if state == 1:
+            if state == 2:
                 order_info = {current_id: self.buyer.query_order(current_id)}
                 self.ready_order_queue.put(order_info)
             else:
@@ -63,19 +63,15 @@ class Broker:
         order_id = list(order_info.keys())[0]
         new_order_info = order_info[order_id]
         market_hash = new_order_info[0]
+        seller_addr = new_order_info[3]
+        buyer_addr = new_order_info[2]
         buyer_rsa_pubkey = new_order_info[1]
+        proxy_id = new_order_info[4]
         raw_aes_key = session.query(FileInfo.aes_key) \
             .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash)) \
             .all()[0][0]
-        # print(raw_aes_key)
-
-        # fixme
-        encrypted_aes_key = "encrypted aes key"
-        # print(encrypted_aes_key)
-        logger.debug("Encrypted_aes_key length: %s", str(len(encrypted_aes_key)))
-        storage_type = Message.Storage.IPFS
-        ipfs_gateway = config.storage.ipfs.addr
-        # File hash is str type
+        # TODO: encrypt aes key with buyer rsa public key
+        encrypted_aes_key = 'encrypted aes key'
         file_hash = session.query(FileInfo.hashcode) \
             .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash)) \
             .all()[0][0]
@@ -83,24 +79,34 @@ class Broker:
         seller_data = message.seller_data
         message.type = Message.SELLER_DATA
         seller_data.order_id = order_id
-        seller_data.seller_addr = to_bytes(hexstr=new_order_info[3])
-        seller_data.buyer_addr = to_bytes(hexstr=new_order_info[2])
+        seller_data.seller_addr = seller_addr
+        seller_data.buyer_addr = buyer_addr
         seller_data.market_hash = market_hash
         seller_data.AES_key = encrypted_aes_key
         storage = seller_data.storage
-        storage.type = storage_type
+
+        # ipfs storage example
+        storage.type = Message.Storage.IPFS
         ipfs = storage.ipfs
-        ipfs.file_hash = file_hash.encode('utf-8')
-        ipfs.gateway = ipfs_gateway
+        ipfs.file_hash = file_hash
+        ipfs.gateway = "192.168.0.132:5001"
+
+        # s3 storage example
+        # storage.type = Message.Storage.S3
+        # s3 = storage.s3
+        # s3.bucket = 'cpchain-bucket'
+        # s3.key = 'sp'
+
         sign_message = SignMessage()
-        sign_message.public_key = Encoder.str_to_base64_byte(
-            self.wallet.market_client.pub_key)
+        sign_message.public_key = self.wallet.accounts.default_account.public_key
         sign_message.data = message.SerializeToString()
-        sign_message.signature = ECCipher.generate_signature(
-            Encoder.str_to_base64_byte(self.wallet.market_client.priv_key),
+        sign_message.signature = ECCipher.create_signature(
+            self.wallet.accounts.default_account.private_key,
             sign_message.data
         )
-        d_proxy_reply = start_client(sign_message)
+
+        seller_sign_message = sign_message
+        d_proxy_reply = start_proxy_request(seller_sign_message, tracker=('192.168.0.132', 8101), proxy_id=proxy_id)
 
         def seller_deliver_proxy_callback(message):
             # print('proxy recieved message')
@@ -124,23 +130,27 @@ class Broker:
     def buyer_send_request(self, order_info):
         order_id = list(order_info.keys())[0]
         new_order_info = order_info[order_id]
+        seller_addr = new_order_info[3]
+        buyer_addr = new_order_info[2]
+        market_hash = new_order_info[0]
+        proxy_id = new_order_info[4]
         message = Message()
         buyer_data = message.buyer_data
         message.type = Message.BUYER_DATA
         buyer_data.order_id = order_id
-        buyer_data.seller_addr = to_bytes(hexstr=new_order_info[3])
-        buyer_data.buyer_addr = to_bytes(hexstr=new_order_info[2])
-        buyer_data.market_hash = new_order_info[0]
+        buyer_data.seller_addr = seller_addr
+        buyer_data.buyer_addr = buyer_addr
+        buyer_data.market_hash = market_hash
 
         sign_message = SignMessage()
-        sign_message.public_key = Encoder.str_to_base64_byte(
-            self.wallet.market_client.pub_key)
+        sign_message.public_key = self.wallet.accounts.default_account.public_key
         sign_message.data = message.SerializeToString()
-        sign_message.signature = ECCipher.generate_signature(
-            Encoder.str_to_base64_byte(self.wallet.market_client.priv_key),
+        sign_message.signature = ECCipher.create_signature(
+            self.wallet.accounts.default_account.private_key,
             sign_message.data
         )
-        d_proxy_reply = start_client(sign_message)
+        buyer_sign_message = sign_message
+        d_proxy_reply = start_proxy_request(buyer_sign_message, tracker=('192.168.0.132', 8101), proxy_id=proxy_id)
 
         def update_buyer_db(file_uuid, file_path):
             market_hash = Encoder.bytes_to_base64_str(new_order_info[0])
@@ -317,7 +327,11 @@ class Handler:
                 order_info = self.broker.order_queue.get()
                 logger.debug("process new order, order info: %s", order_info)
                 logger.debug("seller send request to proxy ...")
-                # self.broker.seller_send_request(order_info)
+                order_id = list(order_info.keys())[0]
+                d = deferToThread(self.broker.seller.confirm_order, order_id)
+                def start_proxy_request():
+                    self.broker.seller_send_request(order_info)
+                d.addCallback(start_proxy_request)
         logger.debug("new order process completed, order queue size: %s", self.broker.order_queue.qsize())
 
 
