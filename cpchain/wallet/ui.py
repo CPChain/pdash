@@ -829,8 +829,9 @@ class ProductDetailTab(QScrollArea):
             load_stylesheet(self, "prductdetail.qss")
     
     def handle_collect(self):
-        print("please handle collect here")
-        pass
+        fs.add_record_collect(self.product_info)
+        self.collect_btn.setText("Collected")
+        # TODO: Update collection info...
 
     def handle_buynow(self):
         item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
@@ -1511,11 +1512,12 @@ class CollectedTab(QScrollArea):
     def update_table(self):
         # file_list = get_file_list()
         print("Updating file list......")
-        file_list = []
-        # single element data structure (assumed); to be changed
-        dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "price": "200"}
-        for i in range(self.row_number):
-            file_list.append(dict_exa)
+        # file_list = []
+        # # single element data structure (assumed); to be changed
+        # dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "price": "200"}
+        # for i in range(self.row_number):
+        #     file_list.append(dict_exa)
+        self.file_list = file_list = fs.get_collect_list()
 
         for cur_row in range(self.row_number):
             if cur_row == len(file_list):
@@ -1524,9 +1526,9 @@ class CollectedTab(QScrollArea):
             checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
             checkbox_item.setCheckState(Qt.Unchecked)
             self.file_table.setItem(cur_row, 0, checkbox_item)
-            self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["name"]))
-            self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["price"]))
-            self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
+            self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].name))
+            self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].price)))
+            self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].size)))
 
     def init_ui(self):
 
@@ -1558,22 +1560,23 @@ class CollectedTab(QScrollArea):
             file_table.setFocusPolicy(Qt.NoFocus)
             # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
-            file_table.setColumnCount(4)
+            file_table.setColumnCount(5)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             # file_table.set_right_menu(right_menu)
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price', 'Size'])
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price', 'Size', ''])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.setSortingEnabled(True)
 
-            # file_list = get_file_list()
-            file_list = []
-            print("Getting file list.......")
-            dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "ordertime": "2018/2/4 08:30",
-                        "price": "36"}
-            for i in range(self.row_number):
-                file_list.append(dict_exa)
+            # # file_list = get_file_list()
+            # file_list = []
+            # print("Getting file list.......")
+            # dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "ordertime": "2018/2/4 08:30",
+            #             "price": "36"}
+            # for i in range(self.row_number):
+            #     file_list.append(dict_exa)
 
+            self.file_list = file_list = fs.get_collect_list()
             self.check_record_list = []
             self.checkbox_list = []
             for cur_row in range(self.row_number):
@@ -1583,9 +1586,15 @@ class CollectedTab(QScrollArea):
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 checkbox_item.setCheckState(Qt.Unchecked)
                 self.file_table.setItem(cur_row, 0, checkbox_item)
-                self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["name"]))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["price"]))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["size"]))
+                self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].name))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].price)))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].size)))
+                # self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(file_list[cur_row].id)))
+
+                hidden_item = QTableWidgetItem()
+                hidden_item.setData(Qt.UserRole, str(self.file_list[cur_row].id))
+                self.file_table.setItem(cur_row, 4, hidden_item)
+
                 self.check_record_list.append(False)
 
         create_file_table()
@@ -1626,10 +1635,10 @@ class CollectedTab(QScrollArea):
         for i in range(len(self.check_record_list)):
             if self.check_record_list[i] == True:
                 self.file_table.removeRow(i)
-                print("handle_uncollect files permanently from the collection...")
-                self.update_table()
-
-
+                file_id = self.file_table.item(i, 4).data(Qt.UserRole)
+                fs.delete_collect_id(file_id)
+                logger.debug("file id in collect info is: {}".format(file_id))
+                logger.debug("uncollect files permanently from the collection...")
 
 class PurchasedTab(QScrollArea):
     def __init__(self, parent=None):
@@ -2438,12 +2447,26 @@ class SellTab(QScrollArea):
         # load_stylesheet(self, "sell.qss")
 
     def handle_delete(self):
+        if wallet.market_client.token == "":
+            QMessageBox.information(self, "Tips", "Please login first !")
+            return
         for i in range(len(self.check_record_list)):
             if self.check_record_list[i] == True:
                 self.file_table.removeRow(i)
-                # TODO: delete files permanetly from the market side and change local state to "unpublished"
-                print("Deleting files permanently from the cloud...")
-                self.update_table()
+                # TODO: delete files permanently from the market side and change local state to "unpublished"
+                market_hash = self.file_table.item(self.cur_clicked, 6).data(Qt.UserRole)
+                logger.debug("Product deleted from local db")
+                d_status = wallet.market_client.hide_product(market_hash)
+                def handle_state(status):
+                    if status == 1:
+                        logger.debug("Product has been deleted from market db")
+                        QMessageBox.information(self, "Tips", "Successfully deleted the product")
+                    else:
+                        QMessageBox.information(self, "Tips", "Problem occurred when deleting the file")
+                        logger.debug("Failed to delete product from market db")
+                d_status.addCallback(handle_state)
+        self.check_record_list = [False for i in range(self.file_table.rowCount())]
+        logger.debug("Reset check_record_list for later operations")
 
 
     def handle_delete_act(self):

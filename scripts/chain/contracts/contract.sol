@@ -346,7 +346,6 @@ contract Contract {
     function sellerRateProxy(uint id, uint rate)
         public
         onlySeller(id)
-        inState(id, State.Finished)
     {
         require(orderRecords[id].state == State.Finished || orderRecords[id].state == State.BuyerRated);
         require(rate > 0 && rate < 10);
