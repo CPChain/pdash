@@ -19,7 +19,6 @@ from twisted.internet.task import LoopingCall
 # from cpchain.wallet.ui import MainWindow
 from cpchain.wallet.chain import Broker
 from cpchain.wallet.net import MarketClient
-from cpchain.wallet.net import ProxyClient
 from cpchain.wallet import fs
 from cpchain.crypto import RSACipher, Encoder
 from cpchain.account import Accounts
@@ -33,9 +32,8 @@ class Wallet:
         self.reactor = reactor
         self.accounts = Accounts()
         # self.main_wnd = MainWindow(self)
-        # self.chain_broker = Broker(self)
+        self.chain_broker = Broker(self)
         self.market_client = MarketClient(self)
-        self.proxy_client = ProxyClient(self)
 
 
         # self._initialize_system()

@@ -51,14 +51,17 @@ class BuyerAgent(Agent):
 
     # order_info is a dictionary that contains parameters for an order
     def place_order(self, order_info: models.OrderInfo,) -> "order id":
+        logger.debug("in place order")
         event_filter = self.contract.eventFilter('OrderInitiated', {'filter': {'from': self.account}})
         # Initiate an order
+        logger.debug("initiate an order")
         offered_price = self.ONE_ETH_IN_WEI * order_info.value
         transaction = {
             'value': offered_price,
             'from': self.account,
         }
-
+        logger.debug("contract address: %s", self.contract.address)
+        logger.debug("estimate gas")
         gas_estimate = self.contract.functions.placeOrder(
             order_info.desc_hash,
             order_info.buyer_rsa_pubkey,
@@ -69,7 +72,7 @@ class BuyerAgent(Agent):
             order_info.time_allowed
         ).estimateGas(transaction)
         transaction['gas'] = gas_estimate + 100000
-
+        logger.debug("issue transaction ...")
         tx_hash = self.contract.functions.placeOrder(
             order_info.desc_hash,
             order_info.buyer_rsa_pubkey,

@@ -24,6 +24,9 @@ from cpchain import config, root_dir
 from cpchain.wallet import fs
 from cpchain.crypto import ECCipher, RSACipher, Encoder
 
+from cpchain.proxy.node import pick_proxy, start_proxy_request
+from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
+
 from twisted.internet import threads, defer, reactor
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import deferToThread
@@ -412,6 +415,7 @@ class BuyNowDialog(QDialog):
     def __init__(self, parent=None, item={}):
         super().__init__(parent)
         self.parent = parent
+        self.item = item
         self.resize(300, 180)
         #for testing this Tab @rayhueng
         #self.setObjectName("cart_tab")
@@ -484,7 +488,19 @@ class BuyNowDialog(QDialog):
         self.show()
 
     def handle_confirm(self):
-        print("handle the confirm of payment")
+        logger.debug("handle the confirm of payment")
+        logger.debug("buyer select proxy ...")
+        d = pick_proxy()
+        def get_proxy_address(proxy_addr):
+            logger.debug("buyer selected proxy, proxy id: %s", proxy_addr)
+            msg_hash = self.item['market_hash']
+            file_title = self.item['title']
+            proxy = proxy_addr
+            seller = self.item['owner_address']
+            wallet.chain_broker.handler.buy_product(msg_hash, file_title, proxy, seller)
+        d.addCallback(get_proxy_address)
+
+
         self.close()
 
     def handle_cancel(self):
@@ -721,7 +737,7 @@ class ProductDetailTab(QScrollArea):
                         break
                     self.promo_lists.append(Product2(self, promo_list[i], 'simple'))
             self.comment_list = []
-            comments = yield wallet.market_client.query_comment_by_hash(self.item['msg_hash'])
+            comments = yield wallet.market_client.query_comment_by_hash(self.item['market_hash'])
             for j in range(len(comments)):
                 self.comment_list.append(ProductDetailTab.ProductComment(self, comments[j]))
             set_layout()
@@ -819,7 +835,7 @@ class ProductDetailTab(QScrollArea):
 
     def handle_buynow(self):
         item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
-        self.buynow_dialog = BuyNowDialog(self, item)
+        self.buynow_dialog = BuyNowDialog(self, self.product_info)
         print("please handle buynow here")
 
     def seller_clicked_act(self):
@@ -923,6 +939,8 @@ class SearchProductTab(QScrollArea):
 
 
     def update_item(self, item_list, promo_list):
+        self.search_item_num = len(item_list)
+        self.search_promo_num = len(promo_list)
         if len(item_list) == 0:
             item = {"title": "Medical data from NHIS", "none": "none"}
             self.get_products(item)
@@ -942,11 +960,11 @@ class SearchProductTab(QScrollArea):
 
     def get_products(self, item={}):
         for i in range(self.search_item_num):
-            self.item_lists.append(Product(self, item))
+            self.item_lists.append(Product2(self, item))
 
     def get_promotion(self, item={}):
         for i in range(self.search_promo_num):
-            self.promo_lists.append(Product(self, item, "simple"))
+            self.promo_lists.append(Product2(self, item, "simple"))
 
 
     def init_ui(self):
@@ -4188,8 +4206,20 @@ def initialize_system():
     initialize_net()
     
     def monitor_chain_event():
-        # Temporily modified for easy test by @hyiwr
-        print("Monitoring chain event......")
+        monitor_new_order = LoopingCall(wallet.chain_broker.monitor.monitor_new_order)
+        monitor_new_order.start(5)
+
+        handle_new_order = LoopingCall(wallet.chain_broker.handler.handle_new_order)
+        handle_new_order.start(10)
+
+        monitor_ready_order = LoopingCall(wallet.chain_broker.monitor.monitor_ready_order)
+        monitor_ready_order.start(7)
+
+        handle_ready_order = LoopingCall(wallet.chain_broker.handler.handle_ready_order)
+        handle_ready_order.start(14)
+
+        monitor_confirmed_order = LoopingCall(wallet.chain_broker.monitor.monitor_confirmed_order)
+        monitor_confirmed_order.start(10)
     monitor_chain_event()
 
 
