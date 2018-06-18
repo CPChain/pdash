@@ -2018,9 +2018,10 @@ class PurchasedDownloadingTab(QScrollArea):
 
 
 class PublishDialog(QDialog):
-    def __init__(self, parent=None, id=None):
+    def __init__(self, parent=None, id=None, tab='cloud'):
         super().__init__(parent)
         self.parent = parent
+        self.tab = tab
         self.resize(300, 400)
         #for testing this Tab @rayhueng
         #self.setObjectName("cart_tab")
@@ -2163,8 +2164,43 @@ class PublishDialog(QDialog):
                         QMessageBox.information(self, "Tips", "Update market side product successfully !")
                         # self.parent.update_table()
                         # self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
-                        main_wnd.findChild(QWidget, 'cloud_tab').update_table()
-                        main_wnd.findChild(QWidget, 'selling_tab').update_table()
+                        # tab_index = main_wnd.cloud_index
+                        # main_wnd.content_tabs.removeTab(tab_index)
+                        # main_wnd.cloud_index = main_wnd.content_tabs.addTab(CloudTab(main_wnd.content_tabs), "")
+                        # if self.tab == 'cloud':
+                        #     main_wnd.content_tabs.setCurrentIndex(main_wnd.cloud_index)
+
+                        # tab_index = main_wnd.main_tab_index["selling_tab"]
+                        # main_wnd.content_tabs.removeTab(tab_index)
+                        # tab_index = main_wnd.content_tabs.addTab(SellTab(main_wnd.content_tabs), "")
+                        # main_wnd.main_tab_index["selling_tab"] = tab_index
+                        # if self.tab == 'sell':
+                        #     main_wnd.content_tabs.setCurrentIndex(tab_index)
+                        #
+
+                        tab_index = main_wnd.main_tab_index['cloud_tab']
+                        main_wnd.content_tabs.removeTab(tab_index)
+                        for key in main_wnd.main_tab_index:
+                            if main_wnd.main_tab_index[key] > tab_index:
+                                main_wnd.main_tab_index[key] -= 1
+                        tab_index = main_wnd.content_tabs.addTab(CloudTab(main_wnd.content_tabs), "")
+                        main_wnd.main_tab_index['cloud_tab'] = tab_index
+                        if self.tab == 'cloud':
+                            main_wnd.content_tabs.setCurrentIndex(tab_index)
+
+                        tab_index = main_wnd.main_tab_index['selling_tab']
+                        main_wnd.content_tabs.removeTab(tab_index)
+                        for key in main_wnd.main_tab_index:
+                            if main_wnd.main_tab_index[key] > tab_index:
+                                main_wnd.main_tab_index[key] -= 1
+                        tab_index = main_wnd.content_tabs.addTab(SellTab(main_wnd.content_tabs), "")
+                        main_wnd.main_tab_index['selling_tab'] = tab_index
+                        if self.tab == 'sell':
+                            main_wnd.content_tabs.setCurrentIndex(tab_index)
+
+                        if self.tab != 'cloud' and self.tab != 'sell':
+                            QMessageBox.information("Wrong parameters for publishing products!")
+
                 d.addCallback(handle_update_file)
                 # # TODO: This is only for test purpose. Will be replaced in this week later.
                 # def update_proxy(markethash):
@@ -2517,7 +2553,7 @@ class SelectionDialog(QDialog):
     def handle_publish(self):
         cur_row = self.list_widget.currentRow()
         product_id = self.pub_list[cur_row].id
-        publish_dlg = PublishDialog(self, product_id)
+        publish_dlg = PublishDialog(self, id=product_id, tab='sell')
         self.close()
 
     def handle_cancel(self):
@@ -3223,30 +3259,37 @@ class CloudTab(QScrollArea):
         self.init_ui()
 
     def update_table(self):
-        print("Updating file list......")
-        self.file_list = fs.get_file_list()
-        logger.debug(len(self.file_list))
-        self.file_table.clearContents()
-        self.row_number = len(self.file_list)
-        self.file_table.setRowCount(self.row_number)
-        for cur_row in range(self.row_number):
-            logger.debug('current file id: %s', self.file_list[cur_row].id)
-            logger.debug('current file name: %s', self.file_list[cur_row].name)
-            logger.debug('current file size: %s', str(self.file_list[cur_row].size))
-            logger.debug('current file remote type: %s', self.file_list[cur_row].remote_type)
-            logger.debug('current file publish: %s', str(self.file_list[cur_row].is_published))
+        tab_index = main_wnd.main_tab_index["cloud_tab"]
+        main_wnd.content_tabs.removeTab(tab_index)
+        tab_index = main_wnd.content_tabs.addTab(CloudTab(main_wnd.content_tabs), "")
+        main_wnd.main_tab_index["cloud_tab"] = tab_index
+        main_wnd.content_tabs.setCurrentIndex(tab_index)
+        # print("Updating file list......")
+        # self.file_list = fs.get_file_list()
+        # logger.debug(len(self.file_list))
+        # self.file_table.clearContents()
+        # self.row_number = len(self.file_list)
+        # self.file_table.setRowCount(self.row_number)
+        # for cur_row in range(self.row_number):
+        #     logger.debug('current file id: %s', self.file_list[cur_row].id)
+        #     logger.debug('current file name: %s', self.file_list[cur_row].name)
+        #     logger.debug('current file size: %s', str(self.file_list[cur_row].size))
+        #     logger.debug('current file remote type: %s', self.file_list[cur_row].remote_type)
+        #     logger.debug('current file publish: %s', str(self.file_list[cur_row].is_published))
+        #
+        #     print(str(cur_row) + " row")
+        #     checkbox_item = QTableWidgetItem()
+        #     checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+        #     checkbox_item.setCheckState(Qt.Unchecked)
+        #     #self.file_table.insertRow(cur_row)
+        #     self.file_table.setItem(cur_row, 0, checkbox_item)
+        #     self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row].name))
+        #     self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(self.file_list[cur_row].size)))
+        #     self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row].remote_type))
+        #     self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(self.file_list[cur_row].is_published)))
+        #     self.file_table.setItem(cur_row, 5, QTableWidgetItem(str(self.file_list[cur_row].id)))
 
-            print(str(cur_row) + " row")
-            checkbox_item = QTableWidgetItem()
-            checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-            checkbox_item.setCheckState(Qt.Unchecked)
-            #self.file_table.insertRow(cur_row)
-            self.file_table.setItem(cur_row, 0, checkbox_item)
-            self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row].name))
-            self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(self.file_list[cur_row].size)))
-            self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row].remote_type))
-            self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(self.file_list[cur_row].is_published)))
-            self.file_table.setItem(cur_row, 5, QTableWidgetItem(str(self.file_list[cur_row].id)))
+
 
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
@@ -3515,20 +3558,32 @@ class CloudTab(QScrollArea):
                     # self.parent.update_table()
                     # TODO: add new row instead of refeshing the whole table
                     # TODO: display problem not solved: checkbox item is the key
-                    file_table = self.parent.file_table
-                    row_count = file_table.rowCount()
-                    file_table.insertRow(row_count)
-                    checkbox_item = QTableWidgetItem()
-                    checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-                    checkbox_item.setCheckState(Qt.Unchecked)
-                    file_table.setItem(row_count, 0, checkbox_item)
-                    file_table.setItem(row_count, 1, QTableWidgetItem(name))
-                    file_table.setItem(row_count, 2, QTableWidgetItem(str(size)))
-                    file_table.setItem(row_count, 3, QTableWidgetItem(remote_type))
-                    file_table.setItem(row_count, 4, QTableWidgetItem('False'))
-                    file_table.setItem(row_count, 5, QTableWidgetItem(str(product_id)))
-
-                    self.parent.check_record_list = [False for i in range(self.parent.file_table.rowCount())]
+                    # file_table = self.parent.file_table
+                    # row_count = file_table.rowCount()
+                    # file_table.insertRow(row_count)
+                    # checkbox_item = QTableWidgetItem()
+                    # checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+                    # checkbox_item.setCheckState(Qt.Unchecked)
+                    # file_table.setItem(row_count, 0, checkbox_item)
+                    # file_table.setItem(row_count, 1, QTableWidgetItem(name))
+                    # file_table.setItem(row_count, 2, QTableWidgetItem(str(size)))
+                    # file_table.setItem(row_count, 3, QTableWidgetItem(remote_type))
+                    # file_table.setItem(row_count, 4, QTableWidgetItem('False'))
+                    # file_table.setItem(row_count, 5, QTableWidgetItem(str(product_id)))
+                    #
+                    # self.parent.check_record_list = [False for i in range(self.parent.file_table.rowCount())]
+                    # tab_index = main_wnd.cloud_index
+                    # main_wnd.content_tabs.removeTab(tab_index)
+                    # main_wnd.cloud_index = main_wnd.content_tabs.addTab(CloudTab(main_wnd.content_tabs), "")
+                    # main_wnd.content_tabs.setCurrentIndex(main_wnd.cloud_index)
+                    tab_index = main_wnd.main_tab_index['cloud_tab']
+                    for key in main_wnd.main_tab_index:
+                        if main_wnd.main_tab_index[key] > tab_index:
+                            main_wnd.main_tab_index[key] -= 1
+                    main_wnd.content_tabs.removeTab(tab_index)
+                    tab_index = main_wnd.content_tabs.addTab(CloudTab(main_wnd.content_tabs), "")
+                    main_wnd.main_tab_index['cloud_tab'] = tab_index
+                    main_wnd.content_tabs.setCurrentIndex(tab_index)
 
                     logger.debug("update table successfully !")
                     QMessageBox.information(self, "Tips", "Uploaded successfuly")
@@ -3553,7 +3608,7 @@ class CloudTab(QScrollArea):
             QMessageBox.information(self, "Tips", "Please login first !")
         else:
             product_id = self.file_table.item(self.cur_clicked, 5).text()
-            self.publish_dialog = PublishDialog(self, product_id)
+            self.publish_dialog = PublishDialog(self, id=product_id, tab='cloud')
             # self.file_list[self.cur_clicked]
             logger.debug("handle publish act....")
 
@@ -3633,8 +3688,9 @@ class SideBar(QScrollArea):
                     "Cloud": "cloud_tab",
                     "Selling": "selling_tab",
                 }
-                wid = self.content_tabs.findChild(QWidget, item_to_tab_name[item.text()])
-                self.content_tabs.setCurrentWidget(wid)
+                tab_index = main_wnd.main_tab_index[item_to_tab_name[item.text()]]
+                main_wnd.content_tabs.setCurrentIndex(tab_index)
+
                 self.trending_list.setCurrentRow(-1);
                 self.treasure_list.setCurrentRow(-1);
             self.mine_list.itemPressed.connect(mine_list_clicked)
@@ -4017,6 +4073,7 @@ class MainWindow(QMainWindow):
         self.setObjectName("main_window")
         # no borders.  we make our own header panel.
         self.setWindowFlags(Qt.FramelessWindowHint)
+        self.main_tab_index = {}
 
         def set_geometry():
             self.resize(1002, 710)  # resize before centering.
@@ -4033,10 +4090,10 @@ class MainWindow(QMainWindow):
             content_tabs.tabBar().hide()
             content_tabs.setContentsMargins(0, 0, 0, 0)
             # Temporily modified for easy test by @hyiwr
-            content_tabs.addTab(PopularTab(content_tabs), "")
-            content_tabs.addTab(CloudTab(content_tabs), "")
-            content_tabs.addTab(FollowingTab(content_tabs), "")
-            content_tabs.addTab(SellTab(content_tabs), "")
+            self.pop_index = content_tabs.addTab(PopularTab(content_tabs), "")
+            self.cloud_index = content_tabs.addTab(CloudTab(content_tabs), "")
+            self.follow_index = content_tabs.addTab(FollowingTab(content_tabs), "")
+            self.sell_index = content_tabs.addTab(SellTab(content_tabs), "")
             #content_tabs.addTab(ProductInfoEdit(content_tabs), "")
             #content_tabs.addTab(PurchasedDownloadedTab(content_tabs), "") 
             #content_tabs.addTab(PurchasedDownloadingTab(content_tabs), "")
@@ -4048,8 +4105,14 @@ class MainWindow(QMainWindow):
             content_tabs.addTab(SecurityTab(content_tabs), "") 
             content_tabs.addTab(PreferenceTab(content_tabs), "")
             content_tabs.addTab(PersonalInfoPage(content_tabs), "") 
-            content_tabs.addTab(PurchasedTab(content_tabs), "")
-            content_tabs.addTab(CollectedTab(content_tabs), "")
+            self.purchase_index = content_tabs.addTab(PurchasedTab(content_tabs), "")
+            self.collect_index = content_tabs.addTab(CollectedTab(content_tabs), "")
+            self.main_tab_index = {
+                "cloud_tab": self.cloud_index,
+                "selling_tab": self.sell_index,
+                "purchase_tab": self.purchase_index,
+                "collect_tab": self.collect_index
+            }
             print("Adding tabs(shopping cart tab, etc.) to content_tabs")
             print("Loading stylesheet to content_tabs")
         add_content_tabs()
