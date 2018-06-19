@@ -3553,8 +3553,8 @@ class CloudTab(QScrollArea):
             else:
                 if self.ipfs_btn.isChecked():
                     print("start uploading")
-                    d_upload = deferToThread(fs.upload_file_ipfs, self.file_choice)
-                    d_upload.addCallback(self.handle_ok_callback)
+                    d_upload = fs.upload_file_ipfs(self.file_choice)
+                    self.handle_ok_callback(d_upload)
                 if self.s3_btn.isChecked():
                     print("upload to s3")
                     d_upload = deferToThread(fs.upload_file_s3, self.file_choice)
