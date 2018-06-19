@@ -3724,10 +3724,12 @@ class SideBar(QScrollArea):
                 item_to_tab_name = {
                     "Purchased": "purchase_tab",
                     "Collection": "collect_tab",
-                    "Shopping Cart": "cart_tab",
+                    # "Shopping Cart": "cart_tab",
                 }
-                wid = self.content_tabs.findChild(QWidget, item_to_tab_name[item.text()])
-                self.content_tabs.setCurrentWidget(wid)
+                # wid = self.content_tabs.findChild(QWidget, item_to_tab_name[item.text()])
+                # self.content_tabs.setCurrentWidget(wid)
+                tab_index = main_wnd.main_tab_index[item_to_tab_name[item.text()]]
+                main_wnd.content_tabs.setCurrentIndex(tab_index)
                 self.trending_list.setCurrentRow(-1);
                 self.mine_list.setCurrentRow(-1);
             self.treasure_list.itemPressed.connect(treasure_list_clicked)
