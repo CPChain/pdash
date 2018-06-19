@@ -1069,6 +1069,9 @@ class SearchProductTab(QScrollArea):
         @inlineCallbacks
         def display_lists():
             self.item_lists = yield wallet.market_client.query_product(self.key_words)
+            for i in range(len(self.item_lists)):
+                self.item_lists[i]['msg_hash'] = self.item_lists[i]['market_hash']
+            #TODO: Will be deleted in the future when the market side has unified the key's name
             self.promo_lists = yield wallet.market_client.query_promotion()
             set_layout()
 
