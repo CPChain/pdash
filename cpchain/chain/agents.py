@@ -151,10 +151,13 @@ class SellerAgent(Agent):
         return id_list
 
     def confirm_order(self, order_id,):
+        logger.debug("in seller confirm order, order id: %s", order_id)
+        logger.debug("seller address: %s", self.account)
         offered_price = self.query_order(order_id)[6]
         if offered_price < 0:
             return None
         transaction = {'value': offered_price, 'from': self.account,}
+        logger.debug("transaction: %s", transaction)
         tx_hash = self.contract.functions.sellerConfirm(order_id).transact(transaction)
         logger.debug("You have confirmed the order:{order_id} and deposited {value} to contract {address}".format(order_id=order_id, value=offered_price, address=self.contract.address))
         wait_for_transaction_receipt(self.web3, tx_hash)

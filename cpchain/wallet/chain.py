@@ -60,6 +60,7 @@ class Broker:
 
 
     def seller_send_request(self, order_info):
+        logger.debug("seller send request to proxy ...")
         order_id = list(order_info.keys())[0]
         new_order_info = order_info[order_id]
         market_hash = new_order_info[0]
@@ -254,7 +255,7 @@ class Monitor:
             else:
                 order_id = self.broker.confirmed_order_queue.get()
                 confirmed_order_list.append(order_id)
-        reactor.callInThread(self.broker.monitor_confirmed_order, confirmed_order_list)
+        reactor.callInThread(self.broker.confirm_order, confirmed_order_list)
 
 
 
@@ -326,8 +327,8 @@ class Handler:
             else:
                 order_info = self.broker.order_queue.get()
                 logger.debug("process new order, order info: %s", order_info)
-                logger.debug("seller send request to proxy ...")
                 order_id = list(order_info.keys())[0]
+                logger.debug("seller confirm order, order id: %s", order_id)
                 d = deferToThread(self.broker.seller.confirm_order, order_id)
                 def start_proxy_request():
                     self.broker.seller_send_request(order_info)
