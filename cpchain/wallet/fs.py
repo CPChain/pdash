@@ -14,15 +14,26 @@ logger = logging.getLogger(__name__)  # pylint: disable=locally-disabled, invali
 def get_file_list():
     """This returns a list of files.
     """
+    dbpath = join_with_rc(config.wallet.dbpath)
+    engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
+    Session = sessionmaker(bind=engine)
+    session = Session()
     return session.query(FileInfo).all()
 
 
 def get_file_by_id(file_id):
     return session.query(FileInfo).filter(FileInfo.id == file_id).all()[0]
 
+
 def get_file_by_hash(file_hash):
     return session.query(FileInfo).filter(FileInfo.hashcode == file_hash)
 
+def get_file_id_new(file_id):
+    dbpath = join_with_rc(config.wallet.dbpath)
+    engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    return session.query(FileInfo).filter(FileInfo.id == file_id).all()[0]
 
 def get_buyer_file_list():
     return session.query(BuyerFileInfo).all()
