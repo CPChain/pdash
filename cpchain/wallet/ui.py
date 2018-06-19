@@ -3767,6 +3767,7 @@ class Header(QFrame):
             search_btn.setFixedSize(18, 18)
             search_btn.setCursor(QCursor(Qt.PointingHandCursor))
             self.search_btn.clicked.connect(self.search_act)
+            self.returnPressed.connect(self.search_act)
 
             def set_layout():
                 main_layout = QHBoxLayout()
