@@ -609,16 +609,17 @@ class ProductDetailTab(QScrollArea):
             self.seller_avatar = QLabel("")
             self.seller_avatar.setObjectName("seller_avatar")
 
-            self.seller_name = QLabel("Christopher Chak")
+            # self.seller_name = QLabel(self.product_info["username"])
+            self.seller_name = QLabel("Jade Smile")
             self.seller_name.setObjectName("seller_name")
 
             self.sales_label = QLabel("Sales: {}".format(self.product_info['sales_number']))
             self.sales_label.setObjectName("sales_label")
 
-            self.size_label = QLabel("Size: 20 Mb")
+            self.size_label = QLabel("Size: {}".format(self.product_info["size"]))
             self.size_label.setObjectName("size_label")
 
-            self.description_label = QLabel("Description:")
+            self.description_label = QLabel("Description")
             self.description_label.setObjectName("description_label")
 
             self.rating_label = QLabel("Rating")
@@ -632,7 +633,7 @@ class ProductDetailTab(QScrollArea):
 
 
             # TODO: to get info from backend
-            self.data_label = QLabel("May 4, 2018")
+            self.data_label = QLabel(self.product_info["created"])
             self.data_label.setObjectName("data_label")
             # # d_comments = wallet.market_client.query_comment_by_hash(self.item['market_hash'])
             # def add_comment():
@@ -662,12 +663,12 @@ class ProductDetailTab(QScrollArea):
 
             des_text = "In 2012, OWSLA launched a monthly subscription, The Nest, with benefits including early access to OWSLA releases.[12] In 2013, Bromance Records partners up with OWSLA to create an American branch titled BromanceUS with releases from Gesaffelstein, Illangelo."
 
-            self.descriptiondetail = QLabel(str(des_text))
+            self.descriptiondetail = QLabel(self.product_info["description"])
             self.descriptiondetail.setObjectName("descriptiondetail")
             self.descriptiondetail.setWordWrap(True)
             self.descriptiondetail.setAlignment(Qt.AlignTop | Qt.AlignLeft)
 
-            self.price_label = QLabel("$15")
+            self.price_label = QLabel("${}".format(self.product_info["price"]))
             self.price_label.setObjectName("price_label")
 
         create_labels()
