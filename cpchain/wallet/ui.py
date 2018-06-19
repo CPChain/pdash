@@ -945,27 +945,6 @@ class SearchProductTab(QScrollArea):
         # logger.debug('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
         self.init_ui()
 
-
-    def update_item(self, item_list, promo_list):
-        self.search_item_num = len(item_list)
-        self.search_promo_num = len(promo_list)
-        if len(item_list) == 0:
-            item = {"title": "Medical data from NHIS", "none": "none"}
-            self.get_products(item)
-        else:
-            for i in range(self.search_item_num):
-                self.item_lists.append(Product2(self, item_list[i]))
-        if len(promo_list) == 0:
-            item = {"title": "Medical data from NHIS", "none": "none"}
-            self.get_promotion(item)
-        else:
-            for i in range(self.search_promo_num):
-                self.promo_lists.append(Product2(self, promo_list[i], 'simple'))
-        # TODO: item_list should return by query_product in net.py, now it return empty list
-        logger.debug('item list: %s', self.item_lists)
-        logger.debug('promo list: %s', self.promo_lists)
-        self.init_ui()
-
     def get_products(self, item={}):
         for i in range(self.search_item_num):
             self.item_lists.append(Product2(self, item))
