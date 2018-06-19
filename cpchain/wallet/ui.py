@@ -737,7 +737,7 @@ class ProductDetailTab(QScrollArea):
                         break
                     self.promo_lists.append(Product2(self, promo_list[i], 'simple'))
             self.comment_list = []
-            comments = yield wallet.market_client.query_comment_by_hash(self.item['market_hash'])
+            comments = yield wallet.market_client.query_comment_by_hash(self.item['msg_hash'])
             for j in range(len(comments)):
                 self.comment_list.append(ProductDetailTab.ProductComment(self, comments[j]))
             set_layout()
