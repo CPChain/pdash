@@ -943,7 +943,7 @@ class SearchProductTab(QScrollArea):
         self.search_item_num = 4
         self.search_promo_num = 4
         # logger.debug('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
-        # self.init_ui()
+        self.init_ui()
 
 
     def update_item(self, item_list, promo_list):
@@ -986,6 +986,7 @@ class SearchProductTab(QScrollArea):
         self.setWidgetResizable(True)
         self.frame.setMinimumWidth(200)
         self.frame.setMaximumWidth(200)
+
 
         def create_labels():
             self.num_label = QLabel("100")
@@ -1065,6 +1066,14 @@ class SearchProductTab(QScrollArea):
 
         self.hline = HorizontalLine(self, 2)
 
+        @inlineCallbacks
+        def display_lists():
+            self.item_lists = yield wallet.market_client.query_product(self.key_words)
+            self.promo_lists = yield wallet.market_client.query_promotion()
+            set_layout()
+
+        display_lists()
+
         def set_layout():
             self.main_layout = main_layout = QHBoxLayout(self)
             main_layout.addSpacing(0)
@@ -1119,13 +1128,17 @@ class SearchProductTab(QScrollArea):
             self.promotion_layout.addSpacing(0)
 
             for i in range(self.search_item_num):
-                self.product_layout.addWidget(self.item_lists[i])
+                if i == len(self.item_lists) - 1:
+                    break
+                self.product_layout.addWidget(Product2(self, self.item_lists[i]))
                 self.product_layout.addSpacing(0)
 
             self.product_layout.addStretch(1)
 
             for i in range(self.search_promo_num):
-                self.promotion_layout.addWidget(self.promo_lists[i])
+                if i == len(self.item_lists) - 1:
+                    break
+                self.promotion_layout.addWidget(Product2(self, self.promo_lists[i], 'simple'))
                 self.promotion_layout.addSpacing(0)
 
             self.promotion_layout.addStretch(1)
@@ -1135,10 +1148,13 @@ class SearchProductTab(QScrollArea):
             
             self.setLayout(self.main_layout)
 
-        set_layout()
+            logger.debug("loading stylesheet...")
+            load_stylesheet(self, "searchproduct.qss")
+
+        # set_layout()
         # TODO: Loading stylesheet
-        logger.debug("loading stylesheet...")
-        load_stylesheet(self, "searchproduct.qss")
+        # logger.debug("loading stylesheet...")
+        # load_stylesheet(self, "searchproduct.qss")
 
 
 #class PersonalHomePageTab(QScrollArea)
@@ -3794,10 +3810,11 @@ class Header(QFrame):
             main_wnd.findChild(QWidget, 'search_tab').update_item(item, promo)
 
         def search_act(self):
-            self.query()
-            # main_wnd.content_tabs.addTab(SearchProductTab(content_tabs), "")
-            wid = self.parent.content_tabs.findChild(QWidget, "search_tab")
-            self.parent.content_tabs.setCurrentWidget(wid)
+            # self.query()
+            content_tabs = main_wnd.content_tabs
+            content_tabs.addTab(SearchProductTab(content_tabs, str(self.text())), "")
+            wid = content_tabs.findChild(QWidget, "search_tab")
+            content_tabs.setCurrentWidget(wid)
 
 
     class LoginDialog(QDialog):
@@ -4130,7 +4147,7 @@ class MainWindow(QMainWindow):
             content_tabs.addTab(TagHPTab(content_tabs), "")
             content_tabs.addTab(SellerHPTab(content_tabs), "") 
             # content_tabs.addTab(ProductDetailTab(content_tabs), "")
-            content_tabs.addTab(SearchProductTab(content_tabs), "")
+            # content_tabs.addTab(SearchProductTab(content_tabs), "")
             content_tabs.addTab(SecurityTab(content_tabs), "") 
             content_tabs.addTab(PreferenceTab(content_tabs), "")
             content_tabs.addTab(PersonalInfoPage(content_tabs), "") 
