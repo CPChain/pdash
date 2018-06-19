@@ -829,8 +829,9 @@ class ProductDetailTab(QScrollArea):
             load_stylesheet(self, "prductdetail.qss")
     
     def handle_collect(self):
-        fs.add_record_collect(self.product_info)
-        self.collect_btn.setText("Collected")
+        if self.collect_btn.text() == "Collect":
+            fs.add_record_collect(self.product_info)
+            self.collect_btn.setText("Collected")
 
         tab_index = main_wnd.main_tab_index['collect_tab']
         main_wnd.content_tabs.removeTab(tab_index)
