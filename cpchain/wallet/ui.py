@@ -831,7 +831,14 @@ class ProductDetailTab(QScrollArea):
     def handle_collect(self):
         fs.add_record_collect(self.product_info)
         self.collect_btn.setText("Collected")
-        # TODO: Update collection info...
+
+        tab_index = main_wnd.main_tab_index['collect_tab']
+        main_wnd.content_tabs.removeTab(tab_index)
+        for key in main_wnd.main_tab_index:
+            if main_wnd.main_tab_index[key] > tab_index:
+                main_wnd.main_tab_index[key] -= 1
+        tab_index = main_wnd.content_tabs.addTab(CollectedTab(main_wnd.content_tabs), "")
+        main_wnd.main_tab_index['collect_tab'] = tab_index
 
     def handle_buynow(self):
         item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
