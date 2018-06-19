@@ -254,7 +254,7 @@ class Monitor:
             else:
                 order_id = self.broker.confirmed_order_queue.get()
                 confirmed_order_list.append(order_id)
-        reactor.callInThread(self.broker.monitor_confirmed_order, confirmed_order_list)
+        reactor.callInThread(self.broker.confirm_order, confirmed_order_list)
 
 
 
