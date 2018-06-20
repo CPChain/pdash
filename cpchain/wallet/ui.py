@@ -496,7 +496,7 @@ class BuyNowDialog(QDialog):
             msg_hash = self.item['market_hash']
             file_title = self.item['title']
             proxy = proxy_addr
-            seller = self.item['owner_address']
+            seller = wallet.market_client.public_key  # self.item['owner_address']
             wallet.chain_broker.handler.buy_product(msg_hash, file_title, proxy, seller)
         d.addCallback(get_proxy_address)
 
@@ -4206,19 +4206,19 @@ def initialize_system():
     
     def monitor_chain_event():
         monitor_new_order = LoopingCall(wallet.chain_broker.monitor.monitor_new_order)
-        monitor_new_order.start(5)
+        monitor_new_order.start(30)
 
         handle_new_order = LoopingCall(wallet.chain_broker.handler.handle_new_order)
-        handle_new_order.start(10)
+        handle_new_order.start(40)
 
         monitor_ready_order = LoopingCall(wallet.chain_broker.monitor.monitor_ready_order)
-        monitor_ready_order.start(7)
+        monitor_ready_order.start(50)
 
         handle_ready_order = LoopingCall(wallet.chain_broker.handler.handle_ready_order)
-        handle_ready_order.start(14)
+        handle_ready_order.start(60)
 
         monitor_confirmed_order = LoopingCall(wallet.chain_broker.monitor.monitor_confirmed_order)
-        monitor_confirmed_order.start(10)
+        monitor_confirmed_order.start(100)
     monitor_chain_event()
 
 
