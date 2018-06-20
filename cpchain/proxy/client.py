@@ -105,7 +105,7 @@ def start_client(sign_message, addr=None):
 
         if not proxy_reply.error:
             logger.debug('file_uri: %s' % proxy_reply.file_uri)
-            logger.debug('AES_key: %s' % proxy_reply.AES_key.decode())
+            logger.debug('AES_key: %s' % proxy_reply.AES_key)
             if buyer_request:
                 return download_file(proxy_reply.file_uri).addCallback(
                     lambda _: d.callback(proxy_reply))

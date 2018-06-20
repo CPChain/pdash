@@ -5,6 +5,11 @@ from queue import Queue
 from twisted.internet.threads import deferToThread
 from twisted.internet import reactor
 
+from cryptography.hazmat.primitives.serialization import load_der_public_key
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+
 from eth_utils import to_bytes
 
 from cpchain.utils import config
@@ -55,8 +60,10 @@ class Broker:
 
 
     def confirm_order(self, order_id_list):
+        logger.debug("in buyer confirm order")
         for current_id in order_id_list:
             self.buyer.confirm_order(current_id)
+            logger.debug("order {id} completed".format(id=current_id))
 
 
     def seller_send_request(self, order_info):
@@ -66,23 +73,36 @@ class Broker:
         market_hash = new_order_info[0]
         seller_addr = new_order_info[3]
         buyer_addr = new_order_info[2]
-        buyer_rsa_pubkey = new_order_info[1]
-        proxy_id = new_order_info[4]
+        buyer_rsa_public_key = new_order_info[1]
+        proxy_id = '7975bcf2faefec0dae6ccc82a66f89b12f23c747'  # new_order_info[4]
         raw_aes_key = session.query(FileInfo.aes_key) \
             .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash)) \
             .all()[0][0]
         # TODO: encrypt aes key with buyer rsa public key
-        encrypted_aes_key = 'encrypted aes key'
+        # encrypted_aes_key = b'encrypted aes key'
+        logger.debug("start to encrypt aes key with buyer rsa public key")
+        logger.debug("raw aes key: %s", raw_aes_key)
+        logger.debug("buyer rsa public key: %s", buyer_rsa_public_key)
+        encrypted_aes_key = load_der_public_key(buyer_rsa_public_key, backend=default_backend()).encrypt(
+            raw_aes_key,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
+        logger.debug("encrypted aes key: %s", encrypted_aes_key)
         file_hash = session.query(FileInfo.hashcode) \
             .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash)) \
             .all()[0][0]
+        logger.debug("order info got generated")
         message = Message()
         seller_data = message.seller_data
         message.type = Message.SELLER_DATA
         seller_data.order_id = order_id
         seller_data.seller_addr = seller_addr
         seller_data.buyer_addr = buyer_addr
-        seller_data.market_hash = market_hash
+        seller_data.market_hash = 'market hash'
         seller_data.AES_key = encrypted_aes_key
         storage = seller_data.storage
 
@@ -99,7 +119,7 @@ class Broker:
         # s3.key = 'sp'
 
         sign_message = SignMessage()
-        sign_message.public_key = self.wallet.accounts.default_account.public_key
+        sign_message.public_key = self.wallet.market_client.public_key
         sign_message.data = message.SerializeToString()
         sign_message.signature = ECCipher.create_signature(
             self.wallet.accounts.default_account.private_key,
@@ -107,19 +127,15 @@ class Broker:
         )
 
         seller_sign_message = sign_message
-        d_proxy_reply = start_proxy_request(seller_sign_message, tracker=('192.168.0.132', 8101), proxy_id=proxy_id)
+        logger.debug("message created")
+        d_proxy_reply = start_proxy_request(seller_sign_message, proxy_id=proxy_id)
 
-        def seller_deliver_proxy_callback(message):
+        def seller_deliver_proxy_callback(proxy_reply):
             # print('proxy recieved message')
-            logger.debug("Inside seller request callback.")
-            assert message.type == Message.PROXY_REPLY
-
-            proxy_reply = message.proxy_reply
-
+            logger.debug("in seller request callback.")
             if not proxy_reply.error:
-                logger.debug('file_uuid: %s', proxy_reply.file_uuid)
-                logger.debug('AES_key: ')
-                logger.debug(proxy_reply.AES_key)
+                logger.debug("receive reply from proxy")
+                logger.debug('file_uri: %s', proxy_reply.file_uri)
                 # add other action...
             else:
                 logger.debug(proxy_reply.error)
@@ -129,57 +145,54 @@ class Broker:
 
 
     def buyer_send_request(self, order_info):
+        logger.debug("buyer send request to proxy ...")
         order_id = list(order_info.keys())[0]
         new_order_info = order_info[order_id]
         seller_addr = new_order_info[3]
         buyer_addr = new_order_info[2]
         market_hash = new_order_info[0]
-        proxy_id = new_order_info[4]
+        proxy_id = '7975bcf2faefec0dae6ccc82a66f89b12f23c747'  # new_order_info[4]
         message = Message()
         buyer_data = message.buyer_data
         message.type = Message.BUYER_DATA
         buyer_data.order_id = order_id
         buyer_data.seller_addr = seller_addr
         buyer_data.buyer_addr = buyer_addr
-        buyer_data.market_hash = market_hash
+        buyer_data.market_hash = 'market hash'
 
         sign_message = SignMessage()
-        sign_message.public_key = self.wallet.accounts.default_account.public_key
+        sign_message.public_key = self.wallet.market_client.public_key
         sign_message.data = message.SerializeToString()
         sign_message.signature = ECCipher.create_signature(
             self.wallet.accounts.default_account.private_key,
             sign_message.data
         )
         buyer_sign_message = sign_message
-        d_proxy_reply = start_proxy_request(buyer_sign_message, tracker=('192.168.0.132', 8101), proxy_id=proxy_id)
+        d_proxy_reply = start_proxy_request(buyer_sign_message, proxy_id=proxy_id)
 
-        def update_buyer_db(file_uuid, file_path):
+        def update_buyer_db(file_uri, file_path):
             market_hash = Encoder.bytes_to_base64_str(new_order_info[0])
             session.query(BuyerFileInfo).filter(BuyerFileInfo.order_id == order_id).update(
                 {BuyerFileInfo.market_hash: market_hash, BuyerFileInfo.is_downloaded: True,
-                 BuyerFileInfo.file_uuid: file_uuid, BuyerFileInfo.path: file_path,
+                 BuyerFileInfo.file_uuid: file_uri, BuyerFileInfo.path: file_path,
                  BuyerFileInfo.size: os.path.getsize(file_path)}, synchronize_session=False)
             session.commit()
             return market_hash
 
-        def buyer_request_proxy_callback(message):
-            logger.debug("Inside buyer request callback.")
-            assert message.type == Message.PROXY_REPLY
-            proxy_reply = message.proxy_reply
+        def buyer_request_proxy_callback(proxy_reply):
+            logger.debug("in buyer request callback.")
             if not proxy_reply.error:
-                logger.debug('file_uuid: %s', proxy_reply.file_uuid)
-                logger.debug('AES_key: ')
-                logger.debug(len(proxy_reply.AES_key))
-                logger.debug(proxy_reply.AES_key)
+                logger.debug('file_uri: %s', proxy_reply.file_uri)
                 file_dir = os.path.expanduser(config.wallet.download_dir)
-                file_path = os.path.join(file_dir, proxy_reply.file_uuid)
-                logger.debug(file_path)
+                file_path = os.path.join(file_dir, proxy_reply.file_uri)
+                logger.debug("downloaded file path: %s", file_path)
                 decrypted_file = decrypt_file_aes(file_path, proxy_reply.AES_key)
                 logger.debug('Decrypted file path: %s', str(decrypted_file))
 
-                update_buyer_db(proxy_reply.file_uuid, decrypted_file)
+                update_buyer_db(proxy_reply.file_uri, decrypted_file)
                 # self.update_treasure_pane()
-
+                logger.debug("file has been downloaded")
+                logger.debug("put order into confirmed queue, order id: %s", order_id)
                 self.confirmed_order_queue.put(order_id)
             else:
                 logger.debug(proxy_reply.error)
@@ -236,8 +249,10 @@ class Monitor:
                 order = self.broker.bought_order_queue.get()
                 bought_order_list.append(order)
         if len(bought_order_list) == 0:
-            logger.debug("no ready order")
+            logger.debug("no bought order")
         else:
+            logger.debug("found bought order[{order_list}]".format(order_list=bought_order_list))
+            logger.debug("check bought order state")
             d_unready_order = deferToThread(self.broker.query_order_state, bought_order_list)
 
             def reset_bought_order_queue(unready_order_list):
@@ -248,9 +263,11 @@ class Monitor:
 
 
     def monitor_confirmed_order(self):
+        logger.debug("in monitor confirmed order")
         confirmed_order_list = []
         while True:
             if self.broker.confirmed_order_queue.empty():
+                logger.debug("no confirmed order")
                 break
             else:
                 order_id = self.broker.confirmed_order_queue.get()
@@ -274,7 +291,6 @@ class Handler:
 
 
     def buy_product(self, msg_hash, file_title, proxy, seller):
-        # fixme: format of hash value need to change
         logger.debug("start to buy product")
         seller_addr = self.get_address_from_public_key_object(seller)
         desc_hash = Encoder.str_to_base64_byte(msg_hash)
@@ -283,8 +299,7 @@ class Handler:
         product = OrderInfo(
             desc_hash=desc_hash,
             buyer_rsa_pubkey=rsa_key,
-            seller=self.broker.buyer.web3.toChecksumAddress(seller_addr),
-            # fixme: proxy should not be seller
+            seller='0x22114F40Ed222e83Bbd88DC6cbb3B9A136299A23',  # self.broker.buyer.web3.toChecksumAddress(seller_addr)
             proxy=self.broker.buyer.web3.toChecksumAddress(proxy),
             secondary_proxy=self.broker.buyer.web3.toChecksumAddress(proxy),
             proxy_value=10,
@@ -293,6 +308,7 @@ class Handler:
         )
         logger.debug("product info has been created")
         logger.debug("product info: %s", product)
+        logger.debug("seller address: %s", product.seller)
         logger.debug("bought order queue size: %s", self.broker.bought_order_queue.qsize())
         d_placed_order = deferToThread(self.broker.buyer.place_order, product)
 
@@ -330,16 +346,20 @@ class Handler:
                 order_id = list(order_info.keys())[0]
                 logger.debug("seller confirm order, order id: %s", order_id)
                 d = deferToThread(self.broker.seller.confirm_order, order_id)
-                def start_proxy_request():
+                def start_proxy_request(tx):
+                    logger.debug("order {tx} has been confirmed by seller".format(tx=tx))
                     self.broker.seller_send_request(order_info)
                 d.addCallback(start_proxy_request)
         logger.debug("new order process completed, order queue size: %s", self.broker.order_queue.qsize())
 
 
     def handle_ready_order(self):
+        logger.debug("in handle ready order")
         while True:
             if self.broker.ready_order_queue.empty():
+                logger.debug("no ready order")
                 break
             else:
                 order_info = self.broker.ready_order_queue.get()
+                logger.debug("process ready order, current order: %s", order_info)
                 self.broker.buyer_send_request(order_info)

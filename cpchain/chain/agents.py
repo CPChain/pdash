@@ -144,7 +144,7 @@ class SellerAgent(Agent):
 
     def filter_seller_range(self, start_id, end_id,):
         id_list = []
-        for current_id in range(start_id, end_id):
+        for current_id in range(start_id+1, end_id+1):
             current_seller = self.query_order(current_id)[2]
             if current_seller == self.account:
                 id_list.append(current_id)
