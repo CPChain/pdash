@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, 
                              QVBoxLayout, QGridLayout, QWidget, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel,
                              QWidget, QLineEdit, QSpacerItem, QSizePolicy, QTableWidget, QFormLayout, QComboBox, QTextEdit,
                              QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
-from PyQt5.QtCore import Qt, QSize, QPoint, pyqtSignal
+from PyQt5.QtCore import Qt, QSize, QPoint, pyqtSignal, QBasicTimer
 from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont, QPainter, QFontDatabase
 
 from cpchain import config, root_dir
@@ -496,7 +496,7 @@ class BuyNowDialog(QDialog):
             msg_hash = self.item['market_hash']
             file_title = self.item['title']
             proxy = proxy_addr
-            seller = wallet.market_client.public_key  # self.item['owner_address']
+            seller = self.item['owner_address']
             wallet.chain_broker.handler.buy_product(msg_hash, file_title, proxy, seller)
         d.addCallback(get_proxy_address)
 
@@ -1571,8 +1571,8 @@ class CollectedTab(QScrollArea):
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             # file_table.set_right_menu(right_menu)
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price', 'Size', ''])
-            file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+            file_table.setHorizontalHeaderLabels(['', 'Product Name', 'Price', 'Size', ''])
+            file_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
             file_table.setSortingEnabled(True)
 
             # # file_list = get_file_list()
@@ -1797,7 +1797,7 @@ class PurchasedDownloadedTab(QScrollArea):
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             #file_table.set_right_menu(right_menu)
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Size', 'Path', 'Remote URI'])
+            file_table.setHorizontalHeaderLabels(['', 'Product Name', 'Size', 'Path', 'Remote URI'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.verticalHeader().setDefaultSectionSize(30)
             file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
@@ -1812,7 +1812,7 @@ class PurchasedDownloadedTab(QScrollArea):
                 if cur_row == len(file_list):
                     break
                 if not file_list[cur_row].is_downloaded:
-                    break
+                    continue
                 checkbox_item = QTableWidgetItem()
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 checkbox_item.setCheckState(Qt.Unchecked)
@@ -1868,20 +1868,49 @@ class PurchasedDownloadedTab(QScrollArea):
                 self.file_table.removeRow(i)
         self.check_record_list = [False for i in range(self.file_table.rowCount())]
 
+
+class DownloadingProgressBar(QProgressBar):
+
+    def __init__(self, bar_row=None):
+        super().__init__()
+        self.bar_row = bar_row
+        self.initUI()
+
+    def initUI(self):
+        self.setGeometry(30, 40, 200, 25)
+
+        self.timer = QBasicTimer()
+        self.step = 0
+        from random import randint
+        self.max_step = randint(500, 1000)
+        self.timer.start(self.max_step, self)
+        self.show()
+
+    def timerEvent(self, e):
+        if self.step >= 100:
+            self.timer.stop()
+            return
+
+        self.step = self.step + 1
+        self.setValue(self.step)
+
+
+
 class PurchasedDownloadingTab(QScrollArea):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
-        #self.setObjectName("purchase_tab")
+        # self.setObjectName("purchase_tab")
         self.setObjectName("purchased_downloading_tab")
         self.init_ui()
 
     def update_table(self):
-        #file_list = get_file_list()
+        # file_list = get_file_list()
         print("Updating file list......")
         file_list = []
-        # single element data structure (assumed); to be changed 
-        dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "ordertime": "2018/2/4 08:30", "price": "36"}
+        # single element data structure (assumed); to be changed
+        dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "ordertime": "2018/2/4 08:30",
+                    "price": "36"}
         for i in range(self.row_number):
             file_list.append(dict_exa)
 
@@ -1892,7 +1921,8 @@ class PurchasedDownloadingTab(QScrollArea):
             checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
             checkbox_item.setCheckState(Qt.Unchecked)
             dling_progressbar = QProgressBar()
-            #dling_progressbar.setFixedSize(150,8)
+            # dling_progressbar = DownloadingProgressBar()
+            dling_progressbar.setFixedSize(150,8)
             dling_progressbar.setMaximum(100)
             dling_progressbar.setMinimum(0)
             dling_progressbar.setValue(49)
@@ -1905,7 +1935,7 @@ class PurchasedDownloadingTab(QScrollArea):
         self.customContextMenuRequested[QPoint].connect(func)
 
     def handle_upload(self):
-            self.local_file = QFileDialog.getOpenFileName()[0]
+        self.local_file = QFileDialog.getOpenFileName()[0]
 
     def init_ui(self):
         self.check_list = []
@@ -1927,13 +1957,14 @@ class PurchasedDownloadingTab(QScrollArea):
         self.purchased_dling_delete_btn.clicked.connect(self.handle_purchased_delete)
         self.open_path = open_path = QLabel("Open file path...")
         open_path.setObjectName("open_path")
-    
+
         self.row_number = 100
 
         self.hline_1 = HorizontalLine(self, 2)
 
         def create_file_table():
-            self.file_table = file_table = TableWidget(self) 
+            self.file_table = file_table = TableWidget(self)
+
             def right_menu():
                 self.purchased_right_menu = QMenu(file_table)
                 self.purchased_delete_act = QAction('Delete', self)
@@ -1951,56 +1982,53 @@ class PurchasedDownloadingTab(QScrollArea):
             file_table.verticalHeader().setVisible(False)
             file_table.setShowGrid(False)
             file_table.setAlternatingRowColors(True)
-            file_table.resizeColumnsToContents()  
+            file_table.resizeColumnsToContents()
             file_table.resizeRowsToContents()
-            file_table.setFocusPolicy(Qt.NoFocus) 
+            file_table.setFocusPolicy(Qt.NoFocus)
             # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
             file_table.setColumnCount(4)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             file_table.set_right_menu(right_menu)
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Progress', 'Order Time'])
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Progress', 'File UUID'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.verticalHeader().setDefaultSectionSize(30)
             file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
             # file_table.setMinimumHeight(30);
             file_table.setSortingEnabled(True)
 
-            #file_list = get_file_list()
-            file_list = []
-            print("Getting file list.......")
-            dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "ordertime": "2018/2/4 08:30", "price": "36", "progress": "50%"}
-            for i in range(self.row_number):
-                file_list.append(dict_exa)
+            self.file_list = file_list = fs.get_buyer_file_list()
 
             self.check_record_list = []
             self.checkbox_list = []
             for cur_row in range(self.row_number):
                 if cur_row == len(file_list):
                     break
-                checkbox_item = QTableWidgetItem()
-                checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-                checkbox_item.setCheckState(Qt.Unchecked)
-                dling_progressbar = QProgressBar()
-                dling_progressbar.setMaximum(100)
-                dling_progressbar.setMinimum(0)
-                dling_progressbar.setValue(49)
-                self.file_table.setItem(cur_row, 0, checkbox_item)
-                self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["name"]))
-                self.file_table.setCellWidget(cur_row, 2, dling_progressbar)
-                #self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["progress"]))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["ordertime"]))
-                self.check_record_list.append(False)
-        create_file_table()    
+                if file_list[cur_row].is_downloaded == False:
+                    checkbox_item = QTableWidgetItem()
+                    checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+                    checkbox_item.setCheckState(Qt.Unchecked)
+                    dling_progressbar = DownloadingProgressBar(cur_row)
+                    # dling_progressbar.valueChanged.connect(progress_complete)
+                    self.file_table.setItem(cur_row, 0, checkbox_item)
+                    self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].file_title))
+                    self.file_table.setCellWidget(cur_row, 2, dling_progressbar)
+                    self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].file_uuid))
+                    self.check_record_list.append(False)
 
-        self.file_table.sortItems(2)
-        self.file_table.horizontalHeader().setStyleSheet("QHeaderView::section{background: #f3f3f3; border: 1px solid #dcdcdc}")
+        create_file_table()
+
+        self.file_table.sortItems(1)
+        self.file_table.horizontalHeader().setStyleSheet(
+            "QHeaderView::section{background: #f3f3f3; border: 1px solid #dcdcdc}")
+
         # record rows that are clicked or checked
         def record_check(item):
             self.cur_clicked = item.row()
             if item.checkState() == Qt.Checked:
                 self.check_record_list[item.row()] = True
+
         self.file_table.itemClicked.connect(record_check)
 
         def set_layout():
@@ -2029,6 +2057,7 @@ class PurchasedDownloadingTab(QScrollArea):
             self.main_layout.addWidget(self.file_table)
             self.main_layout.addSpacing(2)
             self.setLayout(self.main_layout)
+
         set_layout()
 
     def handle_purchased_delete(self):
@@ -2036,7 +2065,7 @@ class PurchasedDownloadingTab(QScrollArea):
         for i in range(len(self.check_record_list)):
             if self.check_record_list[i] == True:
                 self.file_table.removeRow(i)
-                #self.update_table()
+                # self.update_table()
         logger.debug("Delete the corresponding row (i.e. self.cur_clicked) in TableWidget as before")
         logger.debug("Cancel uploading from backend")
         logger.debug("Uploading the table")
@@ -2401,7 +2430,7 @@ class SellTab(QScrollArea):
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
 
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price ($)', 'Sales', 'Rating', 'Update Time', ''])
+            file_table.setHorizontalHeaderLabels(['', 'Product Name', 'Price ($)', 'Sales', 'Rating', 'Update Time', ''])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.verticalHeader().setDefaultSectionSize(30)
             file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
@@ -2573,6 +2602,7 @@ class SelectionDialog(QDialog):
             self.setLayout(self.main_layout)
         set_layout()
         logger.debug("Loading stylesheets of SelectionDialog")
+        load_stylesheet(self, "selectiondialog.qss")
         self.show()
 
     def handle_publish(self):
@@ -2605,29 +2635,21 @@ class FollowingTagTab(QScrollArea):
         self.item_lists = []
         self.promo_lists = []
 
-        def get_items(products):
-            print("Getting items from backend......")
-            for i in range(self.follow_item_num):
-                self.item_lists.append(Product2(self, item=products[i], navi="following"))
-            set_layout()
-
-
         d_products = wallet.market_client.query_recommend_product()
+        def get_items(products):
+            for i in range(self.follow_item_num):
+                if i == len(products) - 1:
+                    break
+                self.item_lists.append(Product2(parent=self, item=products[i]))
+            d_promotion = wallet.market_client.query_promotion()
+            def get_promotion(products):
+                for i in range(self.promo_num_max):
+                    if i == len(products) - 1:
+                        break
+                    self.promo_lists.append(Product2(parent=self, item=products[i], mode="simple"))
+                set_layout()
+            d_promotion.addCallback(get_promotion)
         d_products.addCallback(get_items)
-
-        self.promo_label = QLabel(self)
-        self.item = {"title": "Medical data from NHIS", "none": "none"}
-
-        # TODO: Get promotion products based on products returned above or the keywords provided
-        
-        def get_promotion(item={}, key_words=""):
-            for i in range(self.promo_num_max):
-                self.promo_lists.append(Product(self, item, "simple"))
-        get_promotion(self.item)
-
-
-        d_promotion = wallet.market_client.query_promotion()
-        d_promotion.addCallback(get_promotion)
 
         def set_layout():
             self.follow_main_layout = QHBoxLayout(self)
@@ -2684,30 +2706,22 @@ class FollowingSellTab(QScrollArea):
         self.item_lists = []
         self.promo_lists = []
 
-        self.header_horline = HorizontalLine(self, 2)
-        self.header_horline.setObjectName("header_horline")
-
-        def get_items(products):
-            print("Getting items from backend......")
-            for i in range(self.follow_item_num):
-                self.item_lists.append(Product2(self, item=products[i], navi="following"))
-            set_layout()
 
         d_products = wallet.market_client.query_recommend_product()
+        def get_items(products):
+            for i in range(self.follow_item_num):
+                if i == len(products) - 1:
+                    break
+                self.item_lists.append(Product2(parent=self, item=products[i]))
+            d_promotion = wallet.market_client.query_promotion()
+            def get_promotion(products):
+                for i in range(self.promo_num_max):
+                    if i == len(products) - 1:
+                        break
+                    self.promo_lists.append(Product2(parent=self, item=products[i], mode="simple"))
+                set_layout()
+            d_promotion.addCallback(get_promotion)
         d_products.addCallback(get_items)
-
-        self.promo_label = QLabel(self)
-        self.item = {"title": "Medical data from NHIS", "none": "none"}
-
-        # TODO: Get promotion products based on products returned above or the keywords provided
-        
-        def get_promotion(item={}, key_words=""):
-            for i in range(self.promo_num_max):
-                self.promo_lists.append(Product(self, item, "simple"))
-        get_promotion(self.item)
-
-        d_promotion = wallet.market_client.query_promotion()
-        d_promotion.addCallback(get_promotion)
 
         def set_layout():
 
@@ -3375,7 +3389,7 @@ class CloudTab(QScrollArea):
             file_table.setColumnCount(6)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             file_table.set_right_menu(right_menu)
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Size', 'Remote Type', 'Published', 'ID'])
+            file_table.setHorizontalHeaderLabels(['', 'Product Name', 'Size', 'Remote Type', 'Published', 'ID'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.verticalHeader().setDefaultSectionSize(30)
             file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
@@ -3804,12 +3818,11 @@ class Header(QFrame):
         def __init__(self, parent=None):
             super().__init__(parent)
             self.parent = parent
-            self.setWindowTitle("Log In")
+            self.setWindowTitle("Log in")
 
             self.init_ui()
 
         def init_ui(self):
-
             def create_btns():
                 self.account1_btn = account1_btn = QRadioButton(self)
                 account1_btn.setText("Account 1")
@@ -3874,12 +3887,12 @@ class Header(QFrame):
             def login_result(status):
                 if status == 1:
                     logger.debug("login account: %s", wallet.market_client.public_key)
-                    QMessageBox.information(self, "Tips", "Successful !")
+                    QMessageBox.information(main_wnd, 'Tips', 'Log in successfully!')
                 elif status == 0:
-                    QMessageBox.information(self, "Tips", "Failed !")
+                    QMessageBox.information(main_wnd, 'Tips', 'Failed to log in !')
                 else:
-                    QMessageBox.information(self, "Tips", "New Users !")
-                    # TODO: jump to user profile page
+                    QMessageBox.information(main_wnd, 'Tips', 'New users !')
+                    # TODO: jump to user profile register page
             d_login.addCallback(login_result)
             self.close()
 
@@ -4207,9 +4220,9 @@ def _handle_keyboard_interrupt():
 def initialize_system():
     
     path = osp.join(root_dir, "cpchain/assets/wallet/font", "liberation.ttf")
-    font_regular = QFontDatabase.addApplicationFont(str(path))
-    font_givenname = QFontDatabase.applicationFontFamilies(font_regular)[0]
-    QApplication.setFont(QFont(font_givenname))
+    # font_regular = QFontDatabase.addApplicationFont(str(path))
+    # font_givenname = QFontDatabase.applicationFontFamilies(font_regular)[0]
+    # QApplication.setFont(QFont(font_givenname))
 
     def initialize_net():
         # Temporily modified for easy test by @hyiwr
@@ -4241,6 +4254,17 @@ def main():
     _handle_keyboard_interrupt()
 
     initialize_system()
+
+    def get_address_from_public_key_object(pub_key_string):
+        pub_key = get_public_key(pub_key_string)
+        return ECCipher.get_address_from_public_key(pub_key)
+
+    def get_public_key(public_key_string):
+        pub_key_bytes = Encoder.hex_to_bytes(public_key_string)
+        return ECCipher.create_public_key(pub_key_bytes)
+
+    seller_address = get_address_from_public_key_object(wallet.market_client.public_key)
+    logger.debug("at the begining, seller address: %s", seller_address)
     
     sys.exit(reactor.run())
 

@@ -144,3 +144,29 @@ QLabel#average_score, QLabel#buyer_rating {
 	font: bold 20px;
 }
 
+QPushButton#comment_btn{
+    padding-left: 14px;
+    padding-right: 14px;
+    border: 1px solid #3173d8;
+    border-radius: 5px;
+    color: #3173d8;
+    min-height: 30px;
+    max-height: 30px;
+    background: #ffffff;
+}
+
+QPushButton#comment_btn:hover{
+    border: 1px solid #3984f7;
+    color: #3984f6;
+}
+
+QPushButton#comment_btn:pressed{
+    border: 1px solid #2e6dcd;
+    color: #2e6dcd;
+    background: #e5ecf4;
+}
+
+QPushbutton#comment_btn:disabled{
+    border: 1px solid #8cb8ea;
+    color: #8cb8ea;
+}

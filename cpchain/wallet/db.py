@@ -17,8 +17,14 @@ print(dirpath)
 engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
 
 Base = declarative_base()
-Session = sessionmaker(bind=engine)
-session = Session()
+# Session = sessionmaker(bind=engine)
+# session = Session()
+
+
+def get_session():
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    return session
 
 
 class FileInfo(Base):

@@ -2,7 +2,7 @@ import tempfile
 import os
 import logging
 
-from cpchain.wallet.db import session, FileInfo, osp, create_engine, sessionmaker, BuyerFileInfo, CollectInfo, FileInfoVersion
+from cpchain.wallet.db import get_session, FileInfo, osp, create_engine, sessionmaker, BuyerFileInfo, CollectInfo, FileInfoVersion
 from cpchain.crypto import AESCipher, RSACipher
 from cpchain.utils import Encoder, join_with_rc
 from cpchain.storage import IPFSStorage
@@ -10,6 +10,7 @@ from cpchain.storage import S3Storage
 from cpchain import root_dir, config
 
 logger = logging.getLogger(__name__)  # pylint: disable=locally-disabled, invalid-name
+
 
 def get_file_list():
     """This returns a list of files.
@@ -22,87 +23,97 @@ def get_file_list():
 
 
 def get_file_by_id(file_id):
-    return session.query(FileInfo).filter(FileInfo.id == file_id).all()[0]
+    return get_session().query(FileInfo).filter(FileInfo.id == file_id).all()[0]
 
 
 def get_file_by_hash(file_hash):
-    return session.query(FileInfo).filter(FileInfo.hashcode == file_hash)
+    return get_session().query(FileInfo).filter(FileInfo.hashcode == file_hash)
 
 def get_file_id_new(file_id):
     dbpath = join_with_rc(config.wallet.dbpath)
     engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
     Session = sessionmaker(bind=engine)
     session = Session()
-    return session.query(FileInfo).filter(FileInfo.id == file_id).all()[0]
+    return get_session().query(FileInfo).filter(FileInfo.id == file_id).all()[0]
 
 def get_buyer_file_list():
-    return session.query(BuyerFileInfo).all()
+    return get_session().query(BuyerFileInfo).all()
 
 
 # Return the file names in a tuple
 def get_file_names():
-    return list(zip(*session.query(FileInfo.name).all()))[0]
+    return list(zip(*get_session().query(FileInfo.name).all()))[0]
 
 
 # Return the file names in a tuple
 def get_buyer_file_names():
-    return list(zip(*session.query(BuyerFileInfo.name).all()))[0]
+    return list(zip(*get_session().query(BuyerFileInfo.name).all()))[0]
 
 
 def add_file(new_file_info):
-    dbpath = join_with_rc(config.wallet.dbpath)
-    engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
-    Session = sessionmaker(bind=engine)
-    session = Session()
+    # dbpath = join_with_rc(config.wallet.dbpath)
+    # engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
+    session = get_session()
     session.add(new_file_info)
     session.commit()
 
 
 def update_file_info_version(public_key):
-    dbpath = join_with_rc(config.wallet.dbpath)
-    engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    public_key_list = []
-    for key in session.query(FileInfoVersion).all():
-        public_key_list.append(key.public_key)
-    if public_key not in public_key_list:
-        new_user_version = FileInfoVersion(version=1, public_key=public_key)
-        add_file(new_user_version)
-    else:
-        cur_version = session.query(FileInfoVersion).filter(FileInfoVersion.public_key==public_key)
-        session.query(FileInfoVersion).filter(FileInfoVersion.public_key==public_key). \
-            update({FileInfoVersion.version: cur_version+1}, synchronize_session=False)
-
+    # dbpath = join_with_rc(config.wallet.dbpath)
+    # engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
+    # Session = sessionmaker(bind=engine)
+    # session = Session()
+    try:
+        session = get_session()
+        public_key_list = []
+        for key in session.query(FileInfoVersion).all():
+            public_key_list.append(key.public_key)
+        if public_key not in public_key_list:
+            new_user_version = FileInfoVersion(version=1, public_key=public_key)
+            add_file(new_user_version)
+        else:
+            cur_version = session.query(FileInfoVersion).filter(FileInfoVersion.public_key==public_key)
+            session.query(FileInfoVersion).filter(FileInfoVersion.public_key==public_key). \
+                update({FileInfoVersion.version: cur_version+1}, synchronize_session=False)
+            session.commit()
+    except:
+        logger.exception("update_file_info_version error")
 
 
 def publish_file_update(market_hash, selected_id):
-    dbpath = join_with_rc(config.wallet.dbpath)
-    engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    session.query(FileInfo).filter(FileInfo.id == selected_id). \
-        update({FileInfo.market_hash: market_hash, FileInfo.is_published: True}, synchronize_session=False)
-    session.commit()
-
+    try:
+        logger.debug("333333333333333333333333xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+        # dbpath = join_with_rc(config.wallet.dbpath)
+        # engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
+        session = get_session()
+        session.query(FileInfo).filter(FileInfo.id == selected_id). \
+            update({FileInfo.market_hash: market_hash, FileInfo.is_published: True}, synchronize_session=False)
+        session.commit()
+        logger.debug("444444xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+    except:
+        logger.exception("error publish_file_update")
 
 def delete_file(file_name):
+    session = get_session()
     session.query(FileInfo).filter(FileInfo.name == file_name).\
         delete(synchronize_session=False)
     session.commit()
 
 def delete_file_by_id(file_id):
-    session.query(FileInfo).filter(FileInfo.id == file_id).\
+    session = get_session()
+    session.query(FileInfo).filter(FileInfo.id == file_id). \
         delete(synchronize_session=False)
     session.commit()
 
 def delete_file_by_msh(market_hash):
-    session.query(FileInfo).filter(FileInfo.market_hash == market_hash).\
+    session = get_session()
+    session.query(FileInfo).filter(FileInfo.market_hash == market_hash). \
         delete(synchronize_session=False)
     session.commit()
 
 
 def delete_buyer_file(file_name):
+    session = get_session()
     session.query(BuyerFileInfo).filter(BuyerFileInfo.file_title == file_name). \
         delete(synchronize_session=False)
     session.commit()
@@ -118,6 +129,7 @@ def encrypt_file(file_in_path, file_out_path):
 
 # Decrypt a file with key stored in database
 def decrypt_file(file_in_path, file_out_path):
+    session = get_session()
     aes_key = session.query(FileInfo.aes_key).filter(FileInfo.path == file_in_path).first()[0]
     decrypter = AESCipher(aes_key)
     decrypter.decrypt(file_in_path, file_out_path)
@@ -196,10 +208,12 @@ def add_record_collect(product_info):
 def get_collect_list():
     """This returns a list of files.
     """
+    session = get_session()
     return session.query(CollectInfo).all()
 
 def delete_collect_id(file_id):
-    session.query(CollectInfo).filter(CollectInfo.id == file_id).\
+    session = get_session()
+    session.query(CollectInfo).filter(CollectInfo.id == file_id). \
         delete(synchronize_session=False)
     session.commit()
     logger.debug("Collect record (id = {}) has been deleted !".format(file_id))
