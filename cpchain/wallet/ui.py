@@ -1812,7 +1812,7 @@ class PurchasedDownloadedTab(QScrollArea):
                 if cur_row == len(file_list):
                     break
                 if not file_list[cur_row].is_downloaded:
-                    break
+                    continue
                 checkbox_item = QTableWidgetItem()
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 checkbox_item.setCheckState(Qt.Unchecked)
@@ -1868,20 +1868,22 @@ class PurchasedDownloadedTab(QScrollArea):
                 self.file_table.removeRow(i)
         self.check_record_list = [False for i in range(self.file_table.rowCount())]
 
+
 class PurchasedDownloadingTab(QScrollArea):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
-        #self.setObjectName("purchase_tab")
+        # self.setObjectName("purchase_tab")
         self.setObjectName("purchased_downloading_tab")
         self.init_ui()
 
     def update_table(self):
-        #file_list = get_file_list()
+        # file_list = get_file_list()
         print("Updating file list......")
         file_list = []
-        # single element data structure (assumed); to be changed 
-        dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "ordertime": "2018/2/4 08:30", "price": "36"}
+        # single element data structure (assumed); to be changed
+        dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "ordertime": "2018/2/4 08:30",
+                    "price": "36"}
         for i in range(self.row_number):
             file_list.append(dict_exa)
 
@@ -1892,7 +1894,7 @@ class PurchasedDownloadingTab(QScrollArea):
             checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
             checkbox_item.setCheckState(Qt.Unchecked)
             dling_progressbar = QProgressBar()
-            #dling_progressbar.setFixedSize(150,8)
+            # dling_progressbar.setFixedSize(150,8)
             dling_progressbar.setMaximum(100)
             dling_progressbar.setMinimum(0)
             dling_progressbar.setValue(49)
@@ -1905,7 +1907,7 @@ class PurchasedDownloadingTab(QScrollArea):
         self.customContextMenuRequested[QPoint].connect(func)
 
     def handle_upload(self):
-            self.local_file = QFileDialog.getOpenFileName()[0]
+        self.local_file = QFileDialog.getOpenFileName()[0]
 
     def init_ui(self):
         self.check_list = []
@@ -1927,13 +1929,14 @@ class PurchasedDownloadingTab(QScrollArea):
         self.purchased_dling_delete_btn.clicked.connect(self.handle_purchased_delete)
         self.open_path = open_path = QLabel("Open file path...")
         open_path.setObjectName("open_path")
-    
+
         self.row_number = 100
 
         self.hline_1 = HorizontalLine(self, 2)
 
         def create_file_table():
-            self.file_table = file_table = TableWidget(self) 
+            self.file_table = file_table = TableWidget(self)
+
             def right_menu():
                 self.purchased_right_menu = QMenu(file_table)
                 self.purchased_delete_act = QAction('Delete', self)
@@ -1951,56 +1954,56 @@ class PurchasedDownloadingTab(QScrollArea):
             file_table.verticalHeader().setVisible(False)
             file_table.setShowGrid(False)
             file_table.setAlternatingRowColors(True)
-            file_table.resizeColumnsToContents()  
+            file_table.resizeColumnsToContents()
             file_table.resizeRowsToContents()
-            file_table.setFocusPolicy(Qt.NoFocus) 
+            file_table.setFocusPolicy(Qt.NoFocus)
             # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
             file_table.setColumnCount(4)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             file_table.set_right_menu(right_menu)
-            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Progress', 'Order Time'])
+            file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Progress', 'File UUID'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.verticalHeader().setDefaultSectionSize(30)
             file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
             # file_table.setMinimumHeight(30);
             file_table.setSortingEnabled(True)
 
-            #file_list = get_file_list()
-            file_list = []
-            print("Getting file list.......")
-            dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "ordertime": "2018/2/4 08:30", "price": "36", "progress": "50%"}
-            for i in range(self.row_number):
-                file_list.append(dict_exa)
+            self.file_list = file_list = fs.get_buyer_file_list()
 
             self.check_record_list = []
             self.checkbox_list = []
             for cur_row in range(self.row_number):
                 if cur_row == len(file_list):
                     break
-                checkbox_item = QTableWidgetItem()
-                checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-                checkbox_item.setCheckState(Qt.Unchecked)
-                dling_progressbar = QProgressBar()
-                dling_progressbar.setMaximum(100)
-                dling_progressbar.setMinimum(0)
-                dling_progressbar.setValue(49)
-                self.file_table.setItem(cur_row, 0, checkbox_item)
-                self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row]["name"]))
-                self.file_table.setCellWidget(cur_row, 2, dling_progressbar)
-                #self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["progress"]))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row]["ordertime"]))
-                self.check_record_list.append(False)
-        create_file_table()    
+                if file_list[cur_row].is_downloaded == False:
+                    checkbox_item = QTableWidgetItem()
+                    checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+                    checkbox_item.setCheckState(Qt.Unchecked)
+                    dling_progressbar = QProgressBar()
+                    dling_progressbar.setMaximum(100)
+                    dling_progressbar.setMinimum(0)
+                    dling_progressbar.setValue(49)
+                    self.file_table.setItem(cur_row, 0, checkbox_item)
+                    self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].file_title))
+                    self.file_table.setCellWidget(cur_row, 2, dling_progressbar)
+                    # self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["progress"]))
+                    self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].file_uuid))
+                    self.check_record_list.append(False)
 
-        self.file_table.sortItems(2)
-        self.file_table.horizontalHeader().setStyleSheet("QHeaderView::section{background: #f3f3f3; border: 1px solid #dcdcdc}")
+        create_file_table()
+
+        self.file_table.sortItems(1)
+        self.file_table.horizontalHeader().setStyleSheet(
+            "QHeaderView::section{background: #f3f3f3; border: 1px solid #dcdcdc}")
+
         # record rows that are clicked or checked
         def record_check(item):
             self.cur_clicked = item.row()
             if item.checkState() == Qt.Checked:
                 self.check_record_list[item.row()] = True
+
         self.file_table.itemClicked.connect(record_check)
 
         def set_layout():
@@ -2029,6 +2032,7 @@ class PurchasedDownloadingTab(QScrollArea):
             self.main_layout.addWidget(self.file_table)
             self.main_layout.addSpacing(2)
             self.setLayout(self.main_layout)
+
         set_layout()
 
     def handle_purchased_delete(self):
@@ -2036,7 +2040,7 @@ class PurchasedDownloadingTab(QScrollArea):
         for i in range(len(self.check_record_list)):
             if self.check_record_list[i] == True:
                 self.file_table.removeRow(i)
-                #self.update_table()
+                # self.update_table()
         logger.debug("Delete the corresponding row (i.e. self.cur_clicked) in TableWidget as before")
         logger.debug("Cancel uploading from backend")
         logger.debug("Uploading the table")
