@@ -195,6 +195,8 @@ class Broker:
                 logger.debug("file has been downloaded")
                 logger.debug("put order into confirmed queue, order id: %s", order_id)
                 self.confirmed_order_queue.put(order_id)
+                # TODO: update purchased tab downloaded
+
             else:
                 logger.debug(proxy_reply.error)
 
@@ -326,7 +328,6 @@ class Handler:
             logger.debug("update local db completed")
 
             # fixme: update UI pane
-            # self.update_treasure_pane()
 
         d_placed_order.addCallback(add_bought_order)
 
