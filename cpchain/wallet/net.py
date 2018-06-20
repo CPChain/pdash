@@ -417,3 +417,30 @@ class MarketClient:
         logger.debug('upload file info to market confirm: %s', confirm_info)
         return confirm_info['status']
 
+
+    @inlineCallbacks
+    def query_by_following_tag(self):
+        logger.debug("xxxxxxxxxxxxxxxxxxxxxxxx query by following tag ...")
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        url = utils.build_url(self.url + "product/v1/my_tag/product/search/")
+        logger.debug(url)
+        resp = yield treq.get(url, headers=header)
+        logger.debug(resp)
+        comment_info = yield treq.json_content(resp)
+        logger.debug('upload file info to market confirm: %s', comment_info)
+        return comment_info['data']
+
+
+    @inlineCallbacks
+    def query_by_following_seller(self):
+        logger.debug("xxxxxxxxxxxxxxxxxxxxxxxx query by following seller ...")
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        url = utils.build_url(self.url + "product/v1/my_seller/product/search/")
+        logger.debug(url)
+        resp = yield treq.get(url, headers=header)
+        logger.debug(resp)
+        comment_info = yield treq.json_content(resp)
+        logger.debug('query by following tag confirm: %s', comment_info)
+        return comment_info['data']
