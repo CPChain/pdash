@@ -1871,9 +1871,9 @@ class PurchasedDownloadedTab(QScrollArea):
 
 class DownloadingProgressBar(QProgressBar):
 
-    def __init__(self):
+    def __init__(self, bar_row=None):
         super().__init__()
-
+        self.bar_row = bar_row
         self.initUI()
 
     def initUI(self):
@@ -1881,7 +1881,9 @@ class DownloadingProgressBar(QProgressBar):
 
         self.timer = QBasicTimer()
         self.step = 0
-        self.timer.start(1000, self)
+        from random import randint
+        self.max_step = randint(500, 1000)
+        self.timer.start(self.max_step, self)
         self.show()
 
     def timerEvent(self, e):
@@ -1891,6 +1893,7 @@ class DownloadingProgressBar(QProgressBar):
 
         self.step = self.step + 1
         self.setValue(self.step)
+
 
 
 class PurchasedDownloadingTab(QScrollArea):
@@ -2006,11 +2009,11 @@ class PurchasedDownloadingTab(QScrollArea):
                     checkbox_item = QTableWidgetItem()
                     checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                     checkbox_item.setCheckState(Qt.Unchecked)
-                    dling_progressbar = DownloadingProgressBar()
+                    dling_progressbar = DownloadingProgressBar(cur_row)
+                    dling_progressbar.valueChanged.connect(progress_complete)
                     self.file_table.setItem(cur_row, 0, checkbox_item)
                     self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].file_title))
                     self.file_table.setCellWidget(cur_row, 2, dling_progressbar)
-                    # self.file_table.setItem(cur_row, 2, QTableWidgetItem(file_list[cur_row]["progress"]))
                     self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].file_uuid))
                     self.check_record_list.append(False)
 
