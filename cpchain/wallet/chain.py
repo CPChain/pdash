@@ -28,8 +28,6 @@ from cpchain.wallet.fs import get_session, FileInfo, decrypt_file_aes
 from cpchain.proxy.node import start_proxy_request
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 
-from cpchain.wallet import ui
-
 logger = logging.getLogger(__name__) # pylint: disable=locally-disabled, invalid-name
 
 
@@ -198,7 +196,7 @@ class Broker:
                 logger.debug("put order into confirmed queue, order id: %s", order_id)
                 self.confirmed_order_queue.put(order_id)
                 # TODO: update purchased tab downloaded
-                ui.update_purchased_tab()
+                # ui.update_purchased_tab()
 
             else:
                 logger.debug(proxy_reply.error)
@@ -331,7 +329,7 @@ class Handler:
             logger.debug("update local db completed")
 
             # fixme: update UI pane
-            ui.update_purchased_tab()
+            # ui.update_purchased_tab()
 
         d_placed_order.addCallback(add_bought_order)
 

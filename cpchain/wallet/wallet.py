@@ -50,6 +50,9 @@ class Wallet:
         #     buyer_check_confirm.start(15)
         # monitor_chain_event()
 
+    def set_main_wnd(self, main_wnd):
+        self.main_wnd = main_wnd
+
 
 def main():
         wallet = Wallet(reactor)
