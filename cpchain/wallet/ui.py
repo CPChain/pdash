@@ -1572,7 +1572,7 @@ class CollectedTab(QScrollArea):
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             # file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Price', 'Size', ''])
-            file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+            file_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
             file_table.setSortingEnabled(True)
 
             # # file_list = get_file_list()
@@ -2573,6 +2573,7 @@ class SelectionDialog(QDialog):
             self.setLayout(self.main_layout)
         set_layout()
         logger.debug("Loading stylesheets of SelectionDialog")
+        load_stylesheet(self, "selectiondialog.qss")
         self.show()
 
     def handle_publish(self):
@@ -3788,12 +3789,11 @@ class Header(QFrame):
         def __init__(self, parent=None):
             super().__init__(parent)
             self.parent = parent
-            self.setWindowTitle("Log In")
+            self.setWindowTitle("Log in")
 
             self.init_ui()
 
         def init_ui(self):
-
             def create_btns():
                 self.account1_btn = account1_btn = QRadioButton(self)
                 account1_btn.setText("Account 1")
@@ -3858,12 +3858,12 @@ class Header(QFrame):
             def login_result(status):
                 if status == 1:
                     logger.debug("login account: %s", wallet.market_client.public_key)
-                    QMessageBox.information(self, "Tips", "Successful !")
+                    QMessageBox.information(main_wnd, 'Tips', 'Log in successfully!')
                 elif status == 0:
-                    QMessageBox.information(self, "Tips", "Failed !")
+                    QMessageBox.information(main_wnd, 'Tips', 'Failed to log in !')
                 else:
-                    QMessageBox.information(self, "Tips", "New Users !")
-                    # TODO: jump to user profile page
+                    QMessageBox.information(main_wnd, 'Tips', 'New users !')
+                    # TODO: jump to user profile register page
             d_login.addCallback(login_result)
             self.close()
 
@@ -4191,9 +4191,9 @@ def _handle_keyboard_interrupt():
 def initialize_system():
     
     path = osp.join(root_dir, "cpchain/assets/wallet/font", "liberation.ttf")
-    font_regular = QFontDatabase.addApplicationFont(str(path))
-    font_givenname = QFontDatabase.applicationFontFamilies(font_regular)[0]
-    QApplication.setFont(QFont(font_givenname))
+    # font_regular = QFontDatabase.addApplicationFont(str(path))
+    # font_givenname = QFontDatabase.applicationFontFamilies(font_regular)[0]
+    # QApplication.setFont(QFont(font_givenname))
 
     def initialize_net():
         # Temporily modified for easy test by @hyiwr
