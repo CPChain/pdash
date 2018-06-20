@@ -197,6 +197,9 @@ class Broker:
                 self.confirmed_order_queue.put(order_id)
                 # TODO: update purchased tab downloaded
                 # ui.update_purchased_tab()
+                self.wallet.main_wnd.update_purchased_tab('downloaded')
+
+
 
             else:
                 logger.debug(proxy_reply.error)
@@ -329,7 +332,8 @@ class Handler:
             logger.debug("update local db completed")
 
             # fixme: update UI pane
-            # ui.update_purchased_tab()
+            self.parent.wallet.main_wnd.update_purchased_tab('downloading')
+
 
         d_placed_order.addCallback(add_bought_order)
 
