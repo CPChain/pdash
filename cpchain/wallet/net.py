@@ -92,7 +92,10 @@ class MarketClient:
         logger.debug('market_hash: %s', confirm_info['data']['market_hash'])
         #TODO: previous problems not solved
         market_hash = confirm_info['data']['market_hash']
+        logger.debug("1111111111111111111xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+
         publish_file_update(market_hash, selected_id)
+        logger.debug("2222222222222222222xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         return market_hash
 
 
