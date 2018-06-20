@@ -172,9 +172,10 @@ class Broker:
 
         def update_buyer_db(file_uri, file_path):
             market_hash = Encoder.bytes_to_base64_str(new_order_info[0])
+            file_uuid = file_uri.split('/')[3]
             session.query(BuyerFileInfo).filter(BuyerFileInfo.order_id == order_id).update(
                 {BuyerFileInfo.market_hash: market_hash, BuyerFileInfo.is_downloaded: True,
-                 BuyerFileInfo.file_uuid: file_uri, BuyerFileInfo.path: file_path,
+                 BuyerFileInfo.file_uuid: file_uuid, BuyerFileInfo.path: file_path,
                  BuyerFileInfo.size: os.path.getsize(file_path)}, synchronize_session=False)
             session.commit()
             return market_hash
@@ -184,7 +185,8 @@ class Broker:
             if not proxy_reply.error:
                 logger.debug('file_uri: %s', proxy_reply.file_uri)
                 file_dir = os.path.expanduser(config.wallet.download_dir)
-                file_path = os.path.join(file_dir, proxy_reply.file_uri)
+                file_name = proxy_reply.file_uri.split('/')[3]
+                file_path = os.path.join(file_dir, file_name)
                 logger.debug("downloaded file path: %s", file_path)
                 decrypted_file = decrypt_file_aes(file_path, proxy_reply.AES_key)
                 logger.debug('Decrypted file path: %s', str(decrypted_file))
