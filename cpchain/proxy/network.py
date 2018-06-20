@@ -2,7 +2,7 @@ import logging
 import time
 import operator
 
-from random import randint
+from uuid import uuid1 as uuid
 
 import socket
 
@@ -15,11 +15,8 @@ from cpchain.proxy.sysconf import get_cpu_info, get_mem_info, get_nic_info, sear
 
 logger = logging.getLogger(__name__)
 
-def entropy(length):
-    return "".join(chr(randint(0, 255)) for _ in range(length))
-
 def generate_tid():
-    return entropy(20)
+    return str(uuid())
 
 
 class PeerProtocol(protocol.DatagramProtocol): # pylint: disable=too-many-instance-attributes
@@ -42,7 +39,7 @@ class PeerProtocol(protocol.DatagramProtocol): # pylint: disable=too-many-instan
     def send_msg(self, msg, addr):
         try:
             if msg['type']:
-                logger.debug('send %s to %s' %  (str(msg['type']), str(addr)))
+                pass
         except:
             logger.debug("send wrong message %s to %s" % (str(msg), str(addr)))
             return
@@ -79,7 +76,7 @@ class PeerProtocol(protocol.DatagramProtocol): # pylint: disable=too-many-instan
 
         try:
             if msg['type']:
-                logger.debug('receive %s from %s' %  (str(msg['type']), str(addr)))
+                pass
         except:
             logger.debug("receive wrong message %s from %s" % (str(msg), str(addr)))
             return
@@ -112,13 +109,13 @@ class PeerProtocol(protocol.DatagramProtocol): # pylint: disable=too-many-instan
                 self.peers[peer_id] = peer
                 self.peers_lat[peer_id] = 0  # initialize
                 self.peers_conf[peer_id] = peer_conf
-                logger.debug("add peer %s" % str(peer['addr']))
 
                 response = {
                     'type': 'response',
                     'tid': tid,
                     'data': "bootstrap"
                 }
+                logger.debug("add peer %s at %s" % (peer_id, str(peer['addr'])))
 
             self.send_msg(response, addr)
 
@@ -151,6 +148,7 @@ class PeerProtocol(protocol.DatagramProtocol): # pylint: disable=too-many-instan
                 'data': pick_peer
             }
 
+            logger.debug("pick peer %s to %s" % (pick_peer, str(addr)))
             self.send_msg(response, addr)
 
         elif msg['type'] == 'get_peer':
@@ -168,12 +166,17 @@ class PeerProtocol(protocol.DatagramProtocol): # pylint: disable=too-many-instan
                 'data': pick_peer
             }
 
+            logger.debug("get peer %s at %s for %s" % \
+                            (peer_id, str(pick_peer), str(addr)))
             self.send_msg(response, addr)
 
         elif msg['type'] == 'response':
             tid = msg['tid']
             data = msg['data']
             self.accept_response(tid, data)
+
+        else:
+            logger.debug("receive wrong message %s from %s" % (str(msg), str(addr)))
 
     def accept_response(self, tid, data):
         d, timeout = self.request[tid]
