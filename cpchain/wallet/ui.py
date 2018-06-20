@@ -4228,6 +4228,16 @@ class MainWindow(QMainWindow):
 
         self.show()
 
+    def update_purchased_tab(self):
+        tab_index = self.main_tab_index['purchase_tab']
+        self.content_tabs.removeTab(tab_index)
+        for key in self.main_tab_index:
+            if self.main_tab_index[key] > tab_index:
+                self.main_tab_index[key] -= 1
+        tab_index = self.content_tabs.addTab(PurchasedTab(main_wnd.content_tabs), "")
+        self.main_tab_index['cloud_tab'] = tab_index
+        self.content_tabs.setCurrentIndex(tab_index)
+
 
     def closeEvent(self, event):
         self.reactor.stop()
@@ -4295,6 +4305,7 @@ def main():
     _handle_keyboard_interrupt()
 
     initialize_system()
+    wallet.set_main_wnd(main_wnd)
     
     sys.exit(reactor.run())
 
