@@ -4228,7 +4228,8 @@ class MainWindow(QMainWindow):
 
         self.show()
 
-    def update_purchased_tab(self):
+    def update_purchased_tab(self, nex_tab='downloaded'):
+
         tab_index = self.main_tab_index['purchase_tab']
         self.content_tabs.removeTab(tab_index)
         for key in self.main_tab_index:
@@ -4237,6 +4238,8 @@ class MainWindow(QMainWindow):
         tab_index = self.content_tabs.addTab(PurchasedTab(main_wnd.content_tabs), "")
         self.main_tab_index['cloud_tab'] = tab_index
         self.content_tabs.setCurrentIndex(tab_index)
+        #TODO: Set to the corresponding sub tab: downloading or downloaded
+
 
 
     def closeEvent(self, event):
