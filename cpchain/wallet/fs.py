@@ -218,6 +218,16 @@ def delete_collect_id(file_id):
     session.commit()
     logger.debug("Collect record (id = {}) has been deleted !".format(file_id))
 
+def buyer_file_update(file_uuid):
+    try:
+        # dbpath = join_with_rc(config.wallet.dbpath)
+        # engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
+        session = get_session()
+        session.query(BuyerFileInfo).filter(BuyerFileInfo.file_uuid == file_uuid). \
+            update({BuyerFileInfo.is_downloaded: True}, synchronize_session=False)
+        session.commit()
+    except:
+        logger.exception("error publish_file_update")
 #
 # # TODO Integrate download later
 # def get_file_from_proxy(order_id, seller_public_key):
