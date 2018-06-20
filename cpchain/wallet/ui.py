@@ -1871,9 +1871,9 @@ class PurchasedDownloadedTab(QScrollArea):
 
 class DownloadingProgressBar(QProgressBar):
 
-    def __init__(self, bar_row=None):
+    def __init__(self, cur_row=None):
         super().__init__()
-        self.bar_row = bar_row
+        self.cur_row = cur_row
         self.initUI()
 
     def initUI(self):
@@ -1887,12 +1887,22 @@ class DownloadingProgressBar(QProgressBar):
         self.show()
 
     def timerEvent(self, e):
-        if self.step >= 100:
+        if self.step >= self.max_step:
             self.timer.stop()
             return
 
         self.step = self.step + 1
         self.setValue(self.step)
+
+    def setRow(self, new_row):
+        self.cur_row = new_row
+
+    def isComplete(self):
+        if self.step >= self.max_step:
+            return True
+        else:
+            return False
+
 
 
 
@@ -1938,6 +1948,7 @@ class PurchasedDownloadingTab(QScrollArea):
         self.local_file = QFileDialog.getOpenFileName()[0]
 
     def init_ui(self):
+        self.actual_row_num = 0
         self.check_list = []
         self.purchased_total_orders = 103
         self.num_file = 100
@@ -2010,12 +2021,17 @@ class PurchasedDownloadingTab(QScrollArea):
                     checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                     checkbox_item.setCheckState(Qt.Unchecked)
                     dling_progressbar = DownloadingProgressBar(cur_row)
-                    dling_progressbar.valueChanged.connect(progress_complete)
                     self.file_table.setItem(cur_row, 0, checkbox_item)
                     self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].file_title))
                     self.file_table.setCellWidget(cur_row, 2, dling_progressbar)
                     self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].file_uuid))
                     self.check_record_list.append(False)
+                    def handle_complete(item):
+                        if item >= 100:
+                            self.file_table.setRowCount(0)
+                    dling_progressbar.valueChanged.connect(handle_complete)
+
+                    self.actual_row_num += 1
 
         create_file_table()
 
@@ -2059,6 +2075,21 @@ class PurchasedDownloadingTab(QScrollArea):
             self.setLayout(self.main_layout)
 
         set_layout()
+
+    def handle_complete(self):
+        sender_int = self.sender()
+        logger.debug("handle complete-----------------------------------")
+        logger.debug(sender_int)
+        logger.debug("handle complete-----------------------------------")
+        # cur_row = sender_bar.cur_row()
+        # if sender_bar.isComplete():
+        #     for row in range(len(self.actual_row_num)):
+        #         if row > cur_row:
+        #             progress_bar = self.file_table.item(row, 2)
+        #             progress_bar.setRow(row-1)
+        #     #TODO: Remove record from the backend
+        #     self.file_table.removeRow(cur_row)
+
 
     def handle_purchased_delete(self):
         # TODO: delete event
