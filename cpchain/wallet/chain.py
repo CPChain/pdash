@@ -18,7 +18,7 @@ from cpchain.chain.poll_chain import OrderMonitor
 
 from cpchain.wallet.db import BuyerFileInfo
 from cpchain.wallet.fs import add_file
-from cpchain.wallet.fs import session, FileInfo, decrypt_file_aes
+from cpchain.wallet.fs import get_session, FileInfo, decrypt_file_aes
 
 from cpchain.proxy.node import start_proxy_request
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
@@ -67,6 +67,7 @@ class Broker:
         buyer_addr = new_order_info[2]
         buyer_rsa_pubkey = new_order_info[1]
         proxy_id = new_order_info[4]
+        session = get_session()
         raw_aes_key = session.query(FileInfo.aes_key) \
             .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash)) \
             .all()[0][0]
@@ -154,6 +155,7 @@ class Broker:
 
         def update_buyer_db(file_uuid, file_path):
             market_hash = Encoder.bytes_to_base64_str(new_order_info[0])
+            session = get_session()
             session.query(BuyerFileInfo).filter(BuyerFileInfo.order_id == order_id).update(
                 {BuyerFileInfo.market_hash: market_hash, BuyerFileInfo.is_downloaded: True,
                  BuyerFileInfo.file_uuid: file_uuid, BuyerFileInfo.path: file_path,
