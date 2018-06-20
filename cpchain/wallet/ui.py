@@ -2676,30 +2676,22 @@ class FollowingSellTab(QScrollArea):
         self.item_lists = []
         self.promo_lists = []
 
-        self.header_horline = HorizontalLine(self, 2)
-        self.header_horline.setObjectName("header_horline")
-
-        def get_items(products):
-            print("Getting items from backend......")
-            for i in range(self.follow_item_num):
-                self.item_lists.append(Product2(self, item=products[i], navi="following"))
-            set_layout()
 
         d_products = wallet.market_client.query_recommend_product()
+        def get_items(products):
+            for i in range(self.follow_item_num):
+                if i == len(products) - 1:
+                    break
+                self.item_lists.append(Product2(parent=self, item=products[i]))
+            d_promotion = wallet.market_client.query_promotion()
+            def get_promotion(products):
+                for i in range(self.promo_num_max):
+                    if i == len(products) - 1:
+                        break
+                    self.promo_lists.append(Product2(parent=self, item=products[i], mode="simple"))
+                set_layout()
+            d_promotion.addCallback(get_promotion)
         d_products.addCallback(get_items)
-
-        self.promo_label = QLabel(self)
-        self.item = {"title": "Medical data from NHIS", "none": "none"}
-
-        # TODO: Get promotion products based on products returned above or the keywords provided
-        
-        def get_promotion(item={}, key_words=""):
-            for i in range(self.promo_num_max):
-                self.promo_lists.append(Product(self, item, "simple"))
-        get_promotion(self.item)
-
-        d_promotion = wallet.market_client.query_promotion()
-        d_promotion.addCallback(get_promotion)
 
         def set_layout():
 
