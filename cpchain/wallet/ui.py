@@ -4277,6 +4277,16 @@ def initialize_system():
         monitor_confirmed_order.start(100)
     monitor_chain_event()
 
+def update_purchased_tab():
+    tab_index = main_wnd.main_tab_index['purchase_tab']
+    main_wnd.content_tabs.removeTab(tab_index)
+    for key in main_wnd.main_tab_index:
+        if main_wnd.main_tab_index[key] > tab_index:
+            main_wnd.main_tab_index[key] -= 1
+    tab_index = main_wnd.content_tabs.addTab(PurchasedTab(main_wnd.content_tabs), "")
+    main_wnd.main_tab_index['cloud_tab'] = tab_index
+    main_wnd.content_tabs.setCurrentIndex(tab_index)
+
 
 def main():
     global main_wnd
