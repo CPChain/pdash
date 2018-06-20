@@ -218,12 +218,12 @@ def delete_collect_id(file_id):
     session.commit()
     logger.debug("Collect record (id = {}) has been deleted !".format(file_id))
 
-def buyer_file_update(file_uuid):
+def buyer_file_update(file_title):
     try:
         # dbpath = join_with_rc(config.wallet.dbpath)
         # engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
         session = get_session()
-        session.query(BuyerFileInfo).filter(BuyerFileInfo.file_uuid == file_uuid). \
+        session.query(BuyerFileInfo).filter(BuyerFileInfo.file_title == file_title). \
             update({BuyerFileInfo.is_downloaded: True}, synchronize_session=False)
         session.commit()
     except:

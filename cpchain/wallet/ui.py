@@ -2078,8 +2078,8 @@ class PurchasedDownloadingTab(QScrollArea):
 
     def handle_complete(self, item):
         if item >= 30:
-            file_uuid = self.file_table.item(0, 3).text()
-            fs.buyer_file_update(file_uuid)
+            file_title = self.file_table.item(0, 1).text()
+            fs.buyer_file_update(file_title)
             self.file_table.setRowCount(0)
         # cur_row = sender_bar.cur_row()
         # if sender_bar.isComplete():
