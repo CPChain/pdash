@@ -24,6 +24,7 @@ from cpchain.chain.poll_chain import OrderMonitor
 from cpchain.wallet.db import BuyerFileInfo
 from cpchain.wallet.fs import add_file
 from cpchain.wallet.fs import session, FileInfo, decrypt_file_aes
+from cpchain.wallet.utils import eth_addr_to_string
 
 from cpchain.proxy.node import start_proxy_request
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
@@ -71,10 +72,10 @@ class Broker:
         order_id = list(order_info.keys())[0]
         new_order_info = order_info[order_id]
         market_hash = new_order_info[0]
-        seller_addr = new_order_info[3]
-        buyer_addr = new_order_info[2]
+        seller_addr = eth_addr_to_string(new_order_info[3])
+        buyer_addr = eth_addr_to_string(new_order_info[2])
         buyer_rsa_public_key = new_order_info[1]
-        proxy_id = '7975bcf2faefec0dae6ccc82a66f89b12f23c747'  # new_order_info[4]
+        proxy_id = eth_addr_to_string(new_order_info[4])
         raw_aes_key = session.query(FileInfo.aes_key) \
             .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash)) \
             .all()[0][0]
@@ -148,10 +149,9 @@ class Broker:
         logger.debug("buyer send request to proxy ...")
         order_id = list(order_info.keys())[0]
         new_order_info = order_info[order_id]
-        seller_addr = new_order_info[3]
-        buyer_addr = new_order_info[2]
-        market_hash = new_order_info[0]
-        proxy_id = '7975bcf2faefec0dae6ccc82a66f89b12f23c747'  # new_order_info[4]
+        seller_addr = eth_addr_to_string(new_order_info[3])
+        buyer_addr = eth_addr_to_string(new_order_info[2])
+        proxy_id = eth_addr_to_string(new_order_info[4])
         message = Message()
         buyer_data = message.buyer_data
         message.type = Message.BUYER_DATA
@@ -301,7 +301,7 @@ class Handler:
         product = OrderInfo(
             desc_hash=desc_hash,
             buyer_rsa_pubkey=rsa_key,
-            seller='0x22114F40Ed222e83Bbd88DC6cbb3B9A136299A23',  # self.broker.buyer.web3.toChecksumAddress(seller_addr)
+            seller=self.broker.buyer.web3.toChecksumAddress(seller_addr),
             proxy=self.broker.buyer.web3.toChecksumAddress(proxy),
             secondary_proxy=self.broker.buyer.web3.toChecksumAddress(proxy),
             proxy_value=10,

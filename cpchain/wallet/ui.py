@@ -4218,19 +4218,19 @@ def initialize_system():
     
     def monitor_chain_event():
         monitor_new_order = LoopingCall(wallet.chain_broker.monitor.monitor_new_order)
-        monitor_new_order.start(30)
+        monitor_new_order.start(10)
 
         handle_new_order = LoopingCall(wallet.chain_broker.handler.handle_new_order)
-        handle_new_order.start(40)
+        handle_new_order.start(20)
 
         monitor_ready_order = LoopingCall(wallet.chain_broker.monitor.monitor_ready_order)
-        monitor_ready_order.start(50)
+        monitor_ready_order.start(30)
 
         handle_ready_order = LoopingCall(wallet.chain_broker.handler.handle_ready_order)
-        handle_ready_order.start(60)
+        handle_ready_order.start(30)
 
         monitor_confirmed_order = LoopingCall(wallet.chain_broker.monitor.monitor_confirmed_order)
-        monitor_confirmed_order.start(100)
+        monitor_confirmed_order.start(50)
     monitor_chain_event()
 
 
