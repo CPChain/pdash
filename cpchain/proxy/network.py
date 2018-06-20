@@ -2,7 +2,7 @@ import logging
 import time
 import operator
 
-from random import randint
+from uuid import uuid1 as uuid
 
 import socket
 
@@ -15,11 +15,8 @@ from cpchain.proxy.sysconf import get_cpu_info, get_mem_info, get_nic_info, sear
 
 logger = logging.getLogger(__name__)
 
-def entropy(length):
-    return "".join(chr(randint(0, 255)) for _ in range(length))
-
 def generate_tid():
-    return entropy(20)
+    return str(uuid())
 
 
 class PeerProtocol(protocol.DatagramProtocol): # pylint: disable=too-many-instance-attributes
