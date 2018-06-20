@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, 
                              QVBoxLayout, QGridLayout, QWidget, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel,
                              QWidget, QLineEdit, QSpacerItem, QSizePolicy, QTableWidget, QFormLayout, QComboBox, QTextEdit,
                              QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
-from PyQt5.QtCore import Qt, QSize, QPoint, pyqtSignal
+from PyQt5.QtCore import Qt, QSize, QPoint, pyqtSignal, QBasicTimer
 from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont, QPainter, QFontDatabase
 
 from cpchain import config, root_dir
@@ -1869,6 +1869,30 @@ class PurchasedDownloadedTab(QScrollArea):
         self.check_record_list = [False for i in range(self.file_table.rowCount())]
 
 
+class DownloadingProgressBar(QProgressBar):
+
+    def __init__(self):
+        super().__init__()
+
+        self.initUI()
+
+    def initUI(self):
+        self.setGeometry(30, 40, 200, 25)
+
+        self.timer = QBasicTimer()
+        self.step = 0
+        self.timer.start(1000, self)
+        self.show()
+
+    def timerEvent(self, e):
+        if self.step >= 100:
+            self.timer.stop()
+            return
+
+        self.step = self.step + 1
+        self.setValue(self.step)
+
+
 class PurchasedDownloadingTab(QScrollArea):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1894,7 +1918,8 @@ class PurchasedDownloadingTab(QScrollArea):
             checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
             checkbox_item.setCheckState(Qt.Unchecked)
             dling_progressbar = QProgressBar()
-            # dling_progressbar.setFixedSize(150,8)
+            # dling_progressbar = DownloadingProgressBar()
+            dling_progressbar.setFixedSize(150,8)
             dling_progressbar.setMaximum(100)
             dling_progressbar.setMinimum(0)
             dling_progressbar.setValue(49)
@@ -1981,10 +2006,7 @@ class PurchasedDownloadingTab(QScrollArea):
                     checkbox_item = QTableWidgetItem()
                     checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                     checkbox_item.setCheckState(Qt.Unchecked)
-                    dling_progressbar = QProgressBar()
-                    dling_progressbar.setMaximum(100)
-                    dling_progressbar.setMinimum(0)
-                    dling_progressbar.setValue(49)
+                    dling_progressbar = DownloadingProgressBar()
                     self.file_table.setItem(cur_row, 0, checkbox_item)
                     self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].file_title))
                     self.file_table.setCellWidget(cur_row, 2, dling_progressbar)
