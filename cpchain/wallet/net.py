@@ -115,6 +115,8 @@ class MarketClient:
         logger.debug('query url: %s', url)
         resp = yield treq.get(url=url, headers=header, persistent=False)
         confirm_info = yield treq.json_content(resp)
+        #TODO: Return key of msg_hash should be changed to be consistent with that of query_recommend_product (market_hash, however)
+        #TODO: Correspondingly, the transformation of keys in SearchProductTab shold also be finished.
         logger.debug("query product confirm info: %s", confirm_info)
         return confirm_info['results']
 

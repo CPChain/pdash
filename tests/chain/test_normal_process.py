@@ -63,15 +63,17 @@ def test_buyer_confirmed(bAgent):
     bAgent.confirm_order(order_id)
     test_record = bAgent.query_order(order_id)
     assert test_record[10] == 5
-    
-def test_buyer_rated(bAgent):
-    rate = 7
-    bAgent.rate_proxy(order_id, rate)
-    test_record = bAgent.query_order(order_id)
-    assert test_record[10] == 7
 
 def test_seller_rated(sAgent):
     rate = 7
     sAgent.rate_proxy(order_id, rate)
     test_record = sAgent.query_order(order_id)
+    print(test_record)
     assert test_record[10] == 6
+
+def test_buyer_rated(bAgent):
+    rate = 7
+    bAgent.rate_proxy(order_id, rate)
+    test_record = bAgent.query_order(order_id)
+    print(test_record)
+    assert test_record[10] == 7

@@ -609,16 +609,17 @@ class ProductDetailTab(QScrollArea):
             self.seller_avatar = QLabel("")
             self.seller_avatar.setObjectName("seller_avatar")
 
-            self.seller_name = QLabel("Christopher Chak")
+            # self.seller_name = QLabel(self.product_info["username"])
+            self.seller_name = QLabel("Jade Smile")
             self.seller_name.setObjectName("seller_name")
 
             self.sales_label = QLabel("Sales: {}".format(self.product_info['sales_number']))
             self.sales_label.setObjectName("sales_label")
 
-            self.size_label = QLabel("Size: 20 Mb")
+            self.size_label = QLabel("Size: {}".format(self.product_info["size"]))
             self.size_label.setObjectName("size_label")
 
-            self.description_label = QLabel("Description:")
+            self.description_label = QLabel("Description")
             self.description_label.setObjectName("description_label")
 
             self.rating_label = QLabel("Rating")
@@ -632,7 +633,7 @@ class ProductDetailTab(QScrollArea):
 
 
             # TODO: to get info from backend
-            self.data_label = QLabel("May 4, 2018")
+            self.data_label = QLabel(self.product_info["created"])
             self.data_label.setObjectName("data_label")
             # # d_comments = wallet.market_client.query_comment_by_hash(self.item['market_hash'])
             # def add_comment():
@@ -662,12 +663,12 @@ class ProductDetailTab(QScrollArea):
 
             des_text = "In 2012, OWSLA launched a monthly subscription, The Nest, with benefits including early access to OWSLA releases.[12] In 2013, Bromance Records partners up with OWSLA to create an American branch titled BromanceUS with releases from Gesaffelstein, Illangelo."
 
-            self.descriptiondetail = QLabel(str(des_text))
+            self.descriptiondetail = QLabel(self.product_info["description"])
             self.descriptiondetail.setObjectName("descriptiondetail")
             self.descriptiondetail.setWordWrap(True)
             self.descriptiondetail.setAlignment(Qt.AlignTop | Qt.AlignLeft)
 
-            self.price_label = QLabel("$15")
+            self.price_label = QLabel("${}".format(self.product_info["price"]))
             self.price_label.setObjectName("price_label")
 
         create_labels()
@@ -737,7 +738,7 @@ class ProductDetailTab(QScrollArea):
                         break
                     self.promo_lists.append(Product2(self, promo_list[i], 'simple'))
             self.comment_list = []
-            comments = yield wallet.market_client.query_comment_by_hash(self.item['market_hash'])
+            comments = yield wallet.market_client.query_comment_by_hash(self.item['msg_hash'])
             for j in range(len(comments)):
                 self.comment_list.append(ProductDetailTab.ProductComment(self, comments[j]))
             set_layout()
@@ -829,9 +830,17 @@ class ProductDetailTab(QScrollArea):
             load_stylesheet(self, "prductdetail.qss")
     
     def handle_collect(self):
-        fs.add_record_collect(self.product_info)
-        self.collect_btn.setText("Collected")
-        # TODO: Update collection info...
+        if self.collect_btn.text() == "Collect":
+            fs.add_record_collect(self.product_info)
+            self.collect_btn.setText("Collected")
+
+        tab_index = main_wnd.main_tab_index['collect_tab']
+        main_wnd.content_tabs.removeTab(tab_index)
+        for key in main_wnd.main_tab_index:
+            if main_wnd.main_tab_index[key] > tab_index:
+                main_wnd.main_tab_index[key] -= 1
+        tab_index = main_wnd.content_tabs.addTab(CollectedTab(main_wnd.content_tabs), "")
+        main_wnd.main_tab_index['collect_tab'] = tab_index
 
     def handle_buynow(self):
         item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
@@ -935,27 +944,6 @@ class SearchProductTab(QScrollArea):
         self.search_item_num = 4
         self.search_promo_num = 4
         # logger.debug('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
-        # self.init_ui()
-
-
-    def update_item(self, item_list, promo_list):
-        self.search_item_num = len(item_list)
-        self.search_promo_num = len(promo_list)
-        if len(item_list) == 0:
-            item = {"title": "Medical data from NHIS", "none": "none"}
-            self.get_products(item)
-        else:
-            for i in range(self.search_item_num):
-                self.item_lists.append(Product2(self, item_list[i]))
-        if len(promo_list) == 0:
-            item = {"title": "Medical data from NHIS", "none": "none"}
-            self.get_promotion(item)
-        else:
-            for i in range(self.search_promo_num):
-                self.promo_lists.append(Product2(self, promo_list[i], 'simple'))
-        # TODO: item_list should return by query_product in net.py, now it return empty list
-        logger.debug('item list: %s', self.item_lists)
-        logger.debug('promo list: %s', self.promo_lists)
         self.init_ui()
 
     def get_products(self, item={}):
@@ -978,6 +966,7 @@ class SearchProductTab(QScrollArea):
         self.setWidgetResizable(True)
         self.frame.setMinimumWidth(200)
         self.frame.setMaximumWidth(200)
+
 
         def create_labels():
             self.num_label = QLabel("100")
@@ -1057,6 +1046,17 @@ class SearchProductTab(QScrollArea):
 
         self.hline = HorizontalLine(self, 2)
 
+        @inlineCallbacks
+        def display_lists():
+            self.item_lists = yield wallet.market_client.query_product(self.key_words)
+            for i in range(len(self.item_lists)):
+                self.item_lists[i]['msg_hash'] = self.item_lists[i]['market_hash']
+            #TODO: Will be deleted in the future when the market side has unified the key's name
+            self.promo_lists = yield wallet.market_client.query_promotion()
+            set_layout()
+
+        display_lists()
+
         def set_layout():
             self.main_layout = main_layout = QHBoxLayout(self)
             main_layout.addSpacing(0)
@@ -1111,13 +1111,17 @@ class SearchProductTab(QScrollArea):
             self.promotion_layout.addSpacing(0)
 
             for i in range(self.search_item_num):
-                self.product_layout.addWidget(self.item_lists[i])
+                if i == len(self.item_lists) - 1:
+                    break
+                self.product_layout.addWidget(Product2(self, self.item_lists[i]))
                 self.product_layout.addSpacing(0)
 
             self.product_layout.addStretch(1)
 
             for i in range(self.search_promo_num):
-                self.promotion_layout.addWidget(self.promo_lists[i])
+                if i == len(self.item_lists) - 1:
+                    break
+                self.promotion_layout.addWidget(Product2(self, self.promo_lists[i], 'simple'))
                 self.promotion_layout.addSpacing(0)
 
             self.promotion_layout.addStretch(1)
@@ -1127,10 +1131,13 @@ class SearchProductTab(QScrollArea):
             
             self.setLayout(self.main_layout)
 
-        set_layout()
+            logger.debug("loading stylesheet...")
+            load_stylesheet(self, "searchproduct.qss")
+
+        # set_layout()
         # TODO: Loading stylesheet
-        logger.debug("loading stylesheet...")
-        load_stylesheet(self, "searchproduct.qss")
+        # logger.debug("loading stylesheet...")
+        # load_stylesheet(self, "searchproduct.qss")
 
 
 #class PersonalHomePageTab(QScrollArea)
@@ -3547,8 +3554,8 @@ class CloudTab(QScrollArea):
             else:
                 if self.ipfs_btn.isChecked():
                     print("start uploading")
-                    d_upload = deferToThread(fs.upload_file_ipfs, self.file_choice)
-                    d_upload.addCallback(self.handle_ok_callback)
+                    d_upload = fs.upload_file_ipfs(self.file_choice)
+                    self.handle_ok_callback(d_upload)
                 if self.s3_btn.isChecked():
                     print("upload to s3")
                     d_upload = deferToThread(fs.upload_file_s3, self.file_choice)
@@ -3717,10 +3724,12 @@ class SideBar(QScrollArea):
                 item_to_tab_name = {
                     "Purchased": "purchase_tab",
                     "Collection": "collect_tab",
-                    "Shopping Cart": "cart_tab",
+                    # "Shopping Cart": "cart_tab",
                 }
-                wid = self.content_tabs.findChild(QWidget, item_to_tab_name[item.text()])
-                self.content_tabs.setCurrentWidget(wid)
+                # wid = self.content_tabs.findChild(QWidget, item_to_tab_name[item.text()])
+                # self.content_tabs.setCurrentWidget(wid)
+                tab_index = main_wnd.main_tab_index[item_to_tab_name[item.text()]]
+                main_wnd.content_tabs.setCurrentIndex(tab_index)
                 self.trending_list.setCurrentRow(-1);
                 self.mine_list.setCurrentRow(-1);
             self.treasure_list.itemPressed.connect(treasure_list_clicked)
@@ -3767,6 +3776,7 @@ class Header(QFrame):
             search_btn.setFixedSize(18, 18)
             search_btn.setCursor(QCursor(Qt.PointingHandCursor))
             self.search_btn.clicked.connect(self.search_act)
+            self.returnPressed.connect(self.search_act)
 
             def set_layout():
                 main_layout = QHBoxLayout()
@@ -3783,10 +3793,11 @@ class Header(QFrame):
             main_wnd.findChild(QWidget, 'search_tab').update_item(item, promo)
 
         def search_act(self):
-            self.query()
-            # main_wnd.content_tabs.addTab(SearchProductTab(content_tabs), "")
-            wid = self.parent.content_tabs.findChild(QWidget, "search_tab")
-            self.parent.content_tabs.setCurrentWidget(wid)
+            # self.query()
+            content_tabs = main_wnd.content_tabs
+            content_tabs.addTab(SearchProductTab(content_tabs, str(self.text())), "")
+            wid = content_tabs.findChild(QWidget, "search_tab")
+            content_tabs.setCurrentWidget(wid)
 
 
     class LoginDialog(QDialog):
@@ -4119,7 +4130,7 @@ class MainWindow(QMainWindow):
             content_tabs.addTab(TagHPTab(content_tabs), "")
             content_tabs.addTab(SellerHPTab(content_tabs), "") 
             # content_tabs.addTab(ProductDetailTab(content_tabs), "")
-            content_tabs.addTab(SearchProductTab(content_tabs), "")
+            # content_tabs.addTab(SearchProductTab(content_tabs), "")
             content_tabs.addTab(SecurityTab(content_tabs), "") 
             content_tabs.addTab(PreferenceTab(content_tabs), "")
             content_tabs.addTab(PersonalInfoPage(content_tabs), "") 
