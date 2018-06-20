@@ -2029,7 +2029,7 @@ class PurchasedDownloadingTab(QScrollArea):
                     def handle_complete(item):
                         if item >= 100:
                             self.file_table.setRowCount(0)
-                    dling_progressbar.valueChanged.connect(handle_complete)
+                    dling_progressbar.valueChanged.connect(self.handle_complete)
 
                     self.actual_row_num += 1
 
@@ -2076,11 +2076,11 @@ class PurchasedDownloadingTab(QScrollArea):
 
         set_layout()
 
-    def handle_complete(self):
-        sender_int = self.sender()
-        logger.debug("handle complete-----------------------------------")
-        logger.debug(sender_int)
-        logger.debug("handle complete-----------------------------------")
+    def handle_complete(self, item):
+        if item >= 30:
+            file_uuid = self.file_table.item(0, 3).text()
+            fs.buyer_file_update(file_uuid)
+            self.file_table.setRowCount(0)
         # cur_row = sender_bar.cur_row()
         # if sender_bar.isComplete():
         #     for row in range(len(self.actual_row_num)):
