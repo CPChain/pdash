@@ -22,7 +22,6 @@ web3
 toml==0.9.4
 cryptography
 twisted
-eth-testrpc
 "
 
 proxy_pkgs="
@@ -69,7 +68,7 @@ do
                 ;;
         chain) pkgs="${pkgs}${chain_pkgs}"
                ;;
-        proxy) pkgs="${pkgs}${proxy_pkgs}${chain_pkgs}"
+        proxy) pkgs="${pkgs}${proxy_pkgs}"
                ;;
         wallet) pkgs="${pkgs}${wallet_pkgs}"
                 ;;
