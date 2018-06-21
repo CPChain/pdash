@@ -328,7 +328,7 @@ class Handler:
             logger.debug("update local db completed")
 
             # fixme: update UI pane
-            self.parent.wallet.main_wnd.update_purchased_tab('downloading')
+            self.broker.wallet.main_wnd.update_purchased_tab('downloading')
 
 
         d_placed_order.addCallback(add_bought_order)
