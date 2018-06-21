@@ -322,7 +322,7 @@ class MarketClient:
     def query_by_seller(self, public_key):
         url = self.url + 'product/v1/es_product/search/?ordering=-created&offset=0&limit=100&status=0&seller=' + str(public_key)
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token, 'Content-Type': 'application/json'}
-        resp = yield treq.get(url, headers=header)
+        resp = yield treq.get(url, headers=header, persistent=False)
         confirm_info = yield treq.json_content(resp)
         return confirm_info['results']
 
