@@ -412,6 +412,7 @@ class Seller(QScrollArea):
 
 
 class BuyNowDialog(QDialog):
+    account_balance = 1500000
     def __init__(self, parent=None, item={}):
         super().__init__(parent)
         self.parent = parent
@@ -432,16 +433,16 @@ class BuyNowDialog(QDialog):
         self.password_label = password_label = QLabel("Payment password:")
         password_label.setObjectName("password_label")
 
-        price_to_pay = 15
-        accout_balance = 15000
-        self.price_value = price_value = QLabel("${}".format(price_to_pay))
+        self.price_to_pay = self.item['price']
+        # accout_balance = 15000
+        self.price_value = price_value = QLabel("${}".format(self.price_to_pay))
         price_value.setObjectName("price_value")
-        self.account_value = account_value = QLabel("${}".format(accout_balance))
+        self.account_value = account_value = QLabel("${}".format(BuyNowDialog.account_balance))
         account_value.setObjectName("account_value")       
 
 
-        try_time_left = 3
-        self.hint_label = hint_label = QLabel("Wrong password. You can try {} times.".format(try_time_left))
+        # try_time_left = 3
+        # self.hint_label = hint_label = QLabel("You can try {} times.".format(try_time_left))
 
         #TextEdit def
         self.password_input = password_input = QLineEdit()
@@ -471,7 +472,7 @@ class BuyNowDialog(QDialog):
             self.pinfo_top_layout.addWidget(self.account_value, 2, 3, 1, 1)
             self.pinfo_top_layout.addWidget(self.password_label, 3, 1, 1, 1)
             self.pinfo_top_layout.addWidget(self.password_input, 3, 3, 1, 5)
-            self.pinfo_top_layout.addWidget(self.hint_label, 4, 3, 1, 3) 
+            # self.pinfo_top_layout.addWidget(self.hint_label, 4, 3, 1, 3)
             
             self.btn_layout = btn_layout = QHBoxLayout(self)
             self.btn_layout.addStretch(1)
@@ -500,7 +501,7 @@ class BuyNowDialog(QDialog):
             wallet.chain_broker.handler.buy_product(msg_hash, file_title, proxy, seller)
         d.addCallback(get_proxy_address)
 
-
+        BuyNowDialog.account_balance -= self.price_to_pay
         self.close()
 
     def handle_cancel(self):
@@ -4232,9 +4233,9 @@ class MainWindow(QMainWindow):
         wid = self.content_tabs.currentWidget()
         #TODO: Set to the corresponding sub tab: downloading or downloaded
         if nex_tab == 'downloading':
-            wid.setCurrentIndex(1)
+            wid.purchased_main_tab.setCurrentIndex(1)
         elif nex_tab == 'downloaded':
-            wid.setCurrentIndex(0)
+            wid.purchased_main_tab.setCurrentIndex(0)
         else:
             logger.debug("Wrong parameter!")
 
@@ -4314,3 +4315,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    # wallet.chain_broker.buyer.query_order(9)
