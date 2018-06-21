@@ -42,7 +42,7 @@ class Broker:
         self.confirmed_order_queue = Queue()
         bin_path = join_with_root(config.chain.contract_bin_path)
         # deploy_contract(bin_path, config.chain.contract_name, default_w3)
-        account = get_address_from_publ	ic_key_object(self.wallet.market_client.public_key)
+        account = get_address_from_public_key_object(self.wallet.market_client.public_key)
         self.buyer = BuyerAgent(default_w3, bin_path, config.chain.contract_name, account)
         self.seller = SellerAgent(default_w3, bin_path, config.chain.contract_name, account)
         self.handler = Handler(self)
