@@ -23,6 +23,7 @@ from cpchain import config, root_dir
 
 from cpchain.wallet import fs
 from cpchain.crypto import ECCipher, RSACipher, Encoder
+from cpchain.utils import open_file, sizeof_fmt
 
 from cpchain.proxy.node import pick_proxy, start_proxy_request
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
@@ -676,8 +677,8 @@ class ProductDetailTab(QScrollArea):
 
         def create_btns():
 
-            self.tag = ["tag1", "tag2", "tag3", "tag4"]
-            self.tag_num = 4
+            self.tag = self.item['tags']
+            self.tag_num = len(self.tag)
             self.tag_btn_list = []
             for i in range(self.tag_num):
                 self.tag_btn_list.append(QPushButton(self.tag[i], self))
@@ -1538,7 +1539,7 @@ class CollectedTab(QScrollArea):
             self.file_table.setItem(cur_row, 0, checkbox_item)
             self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].name))
             self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].price)))
-            self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].size)))
+            self.file_table.setItem(cur_row, 3, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
 
     def init_ui(self):
 
@@ -1598,7 +1599,7 @@ class CollectedTab(QScrollArea):
                 self.file_table.setItem(cur_row, 0, checkbox_item)
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].name))
                 self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].price)))
-                self.file_table.setItem(cur_row, 3, QTableWidgetItem(str(file_list[cur_row].size)))
+                self.file_table.setItem(cur_row, 3, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
                 # self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(file_list[cur_row].id)))
 
                 hidden_item = QTableWidgetItem()
@@ -1754,7 +1755,7 @@ class PurchasedDownloadedTab(QScrollArea):
             checkbox_item.setCheckState(Qt.Unchecked)
             self.file_table.setItem(cur_row, 0, checkbox_item)
             self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].file_title))
-            self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].size)))
+            self.file_table.setItem(cur_row, 2, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
             self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].path))
             self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].file_uuid))
 
@@ -1806,6 +1807,14 @@ class PurchasedDownloadedTab(QScrollArea):
             file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
             file_table.setSortingEnabled(True)
 
+            def right_menu():
+
+                self.downloaded_right_menu = QMenu(self.file_table)
+                self.downloaded_open_act = QAction('Open file', self)
+                self.downloaded_open_act.triggered.connect(self.handle_open_act)
+                self.downloaded_right_menu.addAction(self.downloaded_open_act)
+                self.downloaded_right_menu.exec_(QCursor.pos())
+            file_table.set_right_menu(right_menu)
 
             self.file_list = file_list = fs.get_buyer_file_list()
 
@@ -1821,7 +1830,7 @@ class PurchasedDownloadedTab(QScrollArea):
                 checkbox_item.setCheckState(Qt.Unchecked)
                 self.file_table.setItem(cur_row, 0, checkbox_item)
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].file_title))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].size)))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].path))
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].file_uuid))
                 self.check_record_list.append(False)
@@ -1870,6 +1879,11 @@ class PurchasedDownloadedTab(QScrollArea):
                 fs.delete_buyer_file(file_path)
                 self.file_table.removeRow(i)
         self.check_record_list = [False for i in range(self.file_table.rowCount())]
+
+    def handle_open_act(self):
+        cur_row = self.cur_clicked
+        file_path = self.file_table.item(cur_row, 3).text()
+        open_file(file_path)
 
 
 class DownloadingProgressBar(QProgressBar):
@@ -3439,7 +3453,7 @@ class CloudTab(QScrollArea):
                 checkbox_item.setCheckState(Qt.Unchecked)
                 self.file_table.setItem(cur_row, 0, checkbox_item)
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row].name))
-                self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(self.file_list[cur_row].size)))
+                self.file_table.setItem(cur_row, 2, QTableWidgetItem(sizeof_fmt(self.file_list[cur_row].size)))
                 #size
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row].remote_type))
                 #remote_type
