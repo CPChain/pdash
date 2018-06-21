@@ -969,8 +969,8 @@ class SearchProductTab(QScrollArea):
 
 
         def create_labels():
-            self.num_label = QLabel("100")
-            self.num_label.setObjectName("num_label")
+            # self.num_label = QLabel("100")
+            # self.num_label.setObjectName("num_label")
 
             self.res_label = QLabel("results")
             self.res_label.setObjectName("res_label")
@@ -1049,6 +1049,8 @@ class SearchProductTab(QScrollArea):
         @inlineCallbacks
         def display_lists():
             self.item_lists = yield wallet.market_client.query_product(self.key_words)
+            self.num_label = QLabel("{}".format(len(self.item_lists)))
+            self.num_label.setObjectName("num_label")
             for i in range(len(self.item_lists)):
                 self.item_lists[i]['msg_hash'] = self.item_lists[i]['market_hash']
             #TODO: Will be deleted in the future when the market side has unified the key's name
@@ -1111,7 +1113,7 @@ class SearchProductTab(QScrollArea):
             self.promotion_layout.addSpacing(0)
 
             for i in range(self.search_item_num):
-                if i == len(self.item_lists) - 1:
+                if i > len(self.item_lists) - 1:
                     break
                 self.product_layout.addWidget(Product2(self, self.item_lists[i]))
                 self.product_layout.addSpacing(0)
