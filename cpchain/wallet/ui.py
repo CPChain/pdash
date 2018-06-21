@@ -742,6 +742,8 @@ class ProductDetailTab(QScrollArea):
             self.comment_list = []
             comments = yield wallet.market_client.query_comment_by_hash(self.item['msg_hash'])
             for j in range(len(comments)):
+                if j >= len(comments):
+                    break
                 self.comment_list.append(ProductDetailTab.ProductComment(self, comments[j]))
             set_layout()
         get_product_info()
