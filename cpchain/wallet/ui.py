@@ -3022,8 +3022,10 @@ class Product2(QScrollArea):
 
         self.gap_line = HorizontalLine(self, 2)
         self.gap_line.setObjectName("gap_line")
-
-        self.tag = ['tagxxx', 'tag2', 'tag3']  #self.item['tags']
+        if isinstance(self.item['tags'], str):
+            self.tag = self.item['tags'].split(',')
+        if isinstance(self.item['tags'], list):
+            self.tag = self.item['tags']
         self.tag_num = len(self.tag)
         self.tag_btn_list = []
 
