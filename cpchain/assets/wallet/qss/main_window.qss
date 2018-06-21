@@ -14,7 +14,8 @@ QScrollArea{
     background: #fafafa;
 }
 
-QApplication{
-	font-family: "font_givenname";
+QMessageBox{
+    color: #006bcf;
+
 }
 

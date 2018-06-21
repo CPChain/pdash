@@ -32,8 +32,9 @@ class Wallet:
         self.reactor = reactor
         self.accounts = Accounts()
         # self.main_wnd = MainWindow(self)
-        self.chain_broker = Broker(self)
         self.market_client = MarketClient(self)
+        self.chain_broker = Broker(self)
+
 
 
         # self._initialize_system()
@@ -49,6 +50,9 @@ class Wallet:
         #     buyer_check_confirm = LoopingCall(buyer_chain_client.check_confirm)
         #     buyer_check_confirm.start(15)
         # monitor_chain_event()
+
+    def set_main_wnd(self, main_wnd):
+        self.main_wnd = main_wnd
 
 
 def main():

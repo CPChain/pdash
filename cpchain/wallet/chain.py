@@ -23,7 +23,8 @@ from cpchain.chain.poll_chain import OrderMonitor
 
 from cpchain.wallet.db import BuyerFileInfo
 from cpchain.wallet.fs import add_file
-from cpchain.wallet.fs import session, FileInfo, decrypt_file_aes
+from cpchain.wallet.utils import eth_addr_to_string, get_address_from_public_key_object
+from cpchain.wallet.fs import get_session, FileInfo, decrypt_file_aes
 
 from cpchain.proxy.node import start_proxy_request
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
@@ -41,8 +42,9 @@ class Broker:
         self.confirmed_order_queue = Queue()
         bin_path = join_with_root(config.chain.contract_bin_path)
         # deploy_contract(bin_path, config.chain.contract_name, default_w3)
-        self.buyer = BuyerAgent(default_w3, bin_path, config.chain.contract_name)
-        self.seller = SellerAgent(default_w3, bin_path, config.chain.contract_name)
+        account = get_address_from_public_key_object(self.wallet.market_client.public_key)
+        self.buyer = BuyerAgent(default_w3, bin_path, config.chain.contract_name, account)
+        self.seller = SellerAgent(default_w3, bin_path, config.chain.contract_name, account)
         self.handler = Handler(self)
         self.monitor = Monitor(self)
 
@@ -71,10 +73,11 @@ class Broker:
         order_id = list(order_info.keys())[0]
         new_order_info = order_info[order_id]
         market_hash = new_order_info[0]
-        seller_addr = new_order_info[3]
-        buyer_addr = new_order_info[2]
+        seller_addr = eth_addr_to_string(new_order_info[3])
+        buyer_addr = eth_addr_to_string(new_order_info[2])
         buyer_rsa_public_key = new_order_info[1]
-        proxy_id = '7975bcf2faefec0dae6ccc82a66f89b12f23c747'  # new_order_info[4]
+        proxy_id = eth_addr_to_string(new_order_info[4])
+        session = get_session()
         raw_aes_key = session.query(FileInfo.aes_key) \
             .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash)) \
             .all()[0][0]
@@ -148,10 +151,9 @@ class Broker:
         logger.debug("buyer send request to proxy ...")
         order_id = list(order_info.keys())[0]
         new_order_info = order_info[order_id]
-        seller_addr = new_order_info[3]
-        buyer_addr = new_order_info[2]
-        market_hash = new_order_info[0]
-        proxy_id = '7975bcf2faefec0dae6ccc82a66f89b12f23c747'  # new_order_info[4]
+        seller_addr = eth_addr_to_string(new_order_info[3])
+        buyer_addr = eth_addr_to_string(new_order_info[2])
+        proxy_id = eth_addr_to_string(new_order_info[4])
         message = Message()
         buyer_data = message.buyer_data
         message.type = Message.BUYER_DATA
@@ -173,6 +175,7 @@ class Broker:
         def update_buyer_db(file_uri, file_path):
             market_hash = Encoder.bytes_to_base64_str(new_order_info[0])
             file_uuid = file_uri.split('/')[3]
+            session = get_session()
             session.query(BuyerFileInfo).filter(BuyerFileInfo.order_id == order_id).update(
                 {BuyerFileInfo.market_hash: market_hash, BuyerFileInfo.is_downloaded: True,
                  BuyerFileInfo.file_uuid: file_uuid, BuyerFileInfo.path: file_path,
@@ -196,6 +199,12 @@ class Broker:
                 logger.debug("file has been downloaded")
                 logger.debug("put order into confirmed queue, order id: %s", order_id)
                 self.confirmed_order_queue.put(order_id)
+                # TODO: update purchased tab downloaded
+                # ui.update_purchased_tab()
+                self.wallet.main_wnd.update_purchased_tab('downloaded')
+
+
+
             else:
                 logger.debug(proxy_reply.error)
 
@@ -283,25 +292,17 @@ class Handler:
     def __init__(self, broker):
         self.broker = broker
 
-    def get_address_from_public_key_object(self, pub_key_string):
-        pub_key = self.get_public_key(pub_key_string)
-        return ECCipher.get_address_from_public_key(pub_key)
-
-    def get_public_key(self, public_key_string):
-        pub_key_bytes = Encoder.hex_to_bytes(public_key_string)
-        return ECCipher.create_public_key(pub_key_bytes)
-
 
     def buy_product(self, msg_hash, file_title, proxy, seller):
         logger.debug("start to buy product")
-        seller_addr = self.get_address_from_public_key_object(seller)
+        seller_addr = get_address_from_public_key_object(seller)
         desc_hash = Encoder.str_to_base64_byte(msg_hash)
         rsa_key = RSACipher.load_public_key()
         logger.debug("desc hash: %s", desc_hash)
         product = OrderInfo(
             desc_hash=desc_hash,
             buyer_rsa_pubkey=rsa_key,
-            seller='0x22114F40Ed222e83Bbd88DC6cbb3B9A136299A23',  # self.broker.buyer.web3.toChecksumAddress(seller_addr)
+            seller=self.broker.buyer.web3.toChecksumAddress(seller_addr),
             proxy=self.broker.buyer.web3.toChecksumAddress(proxy),
             secondary_proxy=self.broker.buyer.web3.toChecksumAddress(proxy),
             proxy_value=10,
@@ -327,7 +328,8 @@ class Handler:
             logger.debug("update local db completed")
 
             # fixme: update UI pane
-            # self.update_treasure_pane()
+            self.parent.wallet.main_wnd.update_purchased_tab('downloading')
+
 
         d_placed_order.addCallback(add_bought_order)
 
