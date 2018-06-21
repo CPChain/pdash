@@ -101,6 +101,8 @@ QTableWidget::item {
     outline-style: none;
     color: #1c1c1c;
     height: 30px;
+    padding-right: 15px;
+    padding-left: 15px;
 }
 
 QTableWidget::item:selected, QTableWidget::item:focus {
