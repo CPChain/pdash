@@ -1871,9 +1871,9 @@ class PurchasedDownloadedTab(QScrollArea):
 
 class DownloadingProgressBar(QProgressBar):
 
-    def __init__(self, bar_row=None):
+    def __init__(self, cur_row=None):
         super().__init__()
-        self.bar_row = bar_row
+        self.cur_row = cur_row
         self.initUI()
 
     def initUI(self):
@@ -1887,12 +1887,22 @@ class DownloadingProgressBar(QProgressBar):
         self.show()
 
     def timerEvent(self, e):
-        if self.step >= 100:
+        if self.step >= self.max_step:
             self.timer.stop()
             return
 
         self.step = self.step + 1
         self.setValue(self.step)
+
+    def setRow(self, new_row):
+        self.cur_row = new_row
+
+    def isComplete(self):
+        if self.step >= self.max_step:
+            return True
+        else:
+            return False
+
 
 
 
@@ -1938,6 +1948,7 @@ class PurchasedDownloadingTab(QScrollArea):
         self.local_file = QFileDialog.getOpenFileName()[0]
 
     def init_ui(self):
+        self.actual_row_num = 0
         self.check_list = []
         self.purchased_total_orders = 103
         self.num_file = 100
@@ -2010,12 +2021,17 @@ class PurchasedDownloadingTab(QScrollArea):
                     checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                     checkbox_item.setCheckState(Qt.Unchecked)
                     dling_progressbar = DownloadingProgressBar(cur_row)
-                    # dling_progressbar.valueChanged.connect(progress_complete)
                     self.file_table.setItem(cur_row, 0, checkbox_item)
                     self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].file_title))
                     self.file_table.setCellWidget(cur_row, 2, dling_progressbar)
                     self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].file_uuid))
                     self.check_record_list.append(False)
+                    def handle_complete(item):
+                        if item >= 100:
+                            self.file_table.setRowCount(0)
+                    dling_progressbar.valueChanged.connect(self.handle_complete)
+
+                    self.actual_row_num += 1
 
         create_file_table()
 
@@ -2059,6 +2075,21 @@ class PurchasedDownloadingTab(QScrollArea):
             self.setLayout(self.main_layout)
 
         set_layout()
+
+    def handle_complete(self, item):
+        if item >= 30:
+            file_title = self.file_table.item(0, 1).text()
+            fs.buyer_file_update(file_title)
+            self.file_table.setRowCount(0)
+        # cur_row = sender_bar.cur_row()
+        # if sender_bar.isComplete():
+        #     for row in range(len(self.actual_row_num)):
+        #         if row > cur_row:
+        #             progress_bar = self.file_table.item(row, 2)
+        #             progress_bar.setRow(row-1)
+        #     #TODO: Remove record from the backend
+        #     self.file_table.removeRow(cur_row)
+
 
     def handle_purchased_delete(self):
         # TODO: delete event
@@ -4197,6 +4228,19 @@ class MainWindow(QMainWindow):
 
         self.show()
 
+    def update_purchased_tab(self, nex_tab='downloaded'):
+
+        tab_index = self.main_tab_index['purchase_tab']
+        self.content_tabs.removeTab(tab_index)
+        for key in self.main_tab_index:
+            if self.main_tab_index[key] > tab_index:
+                self.main_tab_index[key] -= 1
+        tab_index = self.content_tabs.addTab(PurchasedTab(main_wnd.content_tabs), "")
+        self.main_tab_index['cloud_tab'] = tab_index
+        self.content_tabs.setCurrentIndex(tab_index)
+        #TODO: Set to the corresponding sub tab: downloading or downloaded
+
+
 
     def closeEvent(self, event):
         self.reactor.stop()
@@ -4246,6 +4290,16 @@ def initialize_system():
         monitor_confirmed_order.start(50)
     monitor_chain_event()
 
+def update_purchased_tab():
+    tab_index = main_wnd.main_tab_index['purchase_tab']
+    main_wnd.content_tabs.removeTab(tab_index)
+    for key in main_wnd.main_tab_index:
+        if main_wnd.main_tab_index[key] > tab_index:
+            main_wnd.main_tab_index[key] -= 1
+    tab_index = main_wnd.content_tabs.addTab(PurchasedTab(main_wnd.content_tabs), "")
+    main_wnd.main_tab_index['cloud_tab'] = tab_index
+    main_wnd.content_tabs.setCurrentIndex(tab_index)
+
 
 def main():
     global main_wnd
@@ -4254,18 +4308,8 @@ def main():
     _handle_keyboard_interrupt()
 
     initialize_system()
+    wallet.set_main_wnd(main_wnd)
 
-    def get_address_from_public_key_object(pub_key_string):
-        pub_key = get_public_key(pub_key_string)
-        return ECCipher.get_address_from_public_key(pub_key)
-
-    def get_public_key(public_key_string):
-        pub_key_bytes = Encoder.hex_to_bytes(public_key_string)
-        return ECCipher.create_public_key(pub_key_bytes)
-
-    seller_address = get_address_from_public_key_object(wallet.market_client.public_key)
-    logger.debug("at the begining, seller address: %s", seller_address)
-    
     sys.exit(reactor.run())
 
 
