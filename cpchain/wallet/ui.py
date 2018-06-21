@@ -2028,9 +2028,6 @@ class PurchasedDownloadingTab(QScrollArea):
                     self.file_table.setCellWidget(cur_row, 2, dling_progressbar)
                     self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].file_uuid))
                     self.check_record_list.append(False)
-                    def handle_complete(item):
-                        if item >= 100:
-                            self.file_table.setRowCount(0)
                     dling_progressbar.valueChanged.connect(self.handle_complete)
 
                     self.actual_row_num += 1
@@ -2079,18 +2076,10 @@ class PurchasedDownloadingTab(QScrollArea):
         set_layout()
 
     def handle_complete(self, item):
-        if item >= 30:
+        if item >= 100:
             file_title = self.file_table.item(0, 1).text()
             fs.buyer_file_update(file_title)
             self.file_table.setRowCount(0)
-        # cur_row = sender_bar.cur_row()
-        # if sender_bar.isComplete():
-        #     for row in range(len(self.actual_row_num)):
-        #         if row > cur_row:
-        #             progress_bar = self.file_table.item(row, 2)
-        #             progress_bar.setRow(row-1)
-        #     #TODO: Remove record from the backend
-        #     self.file_table.removeRow(cur_row)
 
 
     def handle_purchased_delete(self):
@@ -3771,7 +3760,7 @@ class SideBar(QScrollArea):
                 item_to_tab_name = {
                     "Purchased": "purchase_tab",
                     "Collection": "collect_tab",
-                    # "Shopping Cart": "cart_tab",
+                    "Shopping Cart": "collect_tab",
                 }
                 # wid = self.content_tabs.findChild(QWidget, item_to_tab_name[item.text()])
                 # self.content_tabs.setCurrentWidget(wid)
@@ -4240,7 +4229,15 @@ class MainWindow(QMainWindow):
         tab_index = self.content_tabs.addTab(PurchasedTab(main_wnd.content_tabs), "")
         self.main_tab_index['cloud_tab'] = tab_index
         self.content_tabs.setCurrentIndex(tab_index)
+        wid = self.content_tabs.currentWidget()
         #TODO: Set to the corresponding sub tab: downloading or downloaded
+        if nex_tab == 'downloading':
+            wid.setCurrentIndex(1)
+        elif nex_tab == 'downloaded':
+            wid.setCurrentIndex(0)
+        else:
+            logger.debug("Wrong parameter!")
+
 
 
 
