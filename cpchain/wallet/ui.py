@@ -1111,7 +1111,7 @@ class SearchProductTab(QScrollArea):
             self.promotion_layout.addSpacing(0)
 
             for i in range(self.search_item_num):
-                if i == len(self.item_lists) - 1:
+                if i > len(self.item_lists) - 1:
                     break
                 self.product_layout.addWidget(Product2(self, self.item_lists[i]))
                 self.product_layout.addSpacing(0)
