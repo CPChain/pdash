@@ -70,6 +70,7 @@ class MarketClient:
     @inlineCallbacks
     def publish_product(self, selected_id, title, description, price, tags, start_date, end_date,
                         file_md5, size):
+
         logger.debug("start publish product")
         header = {'Content-Type': 'application/json'}
         header['MARKET-KEY'] = self.public_key
@@ -320,6 +321,9 @@ class MarketClient:
 
     @inlineCallbacks
     def query_by_seller(self, public_key):
+        logger.debug("in query by seller")
+        logger.debug("seller's public key: %s", self.public_key)
+        logger.debug("public key used by query: %s", public_key)
         url = self.url + 'product/v1/es_product/search/?ordering=-created&offset=0&limit=100&status=0&seller=' + str(public_key)
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token, 'Content-Type': 'application/json'}
         resp = yield treq.get(url, headers=header, persistent=False)

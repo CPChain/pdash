@@ -135,7 +135,7 @@ class TagHPTab(QScrollArea):
         get_promotion(self.item)
 
         def create_labels():
-            self.tag_header = QLabel("Tag X")
+            self.tag_header = QLabel("Tag 1")
             self.tag_header.setObjectName("tag_header")
 
             self.followthis_label = QPushButton("Follow this tag")
@@ -379,7 +379,7 @@ class Seller(QScrollArea):
         self.setMaximumHeight(500)
         self.setMinimumHeight(120)
         self.setMaximumHeight(120)
-        self.seller_name = QPushButton("Christopher Chak")
+        self.seller_name = QPushButton("Barack Obama")
         self.seller_name.setObjectName("seller_name")
         self.seller_name.setCursor(QCursor(Qt.PointingHandCursor))
 
@@ -688,7 +688,7 @@ class ProductDetailTab(QScrollArea):
 
             self.seller_btn = QPushButton(self)
             self.seller_btn.setObjectName("seller_btn")
-            self.seller_btn.setText("Christopher Chak")
+            self.seller_btn.setText("Barack Obama")
             self.seller_btn.clicked.connect(self.seller_clicked_act)
             self.seller_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
@@ -2287,6 +2287,7 @@ class PublishDialog(QDialog):
                         for key in main_wnd.main_tab_index:
                             if main_wnd.main_tab_index[key] > tab_index:
                                 main_wnd.main_tab_index[key] -= 1
+                        logger.debug("update sell tab")
                         tab_index = main_wnd.content_tabs.addTab(SellTab(main_wnd.content_tabs), "")
                         main_wnd.main_tab_index['selling_tab'] = tab_index
                         if self.tab == 'sell':
@@ -2455,6 +2456,7 @@ class SellTab(QScrollArea):
 
 
         def create_file_table():
+            logger.debug("in create file table")
             self.file_table = file_table = TableWidget(self)
 
             file_table.horizontalHeader().setStretchLastSection(True)
@@ -2485,6 +2487,7 @@ class SellTab(QScrollArea):
                 checkbox_item = QTableWidgetItem()
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 checkbox_item.setCheckState(Qt.Unchecked)
+                logger.debug("current row of product: %s", self.file_list[cur_row])
                 self.file_table.setItem(cur_row, 0, checkbox_item)
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row]["title"]))
                 self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(self.file_list[cur_row]["price"])))
@@ -2500,6 +2503,8 @@ class SellTab(QScrollArea):
         # TODO: Seems public key here is not consistent with account1 or account 2 that is used for login, leading to
         # TODO: incomplete display
         def handle_query_by_seller(products):
+            logger.debug("in handle query by seller")
+            logger.debug("seller's product list: %s", products)
             self.file_list = []
             if len(products) == 0:
                 item = {"ID": "00x2222", "title": "Medical Data from Mayo Clinic", "price": "100", "avg_rating": "83%", "sales_number": "13087", "end_date": "2018-05-05"}
