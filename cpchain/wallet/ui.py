@@ -57,19 +57,16 @@ class PersonalProfileTab(QScrollArea):
 
     def init_ui(self):
 
-        def add_content_tabs():
-            self.profile_tabs = profile_tabs = QTabWidget(self)
-            profile_tabs.setObjectName("profile_tabs")
-            #follow_tabs.tabBar().hide()
-            profile_tabs.addTab(PersonalInfoPage(profile_tabs), "Personal Information")
-            profile_tabs.addTab(PreferenceTab(profile_tabs), "Preference")
-            profile_tabs.addTab(SecurityTab(profile_tabs), "Account Security")
-        add_content_tabs()
+        self.profile_tabs = profile_tabs = QTabWidget(self)
+        profile_tabs.setObjectName("profile_tabs")
+        profile_tabs.addTab(PersonalInfoPage(profile_tabs), "Personal Information")
+        profile_tabs.addTab(PreferenceTab(profile_tabs), "Preference")
+        profile_tabs.addTab(SecurityTab(profile_tabs), "Account Security")
 
         def set_layout():
-            self.follow_main_layout = follow_main_layout = QHBoxLayout()
+            follow_main_layout = QHBoxLayout()
             follow_main_layout.addWidget(self.profile_tabs)
-            self.setLayout(self.follow_main_layout)
+            self.setLayout(follow_main_layout)
         set_layout()
         load_stylesheet(self, "personalprofile.qss")
 
@@ -99,33 +96,30 @@ class TagHPTab(QScrollArea):
         self.item_lists = []
         self.promo_lists = []
 
-        def get_products(item={}, key_words=""):
+        def get_products(item=None):
             for i in range(self.search_item_num):
                 self.item_lists.append(Product(self, item))
 
         self.item = {"title": "Medical data from NHIS", "none": "none"}
         get_products(self.item)
 
-        def get_promotion(item={}, key_words=""):
+        def get_promotion(item=None):
             for i in range(self.search_promo_num):
                 self.promo_lists.append(Product(self, item, "simple"))
         get_promotion(self.item)
 
-        def create_labels():
-            self.tag_header = QLabel("Tag 1")
-            self.tag_header.setObjectName("tag_header")
+        self.tag_header = QLabel("Tag 1")
+        self.tag_header.setObjectName("tag_header")
 
-            self.followthis_label = QPushButton("Follow this tag")
-            self.followthis_label.setObjectName("followthis_label")
-            self.followthis_label.clicked.connect(self.handle_follow_tag)
+        self.followthis_label = QPushButton("Follow this tag")
+        self.followthis_label.setObjectName("followthis_label")
+        self.followthis_label.clicked.connect(self.handle_follow_tag)
 
-            self.related_label = QLabel("Related Tags")
-            self.related_label.setObjectName("related_label")
+        self.related_label = QLabel("Related Tags")
+        self.related_label.setObjectName("related_label")
 
-            self.may_like_label = QLabel("You may like")
-            self.may_like_label.setObjectName("may_like_label")
-
-        create_labels()
+        self.may_like_label = QLabel("You may like")
+        self.may_like_label.setObjectName("may_like_label")
 
         def bind_slots():
             logger.debug("binding slots of btns....")
@@ -135,44 +129,42 @@ class TagHPTab(QScrollArea):
         self.hline_1 = HorizontalLine(self, 2)
         self.hline_2 = HorizontalLine(self, 2)
         self.hline_3 = HorizontalLine(self, 2)
-        def set_layout():
-            self.main_layout = main_layout = QHBoxLayout(self)
-            main_layout.addSpacing(0)
+        self.main_layout = main_layout = QHBoxLayout(self)
+        main_layout.addSpacing(0)
 
-            self.content_layout = QVBoxLayout(self)
-            self.stat_layout = QHBoxLayout()
-            self.stat_layout.addSpacing(0)
-            self.stat_layout.addWidget(self.tag_header)
-            self.stat_layout.addStretch(1)
-            self.stat_layout.addWidget(self.followthis_label)
-            self.stat_layout.addSpacing(0)
+        self.content_layout = QVBoxLayout(self)
+        self.stat_layout = QHBoxLayout()
+        self.stat_layout.addSpacing(0)
+        self.stat_layout.addWidget(self.tag_header)
+        self.stat_layout.addStretch(1)
+        self.stat_layout.addWidget(self.followthis_label)
+        self.stat_layout.addSpacing(0)
 
-            self.content_layout.addLayout(self.stat_layout)
-            self.content_layout.addWidget(self.hline_1)
-            for i in range(self.search_item_num):
-                self.content_layout.addWidget(self.item_lists[i])
-                self.content_layout.addSpacing(0)
+        self.content_layout.addLayout(self.stat_layout)
+        self.content_layout.addWidget(self.hline_1)
+        for i in range(self.search_item_num):
+            self.content_layout.addWidget(self.item_lists[i])
+            self.content_layout.addSpacing(0)
 
-            self.content_layout.addStretch(1)
+        self.content_layout.addStretch(1)
 
-            self.promotion_layout = QVBoxLayout(self)
-            self.promotion_layout.addWidget(self.related_label)
-            self.promotion_layout.addWidget(self.hline_2)
-            self.promotion_layout.addWidget(self.may_like_label)
-            self.promotion_layout.addWidget(self.hline_3)
+        self.promotion_layout = QVBoxLayout(self)
+        self.promotion_layout.addWidget(self.related_label)
+        self.promotion_layout.addWidget(self.hline_2)
+        self.promotion_layout.addWidget(self.may_like_label)
+        self.promotion_layout.addWidget(self.hline_3)
 
-            for i in range(self.search_promo_num):
-                self.promotion_layout.addWidget(self.promo_lists[i])
-                self.promotion_layout.addSpacing(0)
+        for i in range(self.search_promo_num):
+            self.promotion_layout.addWidget(self.promo_lists[i])
+            self.promotion_layout.addSpacing(0)
 
-            self.main_layout.addLayout(self.content_layout, 2)
-            self.main_layout.addLayout(self.promotion_layout, 1)
+        self.main_layout.addLayout(self.content_layout, 2)
+        self.main_layout.addLayout(self.promotion_layout, 1)
 
-            self.main_layout.addLayout(self.content_layout)
+        self.main_layout.addLayout(self.content_layout)
 
-            self.setLayout(self.main_layout)
+        self.setLayout(self.main_layout)
 
-        set_layout()
         logger.debug("loading stylesheet...")
         load_stylesheet(self, "tagpage.qss")
 
@@ -224,34 +216,28 @@ class SellerHPTab(QScrollArea):
         self.init_ui()
 
     def init_ui(self):
-        def create_labels():
 
-            self.time_label = QLabel("Time")
-            self.time_label.setObjectName("time_label")
+        self.time_label = QLabel("Time")
+        self.time_label.setObjectName("time_label")
 
-            self.price_label = QLabel("Price")
-            self.price_label.setObjectName("price_label")
+        self.price_label = QLabel("Price")
+        self.price_label.setObjectName("price_label")
 
-        create_labels()
 
-        def create_btns():
+        self.time_btn = QPushButton(self)
+        self.time_btn.setObjectName("time_btn")
 
-            self.time_btn = QPushButton(self)
-            self.time_btn.setObjectName("time_btn")
+        self.price_btn = QPushButton(self)
+        self.price_btn.setObjectName("price_btn")
 
-            self.price_btn = QPushButton(self)
-            self.price_btn.setObjectName("price_btn")
+        self.message_btn = QPushButton(self)
+        self.message_btn.setObjectName("message_btn")
+        self.message_btn.setText("Message")
 
-            self.message_btn = QPushButton(self)
-            self.message_btn.setObjectName("message_btn")
-            self.message_btn.setText("Message")
-
-            self.follow_btn = QPushButton(self)
-            self.follow_btn.setObjectName("follow_btn")
-            self.follow_btn.setText("Follow")
-            self.follow_btn.clicked.connect(self.handle_follow)
-
-        create_btns()
+        self.follow_btn = QPushButton(self)
+        self.follow_btn.setObjectName("follow_btn")
+        self.follow_btn.setText("Follow")
+        self.follow_btn.clicked.connect(self.handle_follow)
 
         self.seller_list = []
         self.seller_promote_number = 3
@@ -271,7 +257,7 @@ class SellerHPTab(QScrollArea):
         get_seller_list()
         self.sellerid = {"name": "Chak", "sales": "2020"}
 
-        def get_products(item={}, key_words=""):
+        def get_products(item=None):
             for i in range(self.item_num):
                 self.item_lists.append(Product(self, item))
 
@@ -282,8 +268,8 @@ class SellerHPTab(QScrollArea):
             self.main_layout = main_layout = QHBoxLayout(self)
             main_layout.addSpacing(0)
 
-            self.content_layout = content_layout = QVBoxLayout(self)
-            self.search_layout = search_layout = QHBoxLayout(self)
+            self.content_layout = QVBoxLayout(self)
+            self.search_layout = QHBoxLayout(self)
             self.search_layout.addWidget(self.search_bar)
             self.search_layout.addSpacing(10)
             self.search_layout.addWidget(self.time_label)
@@ -300,9 +286,9 @@ class SellerHPTab(QScrollArea):
                 self.content_layout.addWidget(self.item_lists[i])
                 self.content_layout.addSpacing(0)
 
-            self.seller_layout = seller_layout = QVBoxLayout(self)
+            self.seller_layout = QVBoxLayout(self)
             self.seller_layout.addWidget(self.this_seller)
-            self.btn_layout = btn_layout = QHBoxLayout(self)
+            self.btn_layout = QHBoxLayout(self)
             self.btn_layout.addWidget(self.message_btn)
             self.btn_layout.addWidget(self.follow_btn)
             self.seller_layout.addLayout(self.btn_layout)
