@@ -9,7 +9,7 @@ from cpchain.storage import IPFSStorage
 from cpchain.storage import S3Storage
 from cpchain import root_dir, config
 
-logger = logging.getLogger(__name__)  # pylint: disable=locally-disabled, invalid-name
+logger = logging.getLogger(__name__)
 
 
 def get_file_list():
@@ -51,18 +51,12 @@ def get_buyer_file_names():
 
 
 def add_file(new_file_info):
-    # dbpath = join_with_rc(config.wallet.dbpath)
-    # engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
     session = get_session()
     session.add(new_file_info)
     session.commit()
 
 
 def update_file_info_version(public_key):
-    # dbpath = join_with_rc(config.wallet.dbpath)
-    # engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
-    # Session = sessionmaker(bind=engine)
-    # session = Session()
     try:
         session = get_session()
         public_key_list = []
@@ -82,14 +76,10 @@ def update_file_info_version(public_key):
 
 def publish_file_update(market_hash, selected_id):
     try:
-        logger.debug("333333333333333333333333xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-        # dbpath = join_with_rc(config.wallet.dbpath)
-        # engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
         session = get_session()
         session.query(FileInfo).filter(FileInfo.id == selected_id). \
             update({FileInfo.market_hash: market_hash, FileInfo.is_published: True}, synchronize_session=False)
         session.commit()
-        logger.debug("444444xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
     except:
         logger.exception("error publish_file_update")
 
@@ -220,66 +210,10 @@ def delete_collect_id(file_id):
 
 def buyer_file_update(file_title):
     try:
-        # dbpath = join_with_rc(config.wallet.dbpath)
-        # engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
         session = get_session()
         session.query(BuyerFileInfo).filter(BuyerFileInfo.file_title == file_title). \
             update({BuyerFileInfo.is_downloaded: True}, synchronize_session=False)
         session.commit()
     except:
         logger.exception("error publish_file_update")
-#
-# # TODO Integrate download later
-# def get_file_from_proxy(order_id, seller_public_key):
-#
-#     with open(join_with_root(config.wallet.private_key_path), "rb") as key_file:
-#         buyer_private_key = serialization.load_pem_private_key(
-#             key_file.read(),
-#             password=b"cpchainisawesome",
-#             backend=default_backend()
-#         )
-#
-#     # buyer_trans = ProxyTrans(default_web3, config.chain.core_contract)
-#     # buyer_public_key = buyer_trans.query_order(order_id)[1]
-#     buyer_public_key = buyer_private_key.public_key()
-#     message = Message()
-#     buyer_data = message.buyer_data
-#     message.type = Message.BUYER_DATA
-#     buyer_data.seller_addr = seller_public_key
-#     buyer_data.buyer_addr = buyer_public_key
-#     buyer_data.market_hash = b'MARKET_HASH0123012345678012345'
-#
-#     sign_message = SignMessage()
-#     sign_message.public_key = buyer_public_key
-#     sign_message.data = message.SerializeToString()
-#     sign_message.signature = ECCipher.generate_signature(
-#         buyer_private_key,
-#         sign_message.data
-#     )
-#
-#     start_client(sign_message)
-#     message = Message()
-#     message.ParseFromString(sign_message.data)
-#
-#     proxy_reply = message.proxy_reply
-#     if proxy_reply.error:
-#         print(proxy_reply.error)
-#     else:
-#         print('AES_key: %s' % proxy_reply.AES_key.decode())
-#         print('file_uuid: %s' % proxy_reply.file_uuid)
-#
-#     download_file(proxy_reply.file_uuid)
-#
-#     file_dir = os.path.expanduser(config.wallet.download_dir)
-#     file_path = os.path.join(file_dir, proxy_reply.file_uuid)
-#
-#     # TODO Update database here
-#
-#     decrypted_aes_key = buyer_private_key.decrypt(proxy_reply.AES_key, padding.OAEP(
-#         mgf=padding.MGF1(algorithm=hashes.SHA256()),
-#         algorithm=hashes.SHA256(),
-#         label=None)
-#     )
-#     decrypter = AESCipher(decrypted_aes_key)
-#     decrypter.decrypt(file_dir, file_path + "decrypted")
-#     return True
+
