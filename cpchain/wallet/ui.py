@@ -13,11 +13,11 @@ import logging
 
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, 
-                             QVBoxLayout, QGridLayout, QWidget, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel,
-                             QWidget, QLineEdit, QSpacerItem, QSizePolicy, QTableWidget, QFormLayout, QComboBox, QTextEdit,
+                             QVBoxLayout, QGridLayout, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel,
+                             QWidget, QLineEdit, QTableWidget, QTextEdit,
                              QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
-from PyQt5.QtCore import Qt, QSize, QPoint, pyqtSignal, QBasicTimer
-from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont, QPainter, QFontDatabase
+from PyQt5.QtCore import Qt, QPoint, QBasicTimer
+from PyQt5.QtGui import QIcon, QCursor, QPixmap, QFont, QFontDatabase
 
 from cpchain import config, root_dir
 
@@ -25,8 +25,7 @@ from cpchain.wallet import fs
 from cpchain.crypto import ECCipher, RSACipher, Encoder
 from cpchain.utils import open_file, sizeof_fmt
 
-from cpchain.proxy.node import pick_proxy, start_proxy_request
-from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
+from cpchain.proxy.node import pick_proxy
 
 from twisted.internet import threads, defer, reactor
 from twisted.internet.defer import inlineCallbacks
