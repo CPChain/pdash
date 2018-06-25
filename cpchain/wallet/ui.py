@@ -86,6 +86,7 @@ class TagHPTab(QScrollArea):
         self.parent = parent
         self.key_words = key_words
         self.setObjectName("tagHP_tab")
+        self.tag = ""
         self.init_ui()
 
     def init_ui(self):
@@ -244,64 +245,53 @@ class SellerHPTab(QScrollArea):
         self.item_lists = []
         self.item_num = 4
         self.search_bar = SellerHPTab.SearchBar(self)
+        self.this_seller = Seller(self)
 
-        def get_this_seller():
-            self.this_seller = Seller(self)
+        for i in range(self.seller_promote_number):
+            self.seller_list.append(Seller(self))
 
-        get_this_seller()
-
-        def get_seller_list():
-            for i in range(self.seller_promote_number):
-                self.seller_list.append(Seller(self))
-
-        get_seller_list()
         self.sellerid = {"name": "Chak", "sales": "2020"}
-
-        def get_products(item=None):
-            for i in range(self.item_num):
-                self.item_lists.append(Product(self, item))
-
         self.item = {"title": "Medical data from NHIS", "none": "none"}
-        get_products(self.item)
 
-        def set_layout():
-            self.main_layout = main_layout = QHBoxLayout(self)
-            main_layout.addSpacing(0)
+        for i in range(self.item_num):
+            self.item_lists.append(Product(self, self.item))
 
-            self.content_layout = QVBoxLayout(self)
-            self.search_layout = QHBoxLayout(self)
-            self.search_layout.addWidget(self.search_bar)
-            self.search_layout.addSpacing(10)
-            self.search_layout.addWidget(self.time_label)
-            self.search_layout.addSpacing(0)
-            self.search_layout.addWidget(self.time_btn)
-            self.search_layout.addSpacing(0)
-            self.search_layout.addWidget(self.price_label)
-            self.search_layout.addSpacing(0)
-            self.search_layout.addWidget(self.price_btn)
+        self.main_layout = main_layout = QHBoxLayout(self)
+        main_layout.addSpacing(0)
 
-            self.content_layout.addLayout(self.search_layout)
+        self.content_layout = QVBoxLayout(self)
+        self.search_layout = QHBoxLayout(self)
+        self.search_layout.addWidget(self.search_bar)
+        self.search_layout.addSpacing(10)
+        self.search_layout.addWidget(self.time_label)
+        self.search_layout.addSpacing(0)
+        self.search_layout.addWidget(self.time_btn)
+        self.search_layout.addSpacing(0)
+        self.search_layout.addWidget(self.price_label)
+        self.search_layout.addSpacing(0)
+        self.search_layout.addWidget(self.price_btn)
 
-            for i in range(self.item_num):
-                self.content_layout.addWidget(self.item_lists[i])
-                self.content_layout.addSpacing(0)
+        self.content_layout.addLayout(self.search_layout)
 
-            self.seller_layout = QVBoxLayout(self)
-            self.seller_layout.addWidget(self.this_seller)
-            self.btn_layout = QHBoxLayout(self)
-            self.btn_layout.addWidget(self.message_btn)
-            self.btn_layout.addWidget(self.follow_btn)
-            self.seller_layout.addLayout(self.btn_layout)
-            self.seller_layout.addSpacing(15)
+        for i in range(self.item_num):
+            self.content_layout.addWidget(self.item_lists[i])
+            self.content_layout.addSpacing(0)
 
-            for i in range(self.seller_promote_number):
-                self.seller_layout.addWidget(self.seller_list[i])
-                self.seller_layout.addSpacing(0)
+        self.seller_layout = QVBoxLayout(self)
+        self.seller_layout.addWidget(self.this_seller)
+        self.btn_layout = QHBoxLayout(self)
+        self.btn_layout.addWidget(self.message_btn)
+        self.btn_layout.addWidget(self.follow_btn)
+        self.seller_layout.addLayout(self.btn_layout)
+        self.seller_layout.addSpacing(15)
 
-            self.main_layout.addLayout(self.content_layout, 2)
-            self.main_layout.addLayout(self.seller_layout, 1)
-            self.setLayout(self.main_layout)
-        set_layout()
+        for i in range(self.seller_promote_number):
+            self.seller_layout.addWidget(self.seller_list[i])
+            self.seller_layout.addSpacing(0)
+
+        self.main_layout.addLayout(self.content_layout, 2)
+        self.main_layout.addLayout(self.seller_layout, 1)
+        self.setLayout(self.main_layout)
         load_stylesheet(self, "sellerhomepage.qss")
 
     def handle_follow(self):
