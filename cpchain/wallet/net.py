@@ -1,23 +1,15 @@
-import sys
 import logging
 import treq
-from twisted.internet.defer import inlineCallbacks
 
-from twisted.python import log
+from twisted.internet.defer import inlineCallbacks
 
 from cpchain.crypto import ECCipher
 
 from cpchain.utils import config, Encoder
 
 from cpchain.wallet.fs import publish_file_update
-
 from cpchain.wallet import utils
 
-from cpchain.proxy.node import start_proxy_request, pick_proxy
-
-from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
-
-from cpchain.storage import S3Storage
 
 
 logger = logging.getLogger(__name__)  # pylint: disable=locally-disabled, invalid-name
@@ -62,6 +54,7 @@ class MarketClient:
     @inlineCallbacks
     def publish_product(self, selected_id, title, description, price, tags, start_date, end_date,
                         file_md5, size):
+
         logger.debug("start publish product")
         header = {'Content-Type': 'application/json'}
         header['MARKET-KEY'] = self.public_key
@@ -71,8 +64,7 @@ class MarketClient:
                 'price': price, 'tags': tags, 'start_date': start_date, 'end_date': end_date,
                 'file_md5': file_md5, 'size': size}
         signature_source = str(self.public_key) + str(title) + str(description) + str(
-            price) + MarketClient.str_to_timestamp(start_date) + MarketClient.str_to_timestamp(
-            end_date) + str(file_md5)
+            price) + MarketClient.str_to_timestamp(start_date) + MarketClient.str_to_timestamp(end_date) + str(file_md5)
         signature = ECCipher.create_signature(self.account.private_key, signature_source)
         data['signature'] = Encoder.bytes_to_hex(signature)
         logger.debug("signature: %s", data['signature'])
@@ -81,9 +73,7 @@ class MarketClient:
         print(confirm_info)
 
         logger.debug('market_hash: %s', confirm_info['data']['market_hash'])
-        #TODO: previous problems not solved
         market_hash = confirm_info['data']['market_hash']
-
         publish_file_update(market_hash, selected_id)
         return market_hash
 
@@ -236,14 +226,15 @@ class MarketClient:
 
 
     @inlineCallbacks
-    def upload_file_info(self, hashcode, path, size, product_id, remote_type, remote_uri, aes_key, name):
+    def upload_file_info(self, hashcode, path, size, product_id, remote_type, remote_uri, name):
+        # fixme: another argument aes_key should be passed and encrypted
         logger.debug("upload file info to market")
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
                   'Content-Type': 'application/json'}
-        data = {"public_key": self.public_key,
-                   "hashcode": hashcode, "path": path, "size": size, "client_id": product_id,
-                   "remote_type": remote_type, "remote_uri": remote_uri, "is_published": "False",
-                   "aes_key": 'encrypted-aes-key', "market_hash": "hash", "name": name}
+        data = {"public_key": self.public_key, "hashcode": hashcode, "path": path, "size": size,
+                "client_id": product_id,
+                "remote_type": remote_type, "remote_uri": remote_uri, "is_published": "False",
+                "aes_key": 'encrypted-aes-key', "market_hash": "hash", "name": name}
         url = self.url + 'user_data/v1/uploaded_file/add/'
         logger.debug('upload file info payload: %s', data)
         logger.debug('upload file info url: %s', url)
@@ -271,6 +262,9 @@ class MarketClient:
 
     @inlineCallbacks
     def query_by_seller(self, public_key):
+        logger.debug("in query by seller")
+        logger.debug("seller's public key: %s", self.public_key)
+        logger.debug("public key used by query: %s", public_key)
         url = self.url + 'product/v1/es_product/search/?ordering=-created&offset=0&limit=100&status=0&seller=' + str(public_key)
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token, 'Content-Type': 'application/json'}
         resp = yield treq.get(url, headers=header, persistent=False)

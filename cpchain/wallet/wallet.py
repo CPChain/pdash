@@ -1,23 +1,15 @@
-import signal
 import sys
-import time
-
-from cpchain.utils import reactor
-
-from PyQt5.QtWidgets import QApplication
 
 from twisted.internet import reactor
-from twisted.internet.task import LoopingCall
 
+from cpchain.utils import reactor
 from cpchain.wallet.chain import Broker
 from cpchain.wallet.net import MarketClient
-from cpchain.wallet import fs
-from cpchain.crypto import RSACipher, Encoder
+
 from cpchain.account import Accounts
 
 import logging
 logger = logging.getLogger(__name__)
-
 
 class Wallet:
     def __init__(self, reactor):
@@ -34,8 +26,8 @@ class Wallet:
 
 
 def main():
-        wallet = Wallet(reactor)
-        wallet.market_client.query_product('Medicine')
+        sys.exit(reactor.run())
+
 
 
 if __name__ == '__main__':

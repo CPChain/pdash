@@ -2,12 +2,12 @@ import tempfile
 import os
 import logging
 
-from cpchain.wallet.db import get_session, FileInfo, osp, create_engine, sessionmaker, BuyerFileInfo, CollectInfo, FileInfoVersion
+from cpchain.wallet.db import get_session, FileInfo, create_engine, sessionmaker, BuyerFileInfo, CollectInfo, FileInfoVersion
 from cpchain.crypto import AESCipher, RSACipher
-from cpchain.utils import Encoder, join_with_rc
+from cpchain.utils import join_with_rc
 from cpchain.storage import IPFSStorage
 from cpchain.storage import S3Storage
-from cpchain import root_dir, config
+from cpchain import config
 
 logger = logging.getLogger(__name__)
 
@@ -29,12 +29,10 @@ def get_file_by_id(file_id):
 def get_file_by_hash(file_hash):
     return get_session().query(FileInfo).filter(FileInfo.hashcode == file_hash)
 
+
 def get_file_id_new(file_id):
-    dbpath = join_with_rc(config.wallet.dbpath)
-    engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
-    Session = sessionmaker(bind=engine)
-    session = Session()
     return get_session().query(FileInfo).filter(FileInfo.id == file_id).all()[0]
+
 
 def get_buyer_file_list():
     return get_session().query(BuyerFileInfo).all()
@@ -66,8 +64,8 @@ def update_file_info_version(public_key):
             new_user_version = FileInfoVersion(version=1, public_key=public_key)
             add_file(new_user_version)
         else:
-            cur_version = session.query(FileInfoVersion).filter(FileInfoVersion.public_key==public_key)
-            session.query(FileInfoVersion).filter(FileInfoVersion.public_key==public_key). \
+            cur_version = session.query(FileInfoVersion).filter(FileInfoVersion.public_key == public_key)
+            session.query(FileInfoVersion).filter(FileInfoVersion.public_key == public_key). \
                 update({FileInfoVersion.version: cur_version+1}, synchronize_session=False)
             session.commit()
     except:
@@ -154,12 +152,8 @@ def upload_file_s3(file_path):
         logger.debug("encrypt completed")
         file_name = list(os.path.split(file_path))[-1]
         s3_client = S3Storage()
-        try:
-            s3_client.upload_file(encrypted_path, file_name, "cpchain-bucket")
-        except Exception:
-            logger.exception("verify signature error")
-        else:
-            pass
+        s3_client.upload_file(encrypted_path, file_name, "cpchain-bucket")
+
 
     file_name = list(os.path.split(file_path))[-1]
     file_size = os.path.getsize(file_path)
@@ -177,8 +171,6 @@ def download_file_ipfs(fhash, file_path):
     ipfs_client.connect()
     if ipfs_client.file_in_ipfs(fhash):
         return ipfs_client.download_file(fhash, file_path)
-    else:
-        return False
 
 
 # Decrypt aes key with rsa key then decrypt file with aes key.
@@ -190,10 +182,12 @@ def decrypt_file_aes(file_path, aes_key):
     decrypter.decrypt(file_path, decrypted_path)
     return decrypted_path
 
+
 def add_record_collect(product_info):
     new_collect_info = CollectInfo(name=product_info['title'], price=product_info['price'], size=product_info['size'])
     add_file(new_collect_info)
     logger.debug("Adding new record to collectinfo successfully!")
+
 
 def get_collect_list():
     """This returns a list of files.
@@ -201,12 +195,14 @@ def get_collect_list():
     session = get_session()
     return session.query(CollectInfo).all()
 
+
 def delete_collect_id(file_id):
     session = get_session()
     session.query(CollectInfo).filter(CollectInfo.id == file_id). \
         delete(synchronize_session=False)
     session.commit()
-    logger.debug("Collect record (id = {}) has been deleted !".format(file_id))
+    logger.debug("Collect record (id = %s) has been deleted !", file_id)
+
 
 def buyer_file_update(file_title):
     try:

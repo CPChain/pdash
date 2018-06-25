@@ -537,7 +537,6 @@ class ProductDetailTab(QScrollArea):
         self.may_like_label = QLabel("You may like")
         self.may_like_label.setObjectName("may_like_label")
 
-
         self.data_label = QLabel(self.product_info["created"])
         self.data_label.setObjectName("data_label")
 
@@ -1804,6 +1803,8 @@ class PublishDialog(QDialog):
 
     def init_ui(self):
 
+        #Labels def
+        self.setWindowTitle("Publish Product")
         self.pinfo_title_label = pinfo_title_label = QLabel("Title:")
         pinfo_title_label.setObjectName("pinfo_title_label")
         self.pinfo_descrip_label = pinfo_descrip_label = QLabel("Description:")
@@ -1928,6 +1929,7 @@ class PublishDialog(QDialog):
                         for key in main_wnd.main_tab_index:
                             if main_wnd.main_tab_index[key] > tab_index:
                                 main_wnd.main_tab_index[key] -= 1
+                        logger.debug("update sell tab")
                         tab_index = main_wnd.content_tabs.addTab(SellTab(main_wnd.content_tabs), "")
                         main_wnd.main_tab_index['selling_tab'] = tab_index
                         if self.tab == 'sell':
@@ -2065,6 +2067,7 @@ class SellTab(QScrollArea):
 
 
         def create_file_table():
+            logger.debug("in create file table")
             self.file_table = file_table = TableWidget(self)
 
             file_table.horizontalHeader().setStretchLastSection(True)
@@ -2094,6 +2097,7 @@ class SellTab(QScrollArea):
                 checkbox_item = QTableWidgetItem()
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 checkbox_item.setCheckState(Qt.Unchecked)
+                logger.debug("current row of product: %s", self.file_list[cur_row])
                 self.file_table.setItem(cur_row, 0, checkbox_item)
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row]["title"]))
                 self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(self.file_list[cur_row]["price"])))
@@ -2107,6 +2111,8 @@ class SellTab(QScrollArea):
 
         d = wallet.market_client.query_by_seller(wallet.market_client.public_key)
         def handle_query_by_seller(products):
+            logger.debug("in handle query by seller")
+            logger.debug("seller's product list: %s", products)
             self.file_list = []
             if len(products) == 0:
                 item = {"ID": "00x2222", "title": "Medical Data from Mayo Clinic", "price": "100", "avg_rating": "83%", "sales_number": "13087", "end_date": "2018-05-05"}
