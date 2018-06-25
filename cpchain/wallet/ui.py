@@ -1041,7 +1041,7 @@ class SecurityTab(QScrollArea):
 
 
 class PreferenceTab(QScrollArea):
-    def __init__(self, parent=None, item=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("preferencepage")
@@ -1164,7 +1164,7 @@ class PreferenceTab(QScrollArea):
 
 
 class PersonalInfoPage(QScrollArea):
-    def __init__(self, parent=None, item={}):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("PersonalInfoPage")
@@ -1207,36 +1207,32 @@ class PersonalInfoPage(QScrollArea):
         self.submit_btn.setCursor(QCursor(Qt.PointingHandCursor))
         self.submit_btn.clicked.connect(self.handle_submit)
 
-        def create_popmenu():
-            self.gender_menu = gender_menu = QMenu('Gender', self)
-            self.male_act = QAction('Male', self)
-            self.male_act.triggered.connect(self.set_male_act)
-            self.female_act = QAction('Female', self)
-            self.female_act.triggered.connect(self.set_female_act)
-            self.others_act = QAction('Other', self)
-            self.others_act.triggered.connect(self.set_other_act)
-            gender_menu.addAction(self.male_act)
-            gender_menu.addAction(self.female_act)
-            gender_menu.addAction(self.others_act)
-        create_popmenu()
+        self.gender_menu = gender_menu = QMenu('Gender', self)
+        self.male_act = QAction('Male', self)
+        self.male_act.triggered.connect(self.set_male_act)
+        self.female_act = QAction('Female', self)
+        self.female_act.triggered.connect(self.set_female_act)
+        self.others_act = QAction('Other', self)
+        self.others_act.triggered.connect(self.set_other_act)
+        gender_menu.addAction(self.male_act)
+        gender_menu.addAction(self.female_act)
+        gender_menu.addAction(self.others_act)
         self.gender_btn.setMenu(self.gender_menu)
-        def set_layout():
-            self.pinfo_top_layout = pinfo_top_layout = QGridLayout(self)
-            self.pinfo_top_layout.setContentsMargins(40, 40, 300, 100)
-            self.pinfo_top_layout.addWidget(avatar_label, 1, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(avatar_icon, 1, 3, 3, 3)
-            self.pinfo_top_layout.addWidget(avataripload_btn, 4, 3, 1, 1)
-            self.pinfo_top_layout.addWidget(username_label, 5, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(username_edit, 5, 3, 1, 5)
-            self.pinfo_top_layout.addWidget(email_label, 6, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(email_edit, 6, 3, 1, 20)
-            self.pinfo_top_layout.addWidget(gender_label, 7, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(gender_btn, 7, 3, 1, 1)
-            self.pinfo_top_layout.addWidget(phone_label, 8, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(phone_edit, 8, 3, 1, 20)
-            self.pinfo_top_layout.addWidget(submit_btn, 10, 3, 1, 2)
-            self.setLayout(pinfo_top_layout)
-        set_layout()
+        self.pinfo_top_layout = pinfo_top_layout = QGridLayout(self)
+        self.pinfo_top_layout.setContentsMargins(40, 40, 300, 100)
+        self.pinfo_top_layout.addWidget(avatar_label, 1, 1, 1, 1)
+        self.pinfo_top_layout.addWidget(avatar_icon, 1, 3, 3, 3)
+        self.pinfo_top_layout.addWidget(avataripload_btn, 4, 3, 1, 1)
+        self.pinfo_top_layout.addWidget(username_label, 5, 1, 1, 1)
+        self.pinfo_top_layout.addWidget(username_edit, 5, 3, 1, 5)
+        self.pinfo_top_layout.addWidget(email_label, 6, 1, 1, 1)
+        self.pinfo_top_layout.addWidget(email_edit, 6, 3, 1, 20)
+        self.pinfo_top_layout.addWidget(gender_label, 7, 1, 1, 1)
+        self.pinfo_top_layout.addWidget(gender_btn, 7, 3, 1, 1)
+        self.pinfo_top_layout.addWidget(phone_label, 8, 1, 1, 1)
+        self.pinfo_top_layout.addWidget(phone_edit, 8, 3, 1, 20)
+        self.pinfo_top_layout.addWidget(submit_btn, 10, 3, 1, 2)
+        self.setLayout(pinfo_top_layout)
         load_stylesheet(self, "personalinfotab.qss")
     def set_male_act(self):
         self.gender_btn.setText("Male")
@@ -1255,6 +1251,7 @@ class CollectedTab(QScrollArea):
             self.init_ui()
 
         def init_ui(self):
+            self.file_list = []
             self.setObjectName("search_bar")
             self.setFixedSize(300, 25)
             self.setTextMargins(25, 0, 20, 0)
@@ -1264,19 +1261,17 @@ class CollectedTab(QScrollArea):
             search_btn.setFixedSize(18, 18)
             search_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
-            def set_layout():
-                main_layout = QHBoxLayout()
-                main_layout.addWidget(search_btn_cloud)
-                main_layout.addStretch()
-                main_layout.setContentsMargins(5, 0, 0, 0)
-                self.setLayout(main_layout)
-
-            set_layout()
+            main_layout = QHBoxLayout()
+            main_layout.addWidget(search_btn)
+            main_layout.addStretch()
+            main_layout.setContentsMargins(5, 0, 0, 0)
+            self.setLayout(main_layout)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("collect_tab")
+        self.file_list = []
         self.init_ui()
 
     def update_table(self):
@@ -1300,6 +1295,9 @@ class CollectedTab(QScrollArea):
         self.purchased_total_orders = 103
         self.num_file = 100
         self.cur_clicked = 0
+        self.file_list = []
+        self.check_record_list = []
+        self.checkbox_list = []
 
         self.uncollect_btn = uncollect_btn = QPushButton("Uncollect")
         uncollect_btn.setObjectName("uncollect_btn")
@@ -1311,9 +1309,9 @@ class CollectedTab(QScrollArea):
         self.search_bar = PurchasedDownloadedTab.SearchBar(self)
 
         self.row_number = 100
-
+        self.file_table = TableWidget(self)
         def create_file_table():
-            self.file_table = file_table = TableWidget(self)
+            file_table = self.file_table
 
             file_table.horizontalHeader().setStretchLastSection(True)
             file_table.verticalHeader().setVisible(False)
@@ -1332,8 +1330,8 @@ class CollectedTab(QScrollArea):
             file_table.setSortingEnabled(True)
 
             self.file_list = file_list = fs.get_collect_list()
-            self.check_record_list = []
-            self.checkbox_list = []
+            # self.check_record_list = []
+            # self.checkbox_list = []
             for cur_row in range(self.row_number):
                 if cur_row == len(file_list):
                     break
@@ -1354,7 +1352,6 @@ class CollectedTab(QScrollArea):
         create_file_table()
         self.file_table.sortItems(2)
         self.file_table.horizontalHeader().setStyleSheet("QHeaderView::section{background: #f3f3f3; border: 1px solid #dcdcdc}")
-
         def record_check(item):
             self.cur_clicked = item.row()
             if item.checkState() == Qt.Checked:
@@ -1382,7 +1379,7 @@ class CollectedTab(QScrollArea):
         load_stylesheet(self, "collection.qss")
     def handle_uncollect(self):
         for i in range(len(self.check_record_list)):
-            if self.check_record_list[i] == True:
+            if self.check_record_list[i] is True:
                 self.file_table.removeRow(i)
                 file_id = self.file_table.item(i, 4).data(Qt.UserRole)
                 fs.delete_collect_id(file_id)
