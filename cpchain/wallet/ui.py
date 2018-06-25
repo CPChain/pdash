@@ -2134,6 +2134,7 @@ class PublishDialog(QDialog):
     def init_ui(self):
 
         #Labels def
+        self.setWindowTitle("Publish Product")
         self.pinfo_title_label = pinfo_title_label = QLabel("Title:")
         pinfo_title_label.setObjectName("pinfo_title_label")
         self.pinfo_descrip_label = pinfo_descrip_label = QLabel("Description:")
