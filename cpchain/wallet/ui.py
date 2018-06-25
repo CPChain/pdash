@@ -1272,6 +1272,12 @@ class CollectedTab(QScrollArea):
         self.parent = parent
         self.setObjectName("collect_tab")
         self.file_list = []
+        self.check_list = []
+        self.purchased_total_orders = 103
+        self.num_file = 100
+        self.cur_clicked = 0
+        self.check_record_list = []
+        self.checkbox_list = []
         self.init_ui()
 
     def update_table(self):
@@ -1290,14 +1296,6 @@ class CollectedTab(QScrollArea):
             self.file_table.setItem(cur_row, 3, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
 
     def init_ui(self):
-
-        self.check_list = []
-        self.purchased_total_orders = 103
-        self.num_file = 100
-        self.cur_clicked = 0
-        self.file_list = []
-        self.check_record_list = []
-        self.checkbox_list = []
 
         self.uncollect_btn = uncollect_btn = QPushButton("Uncollect")
         uncollect_btn.setObjectName("uncollect_btn")
@@ -1359,23 +1357,21 @@ class CollectedTab(QScrollArea):
 
         self.file_table.itemClicked.connect(record_check)
 
-        def set_layout():
-            self.main_layout = main_layout = QVBoxLayout(self)
-            main_layout.addSpacing(0)
-            self.collection_upper_layout = QHBoxLayout(self)
-            self.collection_upper_layout.addSpacing(5)
-            self.collection_upper_layout.addWidget(self.search_bar)
-            self.collection_upper_layout.addSpacing(5)
-            self.collection_upper_layout.addWidget(self.time_rank_label)
-            self.collection_upper_layout.addStretch(1)
-            self.collection_upper_layout.addWidget(self.uncollect_btn)
-            self.collection_upper_layout.addSpacing(10)
-            self.main_layout.addLayout(self.collection_upper_layout)
-            self.main_layout.addSpacing(2)
-            self.main_layout.addWidget(self.file_table)
-            self.main_layout.addSpacing(2)
-            self.setLayout(self.main_layout)
-        set_layout()
+        self.main_layout = main_layout = QVBoxLayout(self)
+        main_layout.addSpacing(0)
+        self.collection_upper_layout = QHBoxLayout(self)
+        self.collection_upper_layout.addSpacing(5)
+        self.collection_upper_layout.addWidget(self.search_bar)
+        self.collection_upper_layout.addSpacing(5)
+        self.collection_upper_layout.addWidget(self.time_rank_label)
+        self.collection_upper_layout.addStretch(1)
+        self.collection_upper_layout.addWidget(self.uncollect_btn)
+        self.collection_upper_layout.addSpacing(10)
+        self.main_layout.addLayout(self.collection_upper_layout)
+        self.main_layout.addSpacing(2)
+        self.main_layout.addWidget(self.file_table)
+        self.main_layout.addSpacing(2)
+        self.setLayout(self.main_layout)
         load_stylesheet(self, "collection.qss")
     def handle_uncollect(self):
         for i in range(len(self.check_record_list)):
@@ -1390,9 +1386,9 @@ class PurchasedTab(QScrollArea):
         self.setObjectName("purchase_tab")
         self.init_ui()
     def init_ui(self):
-        self.purchased_dled_tab_btn = purchased_dled_tab_btn = QPushButton("Downloaded")
+        self.purchased_dled_tab_btn = QPushButton("Downloaded")
         self.purchased_dled_tab_btn.setObjectName("purchased_dled_tab_btn")
-        self.purchased_dling_tab_btn = purchased_dling_tab_btn = QPushButton("Downloading")
+        self.purchased_dling_tab_btn = QPushButton("Downloading")
         self.purchased_dling_tab_btn.setObjectName("purchased_dling_tab_btn")
         self.purchased_main_tab = purchased_main_tab = QTabWidget(self)
         purchased_main_tab.setObjectName("purchased_main_tab")
@@ -1409,20 +1405,19 @@ class PurchasedTab(QScrollArea):
             self.purchased_dling_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8; border-top-right-radius: 5px; border-bottom-right-radius: 5px; color: #ffffff; min-height: 30px; max-height: 30px; background: #3173d8; }")
             self.purchased_dled_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8; border-top-left-radius: 5px; border-bottom-left-radius: 5px; color: #3173d8; min-height: 30px; max-height: 30px; background: #ffffff; }")
         self.purchased_dling_tab_btn.clicked.connect(dling_btn_clicked)
-        def set_layout():
-            self.purchased_main_layout = purchased_main_layout = QVBoxLayout(self)
-            self.purchased_switch_layout = purchased_switch_layout = QHBoxLayout(self)
-            self.purchased_switch_layout.setContentsMargins(0, 0, 0, 0)
-            self.purchased_switch_layout.setSpacing(0)
-            self.purchased_switch_layout.addStretch(1)
-            self.purchased_switch_layout.addWidget(self.purchased_dled_tab_btn)
-            self.purchased_switch_layout.addWidget(self.purchased_dling_tab_btn)
-            self.purchased_switch_layout.addStretch(1)
-            self.purchased_main_layout.addLayout(self.purchased_switch_layout)
-            self.purchased_main_layout.addSpacing(5)
-            self.purchased_main_layout.addWidget(self.purchased_main_tab)
-            self.setLayout(self.purchased_main_layout)
-        set_layout()
+
+        self.purchased_main_layout = QVBoxLayout(self)
+        self.purchased_switch_layout = QHBoxLayout(self)
+        self.purchased_switch_layout.setContentsMargins(0, 0, 0, 0)
+        self.purchased_switch_layout.setSpacing(0)
+        self.purchased_switch_layout.addStretch(1)
+        self.purchased_switch_layout.addWidget(self.purchased_dled_tab_btn)
+        self.purchased_switch_layout.addWidget(self.purchased_dling_tab_btn)
+        self.purchased_switch_layout.addStretch(1)
+        self.purchased_main_layout.addLayout(self.purchased_switch_layout)
+        self.purchased_main_layout.addSpacing(5)
+        self.purchased_main_layout.addWidget(self.purchased_main_tab)
+        self.setLayout(self.purchased_main_layout)
         load_stylesheet(self, "purchased.qss")
 
 class PurchasedDownloadedTab(QScrollArea):
@@ -1451,6 +1446,14 @@ class PurchasedDownloadedTab(QScrollArea):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("purchased_downloaded_tab")
+        self.file_list = []
+        self.check_list = []
+        self.purchased_total_orders = 0
+        self.num_file = 100
+        self.cur_clicked = 0
+        self.checkbox_list = []
+        self.file_table = TableWidget(self)
+        self.check_record_list = []
         self.init_ui()
     def update_table(self):
         self.file_list = file_list = fs.get_buyer_file_list()
@@ -1470,11 +1473,6 @@ class PurchasedDownloadedTab(QScrollArea):
 
     def init_ui(self):
 
-        self.check_list = []
-        self.purchased_total_orders = 0
-        self.num_file = 100
-        self.cur_clicked = 0
-
         self.purchased_dled_delete_btn = purchased_dled_delete_btn = QPushButton("Delete")
         purchased_dled_delete_btn.setObjectName("purchased_dled_delete_btn")
 
@@ -1493,7 +1491,7 @@ class PurchasedDownloadedTab(QScrollArea):
         self.row_number = 100
 
         def create_file_table():
-            self.file_table = file_table = TableWidget(self)
+            file_table = self.file_table
             file_table.horizontalHeader().setStretchLastSection(True)
             file_table.verticalHeader().setVisible(False)
             file_table.setShowGrid(False)
@@ -1520,8 +1518,6 @@ class PurchasedDownloadedTab(QScrollArea):
             file_table.set_right_menu(right_menu)
 
             self.file_list = file_list = fs.get_buyer_file_list()
-            self.check_record_list = []
-            self.checkbox_list = []
             for cur_row in range(self.row_number):
                 if cur_row == len(file_list):
                     break
@@ -1538,7 +1534,7 @@ class PurchasedDownloadedTab(QScrollArea):
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].file_uuid))
                 self.check_record_list.append(False)
         create_file_table()
-        self.total_orders_value = total_orders_value = QLabel("{}".format(self.purchased_total_orders))
+        self.total_orders_value = QLabel("{}".format(self.purchased_total_orders))
         self.total_orders_value.setObjectName("total_orders_value")
         self.file_table.sortItems(2)
         self.file_table.horizontalHeader().setStyleSheet("QHeaderView::section{background: #f3f3f3; border: 1px solid #dcdcdc}")
@@ -1548,37 +1544,35 @@ class PurchasedDownloadedTab(QScrollArea):
                 self.check_record_list[item.row()] = True
         self.file_table.itemClicked.connect(record_check)
 
-        def set_layout():
-            self.main_layout = main_layout = QVBoxLayout(self)
-            main_layout.addSpacing(0)
-            self.main_layout.setContentsMargins(10, 0, 10, 10)
-            self.main_layout.addWidget(self.hline_1)
-            self.main_layout.addSpacing(0)
-            self.purchased_dled_upper_layout = QHBoxLayout(self)
-            self.purchased_dled_upper_layout.addSpacing(0)
-            self.purchased_dled_upper_layout.addWidget(self.purchased_total_orders_label)
-            self.purchased_dled_upper_layout.addSpacing(0)
-            self.purchased_dled_upper_layout.addWidget(self.total_orders_value)
-            self.purchased_dled_upper_layout.addSpacing(10)
-            self.purchased_dled_upper_layout.addWidget(self.search_bar)
-            self.purchased_dled_upper_layout.addSpacing(10)
-            self.purchased_dled_upper_layout.addWidget(self.time_label)
-            self.purchased_dled_upper_layout.addSpacing(10)
-            self.purchased_dled_upper_layout.addWidget(self.open_path)
-            self.purchased_dled_upper_layout.addStretch(1)
-            self.purchased_dled_upper_layout.addWidget(self.purchased_dled_delete_btn)
+        self.main_layout = main_layout = QVBoxLayout(self)
+        main_layout.addSpacing(0)
+        self.main_layout.setContentsMargins(10, 0, 10, 10)
+        self.main_layout.addWidget(self.hline_1)
+        self.main_layout.addSpacing(0)
+        self.purchased_dled_upper_layout = QHBoxLayout(self)
+        self.purchased_dled_upper_layout.addSpacing(0)
+        self.purchased_dled_upper_layout.addWidget(self.purchased_total_orders_label)
+        self.purchased_dled_upper_layout.addSpacing(0)
+        self.purchased_dled_upper_layout.addWidget(self.total_orders_value)
+        self.purchased_dled_upper_layout.addSpacing(10)
+        self.purchased_dled_upper_layout.addWidget(self.search_bar)
+        self.purchased_dled_upper_layout.addSpacing(10)
+        self.purchased_dled_upper_layout.addWidget(self.time_label)
+        self.purchased_dled_upper_layout.addSpacing(10)
+        self.purchased_dled_upper_layout.addWidget(self.open_path)
+        self.purchased_dled_upper_layout.addStretch(1)
+        self.purchased_dled_upper_layout.addWidget(self.purchased_dled_delete_btn)
 
-            self.main_layout.addLayout(self.purchased_dled_upper_layout)
-            self.main_layout.addSpacing(2)
-            self.main_layout.addWidget(self.file_table)
-            self.main_layout.addSpacing(2)
-            self.setLayout(self.main_layout)
-        set_layout()
+        self.main_layout.addLayout(self.purchased_dled_upper_layout)
+        self.main_layout.addSpacing(2)
+        self.main_layout.addWidget(self.file_table)
+        self.main_layout.addSpacing(2)
+        self.setLayout(self.main_layout)
 
 
     def handle_delete(self):
         for i in range(len(self.check_record_list)):
-            if self.check_record_list[i] == True:
+            if self.check_record_list[i] is True:
                 file_path = self.file_table.item(i, 3).text()
                 fs.delete_buyer_file(file_path)
                 self.file_table.removeRow(i)
@@ -1595,13 +1589,14 @@ class DownloadingProgressBar(QProgressBar):
     def __init__(self, cur_row=None):
         super().__init__()
         self.cur_row = cur_row
-        self.initUI()
+        self.step = 0
+        self.max_step = 0
+        self.init_ui()
 
-    def initUI(self):
+    def init_ui(self):
         self.setGeometry(30, 40, 200, 25)
 
         self.timer = QBasicTimer()
-        self.step = 0
         from random import randint
         self.max_step = randint(500, 1000)
         self.timer.start(self.max_step, self)
@@ -1619,12 +1614,7 @@ class DownloadingProgressBar(QProgressBar):
         self.cur_row = new_row
 
     def isComplete(self):
-        if self.step >= self.max_step:
-            return True
-        else:
-            return False
-
-
+        return(self.step >= self.max_step)
 
 
 class PurchasedDownloadingTab(QScrollArea):
@@ -1632,6 +1622,11 @@ class PurchasedDownloadingTab(QScrollArea):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("purchased_downloading_tab")
+        self.cur_clicked = 0
+        self.file_table = TableWidget(self)
+        self.file_list = []
+        self.check_record_list = []
+        self.checkbox_list = []
         self.init_ui()
 
     def update_table(self):
@@ -1661,9 +1656,6 @@ class PurchasedDownloadingTab(QScrollArea):
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
 
-    def handle_upload(self):
-        self.local_file = QFileDialog.getOpenFileName()[0]
-
     def init_ui(self):
         self.actual_row_num = 0
         self.check_list = []
@@ -1691,7 +1683,7 @@ class PurchasedDownloadingTab(QScrollArea):
         self.hline_1 = HorizontalLine(self, 2)
 
         def create_file_table():
-            self.file_table = file_table = TableWidget(self)
+            file_table = self.file_table
 
             def right_menu():
                 self.purchased_right_menu = QMenu(file_table)
@@ -1727,12 +1719,10 @@ class PurchasedDownloadingTab(QScrollArea):
 
             self.file_list = file_list = fs.get_buyer_file_list()
 
-            self.check_record_list = []
-            self.checkbox_list = []
             for cur_row in range(self.row_number):
                 if cur_row == len(file_list):
                     break
-                if file_list[cur_row].is_downloaded == False:
+                if file_list[cur_row].is_downloaded is False:
                     self.purchased_total_orders += 1
                     checkbox_item = QTableWidgetItem()
                     checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
@@ -1748,7 +1738,7 @@ class PurchasedDownloadingTab(QScrollArea):
                     self.actual_row_num += 1
 
         create_file_table()
-        self.total_orders_value = total_orders_value = QLabel("{}".format(self.purchased_total_orders))
+        self.total_orders_value = QLabel("{}".format(self.purchased_total_orders))
         self.total_orders_value.setObjectName("total_orders_value")
 
         self.file_table.sortItems(1)
@@ -1762,34 +1752,31 @@ class PurchasedDownloadingTab(QScrollArea):
 
         self.file_table.itemClicked.connect(record_check)
 
-        def set_layout():
-            self.main_layout = main_layout = QVBoxLayout(self)
-            self.main_layout.setContentsMargins(10, 0, 10, 10)
-            self.main_layout.addSpacing(0)
-            self.main_layout.addWidget(self.hline_1)
-            self.main_layout.addSpacing(0)
-            self.purchased_upper_layout = QHBoxLayout(self)
-            self.purchased_upper_layout.addSpacing(0)
-            self.purchased_upper_layout.addWidget(self.purchased_total_orders_label)
-            self.purchased_upper_layout.addSpacing(0)
-            self.purchased_upper_layout.addWidget(self.total_orders_value)
-            self.purchased_upper_layout.addSpacing(10)
-            self.purchased_upper_layout.addWidget(self.open_path)
-            self.purchased_upper_layout.addStretch(1)
-            self.purchased_upper_layout.addWidget(self.purchased_dling_start_btn)
-            self.purchased_upper_layout.addSpacing(10)
-            self.purchased_upper_layout.addWidget(self.purchased_dling_pause_btn)
-            self.purchased_upper_layout.addSpacing(10)
-            self.purchased_upper_layout.addWidget(self.purchased_dling_delete_btn)
-            self.purchased_upper_layout.addSpacing(5)
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.setContentsMargins(10, 0, 10, 10)
+        self.main_layout.addSpacing(0)
+        self.main_layout.addWidget(self.hline_1)
+        self.main_layout.addSpacing(0)
+        self.purchased_upper_layout = QHBoxLayout(self)
+        self.purchased_upper_layout.addSpacing(0)
+        self.purchased_upper_layout.addWidget(self.purchased_total_orders_label)
+        self.purchased_upper_layout.addSpacing(0)
+        self.purchased_upper_layout.addWidget(self.total_orders_value)
+        self.purchased_upper_layout.addSpacing(10)
+        self.purchased_upper_layout.addWidget(self.open_path)
+        self.purchased_upper_layout.addStretch(1)
+        self.purchased_upper_layout.addWidget(self.purchased_dling_start_btn)
+        self.purchased_upper_layout.addSpacing(10)
+        self.purchased_upper_layout.addWidget(self.purchased_dling_pause_btn)
+        self.purchased_upper_layout.addSpacing(10)
+        self.purchased_upper_layout.addWidget(self.purchased_dling_delete_btn)
+        self.purchased_upper_layout.addSpacing(5)
 
-            self.main_layout.addLayout(self.purchased_upper_layout)
-            self.main_layout.addSpacing(2)
-            self.main_layout.addWidget(self.file_table)
-            self.main_layout.addSpacing(2)
-            self.setLayout(self.main_layout)
-
-        set_layout()
+        self.main_layout.addLayout(self.purchased_upper_layout)
+        self.main_layout.addSpacing(2)
+        self.main_layout.addWidget(self.file_table)
+        self.main_layout.addSpacing(2)
+        self.setLayout(self.main_layout)
 
     def handle_complete(self, item):
         if item >= 100:
@@ -1799,9 +1786,8 @@ class PurchasedDownloadingTab(QScrollArea):
 
 
     def handle_purchased_delete(self):
-        # TODO: delete event
         for i in range(len(self.check_record_list)):
-            if self.check_record_list[i] == True:
+            if self.check_record_list[i] is True:
                 self.file_table.removeRow(i)
 
 
