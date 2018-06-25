@@ -298,8 +298,8 @@ class SellerHPTab(QScrollArea):
         if wallet.market_client.token == '':
             QMessageBox.information(self, "Tips", "Please login first !")
             return
-        self.seller_publick_key = '040ceb41bf5f9a96c16b1441f5edc0277bfa2d0ce6a10b481b14de96b0d03cdc5a43668c6f2fb35ac79f70ba7ea86f036cc37ec814f67e066c4ff65648f829dfe7'
-        d_status = wallet.market_client.add_follow_seller(self.seller_publick_key)
+        seller_publick_key = '040ceb41bf5f9a96c16b1441f5edc0277bfa2d0ce6a10b481b14de96b0d03cdc5a43668c6f2fb35ac79f70ba7ea86f036cc37ec814f67e066c4ff65648f829dfe7'
+        d_status = wallet.market_client.add_follow_seller(seller_publick_key)
         def handle_state(status):
             if status == 1:
                 self.follow_btn.setText("Unfollow")
@@ -309,7 +309,7 @@ class SellerHPTab(QScrollArea):
 
 
 class Seller(QScrollArea):
-    def __init__(self, parent=None, sellerid={}, mode=""):
+    def __init__(self, parent=None, sellerid=None, mode=""):
         super().__init__(parent)
         self.parent = parent
         self.sellerid = sellerid
@@ -325,26 +325,24 @@ class Seller(QScrollArea):
         self.seller_name.setObjectName("seller_name")
         self.seller_name.setCursor(QCursor(Qt.PointingHandCursor))
 
-        self.seller_avatar = seller_avatar = QLabel(self)
+        self.seller_avatar = QLabel(self)
         self.seller_avatar.setObjectName("seller_avatar")
 
         seller_product_value = 20
         seller_sales_volume = 3455
-        self.product_label = product_label = QLabel("Products {}".format(seller_product_value))
-        self.sales_volume = sales_volume = QLabel("Sales Volume {}".format(seller_sales_volume))
+        self.product_label = QLabel("Products {}".format(seller_product_value))
+        self.sales_volume = QLabel("Sales Volume {}".format(seller_sales_volume))
 
         self.hline = HorizontalLine(self, 2)
 
-        def setlayout():
-            self.main_layout = main_layout = QGridLayout(self)
-            self.main_layout.setSpacing(0)
-            self.main_layout.addWidget(self.seller_avatar, 1, 1, 2, 3)
-            self.main_layout.addWidget(self.seller_name, 1, 3, 1, 1)
-            self.main_layout.addWidget(self.product_label, 2, 3, 1, 1)
-            self.main_layout.addWidget(self.sales_volume, 3, 3, 1, 1)
-            self.main_layout.addWidget(self.hline, 4, 1, 1, 3)
-            self.setLayout(self.main_layout)
-        setlayout()
+        self.main_layout = QGridLayout(self)
+        self.main_layout.setSpacing(0)
+        self.main_layout.addWidget(self.seller_avatar, 1, 1, 2, 3)
+        self.main_layout.addWidget(self.seller_name, 1, 3, 1, 1)
+        self.main_layout.addWidget(self.product_label, 2, 3, 1, 1)
+        self.main_layout.addWidget(self.sales_volume, 3, 3, 1, 1)
+        self.main_layout.addWidget(self.hline, 4, 1, 1, 3)
+        self.setLayout(self.main_layout)
         load_stylesheet(self, "selleritem.qss")
 
 
