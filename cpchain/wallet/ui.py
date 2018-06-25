@@ -965,7 +965,7 @@ class SearchProductTab(QScrollArea):
 
 
 class SecurityTab(QScrollArea):
-    def __init__(self, parent=None, item={}):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("securitypage")
@@ -1007,32 +1007,30 @@ class SecurityTab(QScrollArea):
 
         self.reset_btn.clicked.connect(self.handle_reset)
 
-        def set_layout():
-            self.security_layout = security_layout = QGridLayout(self)
-            self.security_layout.setContentsMargins(40, 40, 150, 300)
-            self.security_layout.addWidget(balance_label, 1, 1, 1, 1)
+        self.security_layout = security_layout = QGridLayout(self)
+        self.security_layout.setContentsMargins(40, 40, 150, 300)
+        self.security_layout.addWidget(balance_label, 1, 1, 1, 1)
 
-            self.balance_layout = balance_layout = QVBoxLayout(self)
-            self.balance_layout.addStretch(1)
-            self.balance_layout.addWidget(balance_value)
-            self.balance_layout.addSpacing(10)
-            self.balance_layout.addWidget(display_btn)
-            self.balance_layout.addStretch(2)
+        self.balance_layout = balance_layout = QVBoxLayout(self)
+        self.balance_layout.addStretch(1)
+        self.balance_layout.addWidget(balance_value)
+        self.balance_layout.addSpacing(10)
+        self.balance_layout.addWidget(display_btn)
+        self.balance_layout.addStretch(2)
 
-            self.security_layout.addLayout(balance_layout, 1, 3, 2, 4)
+        self.security_layout.addLayout(balance_layout, 1, 3, 2, 4)
 
-            self.security_layout.addWidget(password_label, 3, 1, 1, 1)
-            self.security_layout.addWidget(password_edit, 3, 3, 1, 5)
-            self.security_layout.addWidget(reset_btn, 4, 3, 1, 2)
+        self.security_layout.addWidget(password_label, 3, 1, 1, 1)
+        self.security_layout.addWidget(password_edit, 3, 3, 1, 5)
+        self.security_layout.addWidget(reset_btn, 4, 3, 1, 2)
 
-            self.security_layout.addWidget(accountbinding_label, 5, 1, 1, 1)
-            self.security_layout.addWidget(binding_label, 5, 3, 1, 2)
-            self.security_layout.addWidget(paylimit_label, 6, 1, 1, 1)
-            self.security_layout.addWidget(paylimit_edit, 6, 3, 1, 2)
-            self.security_layout.addWidget(cpc_label, 6, 5, 1, 2)
+        self.security_layout.addWidget(accountbinding_label, 5, 1, 1, 1)
+        self.security_layout.addWidget(binding_label, 5, 3, 1, 2)
+        self.security_layout.addWidget(paylimit_label, 6, 1, 1, 1)
+        self.security_layout.addWidget(paylimit_edit, 6, 3, 1, 2)
+        self.security_layout.addWidget(cpc_label, 6, 5, 1, 2)
 
-            self.setLayout(security_layout)
-        set_layout()
+        self.setLayout(security_layout)
         load_stylesheet(self, "security.qss")
 
     def handle_display(self):
@@ -1043,7 +1041,7 @@ class SecurityTab(QScrollArea):
 
 
 class PreferenceTab(QScrollArea):
-    def __init__(self, parent=None, item={}):
+    def __init__(self, parent=None, item=None):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("preferencepage")
@@ -1114,47 +1112,45 @@ class PreferenceTab(QScrollArea):
         seller_id.setObjectName("seller_id")
         self.seller_pcount = seller_pcount = QLabel("Products {}".format(product_counter))
         seller_pcount.setObjectName("seller_pcount")
-        self.unfollow_btn = unfollow_btn = QPushButton("Unfollow")
+        self.unfollow_btn = QPushButton("Unfollow")
         self.unfollow_btn.setObjectName("unfollow_btn")
         self.unfollow_btn.setCursor(QCursor(Qt.PointingHandCursor))
         self.unfollow_btn.clicked.connect(self.handle_unfollow)
 
 
-        def set_layout():
-            self.pinfo_preference_layout = pinfo_preference_layout = QGridLayout(self)
-            #self.pinfo_top_layout.setSpacing(10)
-            self.pinfo_preference_layout.setContentsMargins(40, 40, 150, 100)
-            self.pinfo_preference_layout.addWidget(downloadpath_label, 1, 1, 1, 1)
-            self.pinfo_preference_layout.addWidget(downloadpath_edit, 1, 3, 1, 10)
-            self.pinfo_preference_layout.addWidget(openpath_btn, 2, 3, 1, 2)
+        self.pinfo_preference_layout = pinfo_preference_layout = QGridLayout(self)
+        #self.pinfo_top_layout.setSpacing(10)
+        self.pinfo_preference_layout.setContentsMargins(40, 40, 150, 100)
+        self.pinfo_preference_layout.addWidget(downloadpath_label, 1, 1, 1, 1)
+        self.pinfo_preference_layout.addWidget(downloadpath_edit, 1, 3, 1, 10)
+        self.pinfo_preference_layout.addWidget(openpath_btn, 2, 3, 1, 2)
 
-            self.pinfo_preference_layout.addWidget(messageset_label, 3, 1, 1, 1)
-            self.pinfo_preference_layout.addWidget(tips_label, 3, 3, 1, 5)
-            self.pinfo_preference_layout.addWidget(messageset_checkbox_1, 4, 3, 1, 2)
-            self.pinfo_preference_layout.addWidget(messageset_checkbox_2, 5, 3, 1, 2)
-            self.pinfo_preference_layout.addWidget(messageset_checkbox_3, 6, 3, 1, 2)
+        self.pinfo_preference_layout.addWidget(messageset_label, 3, 1, 1, 1)
+        self.pinfo_preference_layout.addWidget(tips_label, 3, 3, 1, 5)
+        self.pinfo_preference_layout.addWidget(messageset_checkbox_1, 4, 3, 1, 2)
+        self.pinfo_preference_layout.addWidget(messageset_checkbox_2, 5, 3, 1, 2)
+        self.pinfo_preference_layout.addWidget(messageset_checkbox_3, 6, 3, 1, 2)
 
-            self.pinfo_preference_layout.addWidget(tag_label, 7, 1, 1, 1)
-            self.pinfo_tag_layout = pinfo_tag_layout = QHBoxLayout(self)
-            for i in range(self.tag_num):
-                self.pinfo_tag_layout.addWidget(self.tag_btn_list[i])
-                self.pinfo_tag_layout.addSpacing(5)
+        self.pinfo_preference_layout.addWidget(tag_label, 7, 1, 1, 1)
+        self.pinfo_tag_layout = pinfo_tag_layout = QHBoxLayout(self)
+        for i in range(self.tag_num):
+            self.pinfo_tag_layout.addWidget(self.tag_btn_list[i])
+            self.pinfo_tag_layout.addSpacing(5)
 
-            self.pinfo_tag_layout.addStretch(1)
-            self.pinfo_preference_layout.addLayout(pinfo_tag_layout, 7, 3, 1, 10)
-            self.pinfo_preference_layout.addWidget(addtag_btn, 8, 3, 1, 2)
+        self.pinfo_tag_layout.addStretch(1)
+        self.pinfo_preference_layout.addLayout(pinfo_tag_layout, 7, 3, 1, 10)
+        self.pinfo_preference_layout.addWidget(addtag_btn, 8, 3, 1, 2)
 
-            self.pinfo_preference_layout.addWidget(seller_label, 9, 1, 1, 1)
+        self.pinfo_preference_layout.addWidget(seller_label, 9, 1, 1, 1)
 
-            self.seller_layout = seller_layout = QVBoxLayout(self)
+        self.seller_layout = seller_layout = QVBoxLayout(self)
 
-            for i in range(self.seller_follow_number):
-                self.seller_layout.addWidget(self.seller_list[i])
-                self.seller_layout.addSpacing(0)
+        for i in range(self.seller_follow_number):
+            self.seller_layout.addWidget(self.seller_list[i])
+            self.seller_layout.addSpacing(0)
 
-            self.pinfo_preference_layout.addLayout(seller_layout, 9, 3, 5, 6)
-            self.setLayout(pinfo_preference_layout)
-        set_layout()
+        self.pinfo_preference_layout.addLayout(seller_layout, 9, 3, 5, 6)
+        self.setLayout(pinfo_preference_layout)
         load_stylesheet(self, "preference.qss")
 
     def handle_openpath(self):
