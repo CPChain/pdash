@@ -349,7 +349,7 @@ class Seller(QScrollArea):
 
 class BuyNowDialog(QDialog):
     account_balance = 1500000
-    def __init__(self, parent=None, item={}):
+    def __init__(self, parent=None, item=None):
         super().__init__(parent)
         self.parent = parent
         self.item = item
@@ -376,38 +376,36 @@ class BuyNowDialog(QDialog):
         password_input.setObjectName("password_input")
         password_input.setEchoMode(QLineEdit.Password)
 
-        self.cancel_btn = cancel_btn = QPushButton(self)
+        self.cancel_btn = QPushButton(self)
         self.cancel_btn.setObjectName("cancel_btn")
         self.cancel_btn.setText("Cancel")
         self.cancel_btn.setCursor(QCursor(Qt.PointingHandCursor))
         self.cancel_btn.clicked.connect(self.handle_cancel)
 
-        self.confirm_btn = confirm_btn = QPushButton(self)
+        self.confirm_btn = QPushButton(self)
         self.confirm_btn.setObjectName("confirm_btn")
         self.confirm_btn.setText("Confirm")
         self.confirm_btn.setCursor(QCursor(Qt.PointingHandCursor))
         self.confirm_btn.clicked.connect(self.handle_confirm)
 
-        def set_layout():
-            self.pinfo_top_layout = pinfo_top_layout = QGridLayout(self)
-            self.pinfo_top_layout.setContentsMargins(40, 40, 10, 10)
-            self.pinfo_top_layout.addWidget(self.needtopay_label, 1, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(self.price_value, 1, 3, 1, 1)
-            self.pinfo_top_layout.addWidget(self.account_label, 2, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(self.account_value, 2, 3, 1, 1)
-            self.pinfo_top_layout.addWidget(self.password_label, 3, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(self.password_input, 3, 3, 1, 5)
+        self.pinfo_top_layout = pinfo_top_layout = QGridLayout(self)
+        self.pinfo_top_layout.setContentsMargins(40, 40, 10, 10)
+        self.pinfo_top_layout.addWidget(self.needtopay_label, 1, 1, 1, 1)
+        self.pinfo_top_layout.addWidget(self.price_value, 1, 3, 1, 1)
+        self.pinfo_top_layout.addWidget(self.account_label, 2, 1, 1, 1)
+        self.pinfo_top_layout.addWidget(self.account_value, 2, 3, 1, 1)
+        self.pinfo_top_layout.addWidget(self.password_label, 3, 1, 1, 1)
+        self.pinfo_top_layout.addWidget(self.password_input, 3, 3, 1, 5)
 
-            self.btn_layout = btn_layout = QHBoxLayout(self)
-            self.btn_layout.addStretch(1)
-            self.btn_layout.addWidget(self.cancel_btn)
-            self.btn_layout.addSpacing(10)
-            self.btn_layout.addWidget(self.confirm_btn)
-            self.btn_layout.addSpacing(5)
-            self.pinfo_top_layout.addLayout(self.btn_layout, 5, 1, 3, 5)
+        self.btn_layout = QHBoxLayout(self)
+        self.btn_layout.addStretch(1)
+        self.btn_layout.addWidget(self.cancel_btn)
+        self.btn_layout.addSpacing(10)
+        self.btn_layout.addWidget(self.confirm_btn)
+        self.btn_layout.addSpacing(5)
+        self.pinfo_top_layout.addLayout(self.btn_layout, 5, 1, 3, 5)
 
-            self.setLayout(pinfo_top_layout)
-        set_layout()
+        self.setLayout(pinfo_top_layout)
         load_stylesheet(self, "buynowdialog.qss")
         self.show()
 
@@ -430,7 +428,7 @@ class BuyNowDialog(QDialog):
 
 class ProductDetailTab(QScrollArea):
     class ProductComment(QScrollArea):
-        def __init__(self, parent=None, comment={}):
+        def __init__(self, parent=None, comment=None):
             super().__init__()
             self.parent = parent
             self.comment = comment
@@ -447,48 +445,44 @@ class ProductDetailTab(QScrollArea):
             self.setMinimumHeight(120)
             self.setMaximumHeight(120)
 
-            def create_labels():
-                self.avatar_label = QLabel("")
-                self.avatar_label.setObjectName("avatar_label")
-                pixmap = get_pixm('avatar.jpeg')
-                pixmap = pixmap.scaled(40, 40)
-                self.avatar_label.setPixmap(pixmap)
+            self.avatar_label = QLabel("")
+            self.avatar_label.setObjectName("avatar_label")
+            pixmap = get_pixm('avatar.jpeg')
+            pixmap = pixmap.scaled(40, 40)
+            self.avatar_label.setPixmap(pixmap)
 
-                username = self.comment['username']
-                if self.comment['username'] == "":
-                    username = "Dcda Ali"
-                self.name_label = QLabel(username)
-                self.name_label.setObjectName('name_label')
+            username = self.comment['username']
+            if self.comment['username'] == "":
+                username = "Dcda Ali"
+            self.name_label = QLabel(username)
+            self.name_label.setObjectName('name_label')
 
-                self.rating_label = QLabel("{}".format(self.comment['rating']))
-                self.rating_label.setObjectName('rating_label')
+            self.rating_label = QLabel("{}".format(self.comment['rating']))
+            self.rating_label.setObjectName('rating_label')
 
-                self.description_label = QLabel(self.comment['content'])
-                self.description_label.setObjectName("description_label")
-            create_labels()
+            self.description_label = QLabel(self.comment['content'])
+            self.description_label.setObjectName("description_label")
 
-            def setlayout():
-                self.main_layout = main_layout = QVBoxLayout(self)
-                main_layout.setContentsMargins(0, 0, 0, 0)
-                main_layout.addSpacing(0)
+            self.main_layout = main_layout = QVBoxLayout(self)
+            main_layout.setContentsMargins(0, 0, 0, 0)
+            main_layout.addSpacing(0)
 
-                self.basic_layout = QHBoxLayout(self)
-                self.basic_layout.setContentsMargins(0, 5, 0, 5)
-                self.basic_layout.addSpacing(1)
-                self.basic_layout.addWidget(self.avatar_label)
-                self.basic_layout.addSpacing(0)
-                self.basic_layout.addWidget(self.name_label)
-                self.basic_layout.addSpacing(60)
-                self.basic_layout.addWidget(self.rating_label)
+            self.basic_layout = QHBoxLayout(self)
+            self.basic_layout.setContentsMargins(0, 5, 0, 5)
+            self.basic_layout.addSpacing(1)
+            self.basic_layout.addWidget(self.avatar_label)
+            self.basic_layout.addSpacing(0)
+            self.basic_layout.addWidget(self.name_label)
+            self.basic_layout.addSpacing(60)
+            self.basic_layout.addWidget(self.rating_label)
 
-                self.main_layout.addLayout(self.basic_layout)
-                self.main_layout.addSpacing(1)
-                self.main_layout.addWidget(self.description_label)
+            self.main_layout.addLayout(self.basic_layout)
+            self.main_layout.addSpacing(1)
+            self.main_layout.addWidget(self.description_label)
 
-                self.setLayout(self.main_layout)
-            setlayout()
+            self.setLayout(self.main_layout)
 
-    def __init__(self, parent=None, item={}):
+    def __init__(self, parent=None, item=None):
         super().__init__(parent)
         self.parent = parent
         self.item = item
@@ -499,7 +493,7 @@ class ProductDetailTab(QScrollArea):
         self.init_ui()
 
     def update_page(self, product_info, promo_list):
-        if len(promo_list) == 0:
+        if not promo_list:
             item = {"title": "Medical data from NHIS", "none": "none"}
             self.get_promotion(item)
         else:
@@ -508,92 +502,86 @@ class ProductDetailTab(QScrollArea):
         self.product_info = product_info
         self.init_ui()
 
-    def get_promotion(self, item={}):
+    def get_promotion(self, item=None):
         for i in range(self.search_promo_num):
             self.promo_lists.append(Product(self, item, "simple"))
 
     def init_ui(self):
-        def create_labels():
+        self.comment_list = []
+        self.title_label = QLabel(self.product_info["title"])
+        self.title_label.setObjectName("title_label")
+        self.title_label.setWordWrap(True)
+        self.title_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
 
-            self.title_label = title_label = QLabel(self.product_info["title"])
-            self.title_label.setObjectName("title_label")
-            self.title_label.setWordWrap(True)
-            self.title_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        self.seller_avatar = QLabel("")
+        self.seller_avatar.setObjectName("seller_avatar")
 
-            self.seller_avatar = QLabel("")
-            self.seller_avatar.setObjectName("seller_avatar")
+        self.seller_name = QLabel("Jade Smile")
+        self.seller_name.setObjectName("seller_name")
 
-            self.seller_name = QLabel("Jade Smile")
-            self.seller_name.setObjectName("seller_name")
+        self.sales_label = QLabel("Sales: {}".format(self.product_info['sales_number']))
+        self.sales_label.setObjectName("sales_label")
 
-            self.sales_label = QLabel("Sales: {}".format(self.product_info['sales_number']))
-            self.sales_label.setObjectName("sales_label")
+        self.size_label = QLabel("Size: {}".format(self.product_info["size"]))
+        self.size_label.setObjectName("size_label")
 
-            self.size_label = QLabel("Size: {}".format(self.product_info["size"]))
-            self.size_label.setObjectName("size_label")
+        self.description_label = QLabel("Description")
+        self.description_label.setObjectName("description_label")
 
-            self.description_label = QLabel("Description")
-            self.description_label.setObjectName("description_label")
+        self.rating_label = QLabel("Rating")
+        self.rating_label.setObjectName("rating_label")
 
-            self.rating_label = QLabel("Rating")
-            self.rating_label.setObjectName("rating_label")
+        self.average_score = QLabel("{0}".format(self.product_info["avg_rating"]))
+        self.average_score.setObjectName("average_score")
 
-            self.average_score = QLabel("{0}".format(self.product_info["avg_rating"]))
-            self.average_score.setObjectName("average_score")
-
-            self.may_like_label = QLabel("You may like")
-            self.may_like_label.setObjectName("may_like_label")
+        self.may_like_label = QLabel("You may like")
+        self.may_like_label.setObjectName("may_like_label")
 
 
-            self.data_label = QLabel(self.product_info["created"])
-            self.data_label.setObjectName("data_label")
+        self.data_label = QLabel(self.product_info["created"])
+        self.data_label.setObjectName("data_label")
 
-            self.descriptiondetail = QLabel(self.product_info["description"])
-            self.descriptiondetail.setObjectName("descriptiondetail")
-            self.descriptiondetail.setWordWrap(True)
-            self.descriptiondetail.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        self.descriptiondetail = QLabel(self.product_info["description"])
+        self.descriptiondetail.setObjectName("descriptiondetail")
+        self.descriptiondetail.setWordWrap(True)
+        self.descriptiondetail.setAlignment(Qt.AlignTop | Qt.AlignLeft)
 
-            self.price_label = QLabel("${}".format(self.product_info["price"]))
-            self.price_label.setObjectName("price_label")
+        self.price_label = QLabel("${}".format(self.product_info["price"]))
+        self.price_label.setObjectName("price_label")
 
-        create_labels()
+        self.tag = self.item['tags']
+        self.tag_num = len(self.tag)
+        self.tag_btn_list = []
+        for i in range(self.tag_num):
+            self.tag_btn_list.append(QPushButton(self.tag[i], self))
+            self.tag_btn_list[i].setObjectName("tag_btn_{0}".format(i))
+            self.tag_btn_list[i].setProperty("t_value", 1)
+            self.tag_btn_list[i].setCursor(QCursor(Qt.PointingHandCursor))
 
-        def create_btns():
+        self.seller_btn = QPushButton(self)
+        self.seller_btn.setObjectName("seller_btn")
+        self.seller_btn.setText("Christopher Chak")
+        self.seller_btn.clicked.connect(self.seller_clicked_act)
+        self.seller_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
-            self.tag = self.item['tags']
-            self.tag_num = len(self.tag)
-            self.tag_btn_list = []
-            for i in range(self.tag_num):
-                self.tag_btn_list.append(QPushButton(self.tag[i], self))
-                self.tag_btn_list[i].setObjectName("tag_btn_{0}".format(i))
-                self.tag_btn_list[i].setProperty("t_value", 1)
-                self.tag_btn_list[i].setCursor(QCursor(Qt.PointingHandCursor))
+        self.comment_btn = QPushButton(self)
+        self.comment_btn.setObjectName("comment_btn")
+        self.comment_btn.setText("Comment")
+        self.comment_btn.clicked.connect(self.handle_comment)
+        self.comment_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
-            self.seller_btn = QPushButton(self)
-            self.seller_btn.setObjectName("seller_btn")
-            self.seller_btn.setText("Christopher Chak")
-            self.seller_btn.clicked.connect(self.seller_clicked_act)
-            self.seller_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        self.collect_btn = QPushButton(self)
+        self.collect_btn.setObjectName("collect_btn")
+        self.collect_btn.setText("Collect")
+        self.collect_btn.clicked.connect(self.handle_collect)
+        self.collect_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
-            self.comment_btn = QPushButton(self)
-            self.comment_btn.setObjectName("comment_btn")
-            self.comment_btn.setText("Comment")
-            self.comment_btn.clicked.connect(self.handle_comment)
-            self.comment_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        self.buynow_btn = QPushButton(self)
+        self.buynow_btn.setObjectName("buynow_btn")
+        self.buynow_btn.setText("Buy Now")
+        self.buynow_btn.clicked.connect(self.handle_buynow)
+        self.buynow_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
-            self.collect_btn = QPushButton(self)
-            self.collect_btn.setObjectName("collect_btn")
-            self.collect_btn.setText("Collect")
-            self.collect_btn.clicked.connect(self.handle_collect)
-            self.collect_btn.setCursor(QCursor(Qt.PointingHandCursor))
-
-            self.buynow_btn = QPushButton(self)
-            self.buynow_btn.setObjectName("buynow_btn")
-            self.buynow_btn.setText("Buy Now")
-            self.buynow_btn.clicked.connect(self.handle_buynow)
-            self.buynow_btn.setCursor(QCursor(Qt.PointingHandCursor))
-
-        create_btns()
 
         self.frame = QFrame()
         self.frame.setObjectName("rating_frame")
@@ -601,14 +589,24 @@ class ProductDetailTab(QScrollArea):
         self.hline_1 = HorizontalLine(self, 2)
         self.hline_2 = HorizontalLine(self, 2)
 
-        def get_promotion(item={}):
+        self.content_layout = QHBoxLayout(self)
+        self.product_layout = QGridLayout(self)
+        self.tag_layout = QHBoxLayout(self)
+        self.btn_layout = QHBoxLayout(self)
+        self.rating_all = QVBoxLayout(self)
+        self.comment_layout = QVBoxLayout(self)
+        self.promotion_layout = QVBoxLayout(self)
+        self.rating_layout = QHBoxLayout(self)
+
+
+        def get_promotion(item=None):
             for i in range(self.search_promo_num):
                 self.promo_lists.append(Product(self, item, "simple"))
 
         @inlineCallbacks
         def get_product_info():
             promo_list = yield wallet.market_client.query_promotion()
-            if len(promo_list) == 0:
+            if not promo_list:
                 item = {"title": "Medical data from NHIS", "none": "none"}
                 get_promotion(item)
             else:
@@ -616,21 +614,19 @@ class ProductDetailTab(QScrollArea):
                     if i == len(promo_list) - 1:
                         break
                     self.promo_lists.append(Product2(self, promo_list[i], 'simple'))
-            self.comment_list = []
             comments = yield wallet.market_client.query_comment_by_hash(self.item['msg_hash'])
-            for j in range(len(comments)):
-                if j >= len(comments):
-                    break
+            comment_size = len(comments)
+            for j in range(comment_size):
                 self.comment_list.append(ProductDetailTab.ProductComment(self, comments[j]))
             set_layout()
         get_product_info()
 
         def set_layout():
 
-            self.content_layout = QHBoxLayout(self)
+            # self.content_layout = QHBoxLayout(self)
             self.content_layout.addSpacing(0)
 
-            self.product_layout = QGridLayout(self)
+            # self.product_layout = QGridLayout(self)
             self.product_layout.setSpacing(10)
             self.product_layout.setContentsMargins(30, 50, 10, 10)
 
@@ -641,7 +637,7 @@ class ProductDetailTab(QScrollArea):
             self.product_layout.addWidget(self.size_label, 4, 1, 1, 2)
             self.product_layout.addWidget(self.sales_label, 4, 3, 1, 2)
 
-            self.tag_layout = tag_layout = QHBoxLayout(self)
+            # self.tag_layout = QHBoxLayout(self)
             for i in range(self.tag_num):
                 self.tag_layout.addWidget(self.tag_btn_list[i])
                 self.tag_layout.addSpacing(5)
@@ -653,7 +649,7 @@ class ProductDetailTab(QScrollArea):
             self.product_layout.addWidget(self.descriptiondetail, 7, 1, 3, 10)
             self.product_layout.addWidget(self.price_label, 9, 1, 1, 2)
 
-            self.btn_layout = QHBoxLayout(self)
+            # self.btn_layout = QHBoxLayout(self)
             self.btn_layout.addWidget(self.collect_btn)
             self.btn_layout.addSpacing(12)
             self.btn_layout.addWidget(self.buynow_btn)
@@ -661,8 +657,8 @@ class ProductDetailTab(QScrollArea):
             self.btn_layout.addWidget(self.comment_btn)
             self.product_layout.addLayout(self.btn_layout, 10, 1, 1, 6)
 
-            self.rating_all = QVBoxLayout(self)
-            self.rating_layout = QHBoxLayout(self)
+            # self.rating_all = QVBoxLayout(self)
+            # self.rating_layout = QHBoxLayout(self)
             self.rating_layout.addWidget(self.rating_label)
             self.rating_layout.addStretch(1)
             self.rating_layout.addWidget(self.average_score)
@@ -671,13 +667,13 @@ class ProductDetailTab(QScrollArea):
             self.rating_all.addWidget(self.hline_1)
             self.product_layout.addLayout(self.rating_all, 12, 1, 1, 10)
 
-            self.comment_layout = QVBoxLayout(self)
+            # self.comment_layout = QVBoxLayout(self)
             for i in range(len(self.comment_list)):
                 self.comment_layout.addWidget(self.comment_list[i])
                 self.comment_layout.addSpacing(0)
             self.product_layout.addLayout(self.comment_layout, 14, 1, 3, 10)
 
-            self.promotion_layout = QVBoxLayout(self)
+            # self.promotion_layout = QVBoxLayout(self)
             self.promotion_layout.setContentsMargins(20, 25, 10, 10)
             self.promotion_layout.addSpacing(0)
             self.promotion_layout.addWidget(self.may_like_label)
@@ -712,7 +708,7 @@ class ProductDetailTab(QScrollArea):
         main_wnd.main_tab_index['collect_tab'] = tab_index
 
     def handle_buynow(self):
-        self.buynow_dialog = BuyNowDialog(self, self.product_info)
+        BuyNowDialog(self, self.product_info)
 
     def seller_clicked_act(self):
         wid = main_wnd.content_tabs.findChild(QWidget, "sellerHP_tab")
@@ -723,6 +719,7 @@ class ProductDetailTab(QScrollArea):
             super().__init__(parent)
             self.parent = parent
             self.market_hash = market_hash
+            self.comment_content = self.comment_edit.toPlainText()
             self.resize(300, 400)
             self.setObjectName("comment_dialog")
             self.init_ui()
@@ -734,37 +731,35 @@ class ProductDetailTab(QScrollArea):
             self.comment_edit = QTextEdit()
             self.comment_edit.setObjectName("comment_edit")
 
-            self.cancel_btn = cancel_btn = QPushButton(self)
+            self.cancel_btn = QPushButton(self)
             self.cancel_btn.setObjectName("comment_cancel_btn")
             self.cancel_btn.setText("Cancel")
             self.cancel_btn.setCursor(QCursor(Qt.PointingHandCursor))
             self.cancel_btn.clicked.connect(self.handle_cancel)
 
-            self.confirm_btn = confirm_btn = QPushButton(self)
+            self.confirm_btn = QPushButton(self)
             self.confirm_btn.setObjectName("pinfo_publish_btn")
             self.confirm_btn.setText("OK")
             self.confirm_btn.setCursor(QCursor(Qt.PointingHandCursor))
             self.confirm_btn.clicked.connect(self.handle_confirm)
 
-            def set_layout():
-                self.main_layout = QVBoxLayout()
-                self.main_layout.addSpacing(0)
-                self.main_layout.addWidget(self.comment_label)
-                self.main_layout.addSpacing(2)
-                self.main_layout.addWidget(self.comment_edit)
-                self.main_layout.addSpacing(2)
+            self.main_layout = QVBoxLayout()
+            self.main_layout.addSpacing(0)
+            self.main_layout.addWidget(self.comment_label)
+            self.main_layout.addSpacing(2)
+            self.main_layout.addWidget(self.comment_edit)
+            self.main_layout.addSpacing(2)
 
-                self.button_layout = QHBoxLayout()
-                self.button_layout.addSpacing(2)
-                self.button_layout.addWidget(self.cancel_btn)
-                self.button_layout.addSpacing(2)
-                self.button_layout.addWidget(self.confirm_btn)
+            self.button_layout = QHBoxLayout()
+            self.button_layout.addSpacing(2)
+            self.button_layout.addWidget(self.cancel_btn)
+            self.button_layout.addSpacing(2)
+            self.button_layout.addWidget(self.confirm_btn)
 
-                self.main_layout.addLayout(self.button_layout)
+            self.main_layout.addLayout(self.button_layout)
 
-                self.setLayout(self.main_layout)
+            self.setLayout(self.main_layout)
 
-            set_layout()
             logger.debug("Loading stylesheet of comment dialog")
             self.show()
 
@@ -793,6 +788,7 @@ class ProductDetailTab(QScrollArea):
         else:
             market_hash = self.product_info['msg_hash']
             comment_dlg = ProductDetailTab.CommentDialog(self, market_hash)
+            comment_dlg.show()
 
 
 class SearchProductTab(QScrollArea):
