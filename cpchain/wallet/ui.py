@@ -1579,6 +1579,7 @@ class CollectedTab(QScrollArea):
             # file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['', 'Product Name', 'Price', 'Size', ''])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+            file_table.horizontalHeader().setFixedHeight(35)
             file_table.setSortingEnabled(True)
 
             # # file_list = get_file_list()
@@ -1805,6 +1806,7 @@ class PurchasedDownloadedTab(QScrollArea):
             #file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['', 'Product Name', 'Size', 'Path', 'Remote URI'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+            file_table.horizontalHeader().setFixedHeight(35)
             file_table.verticalHeader().setDefaultSectionSize(30)
             file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
             file_table.setSortingEnabled(True)
@@ -2023,6 +2025,7 @@ class PurchasedDownloadingTab(QScrollArea):
             file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['CheckState', 'Product Name', 'Progress', 'File UUID'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+            file_table.horizontalHeader().setFixedHeight(35)
             file_table.verticalHeader().setDefaultSectionSize(30)
             file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
             # file_table.setMinimumHeight(30);
@@ -2471,6 +2474,7 @@ class SellTab(QScrollArea):
 
             file_table.setHorizontalHeaderLabels(['', 'Product Name', 'Price ($)', 'Sales', 'Rating', 'Update Time', ''])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+            file_table.horizontalHeader().setFixedHeight(35)
             file_table.verticalHeader().setDefaultSectionSize(30)
             file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
             file_table.setSortingEnabled(True)
@@ -3431,6 +3435,7 @@ class CloudTab(QScrollArea):
             file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['', 'Product Name', 'Size', 'Remote Type', 'Published', 'ID'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+            file_table.horizontalHeader().setFixedHeight(35)
             file_table.verticalHeader().setDefaultSectionSize(30)
             file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
             file_table.setSortingEnabled(True)

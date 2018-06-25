@@ -13,7 +13,7 @@ QScrollArea {
 }
 
 QFrame {
-    background: #eeeeee;
+    background: #fafafa;
     border: none;
     outline: none;
 }
