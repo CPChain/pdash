@@ -3672,7 +3672,7 @@ def initialize_system():
 
 def main():
     global main_wnd
-    from twisted.internet import reactor
+    # from twisted.internet import reactor
     main_wnd = MainWindow(reactor)
     _handle_keyboard_interrupt()
 
