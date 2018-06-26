@@ -1,41 +1,31 @@
 #!/usr/bin/python3
-from twisted.logger import globalLogBeginner, textFileLogObserver
+
 import sys
-globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
-
-from cpchain.wallet.wallet import Wallet
-
 import os.path as osp
 import string
 import hashlib
 import logging
 
-
-
-from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, 
-                             QVBoxLayout, QGridLayout, QWidget, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel,
-                             QWidget, QLineEdit, QSpacerItem, QSizePolicy, QTableWidget, QFormLayout, QComboBox, QTextEdit,
-                             QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
-from PyQt5.QtCore import Qt, QSize, QPoint, pyqtSignal, QBasicTimer
-from PyQt5.QtGui import QIcon, QCursor, QPixmap, QStandardItem, QFont, QPainter, QFontDatabase
-
+from cpchain.wallet.wallet import Wallet
 from cpchain import config, root_dir
-
 from cpchain.wallet import fs
 from cpchain.crypto import ECCipher, RSACipher, Encoder
 from cpchain.utils import open_file, sizeof_fmt
+from cpchain.proxy.node import pick_proxy
 
-from cpchain.proxy.node import pick_proxy, start_proxy_request
-from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
-
-from twisted.internet import threads, defer, reactor
+from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import deferToThread
 from twisted.internet.task import LoopingCall
+from twisted.logger import globalLogBeginner, textFileLogObserver
 
+from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, QVBoxLayout, QGridLayout, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel, QWidget, QLineEdit, QTableWidget, QTextEdit, QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
+from PyQt5.QtCore import Qt, QPoint, QBasicTimer
+from PyQt5.QtGui import QIcon, QCursor, QPixmap, QFont, QFontDatabase
+
+globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
 wallet = Wallet(reactor)
-
-logger = logging.getLogger(__name__) # pylint: disable=locally-disabled, invalid-name
+logger = logging.getLogger(__name__)
 
 def get_icon(name):
     path = osp.join(root_dir, "cpchain/assets/wallet/icons", name)
@@ -45,7 +35,7 @@ def get_pixm(name):
     path = osp.join(root_dir, "cpchain/assets/wallet/icons", name)
     return QPixmap(path)
 
-    
+
 
 def load_stylesheet(wid, name):
     path = osp.join(root_dir, "cpchain/assets/wallet/qss", name)
@@ -63,35 +53,22 @@ class PersonalProfileTab(QScrollArea):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("personalprofile_tab")
-        self.init_ui()   
+        self.init_ui()
 
     def init_ui(self):
 
-        def add_content_tabs():
-            self.profile_tabs = profile_tabs = QTabWidget(self)
-            profile_tabs.setObjectName("profile_tabs")
-            #follow_tabs.tabBar().hide()
-            profile_tabs.addTab(PersonalInfoPage(profile_tabs), "Personal Information")
-            profile_tabs.addTab(PreferenceTab(profile_tabs), "Preference")
-            profile_tabs.addTab(SecurityTab(profile_tabs), "Account Security")            
-        add_content_tabs()
+        self.profile_tabs = profile_tabs = QTabWidget(self)
+        profile_tabs.setObjectName("profile_tabs")
+        profile_tabs.addTab(PersonalInfoPage(profile_tabs), "Personal Information")
+        profile_tabs.addTab(PreferenceTab(profile_tabs), "Preference")
+        profile_tabs.addTab(SecurityTab(profile_tabs), "Account Security")
 
         def set_layout():
-            self.follow_main_layout = follow_main_layout = QHBoxLayout()
-            #self.follow_main_layout.setSpacing(0)
-            #self.follow_main_layout.setContentsMargins(0, 0, 0, 0) 
-            #self.follow_main_layout.addSpacing(0)
-            #follow_main_layout.addWidget(self.follow_tag_btn)
+            follow_main_layout = QHBoxLayout()
             follow_main_layout.addWidget(self.profile_tabs)
-            self.setLayout(self.follow_main_layout)
-            #self.main_layout.addLayout(self.content_layout)
-
-            #wid = QWidget(self)
-            #wid.setLayout(self.main_layout)
-            #self.setCentralWidget(wid)
+            self.setLayout(follow_main_layout)
         set_layout()
         load_stylesheet(self, "personalprofile.qss")
-        #print("Loading stylesheet of following tab widget")
 
     def set_one_index(self):
         self.profile_tabs.setCurrentIndex(0)
@@ -108,8 +85,8 @@ class TagHPTab(QScrollArea):
         super().__init__(parent)
         self.parent = parent
         self.key_words = key_words
-        #self.setObjectName("cart_tab")
         self.setObjectName("tagHP_tab")
+        self.tag = ""
         self.init_ui()
 
     def init_ui(self):
@@ -120,35 +97,30 @@ class TagHPTab(QScrollArea):
         self.item_lists = []
         self.promo_lists = []
 
-        # TODO: Search for products by self.key_words and return them from the backend
-        def get_products(item={}, key_words=""):
+        def get_products(item=None):
             for i in range(self.search_item_num):
                 self.item_lists.append(Product(self, item))
 
         self.item = {"title": "Medical data from NHIS", "none": "none"}
         get_products(self.item)
 
-        # TODO: Get promotion products based on products returned above or the keywords provided
-        def get_promotion(item={}, key_words=""):
+        def get_promotion(item=None):
             for i in range(self.search_promo_num):
                 self.promo_lists.append(Product(self, item, "simple"))
         get_promotion(self.item)
 
-        def create_labels():
-            self.tag_header = QLabel("Tag 1")
-            self.tag_header.setObjectName("tag_header")
+        self.tag_header = QLabel("Tag 1")
+        self.tag_header.setObjectName("tag_header")
 
-            self.followthis_label = QPushButton("Follow this tag")
-            self.followthis_label.setObjectName("followthis_label")
-            self.followthis_label.clicked.connect(self.handle_follow_tag)
+        self.followthis_label = QPushButton("Follow this tag")
+        self.followthis_label.setObjectName("followthis_label")
+        self.followthis_label.clicked.connect(self.handle_follow_tag)
 
-            self.related_label = QLabel("Related Tags")
-            self.related_label.setObjectName("related_label")
+        self.related_label = QLabel("Related Tags")
+        self.related_label.setObjectName("related_label")
 
-            self.may_like_label = QLabel("You may like")
-            self.may_like_label.setObjectName("may_like_label")
-
-        create_labels()
+        self.may_like_label = QLabel("You may like")
+        self.may_like_label.setObjectName("may_like_label")
 
         def bind_slots():
             logger.debug("binding slots of btns....")
@@ -156,48 +128,44 @@ class TagHPTab(QScrollArea):
         bind_slots()
 
         self.hline_1 = HorizontalLine(self, 2)
-        self.hline_2 = HorizontalLine(self, 2)   
-        self.hline_3 = HorizontalLine(self, 2)    
+        self.hline_2 = HorizontalLine(self, 2)
+        self.hline_3 = HorizontalLine(self, 2)
+        self.main_layout = main_layout = QHBoxLayout(self)
+        main_layout.addSpacing(0)
 
-        def set_layout():
-            self.main_layout = main_layout = QHBoxLayout(self)
-            main_layout.addSpacing(0)
+        self.content_layout = QVBoxLayout(self)
+        self.stat_layout = QHBoxLayout()
+        self.stat_layout.addSpacing(0)
+        self.stat_layout.addWidget(self.tag_header)
+        self.stat_layout.addStretch(1)
+        self.stat_layout.addWidget(self.followthis_label)
+        self.stat_layout.addSpacing(0)
 
-            self.content_layout = QVBoxLayout(self)
-            self.stat_layout = QHBoxLayout()
-            self.stat_layout.addSpacing(0)
-            self.stat_layout.addWidget(self.tag_header)
-            self.stat_layout.addStretch(1)
-            self.stat_layout.addWidget(self.followthis_label)
-            self.stat_layout.addSpacing(0)
+        self.content_layout.addLayout(self.stat_layout)
+        self.content_layout.addWidget(self.hline_1)
+        for i in range(self.search_item_num):
+            self.content_layout.addWidget(self.item_lists[i])
+            self.content_layout.addSpacing(0)
 
-            self.content_layout.addLayout(self.stat_layout)
-            self.content_layout.addWidget(self.hline_1)
-            for i in range(self.search_item_num):
-                self.content_layout.addWidget(self.item_lists[i])
-                self.content_layout.addSpacing(0)
+        self.content_layout.addStretch(1)
 
-            self.content_layout.addStretch(1)
+        self.promotion_layout = QVBoxLayout(self)
+        self.promotion_layout.addWidget(self.related_label)
+        self.promotion_layout.addWidget(self.hline_2)
+        self.promotion_layout.addWidget(self.may_like_label)
+        self.promotion_layout.addWidget(self.hline_3)
 
-            self.promotion_layout = QVBoxLayout(self)
-            self.promotion_layout.addWidget(self.related_label)
-            self.promotion_layout.addWidget(self.hline_2)
-            self.promotion_layout.addWidget(self.may_like_label)
-            self.promotion_layout.addWidget(self.hline_3)            
+        for i in range(self.search_promo_num):
+            self.promotion_layout.addWidget(self.promo_lists[i])
+            self.promotion_layout.addSpacing(0)
 
-            for i in range(self.search_promo_num):
-                self.promotion_layout.addWidget(self.promo_lists[i])
-                self.promotion_layout.addSpacing(0)
+        self.main_layout.addLayout(self.content_layout, 2)
+        self.main_layout.addLayout(self.promotion_layout, 1)
 
-            self.main_layout.addLayout(self.content_layout, 2)
-            self.main_layout.addLayout(self.promotion_layout, 1)
+        self.main_layout.addLayout(self.content_layout)
 
-            self.main_layout.addLayout(self.content_layout)
+        self.setLayout(self.main_layout)
 
-            self.setLayout(self.main_layout)
-
-        set_layout()
-        # TODO: Loading stylesheet
         logger.debug("loading stylesheet...")
         load_stylesheet(self, "tagpage.qss")
 
@@ -232,11 +200,6 @@ class SellerHPTab(QScrollArea):
             search_btn.setFixedSize(18, 18)
             search_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
-            def bind_slots():
-                print("Binding slots of clicked-search-btn......")
-
-            bind_slots()
-
             def set_layout():
                 main_layout = QHBoxLayout()
                 main_layout.addWidget(search_btn)
@@ -251,112 +214,92 @@ class SellerHPTab(QScrollArea):
         self.parent = parent
         self.seller_addr = "2af2e6a7da5c788f6a73abf67bb8acb809d7ff54"
         self.setObjectName("sellerHP_tab")
-        #self.setObjectName("cart_tab")
         self.init_ui()
 
     def init_ui(self):
-        def create_labels():
 
-            self.time_label = QLabel("Time")
-            self.time_label.setObjectName("time_label")
+        self.time_label = QLabel("Time")
+        self.time_label.setObjectName("time_label")
 
-            self.price_label = QLabel("Price")
-            self.price_label.setObjectName("price_label")
+        self.price_label = QLabel("Price")
+        self.price_label.setObjectName("price_label")
 
-        create_labels()
 
-        def create_btns():
+        self.time_btn = QPushButton(self)
+        self.time_btn.setObjectName("time_btn")
 
-            self.time_btn = QPushButton(self)
-            self.time_btn.setObjectName("time_btn")
-            # self.time_btn.setText("t")
+        self.price_btn = QPushButton(self)
+        self.price_btn.setObjectName("price_btn")
 
-            self.price_btn = QPushButton(self)
-            self.price_btn.setObjectName("price_btn")
-            # self.price_btn.setText("p")
+        self.message_btn = QPushButton(self)
+        self.message_btn.setObjectName("message_btn")
+        self.message_btn.setText("Message")
 
-            self.message_btn = QPushButton(self)
-            self.message_btn.setObjectName("message_btn")
-            self.message_btn.setText("Message")
-
-            self.follow_btn = QPushButton(self)
-            self.follow_btn.setObjectName("follow_btn")
-            self.follow_btn.setText("Follow")
-            self.follow_btn.clicked.connect(self.handle_follow)
-
-        create_btns()
+        self.follow_btn = QPushButton(self)
+        self.follow_btn.setObjectName("follow_btn")
+        self.follow_btn.setText("Follow")
+        self.follow_btn.clicked.connect(self.handle_follow)
 
         self.seller_list = []
         self.seller_promote_number = 3
         self.item_lists = []
         self.item_num = 4
         self.search_bar = SellerHPTab.SearchBar(self)
+        self.this_seller = Seller(self)
 
-        def get_this_seller():
-            self.this_seller = Seller(self)
+        for i in range(self.seller_promote_number):
+            self.seller_list.append(Seller(self))
 
-        get_this_seller()
-
-        def get_seller_list():
-            for i in range(self.seller_promote_number):
-                self.seller_list.append(Seller(self))
-
-        get_seller_list()
         self.sellerid = {"name": "Chak", "sales": "2020"}
-
-        def get_products(item={}, key_words=""):
-            for i in range(self.item_num):
-                self.item_lists.append(Product(self, item))
-
         self.item = {"title": "Medical data from NHIS", "none": "none"}
-        get_products(self.item)
 
-        def set_layout():
-            self.main_layout = main_layout = QHBoxLayout(self)
-            main_layout.addSpacing(0)
+        for i in range(self.item_num):
+            self.item_lists.append(Product(self, self.item))
 
-            self.content_layout = content_layout = QVBoxLayout(self)
-            self.search_layout = search_layout = QHBoxLayout(self)
-            self.search_layout.addWidget(self.search_bar)
-            self.search_layout.addSpacing(10)
-            self.search_layout.addWidget(self.time_label)
-            self.search_layout.addSpacing(0)
-            self.search_layout.addWidget(self.time_btn)
-            self.search_layout.addSpacing(0)
-            self.search_layout.addWidget(self.price_label)
-            self.search_layout.addSpacing(0)
-            self.search_layout.addWidget(self.price_btn)
+        self.main_layout = main_layout = QHBoxLayout(self)
+        main_layout.addSpacing(0)
 
-            self.content_layout.addLayout(self.search_layout)
+        self.content_layout = QVBoxLayout(self)
+        self.search_layout = QHBoxLayout(self)
+        self.search_layout.addWidget(self.search_bar)
+        self.search_layout.addSpacing(10)
+        self.search_layout.addWidget(self.time_label)
+        self.search_layout.addSpacing(0)
+        self.search_layout.addWidget(self.time_btn)
+        self.search_layout.addSpacing(0)
+        self.search_layout.addWidget(self.price_label)
+        self.search_layout.addSpacing(0)
+        self.search_layout.addWidget(self.price_btn)
 
-            for i in range(self.item_num):
-                self.content_layout.addWidget(self.item_lists[i])
-                self.content_layout.addSpacing(0)
+        self.content_layout.addLayout(self.search_layout)
 
-            self.seller_layout = seller_layout = QVBoxLayout(self)   
-            self.seller_layout.addWidget(self.this_seller)
-            self.btn_layout = btn_layout = QHBoxLayout(self)
-            self.btn_layout.addWidget(self.message_btn)
-            self.btn_layout.addWidget(self.follow_btn)
-            self.seller_layout.addLayout(self.btn_layout)
-            self.seller_layout.addSpacing(15)
+        for i in range(self.item_num):
+            self.content_layout.addWidget(self.item_lists[i])
+            self.content_layout.addSpacing(0)
 
-            for i in range(self.seller_promote_number):
-                self.seller_layout.addWidget(self.seller_list[i])
-                self.seller_layout.addSpacing(0)
+        self.seller_layout = QVBoxLayout(self)
+        self.seller_layout.addWidget(self.this_seller)
+        self.btn_layout = QHBoxLayout(self)
+        self.btn_layout.addWidget(self.message_btn)
+        self.btn_layout.addWidget(self.follow_btn)
+        self.seller_layout.addLayout(self.btn_layout)
+        self.seller_layout.addSpacing(15)
 
-            self.main_layout.addLayout(self.content_layout, 2)
-            self.main_layout.addLayout(self.seller_layout, 1)
-            self.setLayout(self.main_layout)
-        set_layout()
+        for i in range(self.seller_promote_number):
+            self.seller_layout.addWidget(self.seller_list[i])
+            self.seller_layout.addSpacing(0)
+
+        self.main_layout.addLayout(self.content_layout, 2)
+        self.main_layout.addLayout(self.seller_layout, 1)
+        self.setLayout(self.main_layout)
         load_stylesheet(self, "sellerhomepage.qss")
 
     def handle_follow(self):
         if wallet.market_client.token == '':
             QMessageBox.information(self, "Tips", "Please login first !")
             return
-        self.seller_publick_key = '040ceb41bf5f9a96c16b1441f5edc0277bfa2d0ce6a10b481b14de96b0d03cdc5a43668c6f2fb35ac79f70ba7ea86f036cc37ec814f67e066c4ff65648f829dfe7'
-        d_status = wallet.market_client.add_follow_seller(self.seller_publick_key)
+        seller_publick_key = '040ceb41bf5f9a96c16b1441f5edc0277bfa2d0ce6a10b481b14de96b0d03cdc5a43668c6f2fb35ac79f70ba7ea86f036cc37ec814f67e066c4ff65648f829dfe7'
+        d_status = wallet.market_client.add_follow_seller(seller_publick_key)
         def handle_state(status):
             if status == 1:
                 self.follow_btn.setText("Unfollow")
@@ -366,7 +309,7 @@ class SellerHPTab(QScrollArea):
 
 
 class Seller(QScrollArea):
-    def __init__(self, parent=None, sellerid={}, mode=""):
+    def __init__(self, parent=None, sellerid=None, mode=""):
         super().__init__(parent)
         self.parent = parent
         self.sellerid = sellerid
@@ -374,7 +317,6 @@ class Seller(QScrollArea):
         self.init_ui()
 
     def init_ui(self):
-        #self.frame.setMinimumWidth(500)
         self.setMinimumHeight(200)
         self.setMaximumHeight(500)
         self.setMinimumHeight(120)
@@ -383,50 +325,40 @@ class Seller(QScrollArea):
         self.seller_name.setObjectName("seller_name")
         self.seller_name.setCursor(QCursor(Qt.PointingHandCursor))
 
-        self.seller_avatar = seller_avatar = QLabel(self)
+        self.seller_avatar = QLabel(self)
         self.seller_avatar.setObjectName("seller_avatar")
 
         seller_product_value = 20
         seller_sales_volume = 3455
-        self.product_label = product_label = QLabel("Products {}".format(seller_product_value))
-        self.sales_volume = sales_volume = QLabel("Sales Volume {}".format(seller_sales_volume))
+        self.product_label = QLabel("Products {}".format(seller_product_value))
+        self.sales_volume = QLabel("Sales Volume {}".format(seller_sales_volume))
 
         self.hline = HorizontalLine(self, 2)
 
-        def bind_slots():
-            print("Binding slots of buttons......")
-        bind_slots()
-
-        def setlayout():
-            self.main_layout = main_layout = QGridLayout(self)
-            self.main_layout.setSpacing(0)
-            self.main_layout.addWidget(self.seller_avatar, 1, 1 , 2, 3)
-            self.main_layout.addWidget(self.seller_name, 1, 3, 1, 1)
-            self.main_layout.addWidget(self.product_label, 2, 3, 1, 1)
-            self.main_layout.addWidget(self.sales_volume, 3, 3, 1, 1) 
-            self.main_layout.addWidget(self.hline, 4, 1, 1, 3)  
-            self.setLayout(self.main_layout)
-        setlayout()
-        logger.debug("Loading stylesheet of item")
+        self.main_layout = QGridLayout(self)
+        self.main_layout.setSpacing(0)
+        self.main_layout.addWidget(self.seller_avatar, 1, 1, 2, 3)
+        self.main_layout.addWidget(self.seller_name, 1, 3, 1, 1)
+        self.main_layout.addWidget(self.product_label, 2, 3, 1, 1)
+        self.main_layout.addWidget(self.sales_volume, 3, 3, 1, 1)
+        self.main_layout.addWidget(self.hline, 4, 1, 1, 3)
+        self.setLayout(self.main_layout)
         load_stylesheet(self, "selleritem.qss")
 
 
 
 class BuyNowDialog(QDialog):
     account_balance = 1500000
-    def __init__(self, parent=None, item={}):
+    def __init__(self, parent=None, item=None):
         super().__init__(parent)
         self.parent = parent
         self.item = item
         self.resize(300, 180)
-        #for testing this Tab @rayhueng
-        #self.setObjectName("cart_tab")
         self.setObjectName("buynowdialog")
         self.init_ui()
 
     def init_ui(self):
 
-        #Labels def
         self.needtopay_label = needtopay_label = QLabel("You need to pay:")
         needtopay_label.setObjectName("needtopay_label")
         self.account_label = account_label = QLabel("Account:")
@@ -435,66 +367,51 @@ class BuyNowDialog(QDialog):
         password_label.setObjectName("password_label")
 
         self.price_to_pay = self.item['price']
-        # accout_balance = 15000
         self.price_value = price_value = QLabel("${}".format(self.price_to_pay))
         price_value.setObjectName("price_value")
         self.account_value = account_value = QLabel("${}".format(BuyNowDialog.account_balance))
-        account_value.setObjectName("account_value")       
+        account_value.setObjectName("account_value")
 
-
-        # try_time_left = 3
-        # self.hint_label = hint_label = QLabel("You can try {} times.".format(try_time_left))
-
-        #TextEdit def
         self.password_input = password_input = QLineEdit()
         password_input.setObjectName("password_input")
         password_input.setEchoMode(QLineEdit.Password)
 
-        #Buttons and Tags
-        self.cancel_btn = cancel_btn = QPushButton(self)
+        self.cancel_btn = QPushButton(self)
         self.cancel_btn.setObjectName("cancel_btn")
         self.cancel_btn.setText("Cancel")
         self.cancel_btn.setCursor(QCursor(Qt.PointingHandCursor))
         self.cancel_btn.clicked.connect(self.handle_cancel)
 
-        self.confirm_btn = confirm_btn = QPushButton(self)
+        self.confirm_btn = QPushButton(self)
         self.confirm_btn.setObjectName("confirm_btn")
         self.confirm_btn.setText("Confirm")
         self.confirm_btn.setCursor(QCursor(Qt.PointingHandCursor))
         self.confirm_btn.clicked.connect(self.handle_confirm)
 
-        def set_layout():
-            self.pinfo_top_layout = pinfo_top_layout = QGridLayout(self)
-            #self.pinfo_top_layout.setSpacing(10)
-            self.pinfo_top_layout.setContentsMargins(40, 40, 10, 10)
-            self.pinfo_top_layout.addWidget(self.needtopay_label, 1, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(self.price_value, 1, 3, 1, 1)
-            self.pinfo_top_layout.addWidget(self.account_label, 2, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(self.account_value, 2, 3, 1, 1)
-            self.pinfo_top_layout.addWidget(self.password_label, 3, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(self.password_input, 3, 3, 1, 5)
-            # self.pinfo_top_layout.addWidget(self.hint_label, 4, 3, 1, 3)
-            
-            self.btn_layout = btn_layout = QHBoxLayout(self)
-            self.btn_layout.addStretch(1)
-            self.btn_layout.addWidget(self.cancel_btn)
-            self.btn_layout.addSpacing(10)
-            self.btn_layout.addWidget(self.confirm_btn)
-            self.btn_layout.addSpacing(5)
-            self.pinfo_top_layout.addLayout(self.btn_layout, 5, 1, 3, 5)
+        self.pinfo_top_layout = pinfo_top_layout = QGridLayout(self)
+        self.pinfo_top_layout.setContentsMargins(40, 40, 10, 10)
+        self.pinfo_top_layout.addWidget(self.needtopay_label, 1, 1, 1, 1)
+        self.pinfo_top_layout.addWidget(self.price_value, 1, 3, 1, 1)
+        self.pinfo_top_layout.addWidget(self.account_label, 2, 1, 1, 1)
+        self.pinfo_top_layout.addWidget(self.account_value, 2, 3, 1, 1)
+        self.pinfo_top_layout.addWidget(self.password_label, 3, 1, 1, 1)
+        self.pinfo_top_layout.addWidget(self.password_input, 3, 3, 1, 5)
 
-            self.setLayout(pinfo_top_layout)
-        set_layout()
-        #print("Loading stylesheet of cloud tab widget")
+        self.btn_layout = QHBoxLayout(self)
+        self.btn_layout.addStretch(1)
+        self.btn_layout.addWidget(self.cancel_btn)
+        self.btn_layout.addSpacing(10)
+        self.btn_layout.addWidget(self.confirm_btn)
+        self.btn_layout.addSpacing(5)
+        self.pinfo_top_layout.addLayout(self.btn_layout, 5, 1, 3, 5)
+
+        self.setLayout(pinfo_top_layout)
         load_stylesheet(self, "buynowdialog.qss")
         self.show()
 
     def handle_confirm(self):
-        logger.debug("handle the confirm of payment")
-        logger.debug("buyer select proxy ...")
         d = pick_proxy()
         def get_proxy_address(proxy_addr):
-            logger.debug("buyer selected proxy, proxy id: %s", proxy_addr)
             msg_hash = self.item['market_hash']
             file_title = self.item['title']
             proxy = proxy_addr
@@ -506,13 +423,12 @@ class BuyNowDialog(QDialog):
         self.close()
 
     def handle_cancel(self):
-        print("exiting the current dialog")
         self.close()
 
 
 class ProductDetailTab(QScrollArea):
     class ProductComment(QScrollArea):
-        def __init__(self, parent=None, comment={}):
+        def __init__(self, parent=None, comment=None):
             super().__init__()
             self.parent = parent
             self.comment = comment
@@ -529,56 +445,47 @@ class ProductDetailTab(QScrollArea):
             self.setMinimumHeight(120)
             self.setMaximumHeight(120)
 
-            def create_labels():
-                self.avatar_label = QLabel("")
-                self.avatar_label.setObjectName("avatar_label")
-                pixmap = get_pixm('avatar.jpeg')
-                pixmap = pixmap.scaled(40, 40)
-                self.avatar_label.setPixmap(pixmap)
+            self.avatar_label = QLabel("")
+            self.avatar_label.setObjectName("avatar_label")
+            pixmap = get_pixm('avatar.jpeg')
+            pixmap = pixmap.scaled(40, 40)
+            self.avatar_label.setPixmap(pixmap)
 
-                username = self.comment['username']
-                if self.comment['username'] == "":
-                    username = "Dcda Ali"
-                self.name_label = QLabel(username)
-                self.name_label.setObjectName('name_label')
+            username = self.comment['username']
+            if self.comment['username'] == "":
+                username = "Dcda Ali"
+            self.name_label = QLabel(username)
+            self.name_label.setObjectName('name_label')
 
-                self.rating_label = QLabel("{}".format(self.comment['rating']))
-                self.rating_label.setObjectName('rating_label')
+            self.rating_label = QLabel("{}".format(self.comment['rating']))
+            self.rating_label.setObjectName('rating_label')
 
-                self.description_label = QLabel(self.comment['content'])
-                self.description_label.setObjectName("description_label")
-            create_labels()
+            self.description_label = QLabel(self.comment['content'])
+            self.description_label.setObjectName("description_label")
 
-            def setlayout():
-                self.main_layout = main_layout = QVBoxLayout(self)
-                main_layout.setContentsMargins(0, 0, 0, 0)
-                main_layout.addSpacing(0)
+            self.main_layout = main_layout = QVBoxLayout(self)
+            main_layout.setContentsMargins(0, 0, 0, 0)
+            main_layout.addSpacing(0)
 
-                self.basic_layout = QHBoxLayout(self)
-                self.basic_layout.setContentsMargins(0, 5, 0, 5)
-                self.basic_layout.addSpacing(1)
-                self.basic_layout.addWidget(self.avatar_label)
-                self.basic_layout.addSpacing(0)
-                self.basic_layout.addWidget(self.name_label)
-                self.basic_layout.addSpacing(60)
-                self.basic_layout.addWidget(self.rating_label)
+            self.basic_layout = QHBoxLayout(self)
+            self.basic_layout.setContentsMargins(0, 5, 0, 5)
+            self.basic_layout.addSpacing(1)
+            self.basic_layout.addWidget(self.avatar_label)
+            self.basic_layout.addSpacing(0)
+            self.basic_layout.addWidget(self.name_label)
+            self.basic_layout.addSpacing(60)
+            self.basic_layout.addWidget(self.rating_label)
 
-                self.main_layout.addLayout(self.basic_layout)
-                self.main_layout.addSpacing(1)
-                self.main_layout.addWidget(self.description_label)
+            self.main_layout.addLayout(self.basic_layout)
+            self.main_layout.addSpacing(1)
+            self.main_layout.addWidget(self.description_label)
 
-                self.setLayout(self.main_layout)
-            setlayout()
-            #TODO: Loading stylesheet
-            logger.debug("Loading stylesheet of item")
+            self.setLayout(self.main_layout)
 
-    def __init__(self, parent=None, item={}):
+    def __init__(self, parent=None, item=None):
         super().__init__(parent)
         self.parent = parent
         self.item = item
-        # self.product_uid = product_uid
-        # self.key_words = key_words
-        #self.setObjectName("cart_tab")
         self.setObjectName("productdetail_tab")
         self.product_info = item
         self.search_promo_num = 4
@@ -586,7 +493,7 @@ class ProductDetailTab(QScrollArea):
         self.init_ui()
 
     def update_page(self, product_info, promo_list):
-        if len(promo_list) == 0:
+        if not promo_list:
             item = {"title": "Medical data from NHIS", "none": "none"}
             self.get_promotion(item)
         else:
@@ -595,143 +502,110 @@ class ProductDetailTab(QScrollArea):
         self.product_info = product_info
         self.init_ui()
 
-    def get_promotion(self, item={}):
+    def get_promotion(self, item=None):
         for i in range(self.search_promo_num):
             self.promo_lists.append(Product(self, item, "simple"))
 
     def init_ui(self):
-        def create_labels():
+        self.comment_list = []
+        self.title_label = QLabel(self.product_info["title"])
+        self.title_label.setObjectName("title_label")
+        self.title_label.setWordWrap(True)
+        self.title_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
 
-            # TODO: replace hard code by self.product_info['sales_number']
-            self.title_label = title_label = QLabel(self.product_info["title"])
-            self.title_label.setObjectName("title_label")
-            self.title_label.setWordWrap(True)
-            self.title_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        self.seller_avatar = QLabel("")
+        self.seller_avatar.setObjectName("seller_avatar")
 
-            self.seller_avatar = QLabel("")
-            self.seller_avatar.setObjectName("seller_avatar")
+        self.seller_name = QLabel("Jade Smile")
+        self.seller_name.setObjectName("seller_name")
 
-            # self.seller_name = QLabel(self.product_info["username"])
-            self.seller_name = QLabel("Jade Smile")
-            self.seller_name.setObjectName("seller_name")
+        self.sales_label = QLabel("Sales: {}".format(self.product_info['sales_number']))
+        self.sales_label.setObjectName("sales_label")
 
-            self.sales_label = QLabel("Sales: {}".format(self.product_info['sales_number']))
-            self.sales_label.setObjectName("sales_label")
+        self.size_label = QLabel("Size: {}".format(self.product_info["size"]))
+        self.size_label.setObjectName("size_label")
 
-            self.size_label = QLabel("Size: {}".format(self.product_info["size"]))
-            self.size_label.setObjectName("size_label")
+        self.description_label = QLabel("Description")
+        self.description_label.setObjectName("description_label")
 
-            self.description_label = QLabel("Description")
-            self.description_label.setObjectName("description_label")
+        self.rating_label = QLabel("Rating")
+        self.rating_label.setObjectName("rating_label")
 
-            self.rating_label = QLabel("Rating")
-            self.rating_label.setObjectName("rating_label")
+        self.average_score = QLabel("{0}".format(self.product_info["avg_rating"]))
+        self.average_score.setObjectName("average_score")
 
-            self.average_score = QLabel("{0}".format(self.product_info["avg_rating"]))
-            self.average_score.setObjectName("average_score")
+        self.may_like_label = QLabel("You may like")
+        self.may_like_label.setObjectName("may_like_label")
 
-            self.may_like_label = QLabel("You may like")
-            self.may_like_label.setObjectName("may_like_label")
+        self.data_label = QLabel(self.product_info["created"])
+        self.data_label.setObjectName("data_label")
 
+        self.descriptiondetail = QLabel(self.product_info["description"])
+        self.descriptiondetail.setObjectName("descriptiondetail")
+        self.descriptiondetail.setWordWrap(True)
+        self.descriptiondetail.setAlignment(Qt.AlignTop | Qt.AlignLeft)
 
-            # TODO: to get info from backend
-            self.data_label = QLabel(self.product_info["created"])
-            self.data_label.setObjectName("data_label")
-            # # d_comments = wallet.market_client.query_comment_by_hash(self.item['market_hash'])
-            # def add_comment():
-            #     self.buyer_avatar = QLabel("")
-            #     self.buyer_avatar.setObjectName("buyer_avatar")
-            #
-            #     self.buyer_name = QLabel("Ross Geller")
-            #     self.buyer_name.setObjectName("buyer_name")
-            #
-                # self.data_label = QLabel("May 4, 2018")
-                # self.data_label.setObjectName("data_label")
-            #
-            #     self.buyer_rating = QLabel("4.5")
-            #     self.buyer_rating.setObjectName("buyer_rating")
-            #
-            #     self.buyer_comment = QLabel("Lorem ipsim dolor sit amet, consectetur adipiscing elit. Aenean euismod bibendum laoreet.")
-            #     self.buyer_comment.setObjectName("buyer_comment")
-            #     self.buyer_comment.setWordWrap(True)
-            #     self.buyer_comment.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-            # add_comment()
-            # self.comment_list = []
-            # d_comments = wallet.market_client.query_comment_by_hash(self.item['msg_hash'])
-            # def add_comment(comments):
-            #     for i in range(len(comments)):
-            #         self.comment_list.append(ProductDetailTab.ProductComment(self, comments[i]))
-            # d_comments.addCallback(add_comment)
+        self.price_label = QLabel("${}".format(self.product_info["price"]))
+        self.price_label.setObjectName("price_label")
 
-            des_text = "In 2012, OWSLA launched a monthly subscription, The Nest, with benefits including early access to OWSLA releases.[12] In 2013, Bromance Records partners up with OWSLA to create an American branch titled BromanceUS with releases from Gesaffelstein, Illangelo."
+        self.tag = self.item['tags']
+        self.tag_num = len(self.tag)
+        self.tag_btn_list = []
+        for i in range(self.tag_num):
+            self.tag_btn_list.append(QPushButton(self.tag[i], self))
+            self.tag_btn_list[i].setObjectName("tag_btn_{0}".format(i))
+            self.tag_btn_list[i].setProperty("t_value", 1)
+            self.tag_btn_list[i].setCursor(QCursor(Qt.PointingHandCursor))
 
-            self.descriptiondetail = QLabel(self.product_info["description"])
-            self.descriptiondetail.setObjectName("descriptiondetail")
-            self.descriptiondetail.setWordWrap(True)
-            self.descriptiondetail.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        self.seller_btn = QPushButton(self)
+        self.seller_btn.setObjectName("seller_btn")
+        self.seller_btn.setText("Christopher Chak")
+        self.seller_btn.clicked.connect(self.seller_clicked_act)
+        self.seller_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
-            self.price_label = QLabel("${}".format(self.product_info["price"]))
-            self.price_label.setObjectName("price_label")
+        self.comment_btn = QPushButton(self)
+        self.comment_btn.setObjectName("comment_btn")
+        self.comment_btn.setText("Comment")
+        self.comment_btn.clicked.connect(self.handle_comment)
+        self.comment_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
-        create_labels()
+        self.collect_btn = QPushButton(self)
+        self.collect_btn.setObjectName("collect_btn")
+        self.collect_btn.setText("Collect")
+        self.collect_btn.clicked.connect(self.handle_collect)
+        self.collect_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
-        def create_btns():
+        self.buynow_btn = QPushButton(self)
+        self.buynow_btn.setObjectName("buynow_btn")
+        self.buynow_btn.setText("Buy Now")
+        self.buynow_btn.clicked.connect(self.handle_buynow)
+        self.buynow_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
-            self.tag = self.item['tags']
-            self.tag_num = len(self.tag)
-            self.tag_btn_list = []
-            for i in range(self.tag_num):
-                self.tag_btn_list.append(QPushButton(self.tag[i], self))
-                self.tag_btn_list[i].setObjectName("tag_btn_{0}".format(i))
-                self.tag_btn_list[i].setProperty("t_value", 1)
-                self.tag_btn_list[i].setCursor(QCursor(Qt.PointingHandCursor))
-
-            self.seller_btn = QPushButton(self)
-            self.seller_btn.setObjectName("seller_btn")
-            self.seller_btn.setText("Barack Obama")
-            self.seller_btn.clicked.connect(self.seller_clicked_act)
-            self.seller_btn.setCursor(QCursor(Qt.PointingHandCursor))
-
-            self.comment_btn = QPushButton(self)
-            self.comment_btn.setObjectName("comment_btn")
-            self.comment_btn.setText("Comment")
-            self.comment_btn.clicked.connect(self.handle_comment)
-            self.comment_btn.setCursor(QCursor(Qt.PointingHandCursor))
-
-            self.collect_btn = QPushButton(self)
-            self.collect_btn.setObjectName("collect_btn")
-            self.collect_btn.setText("Collect")
-            self.collect_btn.clicked.connect(self.handle_collect)
-            self.collect_btn.setCursor(QCursor(Qt.PointingHandCursor))
-
-            self.buynow_btn = QPushButton(self)
-            self.buynow_btn.setObjectName("buynow_btn")
-            self.buynow_btn.setText("Buy Now")
-            self.buynow_btn.clicked.connect(self.handle_buynow)
-            self.buynow_btn.setCursor(QCursor(Qt.PointingHandCursor))
-
-        create_btns()
 
         self.frame = QFrame()
         self.frame.setObjectName("rating_frame")
 
-        def bind_slots():
-            logger.debug("binding slots of btns....")
-
-        bind_slots()
-
         self.hline_1 = HorizontalLine(self, 2)
         self.hline_2 = HorizontalLine(self, 2)
 
-        def get_promotion(item={}):
+        self.content_layout = QHBoxLayout(self)
+        self.product_layout = QGridLayout(self)
+        self.tag_layout = QHBoxLayout(self)
+        self.btn_layout = QHBoxLayout(self)
+        self.rating_all = QVBoxLayout(self)
+        self.comment_layout = QVBoxLayout(self)
+        self.promotion_layout = QVBoxLayout(self)
+        self.rating_layout = QHBoxLayout(self)
+
+
+        def get_promotion(item=None):
             for i in range(self.search_promo_num):
                 self.promo_lists.append(Product(self, item, "simple"))
-        # TODO: Problems not solved here: list out of range for self.promo_lists
-        # TODO: Most likely the wrong usage of addCallback
+
         @inlineCallbacks
         def get_product_info():
             promo_list = yield wallet.market_client.query_promotion()
-            if len(promo_list) == 0:
+            if not promo_list:
                 item = {"title": "Medical data from NHIS", "none": "none"}
                 get_promotion(item)
             else:
@@ -739,33 +613,31 @@ class ProductDetailTab(QScrollArea):
                     if i == len(promo_list) - 1:
                         break
                     self.promo_lists.append(Product2(self, promo_list[i], 'simple'))
-            self.comment_list = []
             comments = yield wallet.market_client.query_comment_by_hash(self.item['msg_hash'])
-            for j in range(len(comments)):
-                if j >= len(comments):
-                    break
+            comment_size = len(comments)
+            for j in range(comment_size):
                 self.comment_list.append(ProductDetailTab.ProductComment(self, comments[j]))
             set_layout()
         get_product_info()
 
         def set_layout():
 
-            self.content_layout = QHBoxLayout(self)
+            # self.content_layout = QHBoxLayout(self)
             self.content_layout.addSpacing(0)
 
-            self.product_layout = QGridLayout(self)
+            # self.product_layout = QGridLayout(self)
             self.product_layout.setSpacing(10)
             self.product_layout.setContentsMargins(30, 50, 10, 10)
 
             self.product_layout.addWidget(self.title_label, 1, 1, 1, 10)
             self.product_layout.addWidget(self.seller_avatar, 2, 1, 1, 1)
-            self.product_layout.addWidget(self.seller_btn, 2, 2, 1, 1) 
-            self.product_layout.addWidget(self.data_label, 2, 3, 1, 2)                      
+            self.product_layout.addWidget(self.seller_btn, 2, 2, 1, 1)
+            self.product_layout.addWidget(self.data_label, 2, 3, 1, 2)
             self.product_layout.addWidget(self.size_label, 4, 1, 1, 2)
             self.product_layout.addWidget(self.sales_label, 4, 3, 1, 2)
 
-            self.tag_layout = tag_layout = QHBoxLayout(self)
-            for i in range(self.tag_num): 
+            # self.tag_layout = QHBoxLayout(self)
+            for i in range(self.tag_num):
                 self.tag_layout.addWidget(self.tag_btn_list[i])
                 self.tag_layout.addSpacing(5)
 
@@ -776,7 +648,7 @@ class ProductDetailTab(QScrollArea):
             self.product_layout.addWidget(self.descriptiondetail, 7, 1, 3, 10)
             self.product_layout.addWidget(self.price_label, 9, 1, 1, 2)
 
-            self.btn_layout = QHBoxLayout(self)
+            # self.btn_layout = QHBoxLayout(self)
             self.btn_layout.addWidget(self.collect_btn)
             self.btn_layout.addSpacing(12)
             self.btn_layout.addWidget(self.buynow_btn)
@@ -784,33 +656,23 @@ class ProductDetailTab(QScrollArea):
             self.btn_layout.addWidget(self.comment_btn)
             self.product_layout.addLayout(self.btn_layout, 10, 1, 1, 6)
 
-            self.rating_all = QVBoxLayout(self)
-            self.rating_layout = QHBoxLayout(self)
+            # self.rating_all = QVBoxLayout(self)
+            # self.rating_layout = QHBoxLayout(self)
             self.rating_layout.addWidget(self.rating_label)
             self.rating_layout.addStretch(1)
-            self.rating_layout.addWidget(self.average_score)   
+            self.rating_layout.addWidget(self.average_score)
 
             self.rating_all.addLayout(self.rating_layout)
             self.rating_all.addWidget(self.hline_1)
-            self.product_layout.addLayout(self.rating_all, 12, 1, 1, 10) 
+            self.product_layout.addLayout(self.rating_all, 12, 1, 1, 10)
 
-            self.comment_layout = QVBoxLayout(self)
+            # self.comment_layout = QVBoxLayout(self)
             for i in range(len(self.comment_list)):
                 self.comment_layout.addWidget(self.comment_list[i])
                 self.comment_layout.addSpacing(0)
-            # self.buyer_layout = QHBoxLayout(self)
-            # self.buyer_layout.addWidget(self.buyer_avatar)
-            # self.buyer_layout.addWidget(self.buyer_name)
-            # self.buyer_layout.addSpacing(10)
-            # self.buyer_layout.addWidget(self.data_label)
-            # self.buyer_layout.addStretch(1)
-            # self.buyer_layout.addWidget(self.buyer_rating)
-            #
-            # self.comment_layout.addLayout(self.buyer_layout)
-            # self.comment_layout.addWidget(self.buyer_comment)
-            self.product_layout.addLayout(self.comment_layout, 14, 1, 3, 10)    
+            self.product_layout.addLayout(self.comment_layout, 14, 1, 3, 10)
 
-            self.promotion_layout = QVBoxLayout(self)
+            # self.promotion_layout = QVBoxLayout(self)
             self.promotion_layout.setContentsMargins(20, 25, 10, 10)
             self.promotion_layout.addSpacing(0)
             self.promotion_layout.addWidget(self.may_like_label)
@@ -829,10 +691,8 @@ class ProductDetailTab(QScrollArea):
             self.content_layout.addLayout(self.promotion_layout, 1)
 
             self.setLayout(self.content_layout)
-            # TODO: Loading stylesheet
-            logger.debug("loading stylesheet...")
             load_stylesheet(self, "prductdetail.qss")
-    
+
     def handle_collect(self):
         if self.collect_btn.text() == "Collect":
             fs.add_record_collect(self.product_info)
@@ -847,12 +707,9 @@ class ProductDetailTab(QScrollArea):
         main_wnd.main_tab_index['collect_tab'] = tab_index
 
     def handle_buynow(self):
-        item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
-        self.buynow_dialog = BuyNowDialog(self, self.product_info)
-        print("please handle buynow here")
+        BuyNowDialog(self, self.product_info)
 
     def seller_clicked_act(self):
-        print("seller_clicked_act")
         wid = main_wnd.content_tabs.findChild(QWidget, "sellerHP_tab")
         main_wnd.content_tabs.setCurrentWidget(wid)
 
@@ -861,50 +718,47 @@ class ProductDetailTab(QScrollArea):
             super().__init__(parent)
             self.parent = parent
             self.market_hash = market_hash
+            self.comment_content = self.comment_edit.toPlainText()
             self.resize(300, 400)
             self.setObjectName("comment_dialog")
             self.init_ui()
 
         def init_ui(self):
 
-            # Labels def
             self.comment_label = QLabel("Please input your comment here:")
 
-            # TextEdit def
             self.comment_edit = QTextEdit()
             self.comment_edit.setObjectName("comment_edit")
 
-            self.cancel_btn = cancel_btn = QPushButton(self)
+            self.cancel_btn = QPushButton(self)
             self.cancel_btn.setObjectName("comment_cancel_btn")
             self.cancel_btn.setText("Cancel")
             self.cancel_btn.setCursor(QCursor(Qt.PointingHandCursor))
             self.cancel_btn.clicked.connect(self.handle_cancel)
 
-            self.confirm_btn = confirm_btn = QPushButton(self)
+            self.confirm_btn = QPushButton(self)
             self.confirm_btn.setObjectName("pinfo_publish_btn")
             self.confirm_btn.setText("OK")
             self.confirm_btn.setCursor(QCursor(Qt.PointingHandCursor))
             self.confirm_btn.clicked.connect(self.handle_confirm)
 
-            def set_layout():
-                self.main_layout = QVBoxLayout()
-                self.main_layout.addSpacing(0)
-                self.main_layout.addWidget(self.comment_label)
-                self.main_layout.addSpacing(2)
-                self.main_layout.addWidget(self.comment_edit)
-                self.main_layout.addSpacing(2)
+            self.main_layout = QVBoxLayout()
+            self.main_layout.addSpacing(0)
+            self.main_layout.addWidget(self.comment_label)
+            self.main_layout.addSpacing(2)
+            self.main_layout.addWidget(self.comment_edit)
+            self.main_layout.addSpacing(2)
 
-                self.button_layout = QHBoxLayout()
-                self.button_layout.addSpacing(2)
-                self.button_layout.addWidget(self.cancel_btn)
-                self.button_layout.addSpacing(2)
-                self.button_layout.addWidget(self.confirm_btn)
+            self.button_layout = QHBoxLayout()
+            self.button_layout.addSpacing(2)
+            self.button_layout.addWidget(self.cancel_btn)
+            self.button_layout.addSpacing(2)
+            self.button_layout.addWidget(self.confirm_btn)
 
-                self.main_layout.addLayout(self.button_layout)
+            self.main_layout.addLayout(self.button_layout)
 
-                self.setLayout(self.main_layout)
+            self.setLayout(self.main_layout)
 
-            set_layout()
             logger.debug("Loading stylesheet of comment dialog")
             self.show()
 
@@ -924,7 +778,6 @@ class ProductDetailTab(QScrollArea):
                 self.close()
 
         def handle_cancel(self):
-            print("exiting the current dialog")
             self.close()
 
 
@@ -934,6 +787,7 @@ class ProductDetailTab(QScrollArea):
         else:
             market_hash = self.product_info['msg_hash']
             comment_dlg = ProductDetailTab.CommentDialog(self, market_hash)
+            comment_dlg.show()
 
 
 class SearchProductTab(QScrollArea):
@@ -941,147 +795,116 @@ class SearchProductTab(QScrollArea):
         super().__init__(parent)
         self.parent = parent
         self.key_words = key_words
-        #self.setObjectName("cart_tab")
         self.setObjectName("search_tab")
         self.item_lists = []
         self.promo_lists = []
         self.search_item_num = 4
         self.search_promo_num = 4
-        # logger.debug('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
         self.init_ui()
-
-    def get_products(self, item={}):
-        for i in range(self.search_item_num):
-            self.item_lists.append(Product2(self, item))
-
-    def get_promotion(self, item={}):
-        for i in range(self.search_promo_num):
-            self.promo_lists.append(Product2(self, item, "simple"))
 
 
     def init_ui(self):
 
-        # logger.debug('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
-        # logger.debug('search page you may like: %s', self.promo_lists[0]['tags'])
-
         self.frame = QFrame()
-        # self.setWidget(self.frame)
         self.frame.setObjectName("promote_frame")
         self.setWidgetResizable(True)
         self.frame.setMinimumWidth(200)
         self.frame.setMaximumWidth(200)
 
+        self.res_label = QLabel("results")
+        self.res_label.setObjectName("res_label")
 
-        def create_labels():
-            # self.num_label = QLabel("100")
-            # self.num_label.setObjectName("num_label")
+        self.time_label = QLabel("Time")
+        self.time_label.setObjectName("time_label")
 
-            self.res_label = QLabel("results")
-            self.res_label.setObjectName("res_label")
+        self.sales_label = QLabel("Sales")
+        self.sales_label.setObjectName("sales_label")
 
-            self.time_label = QLabel("Time")
-            self.time_label.setObjectName("time_label")
+        self.price_label = QLabel("Price")
+        self.price_label.setObjectName("price_label")
 
-            self.sales_label = QLabel("Sales")
-            self.sales_label.setObjectName("sales_label")
+        self.region_label = QLabel("Region")
+        self.region_label.setObjectName("region_label")
 
-            self.price_label = QLabel("Price")
-            self.price_label.setObjectName("price_label")
+        self.line_label = QLabel("-")
+        self.line_label.setObjectName("line_label")
 
-            self.region_label = QLabel("Region")
-            self.region_label.setObjectName("region_label")
+        self.may_like_label = QLabel("You may like")
+        self.may_like_label.setObjectName("may_like_label")
 
-            self.line_label = QLabel("-")
-            self.line_label.setObjectName("line_label")
+        self.time_btn = QPushButton(self)
+        self.time_btn.setObjectName("time_btn")
 
-            self.may_like_label = QLabel("You may like")
-            self.may_like_label.setObjectName("may_like_label")
+        self.sales_btn = QPushButton(self)
+        self.sales_btn.setObjectName("sales_btn")
 
-        create_labels()
+        self.price_btn = QPushButton(self)
+        self.price_btn.setObjectName("price_btn")
 
-        def create_btns():
-            self.time_btn = QPushButton(self)
-            self.time_btn.setObjectName("time_btn")
-            # self.time_btn.setText("t")
+        self.region_btn = QPushButton(self)
+        self.region_btn.setObjectName("region_btn")
 
-            self.sales_btn = QPushButton(self)
-            self.sales_btn.setObjectName("sales_btn")
-            # self.sales_btn.setText("s")
+        self.region_menu = region_menu = QMenu('Region', self)
+        self.shanghai_act = QAction('China', self)
+        self.london_act = QAction('London', self)
+        self.paris_act = QAction('Paris', self)
+        self.more_act = QAction('More', self)
 
-            self.price_btn = QPushButton(self)
-            self.price_btn.setObjectName("price_btn")
-            # self.price_btn.setText("p")
-
-            self.region_btn = QPushButton(self)
-            self.region_btn.setObjectName("region_btn")
-
-        create_btns()
-
-        def bind_slots():
-            logger.debug("binding slots of btns....")
-
-        bind_slots()
-
-        def create_popmenu():
-            self.region_menu = region_menu = QMenu('Region', self)
-            self.shanghai_act = QAction('China', self)
-            self.london_act = QAction('London', self)
-            self.paris_act = QAction('Paris', self)
-            self.more_act = QAction('More', self)
-
-            region_menu.addAction(self.shanghai_act)
-            region_menu.addAction(self.london_act)
-            region_menu.addAction(self.paris_act)
-            region_menu.addAction(self.more_act)
-
-        create_popmenu()
+        region_menu.addAction(self.shanghai_act)
+        region_menu.addAction(self.london_act)
+        region_menu.addAction(self.paris_act)
+        region_menu.addAction(self.more_act)
 
         self.region_btn.setMenu(self.region_menu)
 
 
-        def create_edits():
-            self.price_edit_from = QLineEdit()
-            self.price_edit_from.setObjectName("price_edit_from")
+        self.price_edit_from = QLineEdit()
+        self.price_edit_from.setObjectName("price_edit_from")
 
-            self.price_edit_to = QLineEdit()
-            self.price_edit_to.setObjectName("price_edit_to")
+        self.price_edit_to = QLineEdit()
+        self.price_edit_to.setObjectName("price_edit_to")
 
-        create_edits()
 
         self.hline = HorizontalLine(self, 2)
+        self.num_label = QLabel()
+
+        self.main_layout = QHBoxLayout(self)
+        self.stat_layout = QHBoxLayout()
+        self.product_layout = QVBoxLayout(self)
+        self.promotion_layout = QVBoxLayout(self)
+        self.sort_layout = QHBoxLayout(self)
 
         @inlineCallbacks
         def display_lists():
             self.item_lists = yield wallet.market_client.query_product(self.key_words)
-            self.num_label = QLabel("{}".format(len(self.item_lists)))
+            self.num_label.setText("{}".format(len(self.item_lists)))
             self.num_label.setObjectName("num_label")
             for i in range(len(self.item_lists)):
                 self.item_lists[i]['msg_hash'] = self.item_lists[i]['market_hash']
-            #TODO: Will be deleted in the future when the market side has unified the key's name
             self.promo_lists = yield wallet.market_client.query_promotion()
             set_layout()
 
         display_lists()
 
         def set_layout():
-            self.main_layout = main_layout = QHBoxLayout(self)
+            main_layout = self.main_layout
             main_layout.addSpacing(0)
             main_layout.setContentsMargins(10, 20, 10, 10)
 
-            self.stat_layout = QHBoxLayout()
+            # self.stat_layout = QHBoxLayout()
             self.stat_layout.addSpacing(0)
             self.stat_layout.addWidget(self.num_label)
             self.stat_layout.addSpacing(0)
             self.stat_layout.addWidget(self.res_label)
             self.stat_layout.addStretch(1)
 
-            self.product_layout = QVBoxLayout(self)
+            # self.product_layout = QVBoxLayout(self)
             self.product_layout.addSpacing(0)
 
-            self.promotion_layout = QVBoxLayout(self)
+            # self.promotion_layout = QVBoxLayout(self)
             self.promotion_layout.addSpacing(0)
 
-            self.sort_layout = QHBoxLayout(self)
+            # self.sort_layout = QHBoxLayout(self)
             self.sort_layout.addSpacing(0)
             self.sort_layout.addWidget(self.time_label)
             self.sort_layout.addSpacing(0)
@@ -1134,31 +957,20 @@ class SearchProductTab(QScrollArea):
 
             self.main_layout.addLayout(self.product_layout, 2)
             self.main_layout.addLayout(self.promotion_layout, 1)
-            
+
             self.setLayout(self.main_layout)
 
-            logger.debug("loading stylesheet...")
             load_stylesheet(self, "searchproduct.qss")
 
-        # set_layout()
-        # TODO: Loading stylesheet
-        # logger.debug("loading stylesheet...")
-        # load_stylesheet(self, "searchproduct.qss")
-
-
-#class PersonalHomePageTab(QScrollArea)
 
 class SecurityTab(QScrollArea):
-    def __init__(self, parent=None, item={}):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
-        #for testing this Tab @rayhueng
-        #self.setObjectName("cart_tab")
         self.setObjectName("securitypage")
         self.init_ui()
 
     def init_ui(self):
-        #Labels def
         self.balance_label = balance_label = QLabel("Account Balance:")
         balance_label.setObjectName("balance_label")
         self.password_label = password_label = QLabel("Payment Password:")
@@ -1170,16 +982,15 @@ class SecurityTab(QScrollArea):
 
         balance = 9999
         self.balance_value = balance_value = QLabel("{} CPC".format(balance))
-        balance_label.setObjectName("balance_label")  
+        balance_label.setObjectName("balance_label")
 
         bindingaccout = str("Barack Obama")
         self.binding_label = binding_label = QLabel("{} Account".format(bindingaccout))
-        binding_label.setObjectName("binding_label")  
+        binding_label.setObjectName("binding_label")
 
         self.cpc_label = cpc_label = QLabel("CPC")
-        cpc_label.setObjectName("cpc_label")               
+        cpc_label.setObjectName("cpc_label")
 
-        #TextEdit def
         self.password_edit = password_edit = QLineEdit()
         password_edit.setObjectName("password_edit")
         password_edit.setEchoMode(QLineEdit.Password)
@@ -1187,64 +998,55 @@ class SecurityTab(QScrollArea):
         self.paylimit_edit = paylimit_edit = QLineEdit()
         paylimit_edit.setObjectName("paylimit_edit")
 
-        #Buttons and Tags
         self.display_btn = display_btn = QPushButton("Display Balance")
         self.display_btn.setObjectName("display_btn")
         self.display_btn.clicked.connect(self.handle_display)
         self.reset_btn = reset_btn = QPushButton("Reset Password")
-        self.reset_btn.setObjectName("reset_btn")    
-        self.reset_btn.clicked.connect(self.handle_reset)    
+        self.reset_btn.setObjectName("reset_btn")
 
-        def set_layout():
-            self.security_layout = security_layout = QGridLayout(self)
-            #self.pinfo_top_layout.setSpacing(10)
-            self.security_layout.setContentsMargins(40, 40, 150, 300)
-            self.security_layout.addWidget(balance_label, 1, 1, 1, 1)
+        self.reset_btn.clicked.connect(self.handle_reset)
 
-            self.balance_layout = balance_layout = QVBoxLayout(self)
-            self.balance_layout.addStretch(1)
-            self.balance_layout.addWidget(balance_value)
-            self.balance_layout.addSpacing(10)
-            self.balance_layout.addWidget(display_btn)
-            self.balance_layout.addStretch(2)
+        self.security_layout = security_layout = QGridLayout(self)
+        self.security_layout.setContentsMargins(40, 40, 150, 300)
+        self.security_layout.addWidget(balance_label, 1, 1, 1, 1)
 
-            self.security_layout.addLayout(balance_layout, 1, 3, 2, 4)   
-                     
-            self.security_layout.addWidget(password_label, 3, 1, 1, 1)
-            self.security_layout.addWidget(password_edit, 3, 3, 1, 5)
-            self.security_layout.addWidget(reset_btn, 4, 3, 1, 2)
+        self.balance_layout = balance_layout = QVBoxLayout(self)
+        self.balance_layout.addStretch(1)
+        self.balance_layout.addWidget(balance_value)
+        self.balance_layout.addSpacing(10)
+        self.balance_layout.addWidget(display_btn)
+        self.balance_layout.addStretch(2)
 
-            self.security_layout.addWidget(accountbinding_label, 5, 1, 1, 1)
-            self.security_layout.addWidget(binding_label, 5, 3, 1, 2)
-            self.security_layout.addWidget(paylimit_label, 6, 1, 1, 1)
-            self.security_layout.addWidget(paylimit_edit, 6, 3, 1, 2)
-            self.security_layout.addWidget(cpc_label, 6, 5, 1, 2)           
-                       
-            self.setLayout(security_layout)
-        set_layout()
-        print("Loading stylesheet of cloud tab widget")
+        self.security_layout.addLayout(balance_layout, 1, 3, 2, 4)
+
+        self.security_layout.addWidget(password_label, 3, 1, 1, 1)
+        self.security_layout.addWidget(password_edit, 3, 3, 1, 5)
+        self.security_layout.addWidget(reset_btn, 4, 3, 1, 2)
+
+        self.security_layout.addWidget(accountbinding_label, 5, 1, 1, 1)
+        self.security_layout.addWidget(binding_label, 5, 3, 1, 2)
+        self.security_layout.addWidget(paylimit_label, 6, 1, 1, 1)
+        self.security_layout.addWidget(paylimit_edit, 6, 3, 1, 2)
+        self.security_layout.addWidget(cpc_label, 6, 5, 1, 2)
+
+        self.setLayout(security_layout)
         load_stylesheet(self, "security.qss")
 
     def handle_display(self):
-        print("display balance")
         pass
 
     def handle_reset(self):
-        print("reset password")
         pass
 
 
 class PreferenceTab(QScrollArea):
-    def __init__(self, parent=None, item={}):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
-        #for testing this Tab @rayhueng
-        #self.setObjectName("cart_tab")
         self.setObjectName("preferencepage")
         self.init_ui()
 
     def init_ui(self):
-        #Labels def
         self.downloadpath_label = downloadpath_label = QLabel("Download Path:")
         downloadpath_label.setObjectName("downloadpath_label")
         self.tips_label = tips_label = QLabel("Send message in these conditions:")
@@ -1256,11 +1058,9 @@ class PreferenceTab(QScrollArea):
         self.seller_label = seller_label = QLabel("Following Sellers:")
         seller_label.setObjectName("seller_label")
 
-        #TextEdit def
         self.downloadpath_edit = downloadpath_edit = QLineEdit()
         downloadpath_edit.setObjectName("downloadpath_edit")
 
-        #Buttons and Tags
         self.tag = ["tag1", "tag2", "tag3", "tag4"]
         self.tag_num = 4
         self.tag_btn_list = []
@@ -1269,9 +1069,6 @@ class PreferenceTab(QScrollArea):
             self.tag_btn_list[i].setObjectName("tag_btn_{0}".format(i))
             self.tag_btn_list[i].setProperty("t_value", 1)
             self.tag_btn_list[i].setCursor(QCursor(Qt.PointingHandCursor))
-
-        #openpath button: open the download path in file browser on click
-        #handler self.handle_openpath
 
         self.seller_list = []
         self.seller_follow_number = 2
@@ -1289,15 +1086,12 @@ class PreferenceTab(QScrollArea):
         self.openpath_btn.setCursor(QCursor(Qt.PointingHandCursor))
         self.openpath_btn.clicked.connect(self.handle_openpath)
 
-        #addtag button: open the page for adding a customized tag on click 
-        #handler self.handle_addtag       
         self.addtag_btn = addtag_btn = QPushButton(self)
         self.addtag_btn.setObjectName("addtag_btn")
         self.addtag_btn.setText("Add...")
         self.addtag_btn.setCursor(QCursor(Qt.PointingHandCursor))
         self.addtag_btn.clicked.connect(self.handle_addtag)
 
-        #three checkboxes
         self.messageset_checkbox_1 = messageset_checkbox_1 = QCheckBox(self)
         self.messageset_checkbox_1.setObjectName("messageset_checkbox_1")
         self.messageset_checkbox_1.setText("New Order")
@@ -1310,63 +1104,52 @@ class PreferenceTab(QScrollArea):
         self.messageset_checkbox_3.setObjectName("messageset_checkbox_3")
         self.messageset_checkbox_3.setText("Download failed")
 
-        #widgets for following sellers
         product_counter = 20
         self.seller_avatar = seller_avatar = QLabel("ICONHERE")
-        seller_avatar.setObjectName("seller_avatar")       
+        seller_avatar.setObjectName("seller_avatar")
         self.seller_id = seller_id = QLabel("Christopher Chak")
-        seller_id.setObjectName("seller_id")  
+        seller_id.setObjectName("seller_id")
         self.seller_pcount = seller_pcount = QLabel("Products {}".format(product_counter))
-        seller_pcount.setObjectName("seller_pcount")                
-        self.unfollow_btn = unfollow_btn = QPushButton("Unfollow")
+        seller_pcount.setObjectName("seller_pcount")
+        self.unfollow_btn = QPushButton("Unfollow")
         self.unfollow_btn.setObjectName("unfollow_btn")
         self.unfollow_btn.setCursor(QCursor(Qt.PointingHandCursor))
         self.unfollow_btn.clicked.connect(self.handle_unfollow)
 
 
-        def set_layout():
-            self.pinfo_preference_layout = pinfo_preference_layout = QGridLayout(self)
-            #self.pinfo_top_layout.setSpacing(10)
-            self.pinfo_preference_layout.setContentsMargins(40, 40, 150, 100)
-            self.pinfo_preference_layout.addWidget(downloadpath_label, 1, 1, 1, 1)
-            self.pinfo_preference_layout.addWidget(downloadpath_edit, 1, 3, 1, 10)
-            self.pinfo_preference_layout.addWidget(openpath_btn, 2, 3, 1, 2)   
-                     
-            self.pinfo_preference_layout.addWidget(messageset_label, 3, 1, 1, 1)
-            self.pinfo_preference_layout.addWidget(tips_label, 3, 3, 1, 5)
-            self.pinfo_preference_layout.addWidget(messageset_checkbox_1, 4, 3, 1, 2)
-            self.pinfo_preference_layout.addWidget(messageset_checkbox_2, 5, 3, 1, 2)
-            self.pinfo_preference_layout.addWidget(messageset_checkbox_3, 6, 3, 1, 2)
+        self.pinfo_preference_layout = pinfo_preference_layout = QGridLayout(self)
+        #self.pinfo_top_layout.setSpacing(10)
+        self.pinfo_preference_layout.setContentsMargins(40, 40, 150, 100)
+        self.pinfo_preference_layout.addWidget(downloadpath_label, 1, 1, 1, 1)
+        self.pinfo_preference_layout.addWidget(downloadpath_edit, 1, 3, 1, 10)
+        self.pinfo_preference_layout.addWidget(openpath_btn, 2, 3, 1, 2)
 
-            #embeded layout for tag button
-            self.pinfo_preference_layout.addWidget(tag_label, 7, 1, 1, 1)
-            self.pinfo_tag_layout = pinfo_tag_layout = QHBoxLayout(self)
-            for i in range(self.tag_num): 
-                self.pinfo_tag_layout.addWidget(self.tag_btn_list[i])
-                self.pinfo_tag_layout.addSpacing(5)
+        self.pinfo_preference_layout.addWidget(messageset_label, 3, 1, 1, 1)
+        self.pinfo_preference_layout.addWidget(tips_label, 3, 3, 1, 5)
+        self.pinfo_preference_layout.addWidget(messageset_checkbox_1, 4, 3, 1, 2)
+        self.pinfo_preference_layout.addWidget(messageset_checkbox_2, 5, 3, 1, 2)
+        self.pinfo_preference_layout.addWidget(messageset_checkbox_3, 6, 3, 1, 2)
 
-            self.pinfo_tag_layout.addStretch(1)
-            self.pinfo_preference_layout.addLayout(pinfo_tag_layout, 7, 3, 1, 10)
-            self.pinfo_preference_layout.addWidget(addtag_btn, 8, 3, 1, 2)
+        self.pinfo_preference_layout.addWidget(tag_label, 7, 1, 1, 1)
+        self.pinfo_tag_layout = pinfo_tag_layout = QHBoxLayout(self)
+        for i in range(self.tag_num):
+            self.pinfo_tag_layout.addWidget(self.tag_btn_list[i])
+            self.pinfo_tag_layout.addSpacing(5)
 
-            self.pinfo_preference_layout.addWidget(seller_label, 9, 1, 1, 1)
+        self.pinfo_tag_layout.addStretch(1)
+        self.pinfo_preference_layout.addLayout(pinfo_tag_layout, 7, 3, 1, 10)
+        self.pinfo_preference_layout.addWidget(addtag_btn, 8, 3, 1, 2)
 
-            self.seller_layout = seller_layout = QVBoxLayout(self)   
+        self.pinfo_preference_layout.addWidget(seller_label, 9, 1, 1, 1)
 
-            for i in range(self.seller_follow_number):
-                self.seller_layout.addWidget(self.seller_list[i])
-                self.seller_layout.addSpacing(0)
+        self.seller_layout = seller_layout = QVBoxLayout(self)
 
-            self.pinfo_preference_layout.addLayout(seller_layout, 9, 3, 5, 6) 
-            # self.pinfo_preference_layout.addWidget(seller_avatar, 9, 3, 2, 2) 
-            # self.pinfo_preference_layout.addWidget(seller_id, 9, 6, 1, 1) 
-            # self.pinfo_preference_layout.addWidget(seller_pcount, 10, 6, 1, 1)
-            
-            # self.pinfo_preference_layout.addWidget(unfollow_btn, 9, 20, 2, 2)            
-                       
-            self.setLayout(pinfo_preference_layout)
-        set_layout()
-        print("Loading stylesheet of cloud tab widget")
+        for i in range(self.seller_follow_number):
+            self.seller_layout.addWidget(self.seller_list[i])
+            self.seller_layout.addSpacing(0)
+
+        self.pinfo_preference_layout.addLayout(seller_layout, 9, 3, 5, 6)
+        self.setLayout(pinfo_preference_layout)
         load_stylesheet(self, "preference.qss")
 
     def handle_openpath(self):
@@ -1380,16 +1163,13 @@ class PreferenceTab(QScrollArea):
 
 
 class PersonalInfoPage(QScrollArea):
-    def __init__(self, parent=None, item={}):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
-        #for testing this Tab @rayhueng
         self.setObjectName("PersonalInfoPage")
-        #self.setObjectName("cart_tab")
         self.init_ui()
 
     def init_ui(self):
-    #Labels def
         self.avatar_label = avatar_label = QLabel("Avatar")
         avatar_label.setObjectName("avatar_label")
         self.avatar_icon = avatar_icon = QLabel("ICONHERE")
@@ -1403,7 +1183,6 @@ class PersonalInfoPage(QScrollArea):
         self.phone_label = phone_label = QLabel("Mobile Phone")
         phone_label.setObjectName("phone_label")
 
-        #TextEdit def
         self.username_edit = username_edit = QLineEdit()
         username_edit.setObjectName("username_edit")
         self.email_edit = email_edit = QLineEdit()
@@ -1412,7 +1191,6 @@ class PersonalInfoPage(QScrollArea):
         phone_edit.setObjectName("phone_edit")
 
 
-        #Buttons and Tags
         self.avataripload_btn = avataripload_btn = QPushButton(self)
         self.avataripload_btn.setObjectName("avataripload_btn")
         self.avataripload_btn.setText("Upload/Save")
@@ -1421,7 +1199,6 @@ class PersonalInfoPage(QScrollArea):
 
         self.gender_btn = gender_btn = QPushButton(self)
         self.gender_btn.setObjectName("gender_btn")
-        #self.gender_btn.setText("Male/Female")
 
         self.submit_btn = submit_btn = QPushButton(self)
         self.submit_btn.setObjectName("submit_btn")
@@ -1429,60 +1206,41 @@ class PersonalInfoPage(QScrollArea):
         self.submit_btn.setCursor(QCursor(Qt.PointingHandCursor))
         self.submit_btn.clicked.connect(self.handle_submit)
 
-        def create_popmenu():
-        
-            self.gender_menu = gender_menu = QMenu('Gender', self)
-            self.male_act = QAction('Male', self)
-            self.male_act.triggered.connect(self.set_male_act)
-            self.female_act = QAction('Female', self)
-            self.female_act.triggered.connect(self.set_female_act)            
-            self.others_act = QAction('Other', self)
-            self.others_act.triggered.connect(self.set_other_act)             
-
-            gender_menu.addAction(self.male_act)
-            gender_menu.addAction(self.female_act)
-            gender_menu.addAction(self.others_act)
-
-        create_popmenu()
-
+        self.gender_menu = gender_menu = QMenu('Gender', self)
+        self.male_act = QAction('Male', self)
+        self.male_act.triggered.connect(self.set_male_act)
+        self.female_act = QAction('Female', self)
+        self.female_act.triggered.connect(self.set_female_act)
+        self.others_act = QAction('Other', self)
+        self.others_act.triggered.connect(self.set_other_act)
+        gender_menu.addAction(self.male_act)
+        gender_menu.addAction(self.female_act)
+        gender_menu.addAction(self.others_act)
         self.gender_btn.setMenu(self.gender_menu)
-
-
-        def set_layout():
-            self.pinfo_top_layout = pinfo_top_layout = QGridLayout(self)
-            #self.pinfo_top_layout.setSpacing(10)
-            self.pinfo_top_layout.setContentsMargins(40, 40, 300, 100)
-            self.pinfo_top_layout.addWidget(avatar_label, 1, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(avatar_icon, 1, 3, 3, 3)
-            self.pinfo_top_layout.addWidget(avataripload_btn, 4, 3, 1, 1)
-
-            self.pinfo_top_layout.addWidget(username_label, 5, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(username_edit, 5, 3, 1, 5)      
-            self.pinfo_top_layout.addWidget(email_label, 6, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(email_edit, 6, 3, 1, 20)        
-            self.pinfo_top_layout.addWidget(gender_label, 7, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(gender_btn, 7, 3, 1, 1)       
-            self.pinfo_top_layout.addWidget(phone_label, 8, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(phone_edit, 8, 3, 1, 20)
-            self.pinfo_top_layout.addWidget(submit_btn, 10, 3, 1, 2)
-
-            self.setLayout(pinfo_top_layout)
-        set_layout()
-        #print("Loading stylesheet of cloud tab widget")
+        self.pinfo_top_layout = pinfo_top_layout = QGridLayout(self)
+        self.pinfo_top_layout.setContentsMargins(40, 40, 300, 100)
+        self.pinfo_top_layout.addWidget(avatar_label, 1, 1, 1, 1)
+        self.pinfo_top_layout.addWidget(avatar_icon, 1, 3, 3, 3)
+        self.pinfo_top_layout.addWidget(avataripload_btn, 4, 3, 1, 1)
+        self.pinfo_top_layout.addWidget(username_label, 5, 1, 1, 1)
+        self.pinfo_top_layout.addWidget(username_edit, 5, 3, 1, 5)
+        self.pinfo_top_layout.addWidget(email_label, 6, 1, 1, 1)
+        self.pinfo_top_layout.addWidget(email_edit, 6, 3, 1, 20)
+        self.pinfo_top_layout.addWidget(gender_label, 7, 1, 1, 1)
+        self.pinfo_top_layout.addWidget(gender_btn, 7, 3, 1, 1)
+        self.pinfo_top_layout.addWidget(phone_label, 8, 1, 1, 1)
+        self.pinfo_top_layout.addWidget(phone_edit, 8, 3, 1, 20)
+        self.pinfo_top_layout.addWidget(submit_btn, 10, 3, 1, 2)
+        self.setLayout(pinfo_top_layout)
         load_stylesheet(self, "personalinfotab.qss")
-
     def set_male_act(self):
         self.gender_btn.setText("Male")
-
     def set_female_act(self):
-        self.gender_btn.setText("Female")    
-
+        self.gender_btn.setText("Female")
     def set_other_act(self):
-        self.gender_btn.setText("Other") 
-
+        self.gender_btn.setText("Other")
     def handle_submit(self):
         pass
-
 
 class CollectedTab(QScrollArea):
     class SearchBar(QLineEdit):
@@ -1492,6 +1250,7 @@ class CollectedTab(QScrollArea):
             self.init_ui()
 
         def init_ui(self):
+            self.file_list = []
             self.setObjectName("search_bar")
             self.setFixedSize(300, 25)
             self.setTextMargins(25, 0, 20, 0)
@@ -1501,35 +1260,27 @@ class CollectedTab(QScrollArea):
             search_btn.setFixedSize(18, 18)
             search_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
-            def bind_slots():
-                print("Binding slots of clicked-search-btn......")
-
-            bind_slots()
-
-            def set_layout():
-                main_layout = QHBoxLayout()
-                main_layout.addWidget(search_btn_cloud)
-                main_layout.addStretch()
-                main_layout.setContentsMargins(5, 0, 0, 0)
-                self.setLayout(main_layout)
-
-            set_layout()
+            main_layout = QHBoxLayout()
+            main_layout.addWidget(search_btn)
+            main_layout.addStretch()
+            main_layout.setContentsMargins(5, 0, 0, 0)
+            self.setLayout(main_layout)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
-        # self.setObjectName("purchase_tab")
         self.setObjectName("collect_tab")
+        self.file_list = []
+        self.check_list = []
+        self.purchased_total_orders = 103
+        self.num_file = 100
+        self.cur_clicked = 0
+        self.check_record_list = []
+        self.checkbox_list = []
         self.init_ui()
 
     def update_table(self):
-        # file_list = get_file_list()
         print("Updating file list......")
-        # file_list = []
-        # # single element data structure (assumed); to be changed
-        # dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "price": "200"}
-        # for i in range(self.row_number):
-        #     file_list.append(dict_exa)
         self.file_list = file_list = fs.get_collect_list()
 
         for cur_row in range(self.row_number):
@@ -1545,11 +1296,6 @@ class CollectedTab(QScrollArea):
 
     def init_ui(self):
 
-        self.check_list = []
-        self.purchased_total_orders = 103
-        self.num_file = 100
-        self.cur_clicked = 0
-
         self.uncollect_btn = uncollect_btn = QPushButton("Uncollect")
         uncollect_btn.setObjectName("uncollect_btn")
 
@@ -1560,9 +1306,9 @@ class CollectedTab(QScrollArea):
         self.search_bar = PurchasedDownloadedTab.SearchBar(self)
 
         self.row_number = 100
-
+        self.file_table = TableWidget(self)
         def create_file_table():
-            self.file_table = file_table = TableWidget(self)
+            file_table = self.file_table
 
             file_table.horizontalHeader().setStretchLastSection(True)
             file_table.verticalHeader().setVisible(False)
@@ -1571,28 +1317,18 @@ class CollectedTab(QScrollArea):
             file_table.resizeColumnsToContents()
             file_table.resizeRowsToContents()
             file_table.setFocusPolicy(Qt.NoFocus)
-            # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
             file_table.setColumnCount(5)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
-            # file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['', 'Product Name', 'Price', 'Size', ''])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
             file_table.horizontalHeader().setFixedHeight(35)
             file_table.setSortingEnabled(True)
 
-            # # file_list = get_file_list()
-            # file_list = []
-            # print("Getting file list.......")
-            # dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "ordertime": "2018/2/4 08:30",
-            #             "price": "36"}
-            # for i in range(self.row_number):
-            #     file_list.append(dict_exa)
-
             self.file_list = file_list = fs.get_collect_list()
-            self.check_record_list = []
-            self.checkbox_list = []
+            # self.check_record_list = []
+            # self.checkbox_list = []
             for cur_row in range(self.row_number):
                 if cur_row == len(file_list):
                     break
@@ -1603,7 +1339,6 @@ class CollectedTab(QScrollArea):
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(file_list[cur_row].name))
                 self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(file_list[cur_row].price)))
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(sizeof_fmt(file_list[cur_row].size)))
-                # self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(file_list[cur_row].id)))
 
                 hidden_item = QTableWidgetItem()
                 hidden_item.setData(Qt.UserRole, str(self.file_list[cur_row].id))
@@ -1614,8 +1349,6 @@ class CollectedTab(QScrollArea):
         create_file_table()
         self.file_table.sortItems(2)
         self.file_table.horizontalHeader().setStyleSheet("QHeaderView::section{background: #f3f3f3; border: 1px solid #dcdcdc}")
-
-        # record rows that are clicked or checked
         def record_check(item):
             self.cur_clicked = item.row()
             if item.checkState() == Qt.Checked:
@@ -1623,91 +1356,67 @@ class CollectedTab(QScrollArea):
 
         self.file_table.itemClicked.connect(record_check)
 
-        def set_layout():
-            self.main_layout = main_layout = QVBoxLayout(self)
-            main_layout.addSpacing(0)
-            self.collection_upper_layout = QHBoxLayout(self)
-            self.collection_upper_layout.addSpacing(5)
-            self.collection_upper_layout.addWidget(self.search_bar)
-            self.collection_upper_layout.addSpacing(5)
-            self.collection_upper_layout.addWidget(self.time_rank_label)
-            self.collection_upper_layout.addStretch(1)
-            self.collection_upper_layout.addWidget(self.uncollect_btn)
-            self.collection_upper_layout.addSpacing(10)
-            
-            self.main_layout.addLayout(self.collection_upper_layout)
-            self.main_layout.addSpacing(2)
-            self.main_layout.addWidget(self.file_table)
-            self.main_layout.addSpacing(2)
-            self.setLayout(self.main_layout)
-
-        set_layout()
-        # print("Loading stylesheet of cloud tab widget")
+        self.main_layout = main_layout = QVBoxLayout(self)
+        main_layout.addSpacing(0)
+        self.collection_upper_layout = QHBoxLayout(self)
+        self.collection_upper_layout.addSpacing(5)
+        self.collection_upper_layout.addWidget(self.search_bar)
+        self.collection_upper_layout.addSpacing(5)
+        self.collection_upper_layout.addWidget(self.time_rank_label)
+        self.collection_upper_layout.addStretch(1)
+        self.collection_upper_layout.addWidget(self.uncollect_btn)
+        self.collection_upper_layout.addSpacing(10)
+        self.main_layout.addLayout(self.collection_upper_layout)
+        self.main_layout.addSpacing(2)
+        self.main_layout.addWidget(self.file_table)
+        self.main_layout.addSpacing(2)
+        self.setLayout(self.main_layout)
         load_stylesheet(self, "collection.qss")
-
     def handle_uncollect(self):
         for i in range(len(self.check_record_list)):
-            if self.check_record_list[i] == True:
+            if self.check_record_list[i] is True:
                 self.file_table.removeRow(i)
                 file_id = self.file_table.item(i, 4).data(Qt.UserRole)
                 fs.delete_collect_id(file_id)
-                logger.debug("file id in collect info is: {}".format(file_id))
-                logger.debug("uncollect files permanently from the collection...")
-
 class PurchasedTab(QScrollArea):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("purchase_tab")
-        #self.setObjectName("purchased_downloading_tab")
         self.init_ui()
-
     def init_ui(self):
-        self.purchased_dled_tab_btn = purchased_dled_tab_btn = QPushButton("Downloaded")
+        self.purchased_dled_tab_btn = QPushButton("Downloaded")
         self.purchased_dled_tab_btn.setObjectName("purchased_dled_tab_btn")
-        self.purchased_dling_tab_btn = purchased_dling_tab_btn = QPushButton("Downloading")
+        self.purchased_dling_tab_btn = QPushButton("Downloading")
         self.purchased_dling_tab_btn.setObjectName("purchased_dling_tab_btn")
-
         self.purchased_main_tab = purchased_main_tab = QTabWidget(self)
         purchased_main_tab.setObjectName("purchased_main_tab")
         purchased_main_tab.tabBar().hide()
-        # Temporily modified for easy test by @hyiwr
         purchased_main_tab.addTab(PurchasedDownloadedTab(purchased_main_tab), "")
         purchased_main_tab.addTab(PurchasedDownloadingTab(purchased_main_tab), "")
-
         def dled_btn_clicked(item):
             self.purchased_main_tab.setCurrentIndex(0)
             self.purchased_dled_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8; border-top-left-radius: 5px; border-bottom-left-radius: 5px; color: #ffffff; min-height: 30px; max-height: 30px; background: #3173d8; }")
             self.purchased_dling_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8; border-top-right-radius: 5px; border-bottom-right-radius: 5px; color: #3173d8; min-height: 30px; max-height: 30px; background: #ffffff; }")
-                   
         self.purchased_dled_tab_btn.clicked.connect(dled_btn_clicked)
-
         def dling_btn_clicked(item):
             self.purchased_main_tab.setCurrentIndex(1)
             self.purchased_dling_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8; border-top-right-radius: 5px; border-bottom-right-radius: 5px; color: #ffffff; min-height: 30px; max-height: 30px; background: #3173d8; }")
             self.purchased_dled_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8; border-top-left-radius: 5px; border-bottom-left-radius: 5px; color: #3173d8; min-height: 30px; max-height: 30px; background: #ffffff; }")
-
         self.purchased_dling_tab_btn.clicked.connect(dling_btn_clicked)
 
-
-        def set_layout():
-            self.purchased_main_layout = purchased_main_layout = QVBoxLayout(self)
-
-            #add downloaded/downloading buttons for tab switch
-            self.purchased_switch_layout = purchased_switch_layout = QHBoxLayout(self)
-            self.purchased_switch_layout.setContentsMargins(0, 0, 0, 0) 
-            self.purchased_switch_layout.setSpacing(0)
-            self.purchased_switch_layout.addStretch(1)
-            self.purchased_switch_layout.addWidget(self.purchased_dled_tab_btn)
-            self.purchased_switch_layout.addWidget(self.purchased_dling_tab_btn)
-            self.purchased_switch_layout.addStretch(1)
-
-            self.purchased_main_layout.addLayout(self.purchased_switch_layout)
-            self.purchased_main_layout.addSpacing(5)
-            self.purchased_main_layout.addWidget(self.purchased_main_tab)
-            self.setLayout(self.purchased_main_layout)
-        set_layout()
-        print("Loading stylesheet of cloud tab widget")
+        self.purchased_main_layout = QVBoxLayout(self)
+        self.purchased_switch_layout = QHBoxLayout(self)
+        self.purchased_switch_layout.setContentsMargins(0, 0, 0, 0)
+        self.purchased_switch_layout.setSpacing(0)
+        self.purchased_switch_layout.addStretch(1)
+        self.purchased_switch_layout.addWidget(self.purchased_dled_tab_btn)
+        self.purchased_switch_layout.addWidget(self.purchased_dling_tab_btn)
+        self.purchased_switch_layout.addStretch(1)
+        self.purchased_main_layout.addLayout(self.purchased_switch_layout)
+        self.purchased_main_layout.addSpacing(5)
+        self.purchased_main_layout.addWidget(self.purchased_main_tab)
+        self.setLayout(self.purchased_main_layout)
         load_stylesheet(self, "purchased.qss")
 
 class PurchasedDownloadedTab(QScrollArea):
@@ -1716,7 +1425,6 @@ class PurchasedDownloadedTab(QScrollArea):
             super().__init__(parent)
             self.parent = parent
             self.init_ui()
-
         def init_ui(self):
             self.setObjectName("search_bar")
             self.setFixedSize(300, 25)
@@ -1726,11 +1434,6 @@ class PurchasedDownloadedTab(QScrollArea):
             search_btn_cloud.setObjectName("search_btn")
             search_btn_cloud.setFixedSize(18, 18)
             search_btn_cloud.setCursor(QCursor(Qt.PointingHandCursor))
-
-            def bind_slots():
-                print("Binding slots of clicked-search-btn......")
-            bind_slots()
-
             def set_layout():
                 main_layout = QHBoxLayout()
                 main_layout.addWidget(search_btn_cloud)
@@ -1738,15 +1441,20 @@ class PurchasedDownloadedTab(QScrollArea):
                 main_layout.setContentsMargins(5, 0, 0, 0)
                 self.setLayout(main_layout)
             set_layout()
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("purchased_downloaded_tab")
+        self.file_list = []
+        self.check_list = []
+        self.purchased_total_orders = 0
+        self.num_file = 100
+        self.cur_clicked = 0
+        self.checkbox_list = []
+        self.file_table = TableWidget(self)
+        self.check_record_list = []
         self.init_ui()
-
     def update_table(self):
-
         self.file_list = file_list = fs.get_buyer_file_list()
         for cur_row in range(self.row_number):
             if cur_row == len(file_list):
@@ -1764,11 +1472,6 @@ class PurchasedDownloadedTab(QScrollArea):
 
     def init_ui(self):
 
-        self.check_list = []
-        self.purchased_total_orders = 0
-        self.num_file = 100
-        self.cur_clicked = 0
-
         self.purchased_dled_delete_btn = purchased_dled_delete_btn = QPushButton("Delete")
         purchased_dled_delete_btn.setObjectName("purchased_dled_delete_btn")
 
@@ -1784,35 +1487,28 @@ class PurchasedDownloadedTab(QScrollArea):
         time_label.setObjectName("time_label")
         self.open_path = open_path = QLabel("Open file path...")
         open_path.setObjectName("open_path")
-    
         self.row_number = 100
 
-
         def create_file_table():
-            self.file_table = file_table = TableWidget(self) 
-
+            file_table = self.file_table
             file_table.horizontalHeader().setStretchLastSection(True)
             file_table.verticalHeader().setVisible(False)
             file_table.setShowGrid(False)
             file_table.setAlternatingRowColors(True)
-            file_table.resizeColumnsToContents()  
+            file_table.resizeColumnsToContents()
             file_table.resizeRowsToContents()
-            file_table.setFocusPolicy(Qt.NoFocus) 
-            # do not highlight (bold-ize) the header
+            file_table.setFocusPolicy(Qt.NoFocus)
             file_table.horizontalHeader().setHighlightSections(False)
             file_table.setColumnCount(5)
             file_table.setRowCount(self.row_number)
             file_table.setSelectionBehavior(QAbstractItemView.SelectRows)
-            #file_table.set_right_menu(right_menu)
             file_table.setHorizontalHeaderLabels(['', 'Product Name', 'Size', 'Path', 'Remote URI'])
             file_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             file_table.horizontalHeader().setFixedHeight(35)
             file_table.verticalHeader().setDefaultSectionSize(30)
             file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
             file_table.setSortingEnabled(True)
-
             def right_menu():
-
                 self.downloaded_right_menu = QMenu(self.file_table)
                 self.downloaded_open_act = QAction('Open file', self)
                 self.downloaded_open_act.triggered.connect(self.handle_open_act)
@@ -1821,8 +1517,6 @@ class PurchasedDownloadedTab(QScrollArea):
             file_table.set_right_menu(right_menu)
 
             self.file_list = file_list = fs.get_buyer_file_list()
-            self.check_record_list = []
-            self.checkbox_list = []
             for cur_row in range(self.row_number):
                 if cur_row == len(file_list):
                     break
@@ -1839,48 +1533,45 @@ class PurchasedDownloadedTab(QScrollArea):
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].file_uuid))
                 self.check_record_list.append(False)
         create_file_table()
-        self.total_orders_value = total_orders_value = QLabel("{}".format(self.purchased_total_orders))
+        self.total_orders_value = QLabel("{}".format(self.purchased_total_orders))
         self.total_orders_value.setObjectName("total_orders_value")
         self.file_table.sortItems(2)
         self.file_table.horizontalHeader().setStyleSheet("QHeaderView::section{background: #f3f3f3; border: 1px solid #dcdcdc}")
-        # record rows that are clicked or checked
         def record_check(item):
             self.cur_clicked = item.row()
             if item.checkState() == Qt.Checked:
                 self.check_record_list[item.row()] = True
         self.file_table.itemClicked.connect(record_check)
 
-        def set_layout():
-            self.main_layout = main_layout = QVBoxLayout(self)
-            main_layout.addSpacing(0)
-            self.main_layout.setContentsMargins(10, 0, 10, 10)
-            self.main_layout.addWidget(self.hline_1)
-            self.main_layout.addSpacing(0)
-            self.purchased_dled_upper_layout = QHBoxLayout(self)
-            self.purchased_dled_upper_layout.addSpacing(0)
-            self.purchased_dled_upper_layout.addWidget(self.purchased_total_orders_label)
-            self.purchased_dled_upper_layout.addSpacing(0)
-            self.purchased_dled_upper_layout.addWidget(self.total_orders_value)
-            self.purchased_dled_upper_layout.addSpacing(10)
-            self.purchased_dled_upper_layout.addWidget(self.search_bar)
-            self.purchased_dled_upper_layout.addSpacing(10)
-            self.purchased_dled_upper_layout.addWidget(self.time_label)
-            self.purchased_dled_upper_layout.addSpacing(10)           
-            self.purchased_dled_upper_layout.addWidget(self.open_path)
-            self.purchased_dled_upper_layout.addStretch(1)
-            self.purchased_dled_upper_layout.addWidget(self.purchased_dled_delete_btn)
+        self.main_layout = main_layout = QVBoxLayout(self)
+        main_layout.addSpacing(0)
+        self.main_layout.setContentsMargins(10, 0, 10, 10)
+        self.main_layout.addWidget(self.hline_1)
+        self.main_layout.addSpacing(0)
+        self.purchased_dled_upper_layout = QHBoxLayout(self)
+        self.purchased_dled_upper_layout.addSpacing(0)
+        self.purchased_dled_upper_layout.addWidget(self.purchased_total_orders_label)
+        self.purchased_dled_upper_layout.addSpacing(0)
+        self.purchased_dled_upper_layout.addWidget(self.total_orders_value)
+        self.purchased_dled_upper_layout.addSpacing(10)
+        self.purchased_dled_upper_layout.addWidget(self.search_bar)
+        self.purchased_dled_upper_layout.addSpacing(10)
+        self.purchased_dled_upper_layout.addWidget(self.time_label)
+        self.purchased_dled_upper_layout.addSpacing(10)
+        self.purchased_dled_upper_layout.addWidget(self.open_path)
+        self.purchased_dled_upper_layout.addStretch(1)
+        self.purchased_dled_upper_layout.addWidget(self.purchased_dled_delete_btn)
 
-            self.main_layout.addLayout(self.purchased_dled_upper_layout)
-            self.main_layout.addSpacing(2)
-            self.main_layout.addWidget(self.file_table)
-            self.main_layout.addSpacing(2)
-            self.setLayout(self.main_layout)
-        set_layout()
+        self.main_layout.addLayout(self.purchased_dled_upper_layout)
+        self.main_layout.addSpacing(2)
+        self.main_layout.addWidget(self.file_table)
+        self.main_layout.addSpacing(2)
+        self.setLayout(self.main_layout)
 
 
     def handle_delete(self):
         for i in range(len(self.check_record_list)):
-            if self.check_record_list[i] == True:
+            if self.check_record_list[i] is True:
                 file_path = self.file_table.item(i, 3).text()
                 fs.delete_buyer_file(file_path)
                 self.file_table.removeRow(i)
@@ -1897,13 +1588,14 @@ class DownloadingProgressBar(QProgressBar):
     def __init__(self, cur_row=None):
         super().__init__()
         self.cur_row = cur_row
-        self.initUI()
+        self.step = 0
+        self.max_step = 0
+        self.init_ui()
 
-    def initUI(self):
+    def init_ui(self):
         self.setGeometry(30, 40, 200, 25)
 
         self.timer = QBasicTimer()
-        self.step = 0
         from random import randint
         self.max_step = randint(500, 1000)
         self.timer.start(self.max_step, self)
@@ -1921,27 +1613,23 @@ class DownloadingProgressBar(QProgressBar):
         self.cur_row = new_row
 
     def isComplete(self):
-        if self.step >= self.max_step:
-            return True
-        else:
-            return False
-
-
+        return(self.step >= self.max_step)
 
 
 class PurchasedDownloadingTab(QScrollArea):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
-        # self.setObjectName("purchase_tab")
         self.setObjectName("purchased_downloading_tab")
+        self.cur_clicked = 0
+        self.file_table = TableWidget(self)
+        self.file_list = []
+        self.check_record_list = []
+        self.checkbox_list = []
         self.init_ui()
 
     def update_table(self):
-        # file_list = get_file_list()
-        print("Updating file list......")
         file_list = []
-        # single element data structure (assumed); to be changed
         dict_exa = {"name": "Avengers: Infinity War - 2018", "size": "7200", "ordertime": "2018/2/4 08:30",
                     "price": "36"}
         for i in range(self.row_number):
@@ -1955,7 +1643,7 @@ class PurchasedDownloadingTab(QScrollArea):
             checkbox_item.setCheckState(Qt.Unchecked)
             dling_progressbar = QProgressBar()
             # dling_progressbar = DownloadingProgressBar()
-            dling_progressbar.setFixedSize(150,8)
+            dling_progressbar.setFixedSize(150, 8)
             dling_progressbar.setMaximum(100)
             dling_progressbar.setMinimum(0)
             dling_progressbar.setValue(49)
@@ -1966,9 +1654,6 @@ class PurchasedDownloadingTab(QScrollArea):
 
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
-
-    def handle_upload(self):
-        self.local_file = QFileDialog.getOpenFileName()[0]
 
     def init_ui(self):
         self.actual_row_num = 0
@@ -1997,7 +1682,7 @@ class PurchasedDownloadingTab(QScrollArea):
         self.hline_1 = HorizontalLine(self, 2)
 
         def create_file_table():
-            self.file_table = file_table = TableWidget(self)
+            file_table = self.file_table
 
             def right_menu():
                 self.purchased_right_menu = QMenu(file_table)
@@ -2019,7 +1704,6 @@ class PurchasedDownloadingTab(QScrollArea):
             file_table.resizeColumnsToContents()
             file_table.resizeRowsToContents()
             file_table.setFocusPolicy(Qt.NoFocus)
-            # do not highlight (bold-ize) the header
             file_table.horizontalHeader().setHighlightSections(False)
             file_table.setColumnCount(4)
             file_table.setRowCount(self.row_number)
@@ -2030,17 +1714,14 @@ class PurchasedDownloadingTab(QScrollArea):
             file_table.horizontalHeader().setFixedHeight(35)
             file_table.verticalHeader().setDefaultSectionSize(30)
             file_table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
-            # file_table.setMinimumHeight(30);
             file_table.setSortingEnabled(True)
 
             self.file_list = file_list = fs.get_buyer_file_list()
 
-            self.check_record_list = []
-            self.checkbox_list = []
             for cur_row in range(self.row_number):
                 if cur_row == len(file_list):
                     break
-                if file_list[cur_row].is_downloaded == False:
+                if file_list[cur_row].is_downloaded is False:
                     self.purchased_total_orders += 1
                     checkbox_item = QTableWidgetItem()
                     checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
@@ -2056,14 +1737,13 @@ class PurchasedDownloadingTab(QScrollArea):
                     self.actual_row_num += 1
 
         create_file_table()
-        self.total_orders_value = total_orders_value = QLabel("{}".format(self.purchased_total_orders))
+        self.total_orders_value = QLabel("{}".format(self.purchased_total_orders))
         self.total_orders_value.setObjectName("total_orders_value")
 
         self.file_table.sortItems(1)
         self.file_table.horizontalHeader().setStyleSheet(
             "QHeaderView::section{background: #f3f3f3; border: 1px solid #dcdcdc}")
 
-        # record rows that are clicked or checked
         def record_check(item):
             self.cur_clicked = item.row()
             if item.checkState() == Qt.Checked:
@@ -2071,34 +1751,31 @@ class PurchasedDownloadingTab(QScrollArea):
 
         self.file_table.itemClicked.connect(record_check)
 
-        def set_layout():
-            self.main_layout = main_layout = QVBoxLayout(self)
-            self.main_layout.setContentsMargins(10, 0, 10, 10)
-            self.main_layout.addSpacing(0)
-            self.main_layout.addWidget(self.hline_1)
-            self.main_layout.addSpacing(0)
-            self.purchased_upper_layout = QHBoxLayout(self)
-            self.purchased_upper_layout.addSpacing(0)
-            self.purchased_upper_layout.addWidget(self.purchased_total_orders_label)
-            self.purchased_upper_layout.addSpacing(0)
-            self.purchased_upper_layout.addWidget(self.total_orders_value)
-            self.purchased_upper_layout.addSpacing(10)
-            self.purchased_upper_layout.addWidget(self.open_path)
-            self.purchased_upper_layout.addStretch(1)
-            self.purchased_upper_layout.addWidget(self.purchased_dling_start_btn)
-            self.purchased_upper_layout.addSpacing(10)
-            self.purchased_upper_layout.addWidget(self.purchased_dling_pause_btn)
-            self.purchased_upper_layout.addSpacing(10)
-            self.purchased_upper_layout.addWidget(self.purchased_dling_delete_btn)
-            self.purchased_upper_layout.addSpacing(5)
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.setContentsMargins(10, 0, 10, 10)
+        self.main_layout.addSpacing(0)
+        self.main_layout.addWidget(self.hline_1)
+        self.main_layout.addSpacing(0)
+        self.purchased_upper_layout = QHBoxLayout(self)
+        self.purchased_upper_layout.addSpacing(0)
+        self.purchased_upper_layout.addWidget(self.purchased_total_orders_label)
+        self.purchased_upper_layout.addSpacing(0)
+        self.purchased_upper_layout.addWidget(self.total_orders_value)
+        self.purchased_upper_layout.addSpacing(10)
+        self.purchased_upper_layout.addWidget(self.open_path)
+        self.purchased_upper_layout.addStretch(1)
+        self.purchased_upper_layout.addWidget(self.purchased_dling_start_btn)
+        self.purchased_upper_layout.addSpacing(10)
+        self.purchased_upper_layout.addWidget(self.purchased_dling_pause_btn)
+        self.purchased_upper_layout.addSpacing(10)
+        self.purchased_upper_layout.addWidget(self.purchased_dling_delete_btn)
+        self.purchased_upper_layout.addSpacing(5)
 
-            self.main_layout.addLayout(self.purchased_upper_layout)
-            self.main_layout.addSpacing(2)
-            self.main_layout.addWidget(self.file_table)
-            self.main_layout.addSpacing(2)
-            self.setLayout(self.main_layout)
-
-        set_layout()
+        self.main_layout.addLayout(self.purchased_upper_layout)
+        self.main_layout.addSpacing(2)
+        self.main_layout.addWidget(self.file_table)
+        self.main_layout.addSpacing(2)
+        self.setLayout(self.main_layout)
 
     def handle_complete(self, item):
         if item >= 100:
@@ -2108,14 +1785,9 @@ class PurchasedDownloadingTab(QScrollArea):
 
 
     def handle_purchased_delete(self):
-        # TODO: delete event
         for i in range(len(self.check_record_list)):
-            if self.check_record_list[i] == True:
+            if self.check_record_list[i] is True:
                 self.file_table.removeRow(i)
-                # self.update_table()
-        logger.debug("Delete the corresponding row (i.e. self.cur_clicked) in TableWidget as before")
-        logger.debug("Cancel uploading from backend")
-        logger.debug("Uploading the table")
 
 
 class PublishDialog(QDialog):
@@ -2124,8 +1796,6 @@ class PublishDialog(QDialog):
         self.parent = parent
         self.tab = tab
         self.resize(300, 400)
-        #for testing this Tab @rayhueng
-        #self.setObjectName("cart_tab")
         self.setObjectName("publish_dialog")
         self.product_id = id
 
@@ -2146,7 +1816,6 @@ class PublishDialog(QDialog):
         self.pinfo_cpc_label = pinfo_cpc_label = QLabel("CPC")
         pinfo_cpc_label.setObjectName("pinfo_cpc_label")
 
-        #TextEdit def
         self.pinfo_title_edit = pinfo_title_edit = QLineEdit()
         pinfo_title_edit.setObjectName("pinfo_title_edit")
         self.pinfo_descrip_edit = pinfo_descrip_edit = QTextEdit()
@@ -2156,14 +1825,12 @@ class PublishDialog(QDialog):
         self.pinfo_price_edit = pinfo_price_edit = QLineEdit()
         pinfo_price_edit.setObjectName("pinfo_price_edit")
 
-        #Buttons and Tags
         self.tag = ["tag1", "tag2", "tag3", "tag4"]
         self.tag_num = 4
         self.tag_btn_list = []
         for i in range(self.tag_num):
             self.tag_btn_list.append(QPushButton(self.tag[i], self))
             self.tag_btn_list[i].setObjectName("tag_btn_{0}".format(i))
-            #ser property t_value = 1 for the convience of specifying QSS
             self.tag_btn_list[i].setProperty("t_value", 1)
             self.tag_btn_list[i].setCheckable(True)
             self.tag_btn_list[i].setCursor(QCursor(Qt.PointingHandCursor))
@@ -2187,17 +1854,14 @@ class PublishDialog(QDialog):
 
         def set_layout():
             self.pinfo_top_layout = pinfo_top_layout = QGridLayout(self)
-            #self.pinfo_top_layout.setSpacing(10)
             self.pinfo_top_layout.setContentsMargins(40, 40, 100, 40)
             self.pinfo_top_layout.addWidget(pinfo_title_label, 1, 1, 1, 1)
             self.pinfo_top_layout.addWidget(pinfo_title_edit, 1, 3, 1, 20)
             self.pinfo_top_layout.addWidget(pinfo_descrip_label, 2, 1, 1, 1)
             self.pinfo_top_layout.addWidget(pinfo_descrip_edit, 2, 3, 3, 20)
             self.pinfo_top_layout.addWidget(pinfo_tag_label, 8, 1, 1, 1)
-
-            #embeded layout for tag button
             self.pinfo_tag_layout = pinfo_tag_layout = QHBoxLayout(self)
-            for i in range(self.tag_num): 
+            for i in range(self.tag_num):
                 self.pinfo_tag_layout.addWidget(self.tag_btn_list[i])
                 self.pinfo_tag_layout.addSpacing(5)
 
@@ -2205,29 +1869,24 @@ class PublishDialog(QDialog):
             self.pinfo_top_layout.addLayout(pinfo_tag_layout, 8, 3, 1, 10)
             self.pinfo_top_layout.addWidget(pinfo_tag_edit, 9, 3, 1, 3)
 
-            #embeded layout for price input
             self.pinfo_price_layout = pinfo_price_layout = QHBoxLayout(self)
             self.pinfo_price_layout.addWidget(pinfo_price_edit)
             self.pinfo_price_layout.addSpacing(5)
             self.pinfo_price_layout.addWidget(pinfo_cpc_label)
             self.pinfo_price_layout.addStretch(1)
-            #add the layout of price input to upper layer layout
-            self.pinfo_top_layout.addLayout(pinfo_price_layout, 10, 3, 1, 10) 
-            self.pinfo_top_layout.addWidget(pinfo_price_label, 10, 1, 1, 1)   
+            self.pinfo_top_layout.addLayout(pinfo_price_layout, 10, 3, 1, 10)
+            self.pinfo_top_layout.addWidget(pinfo_price_label, 10, 1, 1, 1)
             self.pinfo_top_layout.addWidget(pinfo_checkbox, 12, 3, 1, 2)
 
-            #embeded layout for two buttons
             self.pinfo_btn_layout = pinfo_btn_layout = QHBoxLayout(self)
             self.pinfo_btn_layout.addWidget(pinfo_cancel_btn)
             self.pinfo_btn_layout.addSpacing(80)
             self.pinfo_btn_layout.addWidget(pinfo_publish_btn)
             self.pinfo_btn_layout.addStretch(1)
-            #add the layout of price input to upper layer layout
-            self.pinfo_top_layout.addLayout(pinfo_btn_layout, 13, 3, 1, 15)    
+            self.pinfo_top_layout.addLayout(pinfo_btn_layout, 13, 3, 1, 15)
 
             self.setLayout(pinfo_top_layout)
         set_layout()
-        print("Loading stylesheet of cloud tab widget")
         load_stylesheet(self, "publishdialog.qss")
         self.show()
 
@@ -2238,16 +1897,7 @@ class PublishDialog(QDialog):
         self.pinfo_price = self.pinfo_price_edit.text()
         self.pinfo_checkbox_state = self.pinfo_checkbox.isChecked()
         if self.pinfo_title and self.pinfo_descrip and self.pinfo_tag and self.pinfo_price and self.pinfo_checkbox_state:
-            print("Updating item info in wallet database and other relevant databases")
-            print("Updating self.parent tab info: selling tab or cloud tab")
-            # logger.debug("current row: %s", self.parent.cur_clicked)
-            # product_info = self.parent.file_list[self.parent.cur_clicked]
-            # logger.debug('selected product name: %s', product_info.name)
-            # logger.debug("product selected id: %s", product_info.id)
-            logger.debug("product info title: %s", self.pinfo_title)
-            logger.debug("product info id: %s", self.product_id)
 
-            #TODO: Get following attributes from fileinfo table
             file_info = fs.get_file_by_id(self.product_id)
             self.size = file_info.size
             self.start_date = '2018-04-01 10:10:10'
@@ -2264,22 +1914,6 @@ class PublishDialog(QDialog):
                 def handle_update_file(status):
                     if status == 1:
                         QMessageBox.information(self, "Tips", "Update market side product successfully !")
-                        # self.parent.update_table()
-                        # self.parent.parent.findChild(QWidget, 'selling_tab').update_table()
-                        # tab_index = main_wnd.cloud_index
-                        # main_wnd.content_tabs.removeTab(tab_index)
-                        # main_wnd.cloud_index = main_wnd.content_tabs.addTab(CloudTab(main_wnd.content_tabs), "")
-                        # if self.tab == 'cloud':
-                        #     main_wnd.content_tabs.setCurrentIndex(main_wnd.cloud_index)
-
-                        # tab_index = main_wnd.main_tab_index["selling_tab"]
-                        # main_wnd.content_tabs.removeTab(tab_index)
-                        # tab_index = main_wnd.content_tabs.addTab(SellTab(main_wnd.content_tabs), "")
-                        # main_wnd.main_tab_index["selling_tab"] = tab_index
-                        # if self.tab == 'sell':
-                        #     main_wnd.content_tabs.setCurrentIndex(tab_index)
-                        #
-
                         tab_index = main_wnd.main_tab_index['cloud_tab']
                         main_wnd.content_tabs.removeTab(tab_index)
                         for key in main_wnd.main_tab_index:
@@ -2305,23 +1939,6 @@ class PublishDialog(QDialog):
                             QMessageBox.information("Wrong parameters for publishing products!")
 
                 d.addCallback(handle_update_file)
-                # # TODO: This is only for test purpose. Will be replaced in this week later.
-                # def update_proxy(markethash):
-                #     file_info = fs.get_file_by_id(self.product_id)
-                #     file_hash = file_info.hashcode
-                #     # TODO: remote_uri is currently defined as the file name
-                #     s3_key = file_info.remote_uri
-                #     storage_type = file_info.remote_type
-                #     product_info = {'storage_type': storage_type, 'file_hash': file_hash, 's3_key': s3_key,
-                #                     'market_hash': markethash}
-                #     d_status = wallet.proxy_client.publish_to_proxy(product_info, 'recommended')
-                #     def status_check_proxy(status):
-                #         if status == True:
-                #             QMessageBox.information(self, "Tips", "Successfully passed info to proxy (Seller)")
-                #         else:
-                #             QMessageBox.information(self, "Tips", "Failed to pass info to proxy (Seller)")
-                #     d_status.addCallback(status_check_proxy)
-                # update_proxy(market_hash)
 
             d_publish.addCallback(update_table)
 
@@ -2332,8 +1949,6 @@ class PublishDialog(QDialog):
     def handle_cancel(self):
         print("exiting the current dialog")
         self.close()
-        # will be changed next according to calling tab (cloud tab or selling tab)
-
 
 class SellTab(QScrollArea):
     class SearchBar(QLineEdit):
@@ -2351,10 +1966,6 @@ class SellTab(QScrollArea):
             search_btn_cloud.setObjectName("search_btn_sell")
             search_btn_cloud.setFixedSize(18, 18)
             search_btn_cloud.setCursor(QCursor(Qt.PointingHandCursor))
-
-            def bind_slots():
-                print("Binding slots of clicked-search-btn......")
-            bind_slots()
 
             def set_layout():
                 main_layout = QHBoxLayout()
@@ -2408,9 +2019,7 @@ class SellTab(QScrollArea):
         self.customContextMenuRequested[QPoint].connect(func)
 
     def handle_upload(self):
-            self.local_file = QFileDialog.getOpenFileName()[0]
-            #defered = threads.deferToThread(upload_file_ipfs, self.local_file)
-            #defered.addCallback(handle_callback_upload)
+        self.local_file = QFileDialog.getOpenFileName()[0]
 
     def init_ui(self):
         self.frame = QFrame()
@@ -2418,7 +2027,6 @@ class SellTab(QScrollArea):
         self.setWidget(self.frame)
         self.setWidgetResizable(True)
         self.frame.setMinimumWidth(500)
-        #self.frame.setMaximumHeight(800)
 
         self.check_list = []
         self.sell_product = 100
@@ -2429,37 +2037,32 @@ class SellTab(QScrollArea):
         self.sell_product_label = sell_product_label = QLabel("Products:")
         sell_product_label.setObjectName("sell_product_label")
         self.product_value = product_value = QLabel("{}".format(self.sell_product))
-        product_value.setObjectName("product_value")  
+        product_value.setObjectName("product_value")
 
         self.sell_orders_label = sell_orders_label = QLabel("Total Orders:")
         sell_orders_label.setObjectName("sell_orders_label")
         self.order_value = order_value = QLabel("{}".format(self.total_orders))
-        order_value.setObjectName("order_value") 
+        order_value.setObjectName("order_value")
 
         self.total_sales_label = total_sales_label = QLabel("Total Sales($):")
         total_sales_label.setObjectName("total_sales_label")
         self.sales_value = sales_value = QLabel("{}".format(self.total_sales))
-        sales_value.setObjectName("sales_value") 
-
+        sales_value.setObjectName("sales_value")
         self.time_rank_label = time_rank_label = QLabel("Time")
         time_rank_label.setObjectName("time_rank_label")
-
         self.tag_rank_label = tag_rank_label = QLabel("Tag")
-        tag_rank_label.setObjectName("tag_rank_label")        
-
+        tag_rank_label.setObjectName("tag_rank_label")
         self.sell_delete_btn = sell_delete_btn = QPushButton("Delete")
         sell_delete_btn.setObjectName("sell_delete_btn")
         self.sell_delete_btn.clicked.connect(self.handle_delete)
 
         self.sell_publish_btn = sell_publish_btn = QPushButton("Publish")
         sell_publish_btn.setObjectName("sell_publish_btn")
-        #please define the handler of publish event
         self.sell_publish_btn.clicked.connect(self.handle_publish)
 
 
         self.search_bar_sell = SellTab.SearchBar(self)
         self.time_label = time_label = QLabel("Time")
-    
         self.row_number = 100
 
 
@@ -2471,10 +2074,9 @@ class SellTab(QScrollArea):
             file_table.verticalHeader().setVisible(False)
             file_table.setShowGrid(False)
             file_table.setAlternatingRowColors(True)
-            file_table.resizeColumnsToContents()  
+            file_table.resizeColumnsToContents()
             file_table.resizeRowsToContents()
-            file_table.setFocusPolicy(Qt.NoFocus) 
-            # do not highlight (bold-ize) the header
+            file_table.setFocusPolicy(Qt.NoFocus)
             file_table.horizontalHeader().setHighlightSections(False)
             file_table.setColumnCount(7)
             file_table.setRowCount(self.row_number)
@@ -2508,8 +2110,6 @@ class SellTab(QScrollArea):
                 self.check_record_list.append(False)
 
         d = wallet.market_client.query_by_seller(wallet.market_client.public_key)
-        # TODO: Seems public key here is not consistent with account1 or account 2 that is used for login, leading to
-        # TODO: incomplete display
         def handle_query_by_seller(products):
             logger.debug("in handle query by seller")
             logger.debug("seller's product list: %s", products)
@@ -2532,7 +2132,6 @@ class SellTab(QScrollArea):
             self.cur_clicked = item.row()
             if item.checkState() == Qt.Checked:
                 self.check_record_list[item.row()] = True
-        # self.file_table.itemClicked.connect(record_check)
 
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout(self)
@@ -2549,7 +2148,6 @@ class SellTab(QScrollArea):
             self.layout1.addWidget(self.sales_value)
             self.layout1.addStretch(1)
             self.main_layout.addLayout(self.layout1)
-            
             self.layout2 = QHBoxLayout(self)
             self.layout2.addWidget(self.search_bar_sell)
             self.layout2.addSpacing(10)
@@ -2562,15 +2160,11 @@ class SellTab(QScrollArea):
             self.layout2.addWidget(self.sell_publish_btn)
             self.layout2.addSpacing(5)
             self.main_layout.addLayout(self.layout2)
-            
             self.main_layout.addSpacing(2)
             self.main_layout.addWidget(self.file_table)
             self.main_layout.addSpacing(2)
             self.setLayout(self.main_layout)
             load_stylesheet(self, "sell.qss")
-        # set_layout()
-        # print("Loading stylesheet of cloud tab widget")
-        # load_stylesheet(self, "sell.qss")
 
     def handle_delete(self):
         if wallet.market_client.token == "":
@@ -2579,33 +2173,25 @@ class SellTab(QScrollArea):
         for i in range(len(self.check_record_list)):
             if self.check_record_list[i] == True:
                 self.file_table.removeRow(i)
-                # TODO: delete files permanently from the market side and change local state to "unpublished"
                 market_hash = self.file_table.item(self.cur_clicked, 6).data(Qt.UserRole)
-                logger.debug("Product deleted from local db")
                 d_status = wallet.market_client.hide_product(market_hash)
                 def handle_state(status):
                     if status == 1:
-                        logger.debug("Product has been deleted from market db")
                         QMessageBox.information(self, "Tips", "Successfully deleted the product")
                     else:
                         QMessageBox.information(self, "Tips", "Problem occurred when deleting the file")
-                        logger.debug("Failed to delete product from market db")
                 d_status.addCallback(handle_state)
         self.check_record_list = [False for i in range(self.file_table.rowCount())]
-        logger.debug("Reset check_record_list for later operations")
 
 
     def handle_delete_act(self):
         self.file_table.removeRow(self.cur_clicked)
-        print("row {} has been removed...".format(self.cur_clicked))
 
     def handle_publish(self):
-        # item = {"name": "Avengers: Infinity War - 2018", "size": "1.2 GB", "remote_type": "ipfs", "is_published": "Published"}
         if wallet.market_client.token == '':
             QMessageBox.information(self, "Tips", "Please login first !")
         else:
             self.file_selection_dlg = SelectionDialog(self)
-            # self.file_list[self.cur_clicked]
             print("handle publish act....")
 
 class SelectionDialog(QDialog):
@@ -2628,8 +2214,6 @@ class SelectionDialog(QDialog):
             if not self.file_list[i].is_published:
                 self.pub_list.append(self.file_list[i])
                 item = QListWidgetItem(self.file_list[i].name)
-                # text = self.file_list[i].name + "    " + str(self.file_list[i].size) + "    " + str(self.file_list[i].remote_type)
-                # item.setText(text)
                 self.list_widget.addItem(item)
         self.publish_btn = QPushButton("Publish")
         self.publish_btn.setObjectName("publish_btn")
@@ -2675,13 +2259,12 @@ class FollowingTagTab(QScrollArea):
         self.setObjectName("follow_tab_tag")
         self.init_ui()
 
-    def init_ui(self):  
+    def init_ui(self):
         self.frame = QFrame()
         self.frame.setObjectName("follow_tag_frame")
         self.setWidget(self.frame)
         self.setWidgetResizable(True)
         self.frame.setMinimumWidth(500)
-        #self.frame.setMaximumHeight(800) 
 
         self.follow_item_num = 4
         self.promo_num_max = 3
@@ -2708,10 +2291,10 @@ class FollowingTagTab(QScrollArea):
         def set_layout():
             self.follow_main_layout = QHBoxLayout(self)
 
-            self.follow_tag_product_layout=QVBoxLayout(self)
+            self.follow_tag_product_layout = QVBoxLayout(self)
             self.follow_tag_product_layout.addSpacing(0)
 
-            self.follow_tag_promotion_layout=QVBoxLayout(self)
+            self.follow_tag_promotion_layout = QVBoxLayout(self)
             self.follow_tag_promotion_layout.addSpacing(0)
 
             for i in range(self.follow_item_num):
@@ -2722,17 +2305,14 @@ class FollowingTagTab(QScrollArea):
 
             self.promo_layout = QVBoxLayout(self)
             self.promo_layout.setContentsMargins(0, 0, 0, 0)
-            self.promo_layout.addSpacing(0)            
-
+            self.promo_layout.addSpacing(0)
             for i in range(self.promo_num_max):
                 self.promo_layout.addWidget(self.promo_lists[i])
                 self.promo_layout.addSpacing(0)
 
             self.promo_layout.addStretch(1)
-                    
             self.follow_main_layout.addLayout(self.follow_tag_product_layout, 2)
             self.follow_main_layout.addSpacing(1)
-            #self.bottom_layout.setStretchFactor(recom_layout,4)
             self.follow_main_layout.addLayout(self.promo_layout, 1)
 
             self.setLayout(self.follow_main_layout)
@@ -2752,7 +2332,6 @@ class FollowingSellTab(QScrollArea):
         self.setWidget(self.frame)
         self.setWidgetResizable(True)
         self.frame.setMinimumWidth(500)
-        # self.frame.setMaximumHeight(800)
 
         self.follow_item_num = 5
         self.promo_num_max = 4
@@ -2781,10 +2360,10 @@ class FollowingSellTab(QScrollArea):
 
             self.follow_main_layout = QHBoxLayout(self)
 
-            self.follow_tag_product_layout=QVBoxLayout(self)
+            self.follow_tag_product_layout = QVBoxLayout(self)
             self.follow_tag_product_layout.addSpacing(0)
 
-            self.follow_tag_promotion_layout=QVBoxLayout(self)
+            self.follow_tag_promotion_layout = QVBoxLayout(self)
             self.follow_tag_promotion_layout.addSpacing(0)
 
             for i in range(self.follow_item_num):
@@ -2795,17 +2374,14 @@ class FollowingSellTab(QScrollArea):
 
             self.promo_layout = QVBoxLayout(self)
             self.promo_layout.setContentsMargins(0, 0, 0, 0)
-            self.promo_layout.addSpacing(0)            
-
+            self.promo_layout.addSpacing(0)
             for i in range(self.promo_num_max):
                 self.promo_layout.addWidget(self.promo_lists[i])
                 self.promo_layout.addSpacing(0)
 
             self.promo_layout.addStretch(1)
-                    
             self.follow_main_layout.addLayout(self.follow_tag_product_layout, 2)
             self.follow_main_layout.addSpacing(1)
-            #self.bottom_layout.setStretchFactor(recom_layout,4)
             self.follow_main_layout.addLayout(self.promo_layout, 1)
 
 class FollowingTab(QScrollArea):
@@ -2814,39 +2390,23 @@ class FollowingTab(QScrollArea):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("follow_tab")
-        self.init_ui()   
-
+        self.init_ui()
     def init_ui(self):
-
-        #self.follow_tag_btn = follow_tag_btn = QPushButton(self)
-        #self.follow_tag_btn.setObjectName("follow_tag_btn")
-
         def add_content_tabs():
             self.follow_tabs = follow_tabs = QTabWidget(self)
             follow_tabs.setObjectName("follow_tabs")
-            #follow_tabs.tabBar().hide()
             follow_tabs.addTab(FollowingTagTab(self.follow_tabs), "Tag")
             follow_tabs.addTab(FollowingSellTab(self.follow_tabs), "Sell")
         add_content_tabs()
 
         def set_layout():
             self.follow_main_layout = follow_main_layout = QHBoxLayout()
-            #self.follow_main_layout.setSpacing(0)
-            #self.follow_main_layout.setContentsMargins(0, 0, 0, 0) 
-            #self.follow_main_layout.addSpacing(0)
-            #follow_main_layout.addWidget(self.follow_tag_btn)
             follow_main_layout.addWidget(self.follow_tabs)
             self.setLayout(self.follow_main_layout)
-            #self.main_layout.addLayout(self.content_layout)
-
-            #wid = QWidget(self)
-            #wid.setLayout(self.main_layout)
-            #self.setCentralWidget(wid)
         set_layout()
         load_stylesheet(self, "follow.qss")
         print("Loading stylesheet of following tab widget")
 
-# widgets
 class TableWidget(QTableWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -2854,9 +2414,8 @@ class TableWidget(QTableWidget):
         self.init_ui()
 
     def init_ui(self):
-        # size
+
         self.setMinimumWidth(self.parent.width())
-        # context menu
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -2864,7 +2423,6 @@ class TableWidget(QTableWidget):
         self.verticalHeader().setVisible(False)
         self.setShowGrid(False)
         self.setAlternatingRowColors(True)
-        # do not highlight (bold-ize) the header
         self.horizontalHeader().setHighlightSections(False)
 
 
@@ -2886,13 +2444,11 @@ class Product(QScrollArea):
     def __init__(self, parent=None, item={}, mode=""):
         super().__init__(parent)
         self.parent = parent
-        # self.content_tabs = parent.parent.content_tabs
         self.item = item
         self.mode = mode
         self.init_ui()
 
     def init_ui(self):
-        #self.frame.setMinimumWidth(500)
 
         self.path = osp.join(root_dir, "cpchain/assets/wallet/font", "ARLRDBD.TTF")
         self.font_regular = QFontDatabase.addApplicationFont(str(self.path))
@@ -2906,7 +2462,6 @@ class Product(QScrollArea):
         self.setMaximumHeight(120)
         self.title_btn = QPushButton("Medicine big data from Mayo Clinic")
         self.title_btn.setObjectName("title_btn")
-        # self.title_btn.setWordWrap(True)
         self.title_btn.clicked.connect(self.title_clicked_act)
         self.title_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
@@ -2921,7 +2476,6 @@ class Product(QScrollArea):
         self.total_sale_label.setObjectName("total_sale_label")
         self.price_label = QLabel("$18")
         self.price_label.setObjectName("price_label")
-        #self.price_label.setFont(QFont(15, QFont.Bold))
 
         self.gap_line = HorizontalLine(self, 2)
         self.gap_line.setObjectName("gap_line")
@@ -2936,10 +2490,6 @@ class Product(QScrollArea):
             self.tag_btn_list[i].setProperty("t_value", 1)
             self.tag_btn_list[i].setCursor(QCursor(Qt.PointingHandCursor))
             self.tag_btn_list[i].clicked.connect(self.tag_clicked_act)
-
-        def bind_slots():
-            print("Binding slots of buttons......")
-        bind_slots()
 
         def setlayout():
             self.main_layout = main_layout = QVBoxLayout(self)
@@ -2974,11 +2524,9 @@ class Product(QScrollArea):
             self.main_layout.addSpacing(5)
             self.main_layout.addWidget(self.gap_line)
             self.main_layout.addSpacing(0)
-            #self.main_layout.addStretch(1)
             self.setLayout(self.main_layout)
         setlayout()
         load_stylesheet(self, "product.qss")
-        logger.debug("Loading stylesheet of item")
 
     @inlineCallbacks
     def get_product_info(self):
@@ -2987,20 +2535,15 @@ class Product(QScrollArea):
         main_wnd.findChild(QWidget, 'productdetail_tab').update_page(product_info, promo_list)
 
     def title_clicked_act(self):
-        # wid = self.parent.parent.findChild(QWidget, "productdetail_tab")
-        # self.parent.parent.content_tabs.setCurrentWidget(wid)
-        print("title_clicked_act")
         self.get_product_info()
         wid = main_wnd.content_tabs.findChild(QWidget, "productdetail_tab")
         main_wnd.content_tabs.setCurrentWidget(wid)
 
     def seller_clicked_act(self):
-        print("seller_clicked_act")
         wid = main_wnd.content_tabs.findChild(QWidget, "sellerHP_tab")
         main_wnd.content_tabs.setCurrentWidget(wid)
 
     def tag_clicked_act(self):
-        print("tag_clicked_act")
         wid = main_wnd.content_tabs.findChild(QWidget, "tagHP_tab")
         main_wnd.content_tabs.setCurrentWidget(wid)
 
@@ -3010,14 +2553,12 @@ class Product2(QScrollArea):
     def __init__(self, parent=None, item={}, mode="", navi=""):
         super().__init__()
         self.parent = parent
-        # self.content_tabs = parent.parent.content_tabs
         self.item = item
         self.mode = mode
         self.init_ui()
         self.navi = navi
 
     def init_ui(self):
-        #self.frame.setMinimumWidth(500)
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumHeight(200)
         self.setMaximumHeight(500)
@@ -3039,7 +2580,6 @@ class Product2(QScrollArea):
         self.total_sale_label.setObjectName("total_sale_label")
         self.price_label = QLabel('$'+str(self.item['price']))
         self.price_label.setObjectName("price_label")
-        # self.price_label.setFont(QFont(15, QFont.Bold))
 
         self.gap_line = HorizontalLine(self, 2)
         self.gap_line.setObjectName("gap_line")
@@ -3055,10 +2595,6 @@ class Product2(QScrollArea):
             self.tag_btn_list[i].setProperty("t_value", 1)
             self.tag_btn_list[i].setCursor(QCursor(Qt.PointingHandCursor))
             self.tag_btn_list[i].clicked.connect(self.tag_clicked_act)
-
-        def bind_slots():
-            print("Binding slots of buttons......")
-        bind_slots()
 
         def setlayout():
             self.main_layout = main_layout = QVBoxLayout(self)
@@ -3090,26 +2626,14 @@ class Product2(QScrollArea):
             self.main_layout.addSpacing(5)
             self.main_layout.addWidget(self.gap_line)
             self.main_layout.addSpacing(0)
-            #self.main_layout.addStretch(1)
             self.setLayout(self.main_layout)
         setlayout()
         load_stylesheet(self, "product.qss")
         logger.debug("Loading stylesheet of item")
 
-    # @inlineCallbacks
-    # def get_product_info(self):
-    #     product_info = self.item
-    #     promo_list = yield wallet.market_client.query_promotion()
-    #     main_wnd.findChild(QWidget, 'productdetail_tab').update_page(product_info, promo_list)
-
 
     def title_clicked_act(self):
-        # wid = self.parent.parent.findChild(QWidget, "productdetail_tab")
-        # self.parent.parent.content_tabs.setCurrentWidget(wid)
-        # print("title_clicked_act")
-        # self.get_product_info()
-        # wid = main_wnd.content_tabs.findChild(QWidget, "productdetail_tab")
-        # main_wnd.content_tabs.setCurrentWidget(wid)
+
         Product2.tab_count = Product2.tab_count + 1
         content_tabs = main_wnd.content_tabs
         product_detail_tab = ProductDetailTab(content_tabs, self.item)
@@ -3117,12 +2641,10 @@ class Product2(QScrollArea):
         content_tabs.setCurrentIndex(tab_index)
 
     def seller_clicked_act(self):
-        print("seller_clicked_act")
         wid = main_wnd.content_tabs.findChild(QWidget, "sellerHP_tab")
         main_wnd.content_tabs.setCurrentWidget(wid)
 
     def tag_clicked_act(self):
-        print("tag_clicked_act")
         wid = main_wnd.content_tabs.findChild(QWidget, "tagHP_tab")
         main_wnd.content_tabs.setCurrentWidget(wid)
 
@@ -3136,12 +2658,6 @@ class PopularTab(QScrollArea):
         self.init_ui()
 
     def init_ui(self):
-        # self.frame = QFrame()
-        # self.frame.setObjectName("popular_frame")
-        # self.setWidget(self.frame)
-        # self.setWidgetResizable(True)
-        # self.frame.setMinimumWidth(500)
-        #self.frame.setMaximumHeight(800)
 
         self.item_num_max = 2
         self.promo_num_max = 2
@@ -3156,10 +2672,7 @@ class PopularTab(QScrollArea):
 
         self.banner_label = QLabel(self)
         def create_banner(carousel):
-            print(carousel)
-            print("Getting banner images......")
             path = osp.join(root_dir, carousel[0]['image'])
-            print(path)
             pixmap = QPixmap(path)  # get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(740, 195)
             self.banner_label.setPixmap(pixmap)
@@ -3169,14 +2682,12 @@ class PopularTab(QScrollArea):
 
         self.hot_label = QLabel("Hot Industry")
         self.hot_label.setObjectName("hot_label")
-        # self.hot_label.setFont(QFont("Arial", 13))
         self.hot_label.setMinimumHeight(2)
         self.hot_label.setMaximumHeight(25)
 
         self.more_btn_1 = more_btn_1 = QPushButton("More>", self)
         more_btn_1.setObjectName("more_btn_1")
         self.more_btn_1.setCursor(QCursor(Qt.PointingHandCursor))
-        #more_btn.setFixedSize(30, 18)
         self.more_btn_2 = more_btn_2 = QPushButton("More>", self)
         more_btn_2.setObjectName("more_btn_2")
         self.more_btn_2.setCursor(QCursor(Qt.PointingHandCursor))
@@ -3186,10 +2697,8 @@ class PopularTab(QScrollArea):
             self.hot_industry_label = []
             for i in range(config.wallet.hot_industry_num):
                 hot_industry = QLabel(self)
-                # hot_industry = QPushButton(self)
                 hot_industry.setObjectName('hot_industry_' + str(i))
                 self.hot_industry_label.append(hot_industry)
-                print('create label' + str(i))
         create_hot_industry()
 
         def set_hot_industry(hot_industry):
@@ -3198,39 +2707,18 @@ class PopularTab(QScrollArea):
                 self.hot_industry_label[i].setFont(QFont("Arial", 13, QFont.Light))
                 self.hot_industry_label[i].setAlignment(Qt.AlignCenter)
                 path = osp.join(root_dir, hot_industry[i]['image'])
-                print(path)
                 self.hot_industry_label[i].setStyleSheet("border-image: url({0}); color: #fefefe".format(path))
-                # self.hot_industry_label[i].clicked.connect(self.handld_hotindustry_clicked)
-                # self.hot_industry_label[i].setCursor(QCursor(Qt.PointingHandCursor))
-                # pixmap = QPixmap(path)
-                # pixmap = pixmap.scaled(230, 136)
-                # self.hot_industry_label[i].setPixmap(pixmap)
         d_hot_industry = wallet.market_client.query_hot_tag()
         d_hot_industry.addCallback(set_hot_industry)
 
         self.recom_label = QLabel("Recommended")
         self.recom_label.setObjectName("recom_label")
-        # self.recom_label.setFont(QFont("Arial", 13, QFont.Light))
         self.recom_label.setMaximumHeight(25)
 
         self.promo_label = QLabel(self)
 
-        self.item = {"title": "Medical data from NHIS", "none": "none"}
-
-        # TODO: Get promotion products based on products returned above or the keywords provided
-
-        # d_promotion = wallet.market_client.query_promotion()
-        # def get_promotion(products):
-        #     for i in range(self.promo_num_max):
-        #         self.promo_lists.append(Product2(parent=self, item=products[i], mode="simple"))
-        # d_promotion.addCallback(get_promotion)
-
-
-        # d_promotion = wallet.market_client.query_promotion()
-        # d_promotion.addCallback(get_promotion)
         d_products = wallet.market_client.query_recommend_product()
         def get_items(products):
-            print("Getting items from backend......")
             for i in range(self.item_num_max):
                 self.item_lists.append(Product2(parent=self, item=products[i]))
             d_promotion = wallet.market_client.query_promotion()
@@ -3267,7 +2755,6 @@ class PopularTab(QScrollArea):
                 self.hot_img_layout.addWidget(self.hot_industry_label[i])
             self.main_layout.addLayout(self.hot_img_layout)
             self.main_layout.addSpacing(1)
-            
             self.recom_layout = QHBoxLayout(self)
             self.recom_layout.addSpacing(0)
             self.recom_layout.addWidget(self.recom_label)
@@ -3277,7 +2764,6 @@ class PopularTab(QScrollArea):
             self.main_layout.addSpacing(1)
             self.main_layout.addWidget(self.horline2)
             self.main_layout.addSpacing(1)
-            
             self.bottom_layout = QHBoxLayout(self)
             self.bottom_layout.setContentsMargins(0, 0, 0, 0)
 
@@ -3290,10 +2776,7 @@ class PopularTab(QScrollArea):
             self.product_layout.addStretch(1)
             self.promo_layout = QVBoxLayout(self)
             self.promo_layout.setContentsMargins(0, 0, 0, 0)
-            self.promo_layout.addSpacing(0)            
-            # self.promo_layout.addWidget(self.promo_label)
-            # self.promo_layout.addSpacing(0)
-
+            self.promo_layout.addSpacing(0)
             for i in range(self.promo_num_max):
                 if i == len(self.promo_lists) - 1:
                     break
@@ -3302,18 +2785,14 @@ class PopularTab(QScrollArea):
 
             self.promo_layout.addStretch(1)
             self.bottom_layout.addLayout(self.product_layout, 2)
-            #self.bottom_layout.setStretchFactor(recom_layout,4)
             self.bottom_layout.addLayout(self.promo_layout, 1)
-            #self.bottom_layout.setStretch(promo_layout,1)
 
             self.main_layout.addLayout(self.bottom_layout)
             load_stylesheet(self, "popular.qss")
-        print("Loading stylesheet of cloud tab widget")
 
     def handld_hotindustry_clicked(self):
         wid = main_wnd.content_tabs.findChild(QWidget, "tagHP_tab")
         main_wnd.content_tabs.setCurrentWidget(wid)
-
 
 
 class CloudTab(QScrollArea):
@@ -3325,7 +2804,6 @@ class CloudTab(QScrollArea):
 
         def init_ui(self):
             self.setObjectName("search_bar")
-            #self.setFixedSize(300, 25)
             self.setTextMargins(25, 0, 20, 0)
 
             self.search_btn_cloud = search_btn_cloud = QPushButton(self)
@@ -3333,9 +2811,6 @@ class CloudTab(QScrollArea):
             search_btn_cloud.setFixedSize(18, 18)
             search_btn_cloud.setCursor(QCursor(Qt.PointingHandCursor))
 
-            def bind_slots():
-                print("Binding slots of clicked-search-btn......")
-            bind_slots()
 
             def set_layout():
                 main_layout = QHBoxLayout()
@@ -3358,32 +2833,6 @@ class CloudTab(QScrollArea):
         tab_index = main_wnd.content_tabs.addTab(CloudTab(main_wnd.content_tabs), "")
         main_wnd.main_tab_index["cloud_tab"] = tab_index
         main_wnd.content_tabs.setCurrentIndex(tab_index)
-        # print("Updating file list......")
-        # self.file_list = fs.get_file_list()
-        # logger.debug(len(self.file_list))
-        # self.file_table.clearContents()
-        # self.row_number = len(self.file_list)
-        # self.file_table.setRowCount(self.row_number)
-        # for cur_row in range(self.row_number):
-        #     logger.debug('current file id: %s', self.file_list[cur_row].id)
-        #     logger.debug('current file name: %s', self.file_list[cur_row].name)
-        #     logger.debug('current file size: %s', str(self.file_list[cur_row].size))
-        #     logger.debug('current file remote type: %s', self.file_list[cur_row].remote_type)
-        #     logger.debug('current file publish: %s', str(self.file_list[cur_row].is_published))
-        #
-        #     print(str(cur_row) + " row")
-        #     checkbox_item = QTableWidgetItem()
-        #     checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-        #     checkbox_item.setCheckState(Qt.Unchecked)
-        #     #self.file_table.insertRow(cur_row)
-        #     self.file_table.setItem(cur_row, 0, checkbox_item)
-        #     self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row].name))
-        #     self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(self.file_list[cur_row].size)))
-        #     self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row].remote_type))
-        #     self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(self.file_list[cur_row].is_published)))
-        #     self.file_table.setItem(cur_row, 5, QTableWidgetItem(str(self.file_list[cur_row].id)))
-
-
 
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
@@ -3403,7 +2852,6 @@ class CloudTab(QScrollArea):
         self.upload_btn = upload_btn = QPushButton("Upload")
         upload_btn.setObjectName("upload_btn")
 
-        #upload_btn.clicked.connect(handle_upload)
         self.upload_btn.clicked.connect(self.handle_upload)
 
         self.search_bar = CloudTab.SearchBar(self)
@@ -3412,10 +2860,7 @@ class CloudTab(QScrollArea):
         time_rank_label.setObjectName("time_rank_label")
 
         self.tag_rank_label = tag_rank_label = QLabel("Tag")
-        tag_rank_label.setObjectName("tag_rank_label")  
-
-
-
+        tag_rank_label.setObjectName("tag_rank_label")
         def create_file_table():
             self.file_table = file_table = TableWidget(self)
             def right_menu():
@@ -3438,7 +2883,6 @@ class CloudTab(QScrollArea):
             self.file_table.resizeColumnsToContents()
             self.file_table.resizeRowsToContents()
             self.file_table.setFocusPolicy(Qt.NoFocus)
-            # do not highlight (bold-ize) the header
 
             file_table.horizontalHeader().setHighlightSections(False)
             file_table.setColumnCount(6)
@@ -3457,12 +2901,8 @@ class CloudTab(QScrollArea):
             self.checkbox_list = []
             self.row_number = len(self.file_list)
             self.file_table.setRowCount(self.row_number)
-            print("init cloud table, row num: ")
-            print(self.row_number)
 
             for cur_row in range(self.row_number):
-                # if cur_row == len(file_list):export PYTHONPATH=/home/cpchainpublic1/Documents/cpchain/
-                #     break
                 logger.debug('current file id: %s', self.file_list[cur_row].id)
                 logger.debug('current file name: %s', self.file_list[cur_row].name)
                 checkbox_item = QTableWidgetItem()
@@ -3471,16 +2911,13 @@ class CloudTab(QScrollArea):
                 self.file_table.setItem(cur_row, 0, checkbox_item)
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row].name))
                 self.file_table.setItem(cur_row, 2, QTableWidgetItem(sizeof_fmt(self.file_list[cur_row].size)))
-                #size
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(self.file_list[cur_row].remote_type))
-                #remote_type
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(str(self.file_list[cur_row].is_published)))
                 self.file_table.setItem(cur_row, 5, QTableWidgetItem(str(self.file_list[cur_row].id)))
                 self.check_record_list.append(False)
-        create_file_table()    
+        create_file_table()
         self.file_table.sortItems(2)
         self.file_table.horizontalHeader().setStyleSheet("QHeaderView::section{background: #f3f3f3; border: 1px solid #dcdcdc}")
-        # record rows that are clicked or checked
         def record_check(item):
             self.cur_clicked = item.row()
             if item.checkState() == Qt.Checked:
@@ -3507,7 +2944,6 @@ class CloudTab(QScrollArea):
             self.main_layout.addWidget(self.file_table)
             self.setLayout(self.main_layout)
         set_layout()
-        print("Loading stylesheet of cloud tab widget")
         load_stylesheet(self, "cloud.qss")
 
     def handle_delete(self):
@@ -3517,11 +2953,9 @@ class CloudTab(QScrollArea):
         for i in range(len(self.check_record_list)):
             logger.debug(self.check_record_list)
             if self.check_record_list[i] == True:
-                # delete corresponding record from local FileInfo
                 file_id = self.file_table.item(i, 5).text()
                 fs.delete_file_by_id(file_id)
                 self.file_table.removeRow(i)
-                # TODO: delete corresponding record from market database
                 d_status = wallet.market_client.delete_file_info(file_id)
                 def update_market_backup(status):
                     if status == 1:
@@ -3605,8 +3039,6 @@ class CloudTab(QScrollArea):
 
             self.show()
 
-            print("Loading stylesheet of publish dialog....")
-
         def choose_file(self):
             self.file_choice = QFileDialog.getOpenFileName()[0]
 
@@ -3631,7 +3063,6 @@ class CloudTab(QScrollArea):
                     d_upload = deferToThread(fs.upload_file_s3, self.file_choice)
                     d_upload.addCallback(self.handle_ok_callback)
 
-            print("Uploading files to....")
             self.close()
 
         def handle_ok_callback(self, file_id):
@@ -3649,28 +3080,6 @@ class CloudTab(QScrollArea):
             d = wallet.market_client.upload_file_info(hashcode, path, size, product_id, remote_type, remote_uri, encrypted_key, name)
             def handle_upload_resp(status):
                 if status == 1:
-                    logger.debug('upload file info to market succeed')
-                    # self.parent.update_table()
-                    # TODO: add new row instead of refeshing the whole table
-                    # TODO: display problem not solved: checkbox item is the key
-                    # file_table = self.parent.file_table
-                    # row_count = file_table.rowCount()
-                    # file_table.insertRow(row_count)
-                    # checkbox_item = QTableWidgetItem()
-                    # checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-                    # checkbox_item.setCheckState(Qt.Unchecked)
-                    # file_table.setItem(row_count, 0, checkbox_item)
-                    # file_table.setItem(row_count, 1, QTableWidgetItem(name))
-                    # file_table.setItem(row_count, 2, QTableWidgetItem(str(size)))
-                    # file_table.setItem(row_count, 3, QTableWidgetItem(remote_type))
-                    # file_table.setItem(row_count, 4, QTableWidgetItem('False'))
-                    # file_table.setItem(row_count, 5, QTableWidgetItem(str(product_id)))
-                    #
-                    # self.parent.check_record_list = [False for i in range(self.parent.file_table.rowCount())]
-                    # tab_index = main_wnd.cloud_index
-                    # main_wnd.content_tabs.removeTab(tab_index)
-                    # main_wnd.cloud_index = main_wnd.content_tabs.addTab(CloudTab(main_wnd.content_tabs), "")
-                    # main_wnd.content_tabs.setCurrentIndex(main_wnd.cloud_index)
                     tab_index = main_wnd.main_tab_index['cloud_tab']
                     for key in main_wnd.main_tab_index:
                         if main_wnd.main_tab_index[key] > tab_index:
@@ -3691,12 +3100,10 @@ class CloudTab(QScrollArea):
         if wallet.market_client.token == '':
             QMessageBox.information(self, "Tips", "Please login first !")
             return
-        logger.debug("Uploading local files....")
         self.upload_dialog = CloudTab.UploadDialog(self)
 
     def handle_delete_act(self):
         self.file_table.removeRow(self.cur_clicked)
-        print("row {} has been removed...".format(self.cur_clicked))
 
     def handle_publish_act(self):
         if wallet.market_client.token == '':
@@ -3704,15 +3111,11 @@ class CloudTab(QScrollArea):
         else:
             product_id = self.file_table.item(self.cur_clicked, 5).text()
             self.publish_dialog = PublishDialog(self, id=product_id, tab='cloud')
-            # self.file_list[self.cur_clicked]
-            logger.debug("handle publish act....")
-
 
 
 class SideBar(QScrollArea):
     def __init__(self, parent):
         super().__init__(parent)
-        # needed
         self.parent = parent
         self.content_tabs = parent.content_tabs
         self.init_ui()
@@ -3743,12 +3146,10 @@ class SideBar(QScrollArea):
 
         def add_lists():
             self.trending_list = QListWidget()
-            #self.trending_list.setMinimumHeight(100)
             self.trending_list.setMaximumHeight(100)
             self.trending_list.addItem(QListWidgetItem(get_icon("pop.png"), "Popular"))
             self.trending_list.addItem(QListWidgetItem(get_icon("following.png"), "Following"))
             self.trending_list.setContentsMargins(0, 0, 0, 0)
-            # self.trending_list.itemSelectionChanged.connect(self.handle_list1())
 
             self.mine_list = QListWidget()
             self.mine_list.setMaximumHeight(100)
@@ -3774,8 +3175,8 @@ class SideBar(QScrollArea):
                 }
                 wid = self.content_tabs.findChild(QWidget, item_to_tab_name[item.text()])
                 self.content_tabs.setCurrentWidget(wid)
-                self.mine_list.setCurrentRow(-1);
-                self.treasure_list.setCurrentRow(-1);
+                self.mine_list.setCurrentRow(-1)
+                self.treasure_list.setCurrentRow(-1)
             self.trending_list.itemPressed.connect(trending_list_clicked)
 
             def mine_list_clicked(item):
@@ -3786,8 +3187,8 @@ class SideBar(QScrollArea):
                 tab_index = main_wnd.main_tab_index[item_to_tab_name[item.text()]]
                 main_wnd.content_tabs.setCurrentIndex(tab_index)
 
-                self.trending_list.setCurrentRow(-1);
-                self.treasure_list.setCurrentRow(-1);
+                self.trending_list.setCurrentRow(-1)
+                self.treasure_list.setCurrentRow(-1)
             self.mine_list.itemPressed.connect(mine_list_clicked)
 
             def treasure_list_clicked(item):
@@ -3796,12 +3197,10 @@ class SideBar(QScrollArea):
                     "Collection": "collect_tab",
                     "Shopping Cart": "collect_tab",
                 }
-                # wid = self.content_tabs.findChild(QWidget, item_to_tab_name[item.text()])
-                # self.content_tabs.setCurrentWidget(wid)
                 tab_index = main_wnd.main_tab_index[item_to_tab_name[item.text()]]
                 main_wnd.content_tabs.setCurrentIndex(tab_index)
-                self.trending_list.setCurrentRow(-1);
-                self.mine_list.setCurrentRow(-1);
+                self.trending_list.setCurrentRow(-1)
+                self.mine_list.setCurrentRow(-1)
             self.treasure_list.itemPressed.connect(treasure_list_clicked)
 
         bind_slots()
@@ -3826,7 +3225,6 @@ class SideBar(QScrollArea):
             self.setLayout(self.main_layout)
         set_layout()
         load_stylesheet(self, "sidebar.qss")
-        print("Loading stylesheet of Sidebar")
 
 
 class Header(QFrame):
@@ -3863,7 +3261,6 @@ class Header(QFrame):
             main_wnd.findChild(QWidget, 'search_tab').update_item(item, promo)
 
         def search_act(self):
-            # self.query()
             content_tabs = main_wnd.content_tabs
             content_tabs.addTab(SearchProductTab(content_tabs, str(self.text())), "")
             wid = content_tabs.findChild(QWidget, "search_tab")
@@ -3924,8 +3321,6 @@ class Header(QFrame):
 
             self.show()
 
-            print("Loading stylesheet of publish dialog....")
-
         def handle_cancel(self):
             self.account1_btn.setChecked(True)
             self.account2_btn.setChecked(False)
@@ -3933,7 +3328,6 @@ class Header(QFrame):
             self.close()
 
         def handle_login(self):
-            print("check access......")
             if self.account2_btn.isChecked():
                 wallet.accounts.set_default_account(1)
                 wallet.market_client.account = wallet.accounts.default_account
@@ -3942,13 +3336,11 @@ class Header(QFrame):
             d_login = wallet.market_client.login()
             def login_result(status):
                 if status == 1:
-                    logger.debug("login account: %s", wallet.market_client.public_key)
                     QMessageBox.information(main_wnd, 'Tips', 'Log in successfully!')
                 elif status == 0:
                     QMessageBox.information(main_wnd, 'Tips', 'Failed to log in !')
                 else:
                     QMessageBox.information(main_wnd, 'Tips', 'New users !')
-                    # TODO: jump to user profile register page
             d_login.addCallback(login_result)
             self.close()
 
@@ -3956,7 +3348,6 @@ class Header(QFrame):
         super().__init__()
         self.parent = parent
         self.content_tabs = parent.content_tabs
-        #self.profile_tabs = PersonalProfileTab.profile_tabs
         self.init_ui()
 
     def init_ui(self):
@@ -3967,9 +3358,7 @@ class Header(QFrame):
             logo_label.setPixmap(pixmap)
             self.word_label = word_label = QLabel(self)
             self.word_label.setText("<b>CPChain</b>")
-            self.word_label.setFont(QFont("Roman times", 25, QFont.Bold));
-            
-            print("Pic label has not been set !")
+            self.word_label.setFont(QFont("Roman times", 25, QFont.Bold))
         create_logos()
 
         def create_search_bar():
@@ -4032,27 +3421,18 @@ class Header(QFrame):
                 profile_view_act = QAction('Profile Settings', self)
                 profile_view_act.triggered.connect(self.profile_view_act_triggered)
                 preference_act = QAction('Preference', self)
-                preference_act.triggered.connect(self.preference_act_triggered)                
+                preference_act.triggered.connect(self.preference_act_triggered)
                 security_act = QAction('Accout Security', self)
                 security_act.triggered.connect(self.security_act_triggered)
 
                 profile_menu.addAction(profile_view_act)
                 profile_menu.addAction(preference_act)
                 profile_menu.addAction(security_act)
-                # profile_menu.addAction(bill_man_act)
-                # profile_menu.addAction(help_act)
             create_popmenu()
             self.profile_btn.setMenu(self.profile_menu)
 
         create_btns()
 
-
-        def bind_slots():
-            # TODO
-            print("Binding slots of clicked-search-btn......")
-            print("Binding slots of pre-btn......")
-            print("Binding slots of nex-btn......")
-        bind_slots()
 
         def set_layout():
             self.all_layout = all_layout = QVBoxLayout(self)
@@ -4101,9 +3481,7 @@ class Header(QFrame):
 
     def login(self):
         self.login_dialog = Header.LoginDialog(self)
-        print("")
 
-    # drag support
     def mousePressEvent(self, event):
         if event.buttons() == Qt.LeftButton:
             self.parent.m_DragPosition = event.globalPos() - self.parent.pos()
@@ -4125,19 +3503,16 @@ class Header(QFrame):
             self.m_drag = False
 
     def profile_view_act_triggered(self):
-        print("open personal profile")
         wid = self.content_tabs.findChild(QWidget, "personalprofile_tab")
         self.content_tabs.setCurrentWidget(wid)
         self.parent.findChild(QWidget, 'personalprofile_tab').set_one_index()
 
     def preference_act_triggered(self):
-        print("open personal profile")
         wid = self.content_tabs.findChild(QWidget, "personalprofile_tab")
         self.content_tabs.setCurrentWidget(wid)
         self.parent.findChild(QWidget, 'personalprofile_tab').set_two_index()
 
     def security_act_triggered(self):
-        print("open personal profile")
         wid = self.content_tabs.findChild(QWidget, "personalprofile_tab")
         self.content_tabs.setCurrentWidget(wid)
         self.parent.findChild(QWidget, 'personalprofile_tab').set_three_index()
@@ -4149,9 +3524,8 @@ class Header(QFrame):
 
     def handle_upload(self):
         if wallet.market_client.token == '':
-            QMessageBox.information(self, "Tips", "Please login first !")
+            QMessageBox.information(main_wnd, "Tips", "Please login first !")
             return
-        logger.debug("Uploading local files....")
         wid = main_wnd.content_tabs.findChild(QWidget, "cloud_tab")
         self.upload_dlg = CloudTab.UploadDialog(wid)
         self.upload_dlg.show()
@@ -4166,10 +3540,8 @@ class MainWindow(QMainWindow):
 
 
     def init_ui(self):
-        # overall window settings
         self.setWindowTitle('CPChain Wallet')
         self.setObjectName("main_window")
-        # no borders.  we make our own header panel.
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.main_tab_index = {}
 
@@ -4187,22 +3559,16 @@ class MainWindow(QMainWindow):
             content_tabs.setObjectName("content_tabs")
             content_tabs.tabBar().hide()
             content_tabs.setContentsMargins(0, 0, 0, 0)
-            # Temporily modified for easy test by @hyiwr
             self.pop_index = content_tabs.addTab(PopularTab(content_tabs), "")
             self.cloud_index = content_tabs.addTab(CloudTab(content_tabs), "")
             self.follow_index = content_tabs.addTab(FollowingTab(content_tabs), "")
             self.sell_index = content_tabs.addTab(SellTab(content_tabs), "")
-            #content_tabs.addTab(ProductInfoEdit(content_tabs), "")
-            #content_tabs.addTab(PurchasedDownloadedTab(content_tabs), "") 
-            #content_tabs.addTab(PurchasedDownloadingTab(content_tabs), "")
             content_tabs.addTab(PersonalProfileTab(content_tabs), "")
             content_tabs.addTab(TagHPTab(content_tabs), "")
-            content_tabs.addTab(SellerHPTab(content_tabs), "") 
-            # content_tabs.addTab(ProductDetailTab(content_tabs), "")
-            # content_tabs.addTab(SearchProductTab(content_tabs), "")
-            content_tabs.addTab(SecurityTab(content_tabs), "") 
+            content_tabs.addTab(SellerHPTab(content_tabs), "")
+            content_tabs.addTab(SecurityTab(content_tabs), "")
             content_tabs.addTab(PreferenceTab(content_tabs), "")
-            content_tabs.addTab(PersonalInfoPage(content_tabs), "") 
+            content_tabs.addTab(PersonalInfoPage(content_tabs), "")
             self.purchase_index = content_tabs.addTab(PurchasedTab(content_tabs), "")
             self.collect_index = content_tabs.addTab(CollectedTab(content_tabs), "")
             self.main_tab_index = {
@@ -4211,26 +3577,22 @@ class MainWindow(QMainWindow):
                 "purchase_tab": self.purchase_index,
                 "collect_tab": self.collect_index
             }
-            print("Adding tabs(shopping cart tab, etc.) to content_tabs")
-            print("Loading stylesheet to content_tabs")
         add_content_tabs()
 
-        # add panes
         self.header = Header(self)
         self.sidebar = SideBar(self)
 
 
-        # set layout
         def set_layout():
             self.main_layout = main_layout = QVBoxLayout()
             self.main_layout.setSpacing(0)
-            self.main_layout.setContentsMargins(0, 0, 0, 0) 
+            self.main_layout.setContentsMargins(0, 0, 0, 0)
             main_layout.addSpacing(0)
             main_layout.addWidget(self.header)
 
             self.content_layout = content_layout = QHBoxLayout()
             self.content_layout.setSpacing(0)
-            self.content_layout.setContentsMargins(0, 0, 0, 0) 
+            self.content_layout.setContentsMargins(0, 0, 0, 0)
             content_layout.addSpacing(0)
             content_layout.addWidget(self.sidebar)
             content_layout.addSpacing(0)
@@ -4242,8 +3604,7 @@ class MainWindow(QMainWindow):
             wid.setLayout(self.main_layout)
             self.setCentralWidget(wid)
         set_layout()
-        load_stylesheet(self, "main_window.qss") 
-        print("Seting stylesheet of MainWindow......")
+        load_stylesheet(self, "main_window.qss")
 
         def load_font(self):
             path = osp.join(root_dir, "cpchain/assets/wallet/font", "ARLRDBD.TTF")
@@ -4264,16 +3625,12 @@ class MainWindow(QMainWindow):
         self.main_tab_index['cloud_tab'] = tab_index
         self.content_tabs.setCurrentIndex(tab_index)
         wid = self.content_tabs.currentWidget()
-        #TODO: Set to the corresponding sub tab: downloading or downloaded
         if nex_tab == 'downloading':
             wid.purchased_main_tab.setCurrentIndex(1)
         elif nex_tab == 'downloaded':
             wid.purchased_main_tab.setCurrentIndex(0)
         else:
             logger.debug("Wrong parameter!")
-
-
-
 
     def closeEvent(self, event):
         self.reactor.stop()
@@ -4285,27 +3642,16 @@ def _handle_keyboard_interrupt():
     import signal
     signal.signal(signal.SIGINT, sigint_handler)
 
-    # cf. https://stackoverflow.com/a/4939113/855160
     from PyQt5.QtCore import QTimer
 
-    # make it global, o.w. the timer will soon vanish.
     _handle_keyboard_interrupt.timer = QTimer()
     timer = _handle_keyboard_interrupt.timer
-    timer.start(300) # run each 300ms
+    timer.start(300)
     timer.timeout.connect(lambda: None)
 
 def initialize_system():
-    
     path = osp.join(root_dir, "cpchain/assets/wallet/font", "liberation.ttf")
-    # font_regular = QFontDatabase.addApplicationFont(str(path))
-    # font_givenname = QFontDatabase.applicationFontFamilies(font_regular)[0]
-    # QApplication.setFont(QFont(font_givenname))
 
-    def initialize_net():
-        # Temporily modified for easy test by @hyiwr
-        print("Initializing network......")
-    initialize_net()
-    
     def monitor_chain_event():
         monitor_new_order = LoopingCall(wallet.chain_broker.monitor.monitor_new_order)
         monitor_new_order.start(10)
@@ -4323,16 +3669,6 @@ def initialize_system():
         monitor_confirmed_order.start(30)
     monitor_chain_event()
 
-def update_purchased_tab():
-    tab_index = main_wnd.main_tab_index['purchase_tab']
-    main_wnd.content_tabs.removeTab(tab_index)
-    for key in main_wnd.main_tab_index:
-        if main_wnd.main_tab_index[key] > tab_index:
-            main_wnd.main_tab_index[key] -= 1
-    tab_index = main_wnd.content_tabs.addTab(PurchasedTab(main_wnd.content_tabs), "")
-    main_wnd.main_tab_index['cloud_tab'] = tab_index
-    main_wnd.content_tabs.setCurrentIndex(tab_index)
-
 
 def main():
     global main_wnd
@@ -4348,4 +3684,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    # wallet.chain_broker.buyer.query_order(9)

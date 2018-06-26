@@ -47,11 +47,7 @@ class MarketClient:
                                json=data_confirm,
                                persistent=False)
         confirm_info = yield treq.json_content(resp)
-        logger.debug('login confirm: %s', confirm_info)
         self.token = confirm_info['message']
-        logger.debug('token: %s', self.token)
-        if confirm_info['status'] == 1:
-            logger.debug("login succeed")
         return confirm_info['status']
 
 
@@ -86,7 +82,6 @@ class MarketClient:
     def query_product(self, keyword):
         logger.debug('keywords: %s', keyword)
         header = {'Content-Type': 'application/json'}
-        # params = {'search': keyword, 'status': 0}
         url = self.url + 'product/v1/es_product/search/?search=' + keyword
         logger.debug('query url: %s', url)
         resp = yield treq.get(url=url, headers=header, persistent=False)
@@ -108,19 +103,15 @@ class MarketClient:
 
     @inlineCallbacks
     def query_carousel(self):
-        # try:
         logger.debug('status: in query carousel')
         url = self.url + 'main/v1/carousel/list/'
         logger.debug("query carousel url: %s", url)
         header = {'Content-Type': 'application/json', 'MARKET-KEY': self.public_key,
                   'MARKET-TOKEN': self.token}
         resp = yield treq.get(url=url, headers=header)
-        # logger.debug("response:", resp)
         confirm_info = yield treq.json_content(resp)
         print(confirm_info)
         logger.debug("carousel response: %s", confirm_info)
-        # except Exception as err:
-        #     logger.debug(err)
         return confirm_info['data']
 
 
@@ -284,7 +275,6 @@ class MarketClient:
 
     @inlineCallbacks
     def query_comment_by_hash(self, market_hash):
-        logger.debug("xxxxxxxxxxxxxxxxxxxxxxxx query comment ...")
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
                   'Content-Type': 'application/json'}
         url = utils.build_url(self.url + "comment/v1/comment/list/", {'market_hash': market_hash})
@@ -298,12 +288,8 @@ class MarketClient:
 
     @inlineCallbacks
     def add_comment_by_hash(self, market_hash, comment=""):
-        logger.debug("xxxxxxxxxxxxxxxxxxxxxxxx add comment ....")
         comment_address = ECCipher.get_address_from_public_key(self.account.public_key)
         logger.debug(comment_address)
-        # from cpchain.market.transaction.models import TransactionDetail
-        # TransactionDetail.objects.create(seller_address=comment_address, market_hash=market_hash,
-        #                                  buyer_address=comment_address)
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token, 'Content-Type': 'application/json'}
         data = {'public_key': self.public_key, 'market_hash': market_hash, 'content': comment}
         url = utils.build_url(self.url + "comment/v1/comment/add/", {'market_hash': market_hash})
@@ -374,7 +360,6 @@ class MarketClient:
 
     @inlineCallbacks
     def query_by_following_tag(self):
-        logger.debug("xxxxxxxxxxxxxxxxxxxxxxxx query by following tag ...")
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
                   'Content-Type': 'application/json'}
         url = utils.build_url(self.url + "product/v1/my_tag/product/search/")
@@ -388,7 +373,6 @@ class MarketClient:
 
     @inlineCallbacks
     def query_by_following_seller(self):
-        logger.debug("xxxxxxxxxxxxxxxxxxxxxxxx query by following seller ...")
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
                   'Content-Type': 'application/json'}
         url = utils.build_url(self.url + "product/v1/my_seller/product/search/")

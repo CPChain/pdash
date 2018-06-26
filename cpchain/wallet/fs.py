@@ -9,7 +9,7 @@ from cpchain.storage import IPFSStorage
 from cpchain.storage import S3Storage
 from cpchain import config
 
-logger = logging.getLogger(__name__)  # pylint: disable=locally-disabled, invalid-name
+logger = logging.getLogger(__name__)
 
 
 def get_file_list():
@@ -206,11 +206,10 @@ def delete_collect_id(file_id):
 
 def buyer_file_update(file_title):
     try:
-        # dbpath = join_with_rc(config.wallet.dbpath)
-        # engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
         session = get_session()
         session.query(BuyerFileInfo).filter(BuyerFileInfo.file_title == file_title). \
             update({BuyerFileInfo.is_downloaded: True}, synchronize_session=False)
         session.commit()
     except:
         logger.exception("error publish_file_update")
+

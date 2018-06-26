@@ -111,11 +111,6 @@ class Broker:
         ipfs.file_hash = file_hash
         ipfs.gateway = "192.168.0.132:5001"
 
-        # s3 storage example
-        # storage.type = Message.Storage.S3
-        # s3 = storage.s3
-        # s3.bucket = 'cpchain-bucket'
-        # s3.key = 'sp'
 
         sign_message = SignMessage()
         sign_message.public_key = self.wallet.market_client.public_key
@@ -130,15 +125,12 @@ class Broker:
         d_proxy_reply = start_proxy_request(seller_sign_message, proxy_id=proxy_id)
 
         def seller_deliver_proxy_callback(proxy_reply):
-            # print('proxy recieved message')
             logger.debug("in seller request callback.")
             if not proxy_reply.error:
                 logger.debug("receive reply from proxy")
                 logger.debug('file_uri: %s', proxy_reply.file_uri)
-                # add other action...
             else:
                 logger.debug(proxy_reply.error)
-                # add other action...
 
         d_proxy_reply.addCallback(seller_deliver_proxy_callback)
 
@@ -191,14 +183,10 @@ class Broker:
                 logger.debug('Decrypted file path: %s', str(decrypted_file))
 
                 update_buyer_db(proxy_reply.file_uri, decrypted_file)
-                # self.update_treasure_pane()
                 logger.debug("file has been downloaded")
                 logger.debug("put order into confirmed queue, order id: %s", order_id)
                 self.confirmed_order_queue.put(order_id)
                 self.wallet.main_wnd.update_purchased_tab('downloaded')
-
-
-
             else:
                 logger.debug(proxy_reply.error)
 
@@ -213,9 +201,6 @@ class Monitor:
         start_id = self.broker.seller.get_order_num()
         self.chain_monitor = OrderMonitor(start_id, self.broker.seller)
 
-
-    # get new order info from chain through web3
-    # order list: [{order_id: (xxx, xxx, xxx)}, {order_id: (xxx, xxx, xxx)}]
     def get_new_order_info(self):
         logger.debug("in get new order info")
         new_order_id_list = self.chain_monitor.get_new_order()
@@ -280,8 +265,6 @@ class Monitor:
         reactor.callInThread(self.broker.confirm_order, confirmed_order_list)
 
 
-
-
 class Handler:
     def __init__(self, broker):
         self.broker = broker
@@ -321,9 +304,8 @@ class Handler:
             add_file(new_buyer_file_info)
             logger.debug("update local db completed")
 
-            # fixme: update UI pane
+            # Update the purchased downloaded tab in the main window of wallet
             self.broker.wallet.main_wnd.update_purchased_tab('downloading')
-
 
         d_placed_order.addCallback(add_bought_order)
 
