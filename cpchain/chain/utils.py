@@ -15,7 +15,7 @@ def _set_default_w3():
     global default_w3
     mode = config.chain.mode
     if default_w3 or mode == "dummy":
-        return 
+        return
 
     if mode == "test":
         provider = TestRPCProvider()
@@ -42,7 +42,7 @@ def read_contract_interface(bin_path, contract_name):
 def deploy_contract(bin_path, contract_name, w3=default_w3):
     interface = read_contract_interface(bin_path, contract_name)
     contract = w3.eth.contract(abi=interface['abi'], bytecode=interface['evm']['bytecode']['object'])
-    
+
     estimated_gas = contract.constructor().estimateGas()
     tx_hash = contract.constructor().transact(dict(gas=estimated_gas))
 

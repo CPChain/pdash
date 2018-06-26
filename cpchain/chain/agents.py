@@ -13,8 +13,6 @@ logger = logging.getLogger(__name__)
 class Agent:
     ONE_ETH_IN_WEI = 10**18  # 1 ETH == 1,000,000,000,000,000,000 Wei
 
-    # NB contract object belongs to web3, and so does account.
-    # we shouldn't pass params like this.)
     def __init__(self, web3, bin_path, contract_name, account=None):
         self.web3 = web3
         contract_interface = utils.read_contract_interface(bin_path, contract_name)
@@ -214,7 +212,6 @@ class ProxyAgent(Agent):
         transaction['gas'] = gas_estimate + 10000
         tx_hash = self.contract.functions.proxyFetched(order_id).transact(transaction)
         wait_for_transaction_receipt(self.web3, tx_hash)
-        
         return tx_hash
 
     def claim_delivered(self, order_id, relay_hash, ):
