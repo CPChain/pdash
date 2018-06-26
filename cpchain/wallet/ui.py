@@ -1394,12 +1394,12 @@ class PurchasedTab(QScrollArea):
         purchased_main_tab.tabBar().hide()
         purchased_main_tab.addTab(PurchasedDownloadedTab(purchased_main_tab), "")
         purchased_main_tab.addTab(PurchasedDownloadingTab(purchased_main_tab), "")
-        def dled_btn_clicked(item):
+        def dled_btn_clicked():
             self.purchased_main_tab.setCurrentIndex(0)
             self.purchased_dled_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8; border-top-left-radius: 5px; border-bottom-left-radius: 5px; color: #ffffff; min-height: 30px; max-height: 30px; background: #3173d8; }")
             self.purchased_dling_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8; border-top-right-radius: 5px; border-bottom-right-radius: 5px; color: #3173d8; min-height: 30px; max-height: 30px; background: #ffffff; }")
         self.purchased_dled_tab_btn.clicked.connect(dled_btn_clicked)
-        def dling_btn_clicked(item):
+        def dling_btn_clicked():
             self.purchased_main_tab.setCurrentIndex(1)
             self.purchased_dling_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8; border-top-right-radius: 5px; border-bottom-right-radius: 5px; color: #ffffff; min-height: 30px; max-height: 30px; background: #3173d8; }")
             self.purchased_dled_tab_btn.setStyleSheet("QPushButton{ padding-left: 14px; padding-right: 14px; border: 1px solid #3173d8; border-top-left-radius: 5px; border-bottom-left-radius: 5px; color: #3173d8; min-height: 30px; max-height: 30px; background: #ffffff; }")
@@ -1791,13 +1791,13 @@ class PurchasedDownloadingTab(QScrollArea):
 
 
 class PublishDialog(QDialog):
-    def __init__(self, parent=None, id=None, tab='cloud'):
+    def __init__(self, parent=None, product_id=None, tab='cloud'):
         super().__init__(parent)
         self.parent = parent
         self.tab = tab
         self.resize(300, 400)
         self.setObjectName("publish_dialog")
-        self.product_id = id
+        self.product_id = product_id
 
         self.init_ui()
 
@@ -1979,6 +1979,7 @@ class SellTab(QScrollArea):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("selling_tab")
+        self.file_list = []
 
         self.init_ui()
 
@@ -1987,7 +1988,7 @@ class SellTab(QScrollArea):
         d = wallet.market_client.query_by_seller(wallet.market_client.public_key)
         def handle_query_by_seller(products):
             self.file_list = []
-            if len(products) == 0:
+            if not products:
                 item = {"ID": "00x2222", "title": "Medical Data from Mayo Clinic", "price": "100", "avg_rating": "83%", "sales_number": "13087", "end_date": "2018-05-05"}
                 for i in range(self.row_number):
                     self.file_list.append(item)
@@ -2062,7 +2063,7 @@ class SellTab(QScrollArea):
 
 
         self.search_bar_sell = SellTab.SearchBar(self)
-        self.time_label = time_label = QLabel("Time")
+        self.time_label = QLabel("Time")
         self.row_number = 100
 
 
@@ -2114,7 +2115,7 @@ class SellTab(QScrollArea):
             logger.debug("in handle query by seller")
             logger.debug("seller's product list: %s", products)
             self.file_list = []
-            if len(products) == 0:
+            if not products:
                 item = {"ID": "00x2222", "title": "Medical Data from Mayo Clinic", "price": "100", "avg_rating": "83%", "sales_number": "13087", "end_date": "2018-05-05"}
                 for i in range(self.row_number):
                     self.file_list.append(item)
@@ -2171,7 +2172,7 @@ class SellTab(QScrollArea):
             QMessageBox.information(self, "Tips", "Please login first !")
             return
         for i in range(len(self.check_record_list)):
-            if self.check_record_list[i] == True:
+            if self.check_record_list[i] is True:
                 self.file_table.removeRow(i)
                 market_hash = self.file_table.item(self.cur_clicked, 6).data(Qt.UserRole)
                 d_status = wallet.market_client.hide_product(market_hash)
@@ -2246,7 +2247,7 @@ class SelectionDialog(QDialog):
     def handle_publish(self):
         cur_row = self.list_widget.currentRow()
         product_id = self.pub_list[cur_row].id
-        publish_dlg = PublishDialog(self, id=product_id, tab='sell')
+        PublishDialog(self, product_id=product_id, tab='sell')
         self.close()
 
     def handle_cancel(self):
@@ -3110,7 +3111,7 @@ class CloudTab(QScrollArea):
             QMessageBox.information(self, "Tips", "Please login first !")
         else:
             product_id = self.file_table.item(self.cur_clicked, 5).text()
-            self.publish_dialog = PublishDialog(self, id=product_id, tab='cloud')
+            self.publish_dialog = PublishDialog(self, product_id=product_id, tab='cloud')
 
 
 class SideBar(QScrollArea):
