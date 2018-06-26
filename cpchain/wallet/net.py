@@ -226,7 +226,7 @@ class MarketClient:
 
 
     @inlineCallbacks
-    def upload_file_info(self, hashcode, path, size, product_id, remote_type, remote_uri, name):
+    def upload_file_info(self, hashcode, path, size, product_id, remote_type, remote_uri, name, encrypted_key):
         # fixme: another argument aes_key should be passed and encrypted
         logger.debug("upload file info to market")
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
@@ -234,7 +234,7 @@ class MarketClient:
         data = {"public_key": self.public_key, "hashcode": hashcode, "path": path, "size": size,
                 "client_id": product_id,
                 "remote_type": remote_type, "remote_uri": remote_uri, "is_published": "False",
-                "aes_key": 'encrypted-aes-key', "market_hash": "hash", "name": name}
+                "aes_key": encrypted_key, "market_hash": "hash", "name": name}
         url = self.url + 'user_data/v1/uploaded_file/add/'
         logger.debug('upload file info payload: %s', data)
         logger.debug('upload file info url: %s', url)

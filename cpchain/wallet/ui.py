@@ -3077,7 +3077,7 @@ class CloudTab(QScrollArea):
             logger.debug('encrypt aes key')
             encrypted_key = RSACipher.encrypt(file_info.aes_key)
             encrypted_key = Encoder.bytes_to_base64_str(encrypted_key)
-            d = wallet.market_client.upload_file_info(hashcode, path, size, product_id, remote_type, remote_uri, encrypted_key, name)
+            d = wallet.market_client.upload_file_info(hashcode, path, size, product_id, remote_type, remote_uri, name, encrypted_key)
             def handle_upload_resp(status):
                 if status == 1:
                     tab_index = main_wnd.main_tab_index['cloud_tab']
