@@ -23,9 +23,9 @@ local_provider_addr = "http://127.0.0.1:8545"
 
 
 [storage.s3]
-bucket = "cpchain-bucket"
-secret_access_key = "TlLYyyb6avQvdf8BU0UzEj7P83tbVjSLyv9kTppd"
-access_key_id = "AKIAI34GNTRZVNJ5ZMZA"
+bucket = "YOUR_BUCKET"
+secret_access_key = "YOUR_KEY"
+access_key_id = "YOUR_KEY_ID"
 
 [storage.ipfs]
 addr = '192.168.0.132'
