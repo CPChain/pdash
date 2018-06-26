@@ -6,6 +6,10 @@ import string
 import hashlib
 import logging
 
+from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, QVBoxLayout, QGridLayout, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel, QWidget, QLineEdit, QTableWidget, QTextEdit, QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
+from PyQt5.QtCore import Qt, QPoint, QBasicTimer
+from PyQt5.QtGui import QIcon, QCursor, QPixmap, QFont, QFontDatabase
+
 from cpchain.wallet.wallet import Wallet
 from cpchain import config, root_dir
 from cpchain.wallet import fs
@@ -18,10 +22,6 @@ from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import deferToThread
 from twisted.internet.task import LoopingCall
 from twisted.logger import globalLogBeginner, textFileLogObserver
-
-from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, QVBoxLayout, QGridLayout, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel, QWidget, QLineEdit, QTableWidget, QTextEdit, QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
-from PyQt5.QtCore import Qt, QPoint, QBasicTimer
-from PyQt5.QtGui import QIcon, QCursor, QPixmap, QFont, QFontDatabase
 
 globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
 wallet = Wallet(reactor)
@@ -3606,12 +3606,6 @@ class MainWindow(QMainWindow):
         set_layout()
         load_stylesheet(self, "main_window.qss")
 
-        def load_font(self):
-            path = osp.join(root_dir, "cpchain/assets/wallet/font", "ARLRDBD.TTF")
-            self.font_regular = QFontDatabase.addApplicationFont(str(path))
-            self.font_givenname = QFontDatabase.applicationFontFamilies(font_regular)[0]
-            self.setFont(QFont(font_givenname))
-
         self.show()
 
     def update_purchased_tab(self, nex_tab='downloaded'):
@@ -3650,8 +3644,6 @@ def _handle_keyboard_interrupt():
     timer.timeout.connect(lambda: None)
 
 def initialize_system():
-    path = osp.join(root_dir, "cpchain/assets/wallet/font", "liberation.ttf")
-
     def monitor_chain_event():
         monitor_new_order = LoopingCall(wallet.chain_broker.monitor.monitor_new_order)
         monitor_new_order.start(10)
@@ -3672,7 +3664,6 @@ def initialize_system():
 
 def main():
     global main_wnd
-    # from twisted.internet import reactor
     main_wnd = MainWindow(reactor)
     _handle_keyboard_interrupt()
 
