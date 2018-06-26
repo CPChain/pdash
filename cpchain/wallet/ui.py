@@ -135,7 +135,7 @@ class TagHPTab(QScrollArea):
         get_promotion(self.item)
 
         def create_labels():
-            self.tag_header = QLabel("Tag X")
+            self.tag_header = QLabel("Tag 1")
             self.tag_header.setObjectName("tag_header")
 
             self.followthis_label = QPushButton("Follow this tag")
@@ -379,7 +379,7 @@ class Seller(QScrollArea):
         self.setMaximumHeight(500)
         self.setMinimumHeight(120)
         self.setMaximumHeight(120)
-        self.seller_name = QPushButton("Christopher Chak")
+        self.seller_name = QPushButton("Barack Obama")
         self.seller_name.setObjectName("seller_name")
         self.seller_name.setCursor(QCursor(Qt.PointingHandCursor))
 
@@ -688,7 +688,7 @@ class ProductDetailTab(QScrollArea):
 
             self.seller_btn = QPushButton(self)
             self.seller_btn.setObjectName("seller_btn")
-            self.seller_btn.setText("Christopher Chak")
+            self.seller_btn.setText("Barack Obama")
             self.seller_btn.clicked.connect(self.seller_clicked_act)
             self.seller_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
@@ -742,6 +742,8 @@ class ProductDetailTab(QScrollArea):
             self.comment_list = []
             comments = yield wallet.market_client.query_comment_by_hash(self.item['msg_hash'])
             for j in range(len(comments)):
+                if j >= len(comments):
+                    break
                 self.comment_list.append(ProductDetailTab.ProductComment(self, comments[j]))
             set_layout()
         get_product_info()
@@ -1170,7 +1172,7 @@ class SecurityTab(QScrollArea):
         self.balance_value = balance_value = QLabel("{} CPC".format(balance))
         balance_label.setObjectName("balance_label")  
 
-        bindingaccout = str("Christopher Chak")
+        bindingaccout = str("Barack Obama")
         self.binding_label = binding_label = QLabel("{} Account".format(bindingaccout))
         binding_label.setObjectName("binding_label")  
 
@@ -1763,7 +1765,7 @@ class PurchasedDownloadedTab(QScrollArea):
     def init_ui(self):
 
         self.check_list = []
-        self.purchased_total_orders = 103
+        self.purchased_total_orders = 0
         self.num_file = 100
         self.cur_clicked = 0
 
@@ -1774,8 +1776,8 @@ class PurchasedDownloadedTab(QScrollArea):
 
         self.purchased_total_orders_label = purchased_total_orders_label = QLabel("Total Orders: ")
         purchased_total_orders_label.setObjectName("purchased_total_orders_label")
-        self.total_orders_value = total_orders_value = QLabel("{}".format(self.purchased_total_orders))
-        self.total_orders_value.setObjectName("total_orders_value")
+        # self.total_orders_value = total_orders_value = QLabel("{}".format(self.purchased_total_orders))
+        # self.total_orders_value.setObjectName("total_orders_value")
         self.purchased_dled_delete_btn.clicked.connect(self.handle_delete)
         self.search_bar = PurchasedDownloadedTab.SearchBar(self)
         self.time_label = time_label = QLabel("Time")
@@ -1819,7 +1821,6 @@ class PurchasedDownloadedTab(QScrollArea):
             file_table.set_right_menu(right_menu)
 
             self.file_list = file_list = fs.get_buyer_file_list()
-
             self.check_record_list = []
             self.checkbox_list = []
             for cur_row in range(self.row_number):
@@ -1827,6 +1828,7 @@ class PurchasedDownloadedTab(QScrollArea):
                     break
                 if not file_list[cur_row].is_downloaded:
                     continue
+                self.purchased_total_orders += 1
                 checkbox_item = QTableWidgetItem()
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 checkbox_item.setCheckState(Qt.Unchecked)
@@ -1836,7 +1838,9 @@ class PurchasedDownloadedTab(QScrollArea):
                 self.file_table.setItem(cur_row, 3, QTableWidgetItem(file_list[cur_row].path))
                 self.file_table.setItem(cur_row, 4, QTableWidgetItem(file_list[cur_row].file_uuid))
                 self.check_record_list.append(False)
-        create_file_table()    
+        create_file_table()
+        self.total_orders_value = total_orders_value = QLabel("{}".format(self.purchased_total_orders))
+        self.total_orders_value.setObjectName("total_orders_value")
         self.file_table.sortItems(2)
         self.file_table.horizontalHeader().setStyleSheet("QHeaderView::section{background: #f3f3f3; border: 1px solid #dcdcdc}")
         # record rows that are clicked or checked
@@ -1969,14 +1973,14 @@ class PurchasedDownloadingTab(QScrollArea):
     def init_ui(self):
         self.actual_row_num = 0
         self.check_list = []
-        self.purchased_total_orders = 103
+        self.purchased_total_orders = 0
         self.num_file = 100
         self.cur_clicked = 0
 
         self.purchased_total_orders_label = purchased_total_orders_label = QLabel("Total Orders: ")
         purchased_total_orders_label.setObjectName("purchased_total_orders_label")
-        self.total_orders_value = total_orders_value = QLabel("{}".format(self.purchased_total_orders))
-        self.total_orders_value.setObjectName("total_orders_value")
+        # self.total_orders_value = total_orders_value = QLabel("{}".format(self.purchased_total_orders))
+        # self.total_orders_value.setObjectName("total_orders_value")
         self.purchased_dling_delete_btn = purchased_dling_delete_btn = QPushButton("Delete")
         purchased_dling_delete_btn.setObjectName("purchased_dling_delete_btn")
         self.purchased_dling_start_btn = purchased_dling_start_btn = QPushButton("Start")
@@ -2037,6 +2041,7 @@ class PurchasedDownloadingTab(QScrollArea):
                 if cur_row == len(file_list):
                     break
                 if file_list[cur_row].is_downloaded == False:
+                    self.purchased_total_orders += 1
                     checkbox_item = QTableWidgetItem()
                     checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                     checkbox_item.setCheckState(Qt.Unchecked)
@@ -2051,6 +2056,8 @@ class PurchasedDownloadingTab(QScrollArea):
                     self.actual_row_num += 1
 
         create_file_table()
+        self.total_orders_value = total_orders_value = QLabel("{}".format(self.purchased_total_orders))
+        self.total_orders_value.setObjectName("total_orders_value")
 
         self.file_table.sortItems(1)
         self.file_table.horizontalHeader().setStyleSheet(
@@ -2127,6 +2134,7 @@ class PublishDialog(QDialog):
     def init_ui(self):
 
         #Labels def
+        self.setWindowTitle("Publish Product")
         self.pinfo_title_label = pinfo_title_label = QLabel("Title:")
         pinfo_title_label.setObjectName("pinfo_title_label")
         self.pinfo_descrip_label = pinfo_descrip_label = QLabel("Description:")
@@ -2287,6 +2295,7 @@ class PublishDialog(QDialog):
                         for key in main_wnd.main_tab_index:
                             if main_wnd.main_tab_index[key] > tab_index:
                                 main_wnd.main_tab_index[key] -= 1
+                        logger.debug("update sell tab")
                         tab_index = main_wnd.content_tabs.addTab(SellTab(main_wnd.content_tabs), "")
                         main_wnd.main_tab_index['selling_tab'] = tab_index
                         if self.tab == 'sell':
@@ -2455,6 +2464,7 @@ class SellTab(QScrollArea):
 
 
         def create_file_table():
+            logger.debug("in create file table")
             self.file_table = file_table = TableWidget(self)
 
             file_table.horizontalHeader().setStretchLastSection(True)
@@ -2485,6 +2495,7 @@ class SellTab(QScrollArea):
                 checkbox_item = QTableWidgetItem()
                 checkbox_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 checkbox_item.setCheckState(Qt.Unchecked)
+                logger.debug("current row of product: %s", self.file_list[cur_row])
                 self.file_table.setItem(cur_row, 0, checkbox_item)
                 self.file_table.setItem(cur_row, 1, QTableWidgetItem(self.file_list[cur_row]["title"]))
                 self.file_table.setItem(cur_row, 2, QTableWidgetItem(str(self.file_list[cur_row]["price"])))
@@ -2500,6 +2511,8 @@ class SellTab(QScrollArea):
         # TODO: Seems public key here is not consistent with account1 or account 2 that is used for login, leading to
         # TODO: incomplete display
         def handle_query_by_seller(products):
+            logger.debug("in handle query by seller")
+            logger.debug("seller's product list: %s", products)
             self.file_list = []
             if len(products) == 0:
                 item = {"ID": "00x2222", "title": "Medical Data from Mayo Clinic", "price": "100", "avg_rating": "83%", "sales_number": "13087", "end_date": "2018-05-05"}

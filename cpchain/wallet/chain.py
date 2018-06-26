@@ -10,8 +10,6 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
-from eth_utils import to_bytes
-
 from cpchain.utils import config
 
 from cpchain.crypto import Encoder, RSACipher, ECCipher
@@ -65,7 +63,7 @@ class Broker:
         logger.debug("in buyer confirm order")
         for current_id in order_id_list:
             self.buyer.confirm_order(current_id)
-            logger.debug("order {id} completed".format(id=current_id))
+            logger.debug("order %s completed", current_id)
 
 
     def seller_send_request(self, order_info):
@@ -81,8 +79,6 @@ class Broker:
         raw_aes_key = session.query(FileInfo.aes_key) \
             .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash)) \
             .all()[0][0]
-        # TODO: encrypt aes key with buyer rsa public key
-        # encrypted_aes_key = b'encrypted aes key'
         logger.debug("start to encrypt aes key with buyer rsa public key")
         logger.debug("raw aes key: %s", raw_aes_key)
         logger.debug("buyer rsa public key: %s", buyer_rsa_public_key)
@@ -199,8 +195,6 @@ class Broker:
                 logger.debug("file has been downloaded")
                 logger.debug("put order into confirmed queue, order id: %s", order_id)
                 self.confirmed_order_queue.put(order_id)
-                # TODO: update purchased tab downloaded
-                # ui.update_purchased_tab()
                 self.wallet.main_wnd.update_purchased_tab('downloaded')
 
 
@@ -259,10 +253,10 @@ class Monitor:
             else:
                 order = self.broker.bought_order_queue.get()
                 bought_order_list.append(order)
-        if len(bought_order_list) == 0:
+        if not bought_order_list:
             logger.debug("no bought order")
         else:
-            logger.debug("found bought order[{order_list}]".format(order_list=bought_order_list))
+            logger.debug("found bought order{%s}", bought_order_list)
             logger.debug("check bought order state")
             d_unready_order = deferToThread(self.broker.query_order_state, bought_order_list)
 
@@ -351,7 +345,7 @@ class Handler:
                 logger.debug("seller confirm order, order id: %s", order_id)
                 d = deferToThread(self.broker.seller.confirm_order, order_id)
                 def start_proxy_request(tx):
-                    logger.debug("order {tx} has been confirmed by seller".format(tx=tx))
+                    logger.debug("order %s has been confirmed by seller", tx)
                     self.broker.seller_send_request(order_info)
                 d.addCallback(start_proxy_request)
         logger.debug("new order process completed, order queue size: %s", self.broker.order_queue.qsize())

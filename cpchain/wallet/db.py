@@ -6,7 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine, Column, Integer, String, Boolean
 from sqlalchemy.orm import sessionmaker
 
-from cpchain import root_dir, config
+from cpchain import config
 from cpchain.utils import join_with_rc
 
 dbpath = join_with_rc(config.wallet.dbpath)
@@ -17,9 +17,6 @@ print(dirpath)
 engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
 
 Base = declarative_base()
-# Session = sessionmaker(bind=engine)
-# session = Session()
-
 
 def get_session():
     Session = sessionmaker(bind=engine)
