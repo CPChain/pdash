@@ -1852,41 +1852,39 @@ class PublishDialog(QDialog):
         self.pinfo_checkbox.setText("I agree with the CPC Agreement")
 
 
-        def set_layout():
-            self.pinfo_top_layout = pinfo_top_layout = QGridLayout(self)
-            self.pinfo_top_layout.setContentsMargins(40, 40, 100, 40)
-            self.pinfo_top_layout.addWidget(pinfo_title_label, 1, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(pinfo_title_edit, 1, 3, 1, 20)
-            self.pinfo_top_layout.addWidget(pinfo_descrip_label, 2, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(pinfo_descrip_edit, 2, 3, 3, 20)
-            self.pinfo_top_layout.addWidget(pinfo_tag_label, 8, 1, 1, 1)
-            self.pinfo_tag_layout = pinfo_tag_layout = QHBoxLayout(self)
-            for i in range(self.tag_num):
-                self.pinfo_tag_layout.addWidget(self.tag_btn_list[i])
-                self.pinfo_tag_layout.addSpacing(5)
+        self.pinfo_top_layout = pinfo_top_layout = QGridLayout(self)
+        self.pinfo_top_layout.setContentsMargins(40, 40, 100, 40)
+        self.pinfo_top_layout.addWidget(pinfo_title_label, 1, 1, 1, 1)
+        self.pinfo_top_layout.addWidget(pinfo_title_edit, 1, 3, 1, 20)
+        self.pinfo_top_layout.addWidget(pinfo_descrip_label, 2, 1, 1, 1)
+        self.pinfo_top_layout.addWidget(pinfo_descrip_edit, 2, 3, 3, 20)
+        self.pinfo_top_layout.addWidget(pinfo_tag_label, 8, 1, 1, 1)
+        self.pinfo_tag_layout = pinfo_tag_layout = QHBoxLayout(self)
+        for i in range(self.tag_num):
+            self.pinfo_tag_layout.addWidget(self.tag_btn_list[i])
+            self.pinfo_tag_layout.addSpacing(5)
 
-            self.pinfo_tag_layout.addStretch(1)
-            self.pinfo_top_layout.addLayout(pinfo_tag_layout, 8, 3, 1, 10)
-            self.pinfo_top_layout.addWidget(pinfo_tag_edit, 9, 3, 1, 3)
+        self.pinfo_tag_layout.addStretch(1)
+        self.pinfo_top_layout.addLayout(pinfo_tag_layout, 8, 3, 1, 10)
+        self.pinfo_top_layout.addWidget(pinfo_tag_edit, 9, 3, 1, 3)
 
-            self.pinfo_price_layout = pinfo_price_layout = QHBoxLayout(self)
-            self.pinfo_price_layout.addWidget(pinfo_price_edit)
-            self.pinfo_price_layout.addSpacing(5)
-            self.pinfo_price_layout.addWidget(pinfo_cpc_label)
-            self.pinfo_price_layout.addStretch(1)
-            self.pinfo_top_layout.addLayout(pinfo_price_layout, 10, 3, 1, 10)
-            self.pinfo_top_layout.addWidget(pinfo_price_label, 10, 1, 1, 1)
-            self.pinfo_top_layout.addWidget(pinfo_checkbox, 12, 3, 1, 2)
+        self.pinfo_price_layout = pinfo_price_layout = QHBoxLayout(self)
+        self.pinfo_price_layout.addWidget(pinfo_price_edit)
+        self.pinfo_price_layout.addSpacing(5)
+        self.pinfo_price_layout.addWidget(pinfo_cpc_label)
+        self.pinfo_price_layout.addStretch(1)
+        self.pinfo_top_layout.addLayout(pinfo_price_layout, 10, 3, 1, 10)
+        self.pinfo_top_layout.addWidget(pinfo_price_label, 10, 1, 1, 1)
+        self.pinfo_top_layout.addWidget(pinfo_checkbox, 12, 3, 1, 2)
 
-            self.pinfo_btn_layout = pinfo_btn_layout = QHBoxLayout(self)
-            self.pinfo_btn_layout.addWidget(pinfo_cancel_btn)
-            self.pinfo_btn_layout.addSpacing(80)
-            self.pinfo_btn_layout.addWidget(pinfo_publish_btn)
-            self.pinfo_btn_layout.addStretch(1)
-            self.pinfo_top_layout.addLayout(pinfo_btn_layout, 13, 3, 1, 15)
+        self.pinfo_btn_layout = pinfo_btn_layout = QHBoxLayout(self)
+        self.pinfo_btn_layout.addWidget(pinfo_cancel_btn)
+        self.pinfo_btn_layout.addSpacing(80)
+        self.pinfo_btn_layout.addWidget(pinfo_publish_btn)
+        self.pinfo_btn_layout.addStretch(1)
+        self.pinfo_top_layout.addLayout(pinfo_btn_layout, 13, 3, 1, 15)
 
-            self.setLayout(pinfo_top_layout)
-        set_layout()
+        self.setLayout(pinfo_top_layout)
         load_stylesheet(self, "publishdialog.qss")
         self.show()
 
@@ -2953,7 +2951,7 @@ class CloudTab(QScrollArea):
             return
         for i in range(len(self.check_record_list)):
             logger.debug(self.check_record_list)
-            if self.check_record_list[i] == True:
+            if self.check_record_list[i] is True:
                 file_id = self.file_table.item(i, 5).text()
                 fs.delete_file_by_id(file_id)
                 self.file_table.removeRow(i)
@@ -3357,7 +3355,7 @@ class Header(QFrame):
             pixmap = get_pixm('cpc-logo-single.png')
             pixmap = pixmap.scaled(45, 45)
             logo_label.setPixmap(pixmap)
-            self.word_label = word_label = QLabel(self)
+            self.word_label = QLabel(self)
             self.word_label.setText("<b>CPChain</b>")
             self.word_label.setFont(QFont("Roman times", 25, QFont.Bold))
         create_logos()
