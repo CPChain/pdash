@@ -1,7 +1,11 @@
 import os
 import re
+from platform import system
 
 def get_cpu_info():
+    if system() != "Linux":
+        return
+
     output = os.popen('cat /proc/cpuinfo')
     lines = output.readlines()
     output.close()
@@ -22,6 +26,9 @@ def get_cpu_info():
     return {'num': cpu_num, 'freq': cpu_freq}
 
 def get_mem_info():
+    if system() != "Linux":
+        return
+
     output = os.popen('cat /proc/meminfo')
     lines = output.readlines()
     output.close()
@@ -34,6 +41,9 @@ def get_mem_info():
     return {'size': mem_size}
 
 def get_nic_info(dst):
+    if system() != "Linux":
+        return
+
     output = os.popen("ip route get " + dst)
     lines = output.readlines()
     output.close()
@@ -53,6 +63,8 @@ def get_nic_info(dst):
     return {'speed': nic_speed}
 
 def search_peer(sysconf, peers_conf):
+    if system() != "Linux":
+        return
 
     pick_peer = None
 
