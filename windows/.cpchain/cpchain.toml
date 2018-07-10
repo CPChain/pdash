@@ -1,0 +1,10 @@
+# -*- mode: conf; -*-
+
+# for sample configuration, cf. https://github.com/toml-lang/toml
+
+[core]
+rc_dir = "./.cpchain"
+mode = "wallet"
+
+[chain]
+mode = "local"
