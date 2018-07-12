@@ -15,17 +15,9 @@ def message_sanity_check(message):
             seller_data.AES_key and \
             seller_data.storage:
             storage = seller_data.storage
-            if storage.type:
-                if storage.type == Message.Storage.IPFS:
-                    if storage.ipfs and \
-                        storage.ipfs.gateway and \
-                        storage.ipfs.file_hash:
-                        return True
-                elif storage.type == Message.Storage.S3:
-                    if storage.s3 and \
-                        storage.s3.bucket and \
-                        storage.s3.key:
-                        return True
+            if storage.type and storage.file_uri:
+                return True
+
     elif message.type == Message.BUYER_DATA and \
         message.buyer_data:
         buyer_data = message.buyer_data
