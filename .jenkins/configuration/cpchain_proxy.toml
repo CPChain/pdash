@@ -1,2 +1,5 @@
+[chain]
+mode = 'dummy'
+
 [core]
 mode = 'proxy'
