@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-import os, time
+import os
+import importlib
 import logging
 
 from twisted.internet import threads, protocol
@@ -14,7 +15,6 @@ from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.message import message_sanity_check, \
 sign_message_verify, is_address_from_key
 
-from cpchain.storage import IPFSStorage, S3Storage
 from cpchain.proxy.db import Trade, ProxyDB
 from cpchain.utils import join_with_rc
 from cpchain.proxy.chain import order_is_ready_on_chain, \
@@ -91,72 +91,37 @@ class SSLServerProtocol(NetstringReceiver):
             trade.market_hash = data.market_hash
             trade.AES_key = data.AES_key
 
-            storage = data.storage
-            if storage.type == Message.Storage.IPFS:
-                ipfs = storage.ipfs
-                trade.file_name = ipfs.file_hash
+            # use order id as the local file name to avoid conflict
+            trade.file_name = str(trade.order_id)
+            file_path = os.path.join(server_root, trade.file_name)
 
-                file_path = os.path.join(
-                    server_root,
-                    trade.file_name
-                    )
+            storage_type = data.storage.type
+            file_uri = data.storage.file_uri
 
-                # seller sold the same file to another buyer
-                if os.path.isfile(file_path):
-                    mtime = time.time()
-                    os.utime(file_path, (mtime, mtime))
+            def download_file():
+                try:
+                    storage_module = importlib.import_module(
+                        "cpchain.storage-plugin." + storage_type
+                        )
 
-                    if not claim_data_fetched_to_chain(trade.order_id):
-                        error = "failed to claim data fetched to chain"
-                        return self.proxy_reply_error(error)
+                    storage = storage_module.Storage()
 
-                    proxy_db.insert(trade)
+                    storage.download_file(
+                        file_uri,
+                        file_path
+                        )
 
-                    return self.proxy_reply_success(trade)
+                except:
+                    logger.exception('failed to fetch file')
+                    return False
+                else:
+                    return True
 
+            d = threads.deferToThread(
+                download_file
+            )
 
-                def download_ipfs_file():
-                    host, port = ipfs.gateway.strip().split(':')
-                    file_name = trade.file_name
-                    ipfs_storage = IPFSStorage()
-                    return ipfs_storage.connect(host, port) and \
-                            ipfs_storage.download_file(
-                                file_name, server_root)
-
-                d = threads.deferToThread(
-                    download_ipfs_file
-                    )
-
-                d.addCallback(self.file_download_finished, trade)
-
-            elif storage.type == Message.Storage.S3:
-                s3 = storage.s3
-                bucket = s3.bucket
-                key = s3.key
-
-                # use order id as the local file name to avoid conflict
-                file_name = str(trade.order_id)
-                trade.file_name = file_name
-                file_path = os.path.join(server_root, file_name)
-
-                def download_s3_file():
-                    try:
-                        S3Storage().download_file(
-                            fpath=file_path,
-                            remote_fpath=key,
-                            bucket=bucket
-                            )
-                    except:
-                        logger.exception('failed to download S3 file')
-                        return False
-                    else:
-                        return True
-
-                d = threads.deferToThread(
-                    download_s3_file
-                )
-
-                d.addCallback(self.file_download_finished, trade)
+            d.addCallback(self.file_download_finished, trade)
 
         elif message.type == Message.BUYER_DATA:
             data = message.buyer_data

@@ -11,25 +11,8 @@ message Message {
 	}
 
 	message Storage {
-		enum StorageType {
-			RESERVED = 0;
-			IPFS = 1;
-			S3 = 2;
-		}
-
-		message IPFS_Storage {
-			string file_hash = 1;
-			string gateway = 2;
-		}
-
-		message S3_Storage {
-			string bucket = 1;
-			string key = 2;
-		}
-
-		StorageType type = 1;
-		IPFS_Storage ipfs = 2;
-		S3_Storage s3 = 3;
+		string type = 1;
+		string file_uri = 2;
 	}
 
 	message SellerData {

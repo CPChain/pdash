@@ -19,37 +19,11 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='trade_msg.proto',
   package='cpchain',
   syntax='proto3',
-  serialized_pb=_b('\n\x0ftrade_msg.proto\x12\x07\x63pchain\"\x84\x07\n\x07Message\x12*\n\x04type\x18\x01 \x01(\x0e\x32\x1c.cpchain.Message.MessageType\x12\x30\n\x0bseller_data\x18\x02 \x01(\x0b\x32\x1b.cpchain.Message.SellerData\x12.\n\nbuyer_data\x18\x03 \x01(\x0b\x32\x1a.cpchain.Message.BuyerData\x12\x30\n\x0bproxy_reply\x18\x04 \x01(\x0b\x32\x1b.cpchain.Message.ProxyReply\x1a\xb1\x02\n\x07Storage\x12\x32\n\x04type\x18\x01 \x01(\x0e\x32$.cpchain.Message.Storage.StorageType\x12\x33\n\x04ipfs\x18\x02 \x01(\x0b\x32%.cpchain.Message.Storage.IPFS_Storage\x12/\n\x02s3\x18\x03 \x01(\x0b\x32#.cpchain.Message.Storage.S3_Storage\x1a\x32\n\x0cIPFS_Storage\x12\x11\n\tfile_hash\x18\x01 \x01(\t\x12\x0f\n\x07gateway\x18\x02 \x01(\t\x1a)\n\nS3_Storage\x12\x0e\n\x06\x62ucket\x18\x01 \x01(\t\x12\x0b\n\x03key\x18\x02 \x01(\t\"-\n\x0bStorageType\x12\x0c\n\x08RESERVED\x10\x00\x12\x08\n\x04IPFS\x10\x01\x12\x06\n\x02S3\x10\x02\x1a\x98\x01\n\nSellerData\x12\x10\n\x08order_id\x18\x01 \x01(\x04\x12\x13\n\x0bseller_addr\x18\x02 \x01(\t\x12\x12\n\nbuyer_addr\x18\x03 \x01(\t\x12\x13\n\x0bmarket_hash\x18\x04 \x01(\t\x12\x0f\n\x07\x41\x45S_key\x18\x05 \x01(\x0c\x12)\n\x07storage\x18\x06 \x01(\x0b\x32\x18.cpchain.Message.Storage\x1a[\n\tBuyerData\x12\x10\n\x08order_id\x18\x01 \x01(\x04\x12\x13\n\x0bseller_addr\x18\x02 \x01(\t\x12\x12\n\nbuyer_addr\x18\x03 \x01(\t\x12\x13\n\x0bmarket_hash\x18\x04 \x01(\t\x1a>\n\nProxyReply\x12\r\n\x05\x65rror\x18\x01 \x01(\t\x12\x0f\n\x07\x41\x45S_key\x18\x02 \x01(\x0c\x12\x10\n\x08\x66ile_uri\x18\x03 \x01(\t\"M\n\x0bMessageType\x12\x0c\n\x08RESERVED\x10\x00\x12\x0f\n\x0bSELLER_DATA\x10\x01\x12\x0e\n\nBUYER_DATA\x10\x02\x12\x0f\n\x0bPROXY_REPLY\x10\x03\"B\n\x0bSignMessage\x12\x12\n\npublic_key\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c\x12\x11\n\tsignature\x18\x03 \x01(\x0c\x62\x06proto3')
+  serialized_pb=_b('\n\x0ftrade_msg.proto\x12\x07\x63pchain\"\xfb\x04\n\x07Message\x12*\n\x04type\x18\x01 \x01(\x0e\x32\x1c.cpchain.Message.MessageType\x12\x30\n\x0bseller_data\x18\x02 \x01(\x0b\x32\x1b.cpchain.Message.SellerData\x12.\n\nbuyer_data\x18\x03 \x01(\x0b\x32\x1a.cpchain.Message.BuyerData\x12\x30\n\x0bproxy_reply\x18\x04 \x01(\x0b\x32\x1b.cpchain.Message.ProxyReply\x1a)\n\x07Storage\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x10\n\x08\x66ile_uri\x18\x02 \x01(\t\x1a\x98\x01\n\nSellerData\x12\x10\n\x08order_id\x18\x01 \x01(\x04\x12\x13\n\x0bseller_addr\x18\x02 \x01(\t\x12\x12\n\nbuyer_addr\x18\x03 \x01(\t\x12\x13\n\x0bmarket_hash\x18\x04 \x01(\t\x12\x0f\n\x07\x41\x45S_key\x18\x05 \x01(\x0c\x12)\n\x07storage\x18\x06 \x01(\x0b\x32\x18.cpchain.Message.Storage\x1a[\n\tBuyerData\x12\x10\n\x08order_id\x18\x01 \x01(\x04\x12\x13\n\x0bseller_addr\x18\x02 \x01(\t\x12\x12\n\nbuyer_addr\x18\x03 \x01(\t\x12\x13\n\x0bmarket_hash\x18\x04 \x01(\t\x1a>\n\nProxyReply\x12\r\n\x05\x65rror\x18\x01 \x01(\t\x12\x0f\n\x07\x41\x45S_key\x18\x02 \x01(\x0c\x12\x10\n\x08\x66ile_uri\x18\x03 \x01(\t\"M\n\x0bMessageType\x12\x0c\n\x08RESERVED\x10\x00\x12\x0f\n\x0bSELLER_DATA\x10\x01\x12\x0e\n\nBUYER_DATA\x10\x02\x12\x0f\n\x0bPROXY_REPLY\x10\x03\"B\n\x0bSignMessage\x12\x12\n\npublic_key\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c\x12\x11\n\tsignature\x18\x03 \x01(\x0c\x62\x06proto3')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
-
-_MESSAGE_STORAGE_STORAGETYPE = _descriptor.EnumDescriptor(
-  name='StorageType',
-  full_name='cpchain.Message.Storage.StorageType',
-  filename=None,
-  file=DESCRIPTOR,
-  values=[
-    _descriptor.EnumValueDescriptor(
-      name='RESERVED', index=0, number=0,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='IPFS', index=1, number=1,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='S3', index=2, number=2,
-      options=None,
-      type=None),
-  ],
-  containing_type=None,
-  options=None,
-  serialized_start=493,
-  serialized_end=538,
-)
-_sym_db.RegisterEnumDescriptor(_MESSAGE_STORAGE_STORAGETYPE)
 
 _MESSAGE_MESSAGETYPE = _descriptor.EnumDescriptor(
   name='MessageType',
@@ -76,85 +50,11 @@ _MESSAGE_MESSAGETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=852,
-  serialized_end=929,
+  serialized_start=587,
+  serialized_end=664,
 )
 _sym_db.RegisterEnumDescriptor(_MESSAGE_MESSAGETYPE)
 
-
-_MESSAGE_STORAGE_IPFS_STORAGE = _descriptor.Descriptor(
-  name='IPFS_Storage',
-  full_name='cpchain.Message.Storage.IPFS_Storage',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='file_hash', full_name='cpchain.Message.Storage.IPFS_Storage.file_hash', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='gateway', full_name='cpchain.Message.Storage.IPFS_Storage.gateway', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=398,
-  serialized_end=448,
-)
-
-_MESSAGE_STORAGE_S3_STORAGE = _descriptor.Descriptor(
-  name='S3_Storage',
-  full_name='cpchain.Message.Storage.S3_Storage',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='bucket', full_name='cpchain.Message.Storage.S3_Storage.bucket', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='key', full_name='cpchain.Message.Storage.S3_Storage.key', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=450,
-  serialized_end=491,
-)
 
 _MESSAGE_STORAGE = _descriptor.Descriptor(
   name='Storage',
@@ -165,31 +65,23 @@ _MESSAGE_STORAGE = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='type', full_name='cpchain.Message.Storage.type', index=0,
-      number=1, type=14, cpp_type=8, label=1,
-      has_default_value=False, default_value=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='ipfs', full_name='cpchain.Message.Storage.ipfs', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='s3', full_name='cpchain.Message.Storage.s3', index=2,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      name='file_uri', full_name='cpchain.Message.Storage.file_uri', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
   ],
   extensions=[
   ],
-  nested_types=[_MESSAGE_STORAGE_IPFS_STORAGE, _MESSAGE_STORAGE_S3_STORAGE, ],
+  nested_types=[],
   enum_types=[
-    _MESSAGE_STORAGE_STORAGETYPE,
   ],
   options=None,
   is_extendable=False,
@@ -197,8 +89,8 @@ _MESSAGE_STORAGE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=233,
-  serialized_end=538,
+  serialized_start=232,
+  serialized_end=273,
 )
 
 _MESSAGE_SELLERDATA = _descriptor.Descriptor(
@@ -262,8 +154,8 @@ _MESSAGE_SELLERDATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=541,
-  serialized_end=693,
+  serialized_start=276,
+  serialized_end=428,
 )
 
 _MESSAGE_BUYERDATA = _descriptor.Descriptor(
@@ -313,8 +205,8 @@ _MESSAGE_BUYERDATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=695,
-  serialized_end=786,
+  serialized_start=430,
+  serialized_end=521,
 )
 
 _MESSAGE_PROXYREPLY = _descriptor.Descriptor(
@@ -357,8 +249,8 @@ _MESSAGE_PROXYREPLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=788,
-  serialized_end=850,
+  serialized_start=523,
+  serialized_end=585,
 )
 
 _MESSAGE = _descriptor.Descriptor(
@@ -410,7 +302,7 @@ _MESSAGE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=29,
-  serialized_end=929,
+  serialized_end=664,
 )
 
 
@@ -454,17 +346,11 @@ _SIGNMESSAGE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=931,
-  serialized_end=997,
+  serialized_start=666,
+  serialized_end=732,
 )
 
-_MESSAGE_STORAGE_IPFS_STORAGE.containing_type = _MESSAGE_STORAGE
-_MESSAGE_STORAGE_S3_STORAGE.containing_type = _MESSAGE_STORAGE
-_MESSAGE_STORAGE.fields_by_name['type'].enum_type = _MESSAGE_STORAGE_STORAGETYPE
-_MESSAGE_STORAGE.fields_by_name['ipfs'].message_type = _MESSAGE_STORAGE_IPFS_STORAGE
-_MESSAGE_STORAGE.fields_by_name['s3'].message_type = _MESSAGE_STORAGE_S3_STORAGE
 _MESSAGE_STORAGE.containing_type = _MESSAGE
-_MESSAGE_STORAGE_STORAGETYPE.containing_type = _MESSAGE_STORAGE
 _MESSAGE_SELLERDATA.fields_by_name['storage'].message_type = _MESSAGE_STORAGE
 _MESSAGE_SELLERDATA.containing_type = _MESSAGE
 _MESSAGE_BUYERDATA.containing_type = _MESSAGE
@@ -480,20 +366,6 @@ DESCRIPTOR.message_types_by_name['SignMessage'] = _SIGNMESSAGE
 Message = _reflection.GeneratedProtocolMessageType('Message', (_message.Message,), dict(
 
   Storage = _reflection.GeneratedProtocolMessageType('Storage', (_message.Message,), dict(
-
-    IPFS_Storage = _reflection.GeneratedProtocolMessageType('IPFS_Storage', (_message.Message,), dict(
-      DESCRIPTOR = _MESSAGE_STORAGE_IPFS_STORAGE,
-      __module__ = 'trade_msg_pb2'
-      # @@protoc_insertion_point(class_scope:cpchain.Message.Storage.IPFS_Storage)
-      ))
-    ,
-
-    S3_Storage = _reflection.GeneratedProtocolMessageType('S3_Storage', (_message.Message,), dict(
-      DESCRIPTOR = _MESSAGE_STORAGE_S3_STORAGE,
-      __module__ = 'trade_msg_pb2'
-      # @@protoc_insertion_point(class_scope:cpchain.Message.Storage.S3_Storage)
-      ))
-    ,
     DESCRIPTOR = _MESSAGE_STORAGE,
     __module__ = 'trade_msg_pb2'
     # @@protoc_insertion_point(class_scope:cpchain.Message.Storage)
@@ -526,8 +398,6 @@ Message = _reflection.GeneratedProtocolMessageType('Message', (_message.Message,
   ))
 _sym_db.RegisterMessage(Message)
 _sym_db.RegisterMessage(Message.Storage)
-_sym_db.RegisterMessage(Message.Storage.IPFS_Storage)
-_sym_db.RegisterMessage(Message.Storage.S3_Storage)
 _sym_db.RegisterMessage(Message.SellerData)
 _sym_db.RegisterMessage(Message.BuyerData)
 _sym_db.RegisterMessage(Message.ProxyReply)

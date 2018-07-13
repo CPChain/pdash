@@ -22,21 +22,6 @@ from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.db import ProxyDB
 from cpchain import config
 
-from cpchain.storage import IPFSStorage, S3Storage
-
-def mock_ipfs_download_file(_, file_hash, file_dir):
-    open(os.path.join(file_dir, file_hash), 'a').close()
-    return True
-
-IPFSStorage.connect = lambda *args: True
-IPFSStorage.download_file = mock_ipfs_download_file
-
-def mock_s3_download_file(_, fpath, remote_fpath, fsize=None, bucket=None):
-    open(fpath, 'a').close()
-
-S3Storage.__init__ = lambda *args: None
-S3Storage.download_file = mock_s3_download_file
-
 accounts = Accounts()
 buyer_account = accounts[0]
 seller_account = accounts[1]
@@ -54,7 +39,7 @@ seller_addr = ECCipher.get_address_from_public_key(
     seller_account.public_key)  #string type
 
 
-def fake_seller_message(storage_type):
+def fake_seller_message():
     message = Message()
     seller_data = message.seller_data
     message.type = Message.SELLER_DATA
@@ -64,18 +49,8 @@ def fake_seller_message(storage_type):
     seller_data.market_hash = 'MARKET_HASH'
     seller_data.AES_key = b'AES_key'
     storage = seller_data.storage
-
-    if storage_type == 'ipfs':
-        storage.type = Message.Storage.IPFS
-        ipfs = storage.ipfs
-        ipfs.file_hash = 'fake_file_hash'
-        ipfs.gateway = "1.2.3.4:5001"
-
-    elif storage_type == 's3':
-        storage.type = Message.Storage.S3
-        s3 = storage.s3
-        s3.bucket = 'fake-bucket'
-        s3.key = 'fake-key'
+    storage.type = 'template'
+    storage.file_uri = 'fake_file_uri'
 
     return message
 
@@ -180,21 +155,21 @@ class SSLServerTestCase(unittest.TestCase):
         return self.check_response_later('trade record not found in database')
 
     def test_2_seller_request(self):
-        message = fake_seller_message('ipfs')
+        message = fake_seller_message()
         sign_message = sign_seller_message(message)
         string = sign_message.SerializeToString()
         self.proto.stringReceived(string)
         return self.check_response_later('')
 
     def test_3_seller_request(self):
-        message = fake_seller_message('ipfs')
+        message = fake_seller_message()
         sign_message = sign_seller_message(message)
         string = sign_message.SerializeToString()
         self.proto.stringReceived(string)
         return self.check_response_later('trade record already in database')
 
     def test_3_sold_to_another_buyer(self):
-        message = fake_seller_message('ipfs')
+        message = fake_seller_message()
         message.seller_data.order_id = 2
         message.seller_data.buyer_addr = b'fake addr'
         sign_message = sign_seller_message(message)
@@ -216,14 +191,6 @@ class SSLServerTestCase(unittest.TestCase):
         string = sign_message.SerializeToString()
         self.proto.stringReceived(string)
         return self.check_response_later('wrong signature')
-
-    def test_S3_storage(self):
-        message = fake_seller_message('s3')
-        message.seller_data.order_id = 3
-        sign_message = sign_seller_message(message)
-        string = sign_message.SerializeToString()
-        self.proto.stringReceived(string)
-        return self.check_response_later('')
 
     def test_key_not_match_address(self):
         message = fake_buyer_message()
