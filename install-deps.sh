@@ -40,6 +40,7 @@ pyopenssl
 web3
 msgpack
 kademlia
+confluent-kafka
 "
 
 wallet_pkgs="
