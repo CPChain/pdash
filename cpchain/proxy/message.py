@@ -3,36 +3,35 @@ from cpchain.crypto import ECCipher
 
 def message_sanity_check(message):
 
-    if not message or not message.type:
-        return False
-
-    if message.type == Message.SELLER_DATA and \
-        message.seller_data:
+    if message.type == Message.SELLER_DATA:
         seller_data = message.seller_data
-        if seller_data.seller_addr and \
+        if seller_data.order_id and \
+            seller_data.seller_addr and \
             seller_data.buyer_addr and \
             seller_data.market_hash and \
-            seller_data.AES_key and \
-            seller_data.storage:
-            storage = seller_data.storage
-            if storage.type and storage.file_uri:
+            seller_data.AES_key:
+            if seller_data.order_type == 'file':
+                storage = seller_data.storage
+                if storage.type and storage.file_uri:
+                    return True
+            elif seller_data.order_type == 'stream':
                 return True
 
-    elif message.type == Message.BUYER_DATA and \
-        message.buyer_data:
+    elif message.type == Message.BUYER_DATA:
         buyer_data = message.buyer_data
-        if buyer_data.seller_addr and \
+        if buyer_data.order_id and \
+            buyer_data.seller_addr and \
             buyer_data.buyer_addr and \
             buyer_data.market_hash:
             return True
 
-    elif message.type == Message.PROXY_REPLY and \
-        message.proxy_reply:
+    elif message.type == Message.PROXY_REPLY:
         proxy_reply = message.proxy_reply
         if proxy_reply.error:
             return True
         elif proxy_reply.AES_key and \
-            proxy_reply.file_uri:
+            proxy_reply.port_conf and \
+            proxy_reply.data_path:
             return True
 
     return False

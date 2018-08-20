@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='trade_msg.proto',
   package='cpchain',
   syntax='proto3',
-  serialized_pb=_b('\n\x0ftrade_msg.proto\x12\x07\x63pchain\"\xfb\x04\n\x07Message\x12*\n\x04type\x18\x01 \x01(\x0e\x32\x1c.cpchain.Message.MessageType\x12\x30\n\x0bseller_data\x18\x02 \x01(\x0b\x32\x1b.cpchain.Message.SellerData\x12.\n\nbuyer_data\x18\x03 \x01(\x0b\x32\x1a.cpchain.Message.BuyerData\x12\x30\n\x0bproxy_reply\x18\x04 \x01(\x0b\x32\x1b.cpchain.Message.ProxyReply\x1a)\n\x07Storage\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x10\n\x08\x66ile_uri\x18\x02 \x01(\t\x1a\x98\x01\n\nSellerData\x12\x10\n\x08order_id\x18\x01 \x01(\x04\x12\x13\n\x0bseller_addr\x18\x02 \x01(\t\x12\x12\n\nbuyer_addr\x18\x03 \x01(\t\x12\x13\n\x0bmarket_hash\x18\x04 \x01(\t\x12\x0f\n\x07\x41\x45S_key\x18\x05 \x01(\x0c\x12)\n\x07storage\x18\x06 \x01(\x0b\x32\x18.cpchain.Message.Storage\x1a[\n\tBuyerData\x12\x10\n\x08order_id\x18\x01 \x01(\x04\x12\x13\n\x0bseller_addr\x18\x02 \x01(\t\x12\x12\n\nbuyer_addr\x18\x03 \x01(\t\x12\x13\n\x0bmarket_hash\x18\x04 \x01(\t\x1a>\n\nProxyReply\x12\r\n\x05\x65rror\x18\x01 \x01(\t\x12\x0f\n\x07\x41\x45S_key\x18\x02 \x01(\x0c\x12\x10\n\x08\x66ile_uri\x18\x03 \x01(\t\"M\n\x0bMessageType\x12\x0c\n\x08RESERVED\x10\x00\x12\x0f\n\x0bSELLER_DATA\x10\x01\x12\x0e\n\nBUYER_DATA\x10\x02\x12\x0f\n\x0bPROXY_REPLY\x10\x03\"B\n\x0bSignMessage\x12\x12\n\npublic_key\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c\x12\x11\n\tsignature\x18\x03 \x01(\x0c\x62\x06proto3')
+  serialized_pb=_b('\n\x0ftrade_msg.proto\x12\x07\x63pchain\"\xb7\x05\n\x07Message\x12*\n\x04type\x18\x01 \x01(\x0e\x32\x1c.cpchain.Message.MessageType\x12\x30\n\x0bseller_data\x18\x02 \x01(\x0b\x32\x1b.cpchain.Message.SellerData\x12.\n\nbuyer_data\x18\x03 \x01(\x0b\x32\x1a.cpchain.Message.BuyerData\x12\x30\n\x0bproxy_reply\x18\x04 \x01(\x0b\x32\x1b.cpchain.Message.ProxyReply\x1a)\n\x07Storage\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x10\n\x08\x66ile_uri\x18\x02 \x01(\t\x1a\xac\x01\n\nSellerData\x12\x10\n\x08order_id\x18\x01 \x01(\x04\x12\x12\n\norder_type\x18\x02 \x01(\t\x12\x13\n\x0bseller_addr\x18\x03 \x01(\t\x12\x12\n\nbuyer_addr\x18\x04 \x01(\t\x12\x13\n\x0bmarket_hash\x18\x05 \x01(\t\x12\x0f\n\x07\x41\x45S_key\x18\x06 \x01(\x0c\x12)\n\x07storage\x18\x07 \x01(\x0b\x32\x18.cpchain.Message.Storage\x1ao\n\tBuyerData\x12\x10\n\x08order_id\x18\x01 \x01(\x04\x12\x12\n\norder_type\x18\x02 \x01(\t\x12\x13\n\x0bseller_addr\x18\x03 \x01(\t\x12\x12\n\nbuyer_addr\x18\x04 \x01(\t\x12\x13\n\x0bmarket_hash\x18\x05 \x01(\t\x1aR\n\nProxyReply\x12\r\n\x05\x65rror\x18\x01 \x01(\t\x12\x0f\n\x07\x41\x45S_key\x18\x02 \x01(\x0c\x12\x11\n\tport_conf\x18\x03 \x01(\t\x12\x11\n\tdata_path\x18\x04 \x01(\t\"M\n\x0bMessageType\x12\x0c\n\x08RESERVED\x10\x00\x12\x0f\n\x0bSELLER_DATA\x10\x01\x12\x0e\n\nBUYER_DATA\x10\x02\x12\x0f\n\x0bPROXY_REPLY\x10\x03\"B\n\x0bSignMessage\x12\x12\n\npublic_key\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c\x12\x11\n\tsignature\x18\x03 \x01(\x0c\x62\x06proto3')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -50,8 +50,8 @@ _MESSAGE_MESSAGETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=587,
-  serialized_end=664,
+  serialized_start=647,
+  serialized_end=724,
 )
 _sym_db.RegisterEnumDescriptor(_MESSAGE_MESSAGETYPE)
 
@@ -108,36 +108,43 @@ _MESSAGE_SELLERDATA = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='seller_addr', full_name='cpchain.Message.SellerData.seller_addr', index=1,
+      name='order_type', full_name='cpchain.Message.SellerData.order_type', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='buyer_addr', full_name='cpchain.Message.SellerData.buyer_addr', index=2,
+      name='seller_addr', full_name='cpchain.Message.SellerData.seller_addr', index=2,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='market_hash', full_name='cpchain.Message.SellerData.market_hash', index=3,
+      name='buyer_addr', full_name='cpchain.Message.SellerData.buyer_addr', index=3,
       number=4, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='AES_key', full_name='cpchain.Message.SellerData.AES_key', index=4,
-      number=5, type=12, cpp_type=9, label=1,
+      name='market_hash', full_name='cpchain.Message.SellerData.market_hash', index=4,
+      number=5, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='AES_key', full_name='cpchain.Message.SellerData.AES_key', index=5,
+      number=6, type=12, cpp_type=9, label=1,
       has_default_value=False, default_value=_b(""),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='storage', full_name='cpchain.Message.SellerData.storage', index=5,
-      number=6, type=11, cpp_type=10, label=1,
+      name='storage', full_name='cpchain.Message.SellerData.storage', index=6,
+      number=7, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -155,7 +162,7 @@ _MESSAGE_SELLERDATA = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=276,
-  serialized_end=428,
+  serialized_end=448,
 )
 
 _MESSAGE_BUYERDATA = _descriptor.Descriptor(
@@ -173,22 +180,29 @@ _MESSAGE_BUYERDATA = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='seller_addr', full_name='cpchain.Message.BuyerData.seller_addr', index=1,
+      name='order_type', full_name='cpchain.Message.BuyerData.order_type', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='buyer_addr', full_name='cpchain.Message.BuyerData.buyer_addr', index=2,
+      name='seller_addr', full_name='cpchain.Message.BuyerData.seller_addr', index=2,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='market_hash', full_name='cpchain.Message.BuyerData.market_hash', index=3,
+      name='buyer_addr', full_name='cpchain.Message.BuyerData.buyer_addr', index=3,
       number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='market_hash', full_name='cpchain.Message.BuyerData.market_hash', index=4,
+      number=5, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -205,8 +219,8 @@ _MESSAGE_BUYERDATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=430,
-  serialized_end=521,
+  serialized_start=450,
+  serialized_end=561,
 )
 
 _MESSAGE_PROXYREPLY = _descriptor.Descriptor(
@@ -231,8 +245,15 @@ _MESSAGE_PROXYREPLY = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='file_uri', full_name='cpchain.Message.ProxyReply.file_uri', index=2,
+      name='port_conf', full_name='cpchain.Message.ProxyReply.port_conf', index=2,
       number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='data_path', full_name='cpchain.Message.ProxyReply.data_path', index=3,
+      number=4, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -249,8 +270,8 @@ _MESSAGE_PROXYREPLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=523,
-  serialized_end=585,
+  serialized_start=563,
+  serialized_end=645,
 )
 
 _MESSAGE = _descriptor.Descriptor(
@@ -302,7 +323,7 @@ _MESSAGE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=29,
-  serialized_end=664,
+  serialized_end=724,
 )
 
 
@@ -346,8 +367,8 @@ _SIGNMESSAGE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=666,
-  serialized_end=732,
+  serialized_start=726,
+  serialized_end=792,
 )
 
 _MESSAGE_STORAGE.containing_type = _MESSAGE
