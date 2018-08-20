@@ -11,13 +11,13 @@ from twisted.internet import threads, protocol, ssl
 from twisted.protocols.basic import NetstringReceiver
 
 from cpchain import config
-from cpchain.utils import join_with_rc, join_with_root
+from cpchain.utils import join_with_rc
 from cpchain.utils import reactor
 
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.message import message_sanity_check, \
 sign_message_verify, is_address_from_key
-
+from cpchain.proxy.ssl_cert import get_ssl_cert
 from cpchain.proxy.db import Trade, ProxyDB
 
 from cpchain.proxy.chain import order_is_ready_on_chain, \
@@ -214,18 +214,7 @@ class ProxyServer:
         os.makedirs(server_root, exist_ok=True)
 
     def run(self):
-        server_key = os.path.expanduser(
-            join_with_rc(config.proxy.server_key))
-        server_crt = os.path.expanduser(
-            join_with_rc(config.proxy.server_crt))
-
-        if not os.path.isfile(server_key):
-            logger.info("SSL key/cert file not found, "
-                        + "run local self-test by default")
-            server_key_sample = 'cpchain/assets/proxy/key/server.key'
-            server_crt_sample = 'cpchain/assets/proxy/key/server.crt'
-            server_key = join_with_root(server_key_sample)
-            server_crt = join_with_root(server_crt_sample)
+        server_key, server_crt = get_ssl_cert()
 
         self.trans = reactor.listenSSL(
             self.port,
