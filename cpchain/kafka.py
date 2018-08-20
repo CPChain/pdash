@@ -49,7 +49,7 @@ class KafkaConsumer:
         self.consumer = Consumer(conf)
         self.running = True
 
-    def consume(self, topics, msg_process_callback):
+    def consume(self, topics):
         try:
             self.consumer.subscribe(topics)
 
@@ -64,7 +64,7 @@ class KafkaConsumer:
                     else:
                         raise KafkaException(msg.error())
 
-                msg_process_callback(msg.value())
+                yield msg.value()
 
         finally:
             self.consumer.close()
