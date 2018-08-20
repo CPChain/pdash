@@ -47,18 +47,17 @@ sidebar = "cpchain/assets/wallet/qss/sidebar.qss"
 
 
 [proxy]
-server_host = 'localhost'
-server_ctrl_port = 8000
-server_data_port = 8001
-server_peer_port = 8100
-server_dht_port = 8200
+server_port = 8000
+server_file_port = 8001
+server_stream_ws_port = 8002
+server_stream_restful_port = 8003
+server_kad_port = 8102
 server_key = 'proxy/server.key'
 server_crt = 'proxy/server.crt'
 dbpath = 'proxy/proxy.db'
 server_root = 'proxy/server_root'
-tracker = '192.168.0.132:8101'
-boot_nodes = '192.168.0.132:8201'
-
+boot_nodes = 'localhost:8103'
+kafka_brokers = 'localhost:29092'
 
 [market]
 dbpath = "cpchain/market/market.db"
