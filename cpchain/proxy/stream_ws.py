@@ -70,7 +70,7 @@ class WSServer:
     def __init__(self):
 
         port = config.proxy.server_stream_ws_port
-        self.factory = WebSocketServerFactory(u"ws://localhost:%d" % port)
+        self.factory = WebSocketServerFactory(u"ws://0.0.0.0:%d" % port)
         self.factory.protocol = WSProtocol
         self.factory.proxy_db = ProxyDB()
 
