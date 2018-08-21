@@ -18,7 +18,7 @@ class WSProtocol(WebSocketServerProtocol):
         self.error_request = False
 
         try:
-            self.stream_id = request.params['stream_id'][0]
+            self.stream_id = request.path.strip('/')
             self.action = request.params['action'][0] # publish or subscribe
             if self.action not in ['publish', 'subscribe']:
                 self.error_request = True
