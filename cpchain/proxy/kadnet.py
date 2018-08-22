@@ -45,6 +45,7 @@ class KadNode(Server):
         nodes = (config.proxy.boot_nodes.split())
         for node in nodes:
             addr, port = node.split(':')
+            port = int(port)
             boot_nodes.append((str(addr), int(port)))
 
         proxy_id = get_proxy_id()
@@ -90,7 +91,6 @@ class KadNode(Server):
                     )
                 ).add_done_callback(bootstrap_done)
 
-        port = config.proxy.server_kad_port
         self.listen(port).addCallback(listen_done)
 
         return d
