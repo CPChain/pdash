@@ -52,11 +52,13 @@ server_file_port = 8001
 server_stream_ws_port = 8002
 server_stream_restful_port = 8003
 server_kad_port = 8102
+server_slave_port = 8200
 server_key = 'proxy/server.key'
 server_crt = 'proxy/server.crt'
 dbpath = 'proxy/proxy.db'
 server_root = 'proxy/server_root'
 boot_nodes = 'localhost:8103'
+tracker = '127.0.0.1:8201'
 kafka_brokers = 'localhost:29092'
 
 [market]

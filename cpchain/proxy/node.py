@@ -1,8 +1,10 @@
 from cpchain.proxy.server import ProxyServer
 from cpchain.proxy.file_server import FileServer
-from cpchain.proxy.kadnet import KadNode
 from cpchain.proxy.stream_ws import WSServer
 from cpchain.proxy.stream_restful import RestfulServer
+
+from cpchain.proxy.kadnet import KadNode
+from cpchain.proxy.centralnet import Slave
 
 from cpchain.proxy.account import set_proxy_account
 
@@ -16,6 +18,7 @@ class Node:
         self.stream_restful_server = RestfulServer()
 
         self.kad_node = KadNode()
+        self.slave = Slave()
 
     def run(self):
         self.proxy_server.run()
@@ -24,6 +27,7 @@ class Node:
         self.stream_restful_server.run()
 
         self.kad_node.run()
+        self.slave.run()
 
     def stop(self):
         self.proxy_server.stop()
@@ -32,3 +36,4 @@ class Node:
         self.stream_restful_server.stop()
 
         self.kad_node.stop()
+        self.slave.stop()
