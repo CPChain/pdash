@@ -2,6 +2,7 @@
 
 import os
 import logging
+import json
 
 from twisted.internet import reactor, protocol, ssl, defer
 from twisted.protocols.basic import NetstringReceiver
@@ -11,6 +12,9 @@ import treq
 from cpchain import config
 from cpchain.proxy.msg.trade_msg_pb2 import Message
 from cpchain.proxy.message import message_sanity_check
+
+from cpchain.proxy.kadnet import KadNode
+from cpchain.proxy.centralnet import Slave
 
 logger = logging.getLogger(__name__)
 
@@ -147,3 +151,37 @@ def download_file(url):
     d.addCallback(treq.collect, f.write)
     d.addBoth(lambda _: f.close())
     return d
+
+def pick_proxy():
+    return Slave().pick_peer()
+
+def get_proxy_addr(proxy_id):
+    return KadNode().get_peer(proxy_id)
+
+def concat_url(ip, proxy_reply):
+
+    if proxy_reply.error:
+        return
+
+    port_conf = json.loads(proxy_reply.port_conf)
+
+    urls = []
+
+    if 'file' in port_conf:
+        port = int(port_conf['file'])
+        url = 'https://%s:%d/%s' % (ip, port, proxy_reply.data_path)
+        urls.append(url)
+
+    if 'stream_ws' in port_conf:
+        port = int(port_conf['stream_ws'])
+        url = 'ws://%s:%d/%s' % \
+            (ip, port, proxy_reply.data_path)
+        urls.append(url)
+
+    if 'stream_restful' in port_conf:
+        port = int(port_conf['stream_restful'])
+        url = 'http://%s:%d/%s' % \
+            (ip, port, proxy_reply.data_path)
+        urls.append(url)
+
+    return urls
