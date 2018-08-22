@@ -47,10 +47,10 @@ if __name__ == '__main__':
     log.startLogging(sys.stdout)
 
     if len(sys.argv) != 2:
-        print("Need the WebSocket server address, i.e. ws://127.0.0.1:8002?stream_id=80847d48-a43d-11e8-9cea-080027bea42a&action=publish")
+        print("Need the WebSocket server address, i.e. ws://127.0.0.1:8002/80847d48-a43d-11e8-9cea-080027bea42a")
         sys.exit(1)
 
-    factory = WebSocketClientFactory(sys.argv[1])
+    factory = WebSocketClientFactory(sys.argv[1] + '?action=publish')
     factory.protocol = MyClientProtocol
 
     connectWS(factory)
