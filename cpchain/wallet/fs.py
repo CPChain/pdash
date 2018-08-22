@@ -1,7 +1,7 @@
 import tempfile
 import os
 import logging
-
+import importlib
 from cpchain.wallet.db import get_session, FileInfo, create_engine, sessionmaker, BuyerFileInfo, CollectInfo, FileInfoVersion
 from cpchain.crypto import AESCipher, RSACipher
 from cpchain.utils import join_with_rc
@@ -122,6 +122,27 @@ def decrypt_file(file_in_path, file_out_path):
     decrypter = AESCipher(aes_key)
     decrypter.decrypt(file_in_path, file_out_path)
 
+def upload_file(file_path, storage_type, dest):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        encrypted_path = os.path.join(tmpdirname, 'encrypted.txt')
+        logger.debug("start to encrypt")
+        this_key = encrypt_file(file_path, encrypted_path)
+        logger.debug("encrypt completed")
+    storage_module = importlib.import_module(
+        "cpchain.storage-plugin." + storage_type
+    )
+    storage = storage_module.Storage()
+    file_uri = storage.upload_file(file_path, dest)  # d_upload file_uri: string save directly
+    file_name = list(os.path.split(file_path))[-1]
+    file_size = os.path.getsize(file_path)
+    logger.debug('start to write data into database')
+    new_file_info = FileInfo(hashcode=str(file_uri), name=file_name, path=file_path, size=file_size,
+                             remote_type=str(storage_type), remote_uri=str(file_uri),
+                             is_published=False, aes_key=this_key)
+    add_file(new_file_info)
+    logger.debug('file id: %s', new_file_info.id)
+    file_id = new_file_info.id
+    return file_id
 
 def upload_file_ipfs(file_path):
     with tempfile.TemporaryDirectory() as tmpdirname:
