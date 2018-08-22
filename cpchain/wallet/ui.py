@@ -3121,6 +3121,7 @@ class CloudTab(QScrollArea):
             def bind_slots():
                 self.cancel_btn.clicked.connect(self.handle_cancel)
                 self.ok_btn.clicked.connect(self.handle_ok)
+                self.file_choose_btn.clicked.connect(self.handle_choose_file)
             bind_slots()
 
             storage_module = importlib.import_module(
@@ -3174,7 +3175,7 @@ class CloudTab(QScrollArea):
 
             self.show()
 
-        def choose_file(self):
+        def handle_choose_file(self):
             self.file_choice = QFileDialog.getOpenFileName()[0]
 
         def handle_cancel(self):
@@ -3186,36 +3187,20 @@ class CloudTab(QScrollArea):
             index = 0
             for key in self.dst:
                 arg = self.edit_list[index].text()
-                if arg:
+                if not arg:
                     flag = False
                     break
                 self.dst[key] = arg
 
-            if flag is True:
+            if flag is False:
                 QMessageBox.warning(self, "Warning", "Please input all the required fields first")
                 return
 
             if self.file_choice == "":
                 QMessageBox.warning(self, "Warning", "Please select your files to upload first !")
                 return
-
-            storage_module = importlib.import_module(
-                "cpchain.storage-plugin." + self.storage_type
-            )
-            storage = storage_module.Storage()
-            # fixme: d_upload json.dumps(dict); why not a dict directly
-            d_upload = deferToThread(storage.upload_file, self.file_choice, self.dst)
+            d_upload = deferToThread(fs.upload_file, self.file_choice, self.storage_type, self.dst)
             d_upload.addCallback(self.handle_ok_callback)
-
-            # TODO: to be deleted
-            if self.ipfs_btn.isChecked():
-                print("start uploading")
-                d_upload = fs.upload_file_ipfs(self.file_choice)
-                self.handle_ok_callback(d_upload)
-            if self.s3_btn.isChecked():
-                print("upload to s3")
-                d_upload = deferToThread(fs.upload_file_s3, self.file_choice)
-                d_upload.addCallback(self.handle_ok_callback)
 
             self.close()
 
@@ -3243,7 +3228,7 @@ class CloudTab(QScrollArea):
                     main_wnd.main_tab_index['cloud_tab'] = tab_index
                     main_wnd.content_tabs.setCurrentIndex(tab_index)
 
-                    logger.debug("update table successfully !")
+                    logger.debug("update table successfully!")
                     QMessageBox.information(self, "Tips", "Uploaded successfuly")
                 else:
                     logger.debug('upload file info to market failed')
@@ -3301,7 +3286,8 @@ class CloudTab(QScrollArea):
             # fixme: list widget item check
             cur_row = self.list_widget.currentRow()
             storage_service = self.service_list[cur_row]
-            CloudTab.UploadDialog(self, storage_service=storage_service)
+            self.upload_dlg = CloudTab.UploadDialog(storage_service)
+            self.upload_dlg.show()
             self.close()
 
         def handle_cancel(self):
