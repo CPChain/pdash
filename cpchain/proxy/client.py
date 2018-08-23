@@ -155,7 +155,39 @@ def download_file(url):
 def pick_proxy():
     return Slave().pick_peer()
 
-def get_proxy_addr(proxy_id):
+def start_proxy_request(sign_message, proxy_id):
+    '''send request to proxy server
+
+    Args:
+        sign_message: request message
+        proxy_id: proxy eth addr
+
+    Returns:
+        tuple: (error, AES_key, urls)
+    '''
+
+    d = defer.Deferred()
+
+    def run_client_done(proxy_reply, ip):
+        if not proxy_reply.error:
+            urls = concat_url(ip, proxy_reply)
+            d.callback((None, proxy_reply.AES_key, urls))
+        else:
+            d.callback((proxy_reply.error, None, None))
+
+    def get_proxy_done(proxy_addr):
+        if proxy_addr:
+            proxy_client = ProxyClient(proxy_addr)
+            proxy_client.run(sign_message).addCallback(run_client_done, proxy_addr[0])
+
+        else:
+            d.callback(('failed to get proxy addr', None, None))
+
+    get_proxy(proxy_id).addCallback(get_proxy_done)
+
+    return d
+
+def get_proxy(proxy_id):
     return KadNode().get_peer(proxy_id)
 
 def concat_url(ip, proxy_reply):
