@@ -6,6 +6,7 @@ import os
 from twisted.test import proto_helpers
 from twisted.trial import unittest
 from twisted.internet.defer import Deferred
+from twisted.internet.protocol import Factory
 
 from cpchain.utils import reactor, join_with_rc
 
@@ -17,7 +18,7 @@ chain.order_is_ready_on_chain = lambda _: True
 chain.claim_data_fetched_to_chain = lambda _: True
 chain.claim_data_delivered_to_chain = lambda _: True
 
-from cpchain.proxy.server import SSLServerFactory
+from cpchain.proxy.server import SSLServerProtocol
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.db import ProxyDB
 from cpchain import config
@@ -38,12 +39,15 @@ seller_public_key = ECCipher.serialize_public_key(
 seller_addr = ECCipher.get_address_from_public_key(
     seller_account.public_key)  #string type
 
+order_id = 1
+order_type = 'file'
 
 def fake_seller_message():
     message = Message()
     seller_data = message.seller_data
     message.type = Message.SELLER_DATA
-    seller_data.order_id = 1
+    seller_data.order_id = order_id
+    seller_data.order_type = order_type
     seller_data.seller_addr = seller_addr
     seller_data.buyer_addr = buyer_addr
     seller_data.market_hash = 'MARKET_HASH'
@@ -58,7 +62,8 @@ def fake_buyer_message():
     message = Message()
     buyer_data = message.buyer_data
     message.type = Message.BUYER_DATA
-    buyer_data.order_id = 1
+    buyer_data.order_id = order_id
+    buyer_data.order_type = order_type
     buyer_data.seller_addr = seller_addr
     buyer_data.buyer_addr = buyer_addr
     buyer_data.market_hash = 'MARKET_HASH'
@@ -111,16 +116,19 @@ class SSLServerTestCase(unittest.TestCase):
                     os.rmdir(os.path.join(root, name))
 
     def setUp(self):
-        self.factory = SSLServerFactory()
+        self.factory = Factory()
+        self.factory.protocol = SSLServerProtocol
         self.clean_up_old_data()
 
-        self.factory.proxy_db = ProxyDB()
-        self.factory.proxy_db.session_create()
-
-        self.factory.ip = '127.0.0.1'
-        self.factory.data_port = 8001
-
         self.proto = self.factory.buildProtocol(("localhost", 0))
+
+        self.proto.proxy_db = ProxyDB()
+        self.proto.port_conf = {
+            'file': config.proxy.server_file_port,
+            'stream_ws': config.proxy.server_stream_ws_port,
+            'stream_restful': config.proxy.server_stream_restful_port
+        }
+
         self.transport = proto_helpers.StringTransport()
         self.proto.makeConnection(self.transport)
 
