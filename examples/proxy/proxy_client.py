@@ -8,8 +8,7 @@ from cpchain.utils import reactor
 from cpchain.account import Accounts
 from cpchain.crypto import ECCipher
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
-listcp
-from cpchain.proxy.client import pick_proxy, get_proxy_addr, concat_url, ProxyClient, download_file
+from cpchain.proxy.client import pick_proxy, start_proxy_request, download_file
 
 log.startLogging(sys.stdout)
 
@@ -76,22 +75,15 @@ def seller_request():
         )
 
     proxy_id = yield pick_proxy()
-    proxy_addr = yield get_proxy_addr(proxy_id)
 
-    if proxy_addr:
-        proxy_client = ProxyClient(proxy_addr)
-        proxy_reply = yield proxy_client.run(sign_message)
-        proxy_client.stop()
+    if proxy_id:
+        error, AES_key, urls = yield start_proxy_request(sign_message, proxy_id)
 
-        if not proxy_reply.error:
-            print('AES_Key: %s' % proxy_reply.AES_key)
-            ip = proxy_addr[0]
-            urls = concat_url(ip, proxy_reply)
-            print(urls)
+        if error:
+            print(error)
         else:
-            print(proxy_reply.error)
-
-    buyer_request()
+            print(AES_key)
+            print(urls)
 
 @defer.inlineCallbacks
 def buyer_request():
@@ -113,24 +105,19 @@ def buyer_request():
         )
 
     proxy_id = yield pick_proxy()
-    proxy_addr = yield get_proxy_addr(proxy_id)
 
-    if proxy_addr:
-        proxy_client = ProxyClient(proxy_addr)
-        proxy_reply = yield proxy_client.run(sign_message)
-        proxy_client.stop()
+    if proxy_id:
+        error, AES_key, urls = yield start_proxy_request(sign_message, proxy_id)
 
-        if not proxy_reply.error:
-            print('AES_Key: %s' % proxy_reply.AES_key)
-            ip = proxy_addr[0]
-            urls = concat_url(ip, proxy_reply)
-            print(urls)
-            if order_type == 'file':
-                yield download_file(urls[0])
+        if error:
+            print(error)
         else:
-            print(proxy_reply.error)
+            print(AES_key)
+            print(urls)
+            yield download_file(urls[0])
 
 seller_request()
+buyer_request()
 
 try:
     reactor.run()
