@@ -57,9 +57,9 @@ server_key = 'proxy/server.key'
 server_crt = 'proxy/server.crt'
 dbpath = 'proxy/proxy.db'
 server_root = 'proxy/server_root'
-boot_nodes = 'localhost:8103'
-tracker = '127.0.0.1:8201'
-kafka_brokers = 'localhost:29092'
+boot_nodes = '192.168.0.132:8103'
+tracker = '192.168.0.132:8201'
+kafka_brokers = '192.168.0.132:29092'
 
 [market]
 dbpath = "cpchain/market/market.db"
