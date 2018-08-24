@@ -63,7 +63,6 @@ kafka_brokers = '192.168.0.132:29092'
 
 [market]
 dbpath = "cpchain/market/market.db"
-server_addr = "192.168.0.132"
 server_port = 8083
 es_hosts = '192.168.0.132:9200'
 market_url = "http://192.168.0.132:8083/"
