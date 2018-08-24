@@ -49,6 +49,7 @@ eth-keyfile
 web3
 qt5reactor
 toml==0.9.4
+quamash
 "
 
 pkgs="
