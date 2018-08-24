@@ -14,6 +14,7 @@ cryptography
 web3
 apscheduler
 pytest-django
+psycopg2-binary
 "
 
 chain_pkgs="
