@@ -21,16 +21,6 @@ mode = "dummy"
 falcon_provider_addr = "http://192.168.0.132:8545"
 local_provider_addr = "http://127.0.0.1:8545"
 
-
-[storage.s3]
-bucket = "YOUR_BUCKET"
-secret_access_key = "YOUR_KEY"
-access_key_id = "YOUR_KEY_ID"
-
-[storage.ipfs]
-addr = '192.168.0.132'
-port = 5001
-
 [wallet]
 # this file is relative to rc_dir
 dbpath = "wallet/wallet.db"
