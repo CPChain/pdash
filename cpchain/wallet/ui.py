@@ -15,7 +15,7 @@ from cpchain import config, root_dir
 from cpchain.wallet import fs
 from cpchain.crypto import ECCipher, RSACipher, Encoder
 from cpchain.utils import open_file, sizeof_fmt
-from cpchain.proxy.node import pick_proxy
+from cpchain.proxy.client import pick_proxy
 
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks

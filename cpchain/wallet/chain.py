@@ -24,7 +24,7 @@ from cpchain.wallet.fs import add_file
 from cpchain.wallet.utils import eth_addr_to_string, get_address_from_public_key_object
 from cpchain.wallet.fs import get_session, FileInfo, decrypt_file_aes
 
-from cpchain.proxy.node import start_proxy_request
+from cpchain.proxy.client import start_proxy_request
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 
 logger = logging.getLogger(__name__) # pylint: disable=locally-disabled, invalid-name
