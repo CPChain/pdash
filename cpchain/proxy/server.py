@@ -1,43 +1,36 @@
 #!/usr/bin/env python3
 
 import os
-import importlib
+import json
 import logging
+import importlib
 
-from twisted.internet import threads, protocol
+from uuid import uuid1 as uuid
+
+from twisted.internet import threads, protocol, ssl
 from twisted.protocols.basic import NetstringReceiver
 
-from twisted.web.resource import Resource, ForbiddenResource
-from twisted.web.static import File
-
 from cpchain import config
+from cpchain.utils import join_with_rc
+from cpchain.utils import reactor
+
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.message import message_sanity_check, \
 sign_message_verify, is_address_from_key
-
+from cpchain.proxy.ssl_cert import get_ssl_cert
 from cpchain.proxy.db import Trade, ProxyDB
-from cpchain.utils import join_with_rc
+
 from cpchain.proxy.chain import order_is_ready_on_chain, \
 claim_data_delivered_to_chain, claim_data_fetched_to_chain
 
 logger = logging.getLogger(__name__)
 
-server_root = join_with_rc(config.proxy.server_root)
-server_root = os.path.expanduser(server_root)
-os.makedirs(server_root, exist_ok=True)
 
 class SSLServerProtocol(NetstringReceiver):
 
-    def __init__(self, factory):
-        self.factory = factory
-        self.proxy_db = factory.proxy_db
-
-        self.peer = None
-
     def connectionMade(self):
-        self.factory.numConnections += 1
-        self.peer = str(self.transport.getPeer())
-        logger.debug("connect to client %s" % self.peer)
+        self.peer = self.transport.getPeer()
+        logger.debug("connect to client %s" % str(self.peer))
 
     def stringReceived(self, string):
         sign_message = SignMessage()
@@ -77,8 +70,12 @@ class SSLServerProtocol(NetstringReceiver):
         if message.type == Message.SELLER_DATA:
             data = message.seller_data
             trade.order_id = data.order_id
+            trade.order_type = data.order_type
+            trade.seller_addr = data.seller_addr
+            trade.buyer_addr = data.buyer_addr
+            trade.market_hash = data.market_hash
 
-            if proxy_db.count(trade):
+            if proxy_db.query(trade):
                 error = "trade record already in database"
                 return self.proxy_reply_error(error)
 
@@ -86,49 +83,57 @@ class SSLServerProtocol(NetstringReceiver):
                 error = "order is not ready on chain"
                 return self.proxy_reply_error(error)
 
-            trade.seller_addr = data.seller_addr
-            trade.buyer_addr = data.buyer_addr
-            trade.market_hash = data.market_hash
             trade.AES_key = data.AES_key
+            trade.order_delivered = False
 
-            # use order id as the local file name to avoid conflict
-            trade.file_name = str(trade.order_id)
-            file_path = os.path.join(server_root, trade.file_name)
+            # to avoid conflict, use uuid as local file path for file type order,
+            # use uuid as stream id for stream type order.
+            trade.data_path = str(uuid())
 
-            storage_type = data.storage.type
-            file_uri = data.storage.file_uri
+            if trade.order_type == 'file':
+                server_root = join_with_rc(config.proxy.server_root)
+                file_path = os.path.join(server_root, trade.data_path)
 
-            def download_file():
-                try:
-                    storage_module = importlib.import_module(
-                        "cpchain.storage-plugin." + storage_type
-                        )
+                storage_type = data.storage.type
+                file_uri = data.storage.file_uri
 
-                    storage = storage_module.Storage()
+                def download_file():
+                    try:
+                        storage_module = importlib.import_module(
+                            "cpchain.storage-plugin." + storage_type
+                            )
 
-                    storage.download_file(
-                        file_uri,
-                        file_path
-                        )
+                        storage = storage_module.Storage()
 
-                except:
-                    logger.exception('failed to fetch file')
-                    return False
-                else:
-                    return True
+                        storage.download_file(
+                            file_uri,
+                            file_path
+                            )
 
-            d = threads.deferToThread(
-                download_file
-            )
+                    except:
+                        logger.exception('failed to fetch file')
+                        return False
+                    else:
+                        return True
 
-            d.addCallback(self.file_download_finished, trade)
+                d = threads.deferToThread(
+                    download_file
+                )
+
+                d.addCallback(self.fetch_data_finished, trade)
+            elif trade.order_type == 'stream':
+                self.fetch_data_finished(True, trade)
 
         elif message.type == Message.BUYER_DATA:
             data = message.buyer_data
             trade.order_id = data.order_id
+            trade.order_type = data.order_type
+            trade.seller_addr = data.seller_addr
+            trade.buyer_addr = data.buyer_addr
+            trade.market_hash = data.market_hash
 
-            if proxy_db.count(trade):
-                trade = proxy_db.query(trade)
+            trade = proxy_db.query(trade)
+            if trade:
 
                 if trade.order_delivered:
                     self.proxy_reply_success(trade)
@@ -143,7 +148,7 @@ class SSLServerProtocol(NetstringReceiver):
                 error = "trade record not found in database"
                 self.proxy_reply_error(error)
 
-    def file_download_finished(self, success, trade):
+    def fetch_data_finished(self, success, trade):
         if success:
             if not claim_data_fetched_to_chain(trade.order_id):
                 error = "failed to claim data fetched to chain"
@@ -160,11 +165,17 @@ class SSLServerProtocol(NetstringReceiver):
         message.type = Message.PROXY_REPLY
         proxy_reply = message.proxy_reply
         proxy_reply.AES_key = trade.AES_key
-        file_uri = "https://%s:%d/%s" % (
-            self.factory.ip,
-            self.factory.data_port,
-            trade.file_uuid)
-        proxy_reply.file_uri = file_uri
+        if trade.order_type == 'file':
+            proxy_reply.port_conf = json.dumps({'file': self.port_conf['file']})
+        elif trade.order_type == 'stream':
+            proxy_reply.port_conf = json.dumps(
+                {
+                    'stream_ws': self.port_conf['stream_ws'],
+                    'stream_restful': self.port_conf['stream_restful']
+
+                }
+                )
+        proxy_reply.data_path = trade.data_path
 
         string = message.SerializeToString()
         self.sendString(string)
@@ -180,51 +191,39 @@ class SSLServerProtocol(NetstringReceiver):
         self.transport.loseConnection()
 
     def connectionLost(self, reason):
-        self.factory.numConnections -= 1
-        logger.debug("lost connection to client %s" % self.peer)
-
-class SSLServerFactory(protocol.Factory):
-    numConnections = 0
-
-    def __init__(self, ip=None, data_port=None):
-        self.proxy_db = None
-        self.ip = ip or '127.0.0.1'
-        self.data_port = data_port or config.proxy.server_data_port
-
-    def set_external_ip(self, ip):
-        self.ip = ip
-
-    def buildProtocol(self, addr):
-        return SSLServerProtocol(self)
-
-    def startFactory(self):
-        self.proxy_db = ProxyDB()
-        self.proxy_db.session_create()
-
-    def stopFactory(self):
-        self.proxy_db.session_close()
+        logger.debug("lost connection to client %s" % str(self.peer))
 
 
-class FileServer(Resource):
-
+class ProxyServer:
     def __init__(self):
-        Resource.__init__(self)
-        self.proxy_db = ProxyDB()
-        self.proxy_db.session_create()
+        self.trans = None
 
-    def getChild(self, path, request):
+        self.factory = protocol.Factory()
+        self.factory.protocol = SSLServerProtocol
+        self.factory.protocol.proxy_db = ProxyDB()
+        self.factory.protocol.port_conf = {
+            'file': config.proxy.server_file_port,
+            'stream_ws': config.proxy.server_stream_ws_port,
+            'stream_restful': config.proxy.server_stream_restful_port
+        }
 
-        # don't expose the file list under root dir
-        # for security consideration
-        if path == b'':
-            return ForbiddenResource()
+        self.port = config.proxy.server_port
 
-        uuid = path.decode()
-        trade = Trade()
-        trade = self.proxy_db.query_file_uuid(uuid)
-        if trade:
-            file_name = trade.file_name
-            file_path = os.path.join(server_root, file_name)
-            return File(file_path)
+        server_root = join_with_rc(config.proxy.server_root)
+        server_root = os.path.expanduser(server_root)
+        os.makedirs(server_root, exist_ok=True)
 
-        return ForbiddenResource()
+    def run(self):
+        server_key, server_crt = get_ssl_cert()
+
+        self.trans = reactor.listenSSL(
+            self.port,
+            self.factory,
+            ssl.DefaultOpenSSLContextFactory(
+                server_key,
+                server_crt
+                )
+            )
+
+    def stop(self):
+        self.trans.stopListening()

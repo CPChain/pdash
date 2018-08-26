@@ -17,24 +17,27 @@ message Message {
 
 	message SellerData {
 		uint64 order_id = 1;
-		string seller_addr = 2;
-		string buyer_addr = 3;
-		string market_hash = 4;
-		bytes AES_key = 5;
-		Storage storage = 6;
+		string order_type = 2;
+		string seller_addr = 3;
+		string buyer_addr = 4;
+		string market_hash = 5;
+		bytes AES_key = 6;
+		Storage storage = 7;
 	}
 
 	message BuyerData{
 		uint64 order_id = 1;
-		string seller_addr = 2;
-		string buyer_addr = 3;
-		string market_hash = 4;
+		string order_type = 2;
+		string seller_addr = 3;
+		string buyer_addr = 4;
+		string market_hash = 5;
 	}
 
 	message ProxyReply {
 		string error = 1;
 		bytes AES_key = 2;
-		string file_uri = 3;
+		string port_conf = 3;
+		string data_path = 4;
 	}
 
 	MessageType type = 1;
