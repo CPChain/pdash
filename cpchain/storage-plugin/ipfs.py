@@ -6,17 +6,14 @@ class Storage:
     def user_input_param(self):
         # fixme: should get user input from UI
 
-        param = {
+        return {
             'host': '192.168.0.132',
-            'port': 5001
+            'port': '5001'
         }
 
-        return json.dumps(param)
-
     def upload_file(self, src, dst):
-        dst = json.loads(dst)
-        host = dst['host']
-        port = dst['port']
+        host = str(dst['host'])
+        port = int(dst['port'])
 
         client = ipfsapi.connect(host, port)
         file_node = client.add(src)
