@@ -18,6 +18,7 @@ class Product(models.Model):
     owner = models.ForeignKey(WalletUser, on_delete=models.CASCADE)
     owner_address = models.CharField(max_length=200)
     title = models.CharField(max_length=100)
+    ptype = models.CharField(max_length=10, default='file', choices=(('file', 'file'), ('stream', 'stream')))
     description = models.TextField()
     tags = models.CharField(max_length=200, null=True)
     price = models.FloatField()
@@ -25,17 +26,15 @@ class Product(models.Model):
     start_date = models.DateTimeField('Start time', null=True)
     end_date = models.DateTimeField('End time', null=True)
     status = models.IntegerField('0:normal,1:frozen', default=0)
-    size = models.IntegerField('file size (byte)', null=True, default=0)
     seq = models.IntegerField('Sequence increase')
-    file_md5 = models.CharField(max_length=32, null=True)
     # verify wallet hash(title,description,expired_date,price,tags)
     signature = models.CharField('Signature created by client', max_length=200, null=True)
     msg_hash = models.CharField('Msg hash(owner_address,title,description,price,created,expired)'
                                 , max_length=256, null=True)
 
     def get_signature_source(self):
-        ss = self.owner_address + self.title + str(self.description[0]) + str(self.price[0]) \
-             + self.start_date + self.end_date + str(self.file_md5)
+        ss = self.owner_address + self.title + str(self.ptype) + str(self.description[0]) + str(self.price[0]) \
+             + self.start_date + self.end_date
         return ss
 
     def get_msg_hash_source(self):
@@ -47,14 +46,13 @@ class Product(models.Model):
         obj = ProductIndex(
             meta={'id': self.msg_hash},
             title=self.title,
+            ptype=self.ptype,
             description=self.description,
             price=self.price,
             tags=self.tags.split(','),
             start_date=self.start_date,
             end_date=self.end_date,
             market_hash=self.msg_hash,
-            file_md5=self.file_md5,
-            size=self.size,
             status=self.status,
             created=self.created,
             owner_address=self.owner_address,

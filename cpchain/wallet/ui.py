@@ -1892,6 +1892,7 @@ class PublishDialog(QDialog):
 
     def handle_publish(self):
         self.pinfo_title = self.pinfo_title_edit.text()
+        self.pinfo_type = 'file'
         self.pinfo_descrip = self.pinfo_descrip_edit.toPlainText()
         self.pinfo_tag = self.pinfo_tag_edit.text()
         self.pinfo_price = self.pinfo_price_edit.text()
@@ -1905,10 +1906,10 @@ class PublishDialog(QDialog):
             self.path = file_info.path
             self.file_md5 = hashlib.md5(open(self.path, "rb").read()).hexdigest()
             logger.debug(self.file_md5)
-            d_publish = wallet.market_client.publish_product(self.product_id, self.pinfo_title,
+            d_publish = wallet.market_client.publish_product(self.product_id, self.pinfo_title, self.pinfo_type,
                                                              self.pinfo_descrip, self.pinfo_price,
                                                              self.pinfo_tag, self.start_date,
-                                                             self.end_date, self.file_md5, self.size)
+                                                             self.end_date)
             def update_table(market_hash):
                 d = wallet.market_client.update_file_info(self.product_id, market_hash)
                 def handle_update_file(status):

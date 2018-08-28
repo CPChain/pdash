@@ -44,14 +44,13 @@ class ProductPublishAPIViewSet(APIView):
         product.seq = msg_seq.seq
         product.owner_address = data['owner_address']
         product.title = data['title']
-        product.description = data['description'],
-        product.price = data['price'],
-        product.created = now,
+        product.ptype = data['ptype']
+        product.description = data['description']
+        product.price = data['price']
+        product.created = now
         product.start_date = data['start_date']
-        product.size = data['size']
         product.end_date = data['end_date']
         product.signature = data['signature']
-        product.file_md5 = data['file_md5']
         product.owner_address = data['owner_address']
 
         signature_source = product.get_signature_source()
@@ -59,7 +58,7 @@ class ProductPublishAPIViewSet(APIView):
         logger.debug("product.signature:%s" % product.signature)
         logger.debug("signature_source:%s" % signature_source)
 
-        is_valid_sign = is_valid_signature(public_key,signature_source,product.signature)
+        is_valid_sign = is_valid_signature(public_key, signature_source, product.signature)
         logger.debug("product.signature:%s" % str(product.signature))
         logger.debug("is_valid_signature:%s,signature_source:%s" % (is_valid_sign, signature_source))
 

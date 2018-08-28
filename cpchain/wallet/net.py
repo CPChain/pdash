@@ -52,19 +52,17 @@ class MarketClient:
 
 
     @inlineCallbacks
-    def publish_product(self, selected_id, title, description, price, tags, start_date, end_date,
-                        file_md5, size):
+    def publish_product(self, selected_id, title, ptype, description, price, tags, start_date, end_date):
 
         logger.debug("start publish product")
         header = {'Content-Type': 'application/json'}
         header['MARKET-KEY'] = self.public_key
         header['MARKET-TOKEN'] = self.token
         logger.debug('header token: %s', self.token)
-        data = {'owner_address': self.public_key, 'title': title, 'description': description,
-                'price': price, 'tags': tags, 'start_date': start_date, 'end_date': end_date,
-                'file_md5': file_md5, 'size': size}
-        signature_source = str(self.public_key) + str(title) + str(description) + str(
-            price) + MarketClient.str_to_timestamp(start_date) + MarketClient.str_to_timestamp(end_date) + str(file_md5)
+        data = {'owner_address': self.public_key, 'title': title, 'ptype': ptype, 'description': description,
+                'price': price, 'tags': tags, 'start_date': start_date, 'end_date': end_date}
+        signature_source = str(self.public_key) + str(title) + str(ptype) + str(description) + str(
+            price) + MarketClient.str_to_timestamp(start_date) + MarketClient.str_to_timestamp(end_date)
         signature = ECCipher.create_signature(self.account.private_key, signature_source)
         data['signature'] = Encoder.bytes_to_hex(signature)
         logger.debug("signature: %s", data['signature'])
@@ -74,7 +72,8 @@ class MarketClient:
 
         logger.debug('market_hash: %s', confirm_info['data']['market_hash'])
         market_hash = confirm_info['data']['market_hash']
-        publish_file_update(market_hash, selected_id)
+        if ptype == 'file':
+            publish_file_update(market_hash, selected_id)
         return market_hash
 
 
