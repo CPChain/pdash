@@ -22,6 +22,12 @@ class ProductIndex(DocType):
 
     class Meta:
         index = 'market'
+        name = 'market'
+
+
+    class Index:
+        index = 'market'
+        name = 'market'
 
     def save(self, ** kwargs):
         return super().save(**kwargs)
