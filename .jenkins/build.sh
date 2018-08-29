@@ -53,6 +53,7 @@ then
         nohup ./bin/eth-init-chain > /dev/null 2>&1 &
         sleep 5s
         nohup ./bin/eth-run-geth > /dev/null 2>&1 &
+        GETH_PID=$!
         sleep 30s
     fi
 fi
@@ -70,6 +71,6 @@ fi
 # teardown
 if [ $modulename = "chain" ]
 then
-#   pkill -f "geth"
+    kill -9 $GETH_PID
     echo "chain test end"
 fi
