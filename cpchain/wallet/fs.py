@@ -5,8 +5,6 @@ import importlib
 from cpchain.wallet.db import get_session, FileInfo, create_engine, sessionmaker, BuyerFileInfo, CollectInfo, FileInfoVersion
 from cpchain.crypto import AESCipher, RSACipher
 from cpchain.utils import join_with_rc
-from cpchain.storage import IPFSStorage
-from cpchain.storage import S3Storage
 from cpchain import config
 
 logger = logging.getLogger(__name__)
@@ -144,56 +142,6 @@ def upload_file(file_path, storage_type, dest):
     file_id = new_file_info.id
     return file_id
 
-def upload_file_ipfs(file_path):
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        encrypted_path = os.path.join(tmpdirname, 'encrypted.txt')
-        logger.debug("start to encrypt")
-        this_key = encrypt_file(file_path, encrypted_path)
-        logger.debug("encrypt completed")
-        ipfs_client = IPFSStorage()
-        ipfs_client.connect()
-        file_hash = ipfs_client.upload_file(encrypted_path)
-    file_name = list(os.path.split(file_path))[-1]
-    file_size = os.path.getsize(file_path)
-    logger.debug('start to write data into database')
-    new_file_info = FileInfo(hashcode=str(file_hash), name=file_name, path=file_path, size=file_size,
-                             remote_type="ipfs", remote_uri="/ipfs/" + file_hash,
-                             is_published=False, aes_key=this_key)
-    add_file(new_file_info)
-    logger.debug('file id: %s', new_file_info.id)
-    file_id = new_file_info.id
-    return file_id
-
-
-def upload_file_s3(file_path):
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        encrypted_path = os.path.join(tmpdirname, 'encrypted.txt')
-        logger.debug("start to encrypt")
-        this_key = encrypt_file(file_path, encrypted_path)
-        logger.debug("encrypt completed")
-        file_name = list(os.path.split(file_path))[-1]
-        s3_client = S3Storage()
-        s3_client.upload_file(encrypted_path, file_name, "cpchain-bucket")
-
-
-    file_name = list(os.path.split(file_path))[-1]
-    file_size = os.path.getsize(file_path)
-    logger.debug('start to write data into database')
-    new_file_info = FileInfo(hashcode=str("s3_hash"), name=file_name, path=file_path, size=file_size,
-                             remote_type="s3", remote_uri=file_name, is_published=False, aes_key=this_key)
-    add_file(new_file_info)
-    logger.debug('file id: %s', new_file_info.id)
-    file_id = new_file_info.id
-    return file_id
-
-
-def download_file_ipfs(fhash, file_path):
-    ipfs_client = IPFSStorage()
-    ipfs_client.connect()
-    if ipfs_client.file_in_ipfs(fhash):
-        return ipfs_client.download_file(fhash, file_path)
-
-
 # Decrypt aes key with rsa key then decrypt file with aes key.
 def decrypt_file_aes(file_path, aes_key):
     decrypted_aes_key = RSACipher.decrypt(aes_key)
@@ -233,4 +181,3 @@ def buyer_file_update(file_title):
         session.commit()
     except:
         logger.exception("error publish_file_update")
-

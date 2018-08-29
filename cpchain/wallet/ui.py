@@ -524,8 +524,8 @@ class ProductDetailTab(QScrollArea):
         self.sales_label = QLabel("Sales: {}".format(self.product_info['sales_number']))
         self.sales_label.setObjectName("sales_label")
 
-        self.size_label = QLabel("Size: {}".format(self.product_info["size"]))
-        self.size_label.setObjectName("size_label")
+        self.size_label = QLabel("type: {}".format(self.product_info["ptype"]))
+        self.size_label.setObjectName("type_label")
 
         self.description_label = QLabel("Description")
         self.description_label.setObjectName("description_label")
