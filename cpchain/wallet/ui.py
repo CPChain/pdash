@@ -3192,6 +3192,7 @@ class CloudTab(QScrollArea):
                     flag = False
                     break
                 self.dst[key] = arg
+                index = index + 1
 
             if flag is False:
                 QMessageBox.warning(self, "Warning", "Please input all the required fields first")
