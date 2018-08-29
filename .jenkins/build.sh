@@ -40,13 +40,13 @@ sh install-deps.sh "$@"
 
 ROOT_PATH=`pwd`
 export PYTHONPATH=$PYTHONPATH:$ROOT_PATH
+export CPCHAIN_HOME_CONFIG_PATH=".jenkins/configuration/cpchain_$modulename.toml"
 
 echo "unit test for $modulename"
 
 # setup env
 if [ "$modulename" = "chain" ];
 then
-    export CPCHAIN_HOME_CONFIG_PATH="~/.cpchain/cpchain_$modulename.toml"
     if ! pgrep geth > /dev/null
     then
         echo "init chain"
@@ -60,7 +60,6 @@ fi
 # run test
 if [ "$modulename" = "market" ];
 then
-    export CPCHAIN_HOME_CONFIG_PATH="~/.cpchain/cpchain_$modulename.toml"
     #python cpchain/market/manage.py test tests/market/unit_test
     py.test ./cpchain/market --junitxml=test_report.xml --cov-report=xml --cov=./
 else
@@ -69,10 +68,8 @@ fi
 
 
 # teardown
-if [ $modulename="chain" ]
+if [ $modulename = "chain" ]
 then
 #   pkill -f "geth"
     echo "chain test end"
 fi
-
-return 0
