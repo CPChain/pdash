@@ -1,6 +1,7 @@
 import logging
 import os
 from queue import Queue
+import json
 
 from twisted.internet.threads import deferToThread
 from twisted.internet import reactor
@@ -22,6 +23,7 @@ from cpchain.chain.utils import default_w3, join_with_root
 from cpchain.chain.poll_chain import OrderMonitor
 
 from cpchain.wallet.db import BuyerFileInfo
+from cpchain.wallet import fs
 from cpchain.wallet.fs import add_file
 from cpchain.wallet.utils import eth_addr_to_string, get_address_from_public_key_object
 from cpchain.wallet.fs import get_session, FileInfo, decrypt_file_aes
@@ -72,7 +74,7 @@ class Broker:
         logger.debug("seller send request to proxy ...")
         order_id = list(order_info.keys())[0]
         new_order_info = order_info[order_id]
-        market_hash = new_order_info[0]
+        market_hash = Encoder.bytes_to_base64_str(new_order_info[0])
         seller_addr = eth_addr_to_string(new_order_info[3])
         buyer_addr = eth_addr_to_string(new_order_info[2])
         buyer_rsa_public_key = new_order_info[1]
@@ -101,15 +103,17 @@ class Broker:
         seller_data.order_type = 'file'
         seller_data.seller_addr = seller_addr
         seller_data.buyer_addr = buyer_addr
-        seller_data.market_hash = 'MARKET_HASH_3'
+        # 'MARKET_HASH_3
+        seller_data.market_hash = market_hash
         seller_data.AES_key = encrypted_aes_key
         storage = seller_data.storage
 
-        # ipfs storage example
-        storage.type = "ipfs"
-        import json
-        storage.file_uri = json.dumps({"host": "192.168.0.132", "port": 5001, "file_hash": "QmUaTxyR5ZqfHmD8ZqLcNkraLeRRdZHj95p4ebbdsbGG3F"})
+        file_info = fs.get_file_by_market_hash(market_hash)
+        storage_type = file_info.remote_type
+        remote_uri = file_info.remote_uri
 
+        storage.type = storage_type
+        storage.file_uri = json.dumps(remote_uri)
 
         sign_message = SignMessage()
         sign_message.public_key = self.wallet.market_client.public_key
@@ -132,6 +136,7 @@ class Broker:
         logger.debug("buyer send request to proxy ...")
         order_id = list(order_info.keys())[0]
         new_order_info = order_info[order_id]
+        market_hash = Encoder.bytes_to_base64_str(new_order_info[0])
         seller_addr = eth_addr_to_string(new_order_info[3])
         buyer_addr = eth_addr_to_string(new_order_info[2])
         proxy_id = eth_addr_to_string(new_order_info[4])
@@ -142,7 +147,8 @@ class Broker:
         buyer_data.order_type = 'file'
         buyer_data.seller_addr = seller_addr
         buyer_data.buyer_addr = buyer_addr
-        buyer_data.market_hash = 'MARKET_HASH_3'
+        # 'MARKET_HASH_3
+        buyer_data.market_hash = market_hash
 
         sign_message = SignMessage()
         sign_message.public_key = self.wallet.market_client.public_key
@@ -162,7 +168,7 @@ class Broker:
                  BuyerFileInfo.file_uuid: file_uuid, BuyerFileInfo.path: file_path,
                  BuyerFileInfo.size: os.path.getsize(file_path)}, synchronize_session=False)
             session.commit()
-            return market_hash
+            #return market_hash
 
         if error:
             print(error)

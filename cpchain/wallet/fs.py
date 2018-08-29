@@ -27,6 +27,9 @@ def get_file_by_id(file_id):
 def get_file_by_hash(file_hash):
     return get_session().query(FileInfo).filter(FileInfo.hashcode == file_hash)
 
+def get_file_by_market_hash(market_hash):
+    return get_session().query(FileInfo).filter(FileInfo.market_hash == market_hash)
+
 
 def get_file_id_new(file_id):
     return get_session().query(FileInfo).filter(FileInfo.id == file_id).all()[0]
