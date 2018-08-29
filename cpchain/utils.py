@@ -94,10 +94,12 @@ def sizeof_fmt(num, suffix='B'):
 
 
 def open_file(path):
-    executable = dict(linux='xdg-open',
-                      darwin='open')
-
-    subprocess.call((executable[sys.platform], path))
+    if sys.platform.startswith('darwin'):
+        subprocess.call(('open', path))
+    elif os.name == 'nt':  # For Windows
+        os.startfile(path)
+    elif os.name == 'posix':  # For Linux, Mac, etc.
+        subprocess.call(('xdg-open', path))
 
 
 class Encoder:
