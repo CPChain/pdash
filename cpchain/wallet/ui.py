@@ -3815,7 +3815,7 @@ class MainWindow(QMainWindow):
             if self.main_tab_index[key] > tab_index:
                 self.main_tab_index[key] -= 1
         tab_index = self.content_tabs.addTab(PurchasedTab(main_wnd.content_tabs), "")
-        self.main_tab_index['cloud_tab'] = tab_index
+        self.main_tab_index['purchase_tab'] = tab_index
         self.content_tabs.setCurrentIndex(tab_index)
         wid = self.content_tabs.currentWidget()
         if nex_tab == 'downloading':

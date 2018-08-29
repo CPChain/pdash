@@ -101,14 +101,14 @@ class Broker:
         seller_data.order_type = 'file'
         seller_data.seller_addr = seller_addr
         seller_data.buyer_addr = buyer_addr
-        seller_data.market_hash = 'MARKET_HASH'
+        seller_data.market_hash = 'MARKET_HASH_3'
         seller_data.AES_key = encrypted_aes_key
         storage = seller_data.storage
 
         # ipfs storage example
         storage.type = "ipfs"
         import json
-        storage.file_uri = json.dumps({"host": "192.168.0.132", "port": 5001, "file_hash": "QmWDmC1PvQ11U22fYRtQ9FKjAqNwysnumAsBKSUWacu6oV"})
+        storage.file_uri = json.dumps({"host": "192.168.0.132", "port": 5001, "file_hash": "QmUaTxyR5ZqfHmD8ZqLcNkraLeRRdZHj95p4ebbdsbGG3F"})
 
 
         sign_message = SignMessage()
@@ -142,7 +142,7 @@ class Broker:
         buyer_data.order_type = 'file'
         buyer_data.seller_addr = seller_addr
         buyer_data.buyer_addr = buyer_addr
-        buyer_data.market_hash = 'MARKET_HASH'
+        buyer_data.market_hash = 'MARKET_HASH_3'
 
         sign_message = SignMessage()
         sign_message.public_key = self.wallet.market_client.public_key
