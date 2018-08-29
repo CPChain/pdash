@@ -20,7 +20,7 @@ class MarketClient:
         self.wallet = wallet
         self.account = self.wallet.accounts.default_account
         self.public_key = ECCipher.serialize_public_key(self.account.public_key)
-        self.url = config.market.market_url
+        self.url = config.market.market_url + '/'
         self.token = ''
         self.nonce = ''
 
