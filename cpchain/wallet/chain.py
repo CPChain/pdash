@@ -74,7 +74,7 @@ class Broker:
         logger.debug("seller send request to proxy ...")
         order_id = list(order_info.keys())[0]
         new_order_info = order_info[order_id]
-        market_hash = Encoder.bytes_to_base64_str(new_order_info[0])
+        market_hash = new_order_info[0]
         seller_addr = eth_addr_to_string(new_order_info[3])
         buyer_addr = eth_addr_to_string(new_order_info[2])
         buyer_rsa_public_key = new_order_info[1]
@@ -104,16 +104,20 @@ class Broker:
         seller_data.seller_addr = seller_addr
         seller_data.buyer_addr = buyer_addr
         # 'MARKET_HASH_3
-        seller_data.market_hash = market_hash
+        seller_data.market_hash = Encoder.bytes_to_base64_str(market_hash)
         seller_data.AES_key = encrypted_aes_key
         storage = seller_data.storage
 
-        file_info = fs.get_file_by_market_hash(market_hash)
-        storage_type = file_info.remote_type
-        remote_uri = file_info.remote_uri
+        storage_type = session.query(FileInfo.remote_type) \
+            .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash)) \
+            .all()[0][0]
+        remote_uri = session.query(FileInfo.remote_uri) \
+            .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash)) \
+            .all()[0][0]
 
         storage.type = storage_type
-        storage.file_uri = json.dumps(remote_uri)
+        import yaml
+        storage.file_uri = json.dumps(yaml.load(remote_uri))
 
         sign_message = SignMessage()
         sign_message.public_key = self.wallet.market_client.public_key
@@ -136,7 +140,6 @@ class Broker:
         logger.debug("buyer send request to proxy ...")
         order_id = list(order_info.keys())[0]
         new_order_info = order_info[order_id]
-        market_hash = Encoder.bytes_to_base64_str(new_order_info[0])
         seller_addr = eth_addr_to_string(new_order_info[3])
         buyer_addr = eth_addr_to_string(new_order_info[2])
         proxy_id = eth_addr_to_string(new_order_info[4])
@@ -148,7 +151,7 @@ class Broker:
         buyer_data.seller_addr = seller_addr
         buyer_data.buyer_addr = buyer_addr
         # 'MARKET_HASH_3
-        buyer_data.market_hash = market_hash
+        buyer_data.market_hash = Encoder.bytes_to_base64_str(new_order_info[0])
 
         sign_message = SignMessage()
         sign_message.public_key = self.wallet.market_client.public_key
