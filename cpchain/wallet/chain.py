@@ -2,6 +2,7 @@ import logging
 import os
 from queue import Queue
 import json
+import yaml
 
 from twisted.internet.threads import deferToThread
 from twisted.internet import reactor
@@ -114,9 +115,9 @@ class Broker:
         remote_uri = session.query(FileInfo.remote_uri) \
             .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash)) \
             .all()[0][0]
-
         storage.type = storage_type
-        import yaml
+        # remote_uri: string representation of dictionary. e.g. ipfs: '{"host": '192.168.0.132', 'port': '5001', 'file_hash': 'sdfdf'}'
+        # yaml.load() is used here to convert above to dic() type
         storage.file_uri = json.dumps(yaml.load(remote_uri))
 
         sign_message = SignMessage()
