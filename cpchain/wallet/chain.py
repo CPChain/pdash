@@ -104,7 +104,6 @@ class Broker:
         seller_data.order_type = 'file'
         seller_data.seller_addr = seller_addr
         seller_data.buyer_addr = buyer_addr
-        # 'MARKET_HASH_3
         seller_data.market_hash = Encoder.bytes_to_base64_str(market_hash)
         seller_data.AES_key = encrypted_aes_key
         storage = seller_data.storage
@@ -151,7 +150,6 @@ class Broker:
         buyer_data.order_type = 'file'
         buyer_data.seller_addr = seller_addr
         buyer_data.buyer_addr = buyer_addr
-        # 'MARKET_HASH_3
         buyer_data.market_hash = Encoder.bytes_to_base64_str(new_order_info[0])
 
         sign_message = SignMessage()
@@ -172,7 +170,6 @@ class Broker:
                  BuyerFileInfo.file_uuid: file_uuid, BuyerFileInfo.path: file_path,
                  BuyerFileInfo.size: os.path.getsize(file_path)}, synchronize_session=False)
             session.commit()
-            #return market_hash
 
         if error:
             logger.debug(error)
