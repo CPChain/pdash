@@ -3129,7 +3129,8 @@ class CloudTab(QScrollArea):
                 "cpchain.storage-plugin." + self.storage_type
             )
             storage = storage_module.Storage()
-            self.dst = storage.user_input_param()
+            self.dst_default = storage.user_input_param()
+            self.dst = self.dst_default
 
             def create_labels():
                 for key in self.dst:
@@ -3143,6 +3144,7 @@ class CloudTab(QScrollArea):
                 for key in self.dst:
                     parameter_edit = QLineEdit()
                     parameter_edit.setObjectName("parameter_edit" + key)
+                    parameter_edit.setText(str(self.dst[key]))
                     self.edit_list.append(parameter_edit)
             create_edits()
 
@@ -3174,8 +3176,6 @@ class CloudTab(QScrollArea):
             set_layout()
             load_stylesheet(self, "uploaddialog.qss")
 
-            self.show()
-
         def handle_choose_file(self):
             self.file_choice = QFileDialog.getOpenFileName()[0]
 
@@ -3192,6 +3192,7 @@ class CloudTab(QScrollArea):
                     flag = False
                     break
                 self.dst[key] = arg
+                index += 1
 
             if flag is False:
                 QMessageBox.warning(self, "Warning", "Please input all the required fields first")
@@ -3249,7 +3250,7 @@ class CloudTab(QScrollArea):
         def init_ui(self):
             self.list_widget.setObjectName("storage_service_list")
             path = osp.join(root_dir, "cpchain/storage-plugin")
-            self.service_list = [osp.splitext(name)[0] for name in os.listdir(path) if name != 'template.py' and name != '__init__.py']
+            self.service_list = [osp.splitext(name)[0] for name in os.listdir(path) if name != 'template.py' and name != '__init__.py' and name != '__pycache__']
 
             for service in self.service_list:
                 item = QListWidgetItem(service)
@@ -3288,8 +3289,8 @@ class CloudTab(QScrollArea):
             cur_row = self.list_widget.currentRow()
             storage_service = self.service_list[cur_row]
             self.upload_dlg = CloudTab.UploadDialog(storage_service)
-            self.upload_dlg.show()
             self.close()
+            self.upload_dlg.show()
 
         def handle_cancel(self):
             self.close()
@@ -3814,7 +3815,7 @@ class MainWindow(QMainWindow):
             if self.main_tab_index[key] > tab_index:
                 self.main_tab_index[key] -= 1
         tab_index = self.content_tabs.addTab(PurchasedTab(main_wnd.content_tabs), "")
-        self.main_tab_index['cloud_tab'] = tab_index
+        self.main_tab_index['purchase_tab'] = tab_index
         self.content_tabs.setCurrentIndex(tab_index)
         wid = self.content_tabs.currentWidget()
         if nex_tab == 'downloading':

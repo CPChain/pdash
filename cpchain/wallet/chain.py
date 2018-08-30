@@ -1,9 +1,13 @@
 import logging
 import os
 from queue import Queue
+import json
+import yaml
 
 from twisted.internet.threads import deferToThread
 from twisted.internet import reactor
+
+from twisted.internet import defer
 
 from cryptography.hazmat.primitives.serialization import load_der_public_key
 from cryptography.hazmat.backends import default_backend
@@ -20,11 +24,12 @@ from cpchain.chain.utils import default_w3, join_with_root
 from cpchain.chain.poll_chain import OrderMonitor
 
 from cpchain.wallet.db import BuyerFileInfo
+from cpchain.wallet import fs
 from cpchain.wallet.fs import add_file
 from cpchain.wallet.utils import eth_addr_to_string, get_address_from_public_key_object
 from cpchain.wallet.fs import get_session, FileInfo, decrypt_file_aes
 
-from cpchain.proxy.client import start_proxy_request
+from cpchain.proxy.client import start_proxy_request, download_file
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 
 logger = logging.getLogger(__name__) # pylint: disable=locally-disabled, invalid-name
@@ -65,7 +70,7 @@ class Broker:
             self.buyer.confirm_order(current_id)
             logger.debug("order %s completed", current_id)
 
-
+    @defer.inlineCallbacks
     def seller_send_request(self, order_info):
         logger.debug("seller send request to proxy ...")
         order_id = list(order_info.keys())[0]
@@ -91,26 +96,28 @@ class Broker:
             )
         )
         logger.debug("encrypted aes key: %s", encrypted_aes_key)
-        file_hash = session.query(FileInfo.hashcode) \
-            .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash)) \
-            .all()[0][0]
         logger.debug("order info got generated")
         message = Message()
         seller_data = message.seller_data
         message.type = Message.SELLER_DATA
         seller_data.order_id = order_id
+        seller_data.order_type = 'file'
         seller_data.seller_addr = seller_addr
         seller_data.buyer_addr = buyer_addr
-        seller_data.market_hash = 'market hash'
+        seller_data.market_hash = Encoder.bytes_to_base64_str(market_hash)
         seller_data.AES_key = encrypted_aes_key
         storage = seller_data.storage
 
-        # ipfs storage example
-        storage.type = Message.Storage.IPFS
-        ipfs = storage.ipfs
-        ipfs.file_hash = file_hash
-        ipfs.gateway = "192.168.0.132:5001"
-
+        storage_type = session.query(FileInfo.remote_type) \
+            .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash)) \
+            .all()[0][0]
+        remote_uri = session.query(FileInfo.remote_uri) \
+            .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash)) \
+            .all()[0][0]
+        storage.type = storage_type
+        # remote_uri: string representation of dictionary. e.g. ipfs: '{"host": '192.168.0.132', 'port': '5001', 'file_hash': 'sdfdf'}'
+        # yaml.load() is used here to convert above to dic() type
+        storage.file_uri = json.dumps(yaml.load(remote_uri))
 
         sign_message = SignMessage()
         sign_message.public_key = self.wallet.market_client.public_key
@@ -120,21 +127,15 @@ class Broker:
             sign_message.data
         )
 
-        seller_sign_message = sign_message
-        logger.debug("message created")
-        d_proxy_reply = start_proxy_request(seller_sign_message, proxy_id=proxy_id)
+        error, AES_key, urls = yield start_proxy_request(sign_message, proxy_id)
 
-        def seller_deliver_proxy_callback(proxy_reply):
-            logger.debug("in seller request callback.")
-            if not proxy_reply.error:
-                logger.debug("receive reply from proxy")
-                logger.debug('file_uri: %s', proxy_reply.file_uri)
-            else:
-                logger.debug(proxy_reply.error)
+        if error:
+            logger.debug(error)
+        else:
+            logger.debug(AES_key)
+            logger.debug(urls)
 
-        d_proxy_reply.addCallback(seller_deliver_proxy_callback)
-
-
+    @defer.inlineCallbacks
     def buyer_send_request(self, order_info):
         logger.debug("buyer send request to proxy ...")
         order_id = list(order_info.keys())[0]
@@ -146,9 +147,10 @@ class Broker:
         buyer_data = message.buyer_data
         message.type = Message.BUYER_DATA
         buyer_data.order_id = order_id
+        buyer_data.order_type = 'file'
         buyer_data.seller_addr = seller_addr
         buyer_data.buyer_addr = buyer_addr
-        buyer_data.market_hash = 'market hash'
+        buyer_data.market_hash = Encoder.bytes_to_base64_str(new_order_info[0])
 
         sign_message = SignMessage()
         sign_message.public_key = self.wallet.market_client.public_key
@@ -157,8 +159,7 @@ class Broker:
             self.wallet.accounts.default_account.private_key,
             sign_message.data
         )
-        buyer_sign_message = sign_message
-        d_proxy_reply = start_proxy_request(buyer_sign_message, proxy_id=proxy_id)
+        error, AES_key, urls = yield start_proxy_request(sign_message, proxy_id)
 
         def update_buyer_db(file_uri, file_path):
             market_hash = Encoder.bytes_to_base64_str(new_order_info[0])
@@ -169,28 +170,24 @@ class Broker:
                  BuyerFileInfo.file_uuid: file_uuid, BuyerFileInfo.path: file_path,
                  BuyerFileInfo.size: os.path.getsize(file_path)}, synchronize_session=False)
             session.commit()
-            return market_hash
 
-        def buyer_request_proxy_callback(proxy_reply):
-            logger.debug("in buyer request callback.")
-            if not proxy_reply.error:
-                logger.debug('file_uri: %s', proxy_reply.file_uri)
-                file_dir = os.path.expanduser(config.wallet.download_dir)
-                file_name = proxy_reply.file_uri.split('/')[3]
-                file_path = os.path.join(file_dir, file_name)
-                logger.debug("downloaded file path: %s", file_path)
-                decrypted_file = decrypt_file_aes(file_path, proxy_reply.AES_key)
-                logger.debug('Decrypted file path: %s', str(decrypted_file))
+        if error:
+            logger.debug(error)
+        else:
+            yield download_file(urls[0])
 
-                update_buyer_db(proxy_reply.file_uri, decrypted_file)
-                logger.debug("file has been downloaded")
-                logger.debug("put order into confirmed queue, order id: %s", order_id)
-                self.confirmed_order_queue.put(order_id)
-                self.wallet.main_wnd.update_purchased_tab('downloaded')
-            else:
-                logger.debug(proxy_reply.error)
+            file_dir = os.path.expanduser(config.wallet.download_dir)
+            file_name = urls[0].split('/')[3]
+            file_path = os.path.join(file_dir, file_name)
+            logger.debug("downloaded file path: %s", file_path)
+            decrypted_file = decrypt_file_aes(file_path, AES_key)
+            logger.debug('Decrypted file path: %s', str(decrypted_file))
 
-        d_proxy_reply.addCallback(buyer_request_proxy_callback)
+            update_buyer_db(urls[0], decrypted_file)
+            logger.debug("file has been downloaded")
+            logger.debug("put order into confirmed queue, order id: %s", order_id)
+            self.confirmed_order_queue.put(order_id)
+            self.wallet.main_wnd.update_purchased_tab('downloaded')
 
 
 

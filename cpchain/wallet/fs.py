@@ -27,6 +27,9 @@ def get_file_by_id(file_id):
 def get_file_by_hash(file_hash):
     return get_session().query(FileInfo).filter(FileInfo.hashcode == file_hash)
 
+def get_file_by_market_hash(market_hash):
+    return get_session().query(FileInfo).filter(FileInfo.market_hash == market_hash)
+
 
 def get_file_id_new(file_id):
     return get_session().query(FileInfo).filter(FileInfo.id == file_id).all()[0]
@@ -121,16 +124,15 @@ def decrypt_file(file_in_path, file_out_path):
     decrypter.decrypt(file_in_path, file_out_path)
 
 def upload_file(file_path, storage_type, dest):
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        encrypted_path = os.path.join(tmpdirname, 'encrypted.txt')
-        logger.debug("start to encrypt")
-        this_key = encrypt_file(file_path, encrypted_path)
-        logger.debug("encrypt completed")
+    # fixed previous bugs of temporary file being deleted after function return
+    tmp = tempfile.NamedTemporaryFile(delete=True)
+    encrypted_path = tmp.name
+    this_key = encrypt_file(file_path, encrypted_path)
     storage_module = importlib.import_module(
         "cpchain.storage-plugin." + storage_type
     )
     storage = storage_module.Storage()
-    file_uri = storage.upload_file(file_path, dest)  # d_upload file_uri: string save directly
+    file_uri = storage.upload_file(encrypted_path, dest)  # d_upload file_uri: string save directly
     file_name = list(os.path.split(file_path))[-1]
     file_size = os.path.getsize(file_path)
     logger.debug('start to write data into database')
@@ -139,6 +141,7 @@ def upload_file(file_path, storage_type, dest):
                              is_published=False, aes_key=this_key)
     add_file(new_file_info)
     logger.debug('file id: %s', new_file_info.id)
+    tmp.close()
     file_id = new_file_info.id
     return file_id
 

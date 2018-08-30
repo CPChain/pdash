@@ -87,6 +87,8 @@ def join_with_rc(path):
 
 def sizeof_fmt(num, suffix='B'):
     for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        if num is None:
+            return 0
         if abs(num) < 1024.0:
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0
@@ -94,10 +96,8 @@ def sizeof_fmt(num, suffix='B'):
 
 
 def open_file(path):
-    executable = dict(linux='xdg-open',
-                      darwin='open')
-
-    subprocess.call((executable[sys.platform], path))
+    executable = dict(linux='xdg-open', darwin='open')
+    subprocess.call(executable[sys.platform], path)
 
 
 class Encoder:
