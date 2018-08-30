@@ -131,10 +131,10 @@ class Broker:
         error, AES_key, urls = yield start_proxy_request(sign_message, proxy_id)
 
         if error:
-            print(error)
+            logger.debug(error)
         else:
-            print(AES_key)
-            print(urls)
+            logger.debug(AES_key)
+            logger.debug(urls)
 
     @defer.inlineCallbacks
     def buyer_send_request(self, order_info):
@@ -175,7 +175,7 @@ class Broker:
             #return market_hash
 
         if error:
-            print(error)
+            logger.debug(error)
         else:
             yield download_file(urls[0])
 
