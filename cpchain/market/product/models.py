@@ -33,7 +33,7 @@ class Product(models.Model):
                                 , max_length=256, null=True)
 
     def get_signature_source(self):
-        ss = self.owner_address + self.title + str(self.ptype) + str(self.description[0]) + str(self.price[0]) \
+        ss = self.owner_address + self.title + str(self.ptype) + str(self.description) + str(self.price) \
              + self.start_date + self.end_date
         return ss
 
