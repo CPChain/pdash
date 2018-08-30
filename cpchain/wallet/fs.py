@@ -124,6 +124,7 @@ def decrypt_file(file_in_path, file_out_path):
     decrypter.decrypt(file_in_path, file_out_path)
 
 def upload_file(file_path, storage_type, dest):
+    # fixed previous bugs of temporary file being deleted after function return
     tmp = tempfile.NamedTemporaryFile(delete=True)
     encrypted_path = tmp.name
     this_key = encrypt_file(file_path, encrypted_path)
