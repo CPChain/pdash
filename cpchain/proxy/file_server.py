@@ -1,5 +1,8 @@
 import os
 import logging
+import cgi
+
+from uuid import uuid1 as uuid
 
 from twisted.web.resource import Resource, ForbiddenResource
 from twisted.web.static import File
@@ -16,10 +19,12 @@ from cpchain.proxy.db import ProxyDB
 logger = logging.getLogger(__name__)
 
 class FileServerResource(Resource):
+    isLeaf = True
     server_root = join_with_rc(config.proxy.server_root)
     proxy_db = ProxyDB()
 
-    def getChild(self, path, request):
+    def render_GET(self, request):
+        path = request.path
 
         # don't expose the file list under root dir
         # for security consideration
@@ -29,6 +34,29 @@ class FileServerResource(Resource):
         data_path = path.decode()
         file_path = os.path.join(self.server_root, data_path)
         return File(file_path)
+
+    def render_POST(self, request):
+        headers = request.getAllHeaders()
+        cgi_form = cgi.FieldStorage(
+            fp=request.content,
+            headers=headers,
+            environ={
+                'REQUEST_METHOD':'POST',
+                'CONTENT_TYPE': headers[b'content-type'],
+            }
+        )
+        # check <treq package>/multipart.py for request format details
+        CRLF = "\r\n"
+        file_content = cgi_form[' filename'].value.split(CRLF)[4:-2][0]
+
+        server_root = join_with_rc(config.proxy.server_root)
+        file_name = str(uuid())
+        file_path = os.path.join(server_root, file_name)
+        f = open(file_path, 'wb')
+        f.write(file_content.encode('utf8'))
+        f.close()
+
+        return file_name.encode('utf8')
 
 class FileServer:
     def __init__(self):

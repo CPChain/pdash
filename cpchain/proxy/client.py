@@ -3,11 +3,12 @@
 import os
 import logging
 import json
+import treq
+from zope.interface import implementer
 
+from twisted.web.iweb import IPolicyForHTTPS
 from twisted.internet import reactor, protocol, ssl, defer
 from twisted.protocols.basic import NetstringReceiver
-
-import treq
 
 from cpchain import config
 from cpchain.utils import join_with_rc
@@ -113,32 +114,38 @@ class ProxyClient:
     def stop(self):
         self.trans.disconnect()
 
+@implementer(IPolicyForHTTPS)
+class NoVerifySSLContextFactory(object):
+    """Context that doesn't verify SSL connections"""
+    def creatorForNetloc(self, hostname, port): # pylint: disable=unused-argument
+        return ssl.CertificateOptions(verify=False)
+
+def no_verify_agent(**kwargs):
+    reactor = treq.api.default_reactor(kwargs.get('reactor'))
+    pool = treq.api.default_pool(
+        reactor,
+        kwargs.get('pool'),
+        kwargs.get('persistent'))
+
+    no_verify_agent.agent = treq.api.Agent(
+        reactor,
+        contextFactory=NoVerifySSLContextFactory(),
+        pool=pool
+    )
+    return no_verify_agent.agent
+
+def upload_file(file_path, url):
+
+    upload_file = {'file': open(file_path, 'rb')}
+
+    # treq will switch to multipart/form-data content-type
+    # for file transaction if 'files' parameter is given.
+    # Check <treq package>/client.py for details.
+    d = treq.post(url, agent=no_verify_agent(), files=upload_file)
+
+    return d
 
 def download_file(url):
-
-    from twisted.web.iweb import IPolicyForHTTPS
-    from zope.interface import implementer
-    from treq import api
-
-    @implementer(IPolicyForHTTPS)
-    class NoVerifySSLContextFactory(object):
-        """Context that doesn't verify SSL connections"""
-        def creatorForNetloc(self, hostname, port): # pylint: disable=unused-argument
-            return ssl.CertificateOptions(verify=False)
-
-    def no_verify_agent(**kwargs):
-        reactor = api.default_reactor(kwargs.get('reactor'))
-        pool = api.default_pool(
-            reactor,
-            kwargs.get('pool'),
-            kwargs.get('persistent'))
-
-        no_verify_agent.agent = api.Agent(
-            reactor,
-            contextFactory=NoVerifySSLContextFactory(),
-            pool=pool
-        )
-        return no_verify_agent.agent
 
     file_dir = join_with_rc(config.wallet.download_dir)
     # create if not exists
