@@ -7,10 +7,8 @@ from cpchain.utils import join_with_rc, join_with_root
 logger = logging.getLogger(__name__)
 
 def get_ssl_cert():
-    server_key = os.path.expanduser(
-        join_with_rc(config.proxy.server_key))
-    server_crt = os.path.expanduser(
-        join_with_rc(config.proxy.server_crt))
+    server_key = join_with_rc(config.proxy.server_key)
+    server_crt = join_with_rc(config.proxy.server_crt)
 
     if not os.path.isfile(server_key):
         logger.info("SSL key/cert file not found, "

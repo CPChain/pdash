@@ -20,7 +20,7 @@ from cpchain.crypto import Encoder, RSACipher, ECCipher
 
 from cpchain.chain.models import OrderInfo
 from cpchain.chain.agents import BuyerAgent, SellerAgent
-from cpchain.chain.utils import default_w3, join_with_root
+from cpchain.chain.utils import default_w3, join_with_root, join_with_rc
 from cpchain.chain.poll_chain import OrderMonitor
 
 from cpchain.wallet.db import BuyerFileInfo
@@ -176,7 +176,7 @@ class Broker:
         else:
             yield download_file(urls[0])
 
-            file_dir = os.path.expanduser(config.wallet.download_dir)
+            file_dir = join_with_rc(config.wallet.download_dir)
             file_name = urls[0].split('/')[3]
             file_path = os.path.join(file_dir, file_name)
             logger.debug("downloaded file path: %s", file_path)
