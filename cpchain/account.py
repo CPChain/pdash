@@ -65,3 +65,6 @@ def create_account(passwd):
         f.write(json.dumps(encrypted_key))
 
     return Account(key_file, passwd.encode('utf8'))
+
+def import_account(key_file, passwd):
+    return Account(key_file, passwd.encode('utf8'))
