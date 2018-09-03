@@ -10,6 +10,7 @@ from twisted.protocols.basic import NetstringReceiver
 import treq
 
 from cpchain import config
+from cpchain.utils import join_with_rc
 from cpchain.proxy.msg.trade_msg_pb2 import Message
 from cpchain.proxy.message import message_sanity_check
 
@@ -139,7 +140,7 @@ def download_file(url):
         )
         return no_verify_agent.agent
 
-    file_dir = config.wallet.download_dir
+    file_dir = join_with_rc(config.wallet.download_dir)
     # create if not exists
     os.makedirs(file_dir, exist_ok=True)
 
