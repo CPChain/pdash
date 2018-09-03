@@ -102,13 +102,11 @@ class SSLServerTestCase(unittest.TestCase):
             _clean_up_db = True
             # init database
             db_path = join_with_rc(config.proxy.dbpath)
-            db_path = os.path.expanduser(db_path)
             if os.path.isfile(db_path):
                 os.remove(db_path)
 
             # clean server_root
             server_root = join_with_rc(config.proxy.server_root)
-            server_root = os.path.expanduser(server_root)
             for root, dirs, files in os.walk(server_root, topdown=False):
                 for name in files:
                     os.remove(os.path.join(root, name))

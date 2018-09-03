@@ -40,7 +40,6 @@ class Trade(Base):
 
 class ProxyDB(object):
     db_path = join_with_rc(config.proxy.dbpath)
-    db_path = os.path.expanduser(db_path)
     default_db = 'sqlite:///' + db_path
 
     def __init__(self, db=default_db):

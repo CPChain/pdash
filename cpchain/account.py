@@ -1,8 +1,15 @@
 import glob
+import os
 import os.path as osp
+import json
+from datetime import datetime
+from eth_account import Account as eth_account
 
 from cpchain import config, crypto
-from cpchain.utils import join_with_root
+from cpchain.utils import join_with_rc
+
+_keystore_dir = join_with_rc(config.account.keystore_dir)
+os.makedirs(_keystore_dir, exist_ok=True)
 
 class Accounts(list):
     def __init__(self, *args):
@@ -11,11 +18,11 @@ class Accounts(list):
         self._populate_accounts()
 
     def _populate_accounts(self):
-        key_dir = join_with_root(config.account.keystore_dir)
-        ptn = osp.join(key_dir, 'UTC-*')
-        
+        ptn = osp.join(_keystore_dir, 'UTC-*')
+
         # TODO for now, we use the password stored in the file
-        key_passphrase = open(osp.join(key_dir, 'password')).read()
+
+        key_passphrase = open(osp.join(_keystore_dir, 'password')).read()
         for key_path in glob.glob(ptn):
             account = Account(key_path, key_passphrase)
             self.append(account)
@@ -34,5 +41,30 @@ class Account:
             key_passphrase = input("Input Key Passphrase: ")
         self.private_key, self.public_key = crypto.ECCipher.load_key_pair(key_path, key_passphrase)
 
-if __name__ == '__main__':
-    accounts = Accounts()
+
+def create_account(passwd):
+
+    acct = eth_account.create()
+
+    # follow eth keystore naming rule
+    # go-ethereum/accounts/keystore/key.go:208
+    # // keyFileName implements the naming convention for keyfiles:
+    # // UTC--<created_at UTC ISO8601>-<address hex>
+    # func keyFileName(keyAddr common.Address) string {
+    #     ts := time.Now().UTC()
+    #     return fmt.Sprintf("UTC--%s--%s", toISO8601(ts), hex.EncodeToString(keyAddr[:]))
+    # }
+
+    key_file = osp.join(
+        _keystore_dir,
+        "UTC--%s--%s" % (datetime.utcnow().isoformat(), acct.address[2:].lower())
+    )
+    encrypted_key = eth_account.encrypt(acct.privateKey, passwd)
+
+    with open(key_file, 'w') as f:
+        f.write(json.dumps(encrypted_key))
+
+    return Account(key_file, passwd.encode('utf8'))
+
+def import_account(key_file, passwd):
+    return Account(key_file, passwd.encode('utf8'))

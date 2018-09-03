@@ -6,8 +6,7 @@
 rc_dir = "~/.cpchain"
 
 [account]
-# we shall move it to ~/.cpchain
-keystore_dir = "eth/data_dir/keystore"
+keystore_dir = "keystore"
 
 
 [chain]
@@ -24,7 +23,7 @@ local_provider_addr = "http://127.0.0.1:8545"
 [wallet]
 # this file is relative to rc_dir
 dbpath = "wallet/wallet.db"
-download_dir = "~/.cpchain/downloads"
+download_dir = "downloads"
 rsa_private_key_file = "cpchain/assets/wallet/private_key.pem"
 rsa_private_key_password_file = 'cpchain/assets/wallet/password'
 private_key_file = 'cpchain/assets/chain/sheds/data_dir/keystore/UTC--2018-01-25T08-04-38.217120006Z--22114f40ed222e83bbd88dc6cbb3b9a136299a23'

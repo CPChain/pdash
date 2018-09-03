@@ -210,7 +210,6 @@ class ProxyServer:
         self.port = config.proxy.server_port
 
         server_root = join_with_rc(config.proxy.server_root)
-        server_root = os.path.expanduser(server_root)
         os.makedirs(server_root, exist_ok=True)
 
     def run(self):
