@@ -1,10 +1,13 @@
 import json
 import logging
+import time
 
 from functools import wraps
+from uuid import uuid1 as uuid
 
 from klein import Klein
 from twisted.web.server import Site
+from twisted.internet import threads
 
 from cpchain.utils import reactor
 
@@ -60,7 +63,36 @@ class RestfulServer:
             return {'status': 'forbidden'}
 
         if request.method == b'GET':
-            pass
+            brokers = config.proxy.kafka_brokers
+            consumer = KafkaConsumer(brokers, str(uuid()))
+
+            self.counter = -1
+            self.last_counter = -1
+            records = []
+            def consume_stream():
+                self.counter = 0
+                for record in consumer.consume([stream_id]):
+                    records.append(record)
+                    self.counter += 1
+
+            threads.deferToThread(
+                consume_stream
+                )
+
+            while True:
+                time.sleep(1)
+
+                if self.counter == -1:
+                    continue
+
+                if self.counter == self.last_counter:
+                    consumer.stop()
+                    break
+                else:
+                    self.last_counter = self.counter
+
+            return str(records)
+
         elif request.method == b'POST':
             data = request.content.read()
 
