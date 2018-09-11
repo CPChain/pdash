@@ -1,8 +1,6 @@
 import logging
 import os
 from queue import Queue
-import json
-import yaml
 
 from twisted.internet.threads import deferToThread
 from twisted.internet import reactor
@@ -14,17 +12,16 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
-from cpchain.utils import config
+from cpchain.utils import config, join_with_root, join_with_rc
 
 from cpchain.crypto import Encoder, RSACipher, ECCipher
 
 from cpchain.chain.models import OrderInfo
 from cpchain.chain.agents import BuyerAgent, SellerAgent
-from cpchain.chain.utils import default_w3, join_with_root, join_with_rc
+from cpchain.chain.utils import default_w3
 from cpchain.chain.poll_chain import OrderMonitor
 
 from cpchain.wallet.db import BuyerFileInfo
-from cpchain.wallet import fs
 from cpchain.wallet.fs import add_file
 from cpchain.wallet.utils import eth_addr_to_string, get_address_from_public_key_object
 from cpchain.wallet.fs import get_session, FileInfo, decrypt_file_aes
@@ -115,9 +112,7 @@ class Broker:
             .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash)) \
             .all()[0][0]
         storage.type = storage_type
-        # remote_uri: string representation of dictionary. e.g. ipfs: '{"host": '192.168.0.132', 'port': '5001', 'file_hash': 'sdfdf'}'
-        # yaml.load() is used here to convert above to dic() type
-        storage.file_uri = json.dumps(yaml.load(remote_uri))
+        storage.file_uri = remote_uri
 
         sign_message = SignMessage()
         sign_message.public_key = self.wallet.market_client.public_key
