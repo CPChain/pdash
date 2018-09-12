@@ -6,17 +6,14 @@ import logging
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, QVBoxLayout, QGridLayout, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel, QWidget, QLineEdit, QTableWidget, QTextEdit, QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
 from PyQt5.QtCore import Qt, QPoint, QBasicTimer
-from PyQt5.QtGui import QIcon, QCursor, QPixmap, QFont, QFontDatabase
 
 from cpchain.proxy.client import pick_proxy
 
 from twisted.internet import reactor
-from twisted.internet.defer import inlineCallbacks
-from twisted.internet.threads import deferToThread
 from twisted.internet.task import LoopingCall
 from twisted.logger import globalLogBeginner, textFileLogObserver
 
-from cpchain.wallet.pages import load_stylesheet, HorizontalLine, wallet, main_wnd
+from cpchain.wallet.pages import load_stylesheet, wallet, main_wnd
 
 globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
 logger = logging.getLogger(__name__)

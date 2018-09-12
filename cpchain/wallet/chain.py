@@ -14,7 +14,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
-from cpchain.utils import config
+from cpchain.utils import config, join_with_root, join_with_rc
 
 from cpchain.crypto import Encoder, RSACipher, ECCipher
 
@@ -22,8 +22,6 @@ from cpchain.chain.models import OrderInfo
 from cpchain.chain.agents import BuyerAgent, SellerAgent
 from cpchain.chain.utils import default_w3
 from cpchain.chain.poll_chain import OrderMonitor
-
-from cpchain.utils import join_with_root, join_with_rc
 
 from cpchain.wallet.db import BuyerFileInfo
 from cpchain.wallet import fs
