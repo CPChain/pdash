@@ -136,14 +136,9 @@ def no_verify_agent(**kwargs):
 
 def upload_file(file_path, url):
 
-    upload_file = {'file': open(file_path, 'rb')}
+    data = open(file_path, 'rb')
 
-    # treq will switch to multipart/form-data content-type
-    # for file transaction if 'files' parameter is given.
-    # Check <treq package>/client.py for details.
-    d = treq.post(url, agent=no_verify_agent(), files=upload_file)
-
-    return d
+    return treq.post(url, agent=no_verify_agent(), data=data, stream=True)
 
 def download_file(url):
 
