@@ -24,16 +24,15 @@ class FileServerResource(Resource):
     proxy_db = ProxyDB()
 
     def render_GET(self, request):
-        path = request.path
+        path = request.path.decode().strip('/')
 
         # don't expose the file list under root dir
         # for security consideration
-        if path == b'':
-            return ForbiddenResource()
+        if path == '':
+            return ForbiddenResource().render(request)
 
-        data_path = path.decode()
-        file_path = os.path.join(self.server_root, data_path)
-        return File(file_path)
+        file_path = os.path.join(self.server_root, path)
+        return File(file_path).render(request)
 
     def render_POST(self, request):
         headers = request.getAllHeaders()
