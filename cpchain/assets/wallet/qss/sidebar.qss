@@ -22,7 +22,7 @@ QListWidget {
     /*font-family: "DejaVu Sans Mono";*/
     /*font-family: : Arial;*/
     border: none;
-    font-size: 12pt; 
+    font-size: 15pt; 
     /*font-weight: bold;*/  
     /*border: none;*/
     outline: none;
