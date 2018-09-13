@@ -58,7 +58,13 @@ class KadNode(Server):
         def stun_done(future):
             addr = future.result()
             ip = addr[1][0]
-            addr = '%s,%d' % (ip, config.proxy.server_port)
+            # proxy addr format: (ip, ctrl_port, file_port, stream_ws_port, stream_restful_port)
+            addr = '%s,%d,%d,%d,%d' % (
+                ip,
+                config.proxy.server_port,
+                config.proxy.server_file_port,
+                config.proxy.server_stream_ws_port,
+                config.proxy.server_stream_restful_port)
 
             asyncio.ensure_future(
                 self.set(
@@ -70,7 +76,13 @@ class KadNode(Server):
         def bootstrap_done(_):
             ip = config.proxy.server_ip
             if ip:
-                addr = '%s,%d' % (ip, config.proxy.server_port)
+                # proxy addr format: (ip, ctrl_port, file_port, stream_ws_port, stream_restful_port)
+                addr = '%s,%d,%d,%d,%d' % (
+                    ip,
+                    config.proxy.server_port,
+                    config.proxy.server_file_port,
+                    config.proxy.server_stream_ws_port,
+                    config.proxy.server_stream_restful_port)
                 asyncio.ensure_future(
                     self.set(
                         proxy_id,

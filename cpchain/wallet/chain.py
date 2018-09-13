@@ -169,11 +169,14 @@ class Broker:
         if error:
             logger.debug(error)
         else:
-            yield download_file(urls[0])
-
-            file_dir = join_with_rc(config.wallet.download_dir)
             file_name = urls[0].split('/')[3]
+            file_dir = join_with_rc(config.wallet.download_dir)
+            # create if not exists
+            os.makedirs(file_dir, exist_ok=True)
             file_path = os.path.join(file_dir, file_name)
+
+            yield download_file(file_path, urls[0])
+
             logger.debug("downloaded file path: %s", file_path)
             decrypted_file = decrypt_file_aes(file_path, AES_key)
             logger.debug('Decrypted file path: %s', str(decrypted_file))

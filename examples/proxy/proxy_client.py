@@ -1,9 +1,10 @@
-import sys
+import sys, os
 
 from twisted.python import log
 from twisted.internet import defer
 
 from cpchain.utils import reactor
+from cpchain.utils import config, join_with_rc
 
 from cpchain.account import Accounts
 from cpchain.crypto import ECCipher
@@ -114,7 +115,14 @@ def buyer_request():
         else:
             print(AES_key)
             print(urls)
-            yield download_file(urls[0])
+
+            file_name = urls[0].split('/')[3]
+            file_dir = join_with_rc(config.wallet.download_dir)
+            # create if not exists
+            os.makedirs(file_dir, exist_ok=True)
+            file_path = os.path.join(file_dir, file_name)
+
+            yield download_file(file_path, urls[0])
 
 seller_request()
 buyer_request()
