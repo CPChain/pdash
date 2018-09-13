@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import os
 import logging
 import json
 import treq
@@ -10,8 +9,6 @@ from twisted.web.iweb import IPolicyForHTTPS
 from twisted.internet import reactor, protocol, ssl, defer
 from twisted.protocols.basic import NetstringReceiver
 
-from cpchain import config
-from cpchain.utils import join_with_rc
 from cpchain.proxy.msg.trade_msg_pb2 import Message
 from cpchain.proxy.message import message_sanity_check
 
@@ -142,18 +139,12 @@ def upload_file(file_path, url):
 
 def download_file(file_path, url):
 
-    # file_dir = join_with_rc(config.wallet.download_dir)
-    # # create if not exists
-    # os.makedirs(file_dir, exist_ok=True)
+    f = open(file_path, 'wb')
+    d = treq.get(url, agent=no_verify_agent())
+    d.addCallback(treq.collect, f.write)
+    d.addBoth(lambda _: f.close())
 
-    # file_name = os.path.basename(url)
-    # file_path = os.path.join(file_dir, file_name)
-
-    with open(file_path, 'wb') as f:
-        d = treq.get(url, agent=no_verify_agent())
-        d.addCallback(treq.collect, f.write)
-
-        return d
+    return d
 
 def pick_proxy():
     return Slave().pick_peer()
