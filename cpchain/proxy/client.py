@@ -140,20 +140,20 @@ def upload_file(file_path, url):
 
     return treq.post(url, agent=no_verify_agent(), data=data, stream=True)
 
-def download_file(url):
+def download_file(file_path, url):
 
-    file_dir = join_with_rc(config.wallet.download_dir)
-    # create if not exists
-    os.makedirs(file_dir, exist_ok=True)
+    # file_dir = join_with_rc(config.wallet.download_dir)
+    # # create if not exists
+    # os.makedirs(file_dir, exist_ok=True)
 
-    file_name = os.path.basename(url)
-    file_path = os.path.join(file_dir, file_name)
+    # file_name = os.path.basename(url)
+    # file_path = os.path.join(file_dir, file_name)
 
-    f = open(file_path, 'wb')
-    d = treq.get(url, agent=no_verify_agent())
-    d.addCallback(treq.collect, f.write)
-    d.addBoth(lambda _: f.close())
-    return d
+    with open(file_path, 'wb') as f:
+        d = treq.get(url, agent=no_verify_agent())
+        d.addCallback(treq.collect, f.write)
+
+        return d
 
 def pick_proxy():
     return Slave().pick_peer()
@@ -179,8 +179,9 @@ def start_proxy_request(sign_message, proxy_id):
             d.callback((proxy_reply.error, None, None))
 
     def get_proxy_done(proxy_addr):
+        # proxy addr format: (ip, ctrl_port, file_port, stream_ws_port, stream_restful_port)
         if proxy_addr:
-            proxy_client = ProxyClient(proxy_addr)
+            proxy_client = ProxyClient(proxy_addr[0:2])
             proxy_client.run(sign_message).addCallback(run_client_done, proxy_addr[0])
 
         else:
