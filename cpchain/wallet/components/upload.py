@@ -20,10 +20,13 @@ import os
 import os.path as osp
 import string
 import logging
+import re
+import traceback
 
 from cpchain import root_dir
 
-from cpchain.wallet.pages import main_wnd, HorizontalLine, abs_path, get_icon
+from cpchain.wallet.pages import main_wnd, HorizontalLine, abs_path, get_icon, Binder, warning
+from cpchain.wallet.components.loading import Loading
 
 class FileUpload(QFrame):
 
@@ -32,6 +35,14 @@ class FileUpload(QFrame):
         ###初始化打开接受拖拽使能
         self.setAcceptDrops(True)
         self.initUI()
+
+    def onOpen(self, event):
+        file_choice = QFileDialog.getOpenFileName()[0]
+        self.target.setText(file_choice)
+
+    @property
+    def file(self):
+        return self.target.text()
 
     def initUI(self):
         layout = QGridLayout(self)
@@ -43,6 +54,8 @@ class FileUpload(QFrame):
         hbox.addWidget(hint)
         self.open_text = QLabel('open...')
         self.open_text.setObjectName('open')
+        Binder.click(self.open_text, self.onOpen)
+
         hbox.addWidget(self.open_text)
         hbox.addStretch(1)
 
@@ -66,7 +79,7 @@ class FileUpload(QFrame):
 
     def dropEvent(self, event):
         st = str(event.mimeData().urls())
-        # [PyQt5.QtCore.QUrl('file:///Users/liaojinlong/Desktop/天池竞赛.xlsx
+        st = re.compile(r'\'file:\/\/(.*?)\'').findall(st)[0]
         self.target.setText(st)
 
 class UploadDialog(QDialog):
@@ -76,50 +89,60 @@ class UploadDialog(QDialog):
         self.setWindowTitle("Upload your file")
         self.storage_index = 0
         self.now_wid = None
+        
         self.storage = [
             {
                 'name': 'Amazon S3',
+                'type': 's3',
                 'options': [
                     {
                         'type': 'edit',
-                        'name': 'Bucket'
+                        'name': 'Bucket',
+                        'id': 'bucket'
                     }, {
                         'type': 'edit',
-                        'name': 'aws_secret_access_key'
+                        'name': 'aws_secret_access_key',
+                        'id': 'aws_secret_access_key'
                     }, {
                         'type': 'edit',
-                        'name': 'aws_access_key_id'
+                        'name': 'aws_access_key_id',
+                        'id': 'aws_access_key_id'
                     }, {
                         'type': 'edit',
-                        'name': 'Key'
+                        'name': 'Key',
+                        'id': 'key'
                     }
                 ],
                 'listener': None
             }, {
                 'name': 'IPFS',
+                'type': 'ipfs',
                 'options': [
                     {
                         'type': 'edit',
-                        'name': 'Host'
+                        'name': 'Host',
+                        'id': 'host'
                     }, {
                         'type': 'edit',
-                        'name': 'Port'
+                        'name': 'Port',
+                        'id': 'port'
                     }
                 ],
                 'listener': None
             }, {
-                'name': 'Proxy',
-                'options': [
-                    {
-                        'type': 'combo',
-                        'items': ['1', '2', '3']
-                    }
-                ]
+                # 'name': 'Proxy',
+                # 'options': [
+                #     {
+                #         'type': 'combo',
+                #         'items': ['1', '2', '3']
+                #     }
+                # ]
             }
         ]
         self.max_row = 0
         for i in self.storage:
-            self.max_row = max(self.max_row, len(i['options']))
+            if i:
+                self.max_row = max(self.max_row, len(i['options']))
         self.initUI()
 
     def onChangeStorage(self, index):
@@ -131,6 +154,13 @@ class UploadDialog(QDialog):
         self.now_wid = new_wid
 
     def build_option_widget(self, storage):
+        if not storage:
+            return
+        storage_module = importlib.import_module(
+            "cpchain.storage-plugin." + storage['type']
+        )
+        self.dst = storage_module.Storage().user_input_param()
+
         grid = QGridLayout()
         grid.setObjectName('grid')
         grid.setContentsMargins(0, 0, 0, 0)
@@ -139,7 +169,10 @@ class UploadDialog(QDialog):
         for option in options:
             if option['type'] == 'edit':
                 grid.addWidget(QLabel(option['name'] + ":"), row, 1)
-                grid.addWidget(QLineEdit(), row, 3)
+                wid = QLineEdit()
+                wid.setObjectName(f'{storage["type"]}-{option["id"]}')
+                wid.setText(self.dst[option['id']])
+                grid.addWidget(wid, row, 3)
             elif option['type'] == 'combo':
                 items = QComboBox()
                 for item in option['items']:
@@ -166,14 +199,16 @@ class UploadDialog(QDialog):
         layout = QGridLayout(self)
         layout.setSpacing(20)
         # Data name
+        data_name = QLineEdit()
         layout.addWidget(QLabel('Data Name:'), 0, 1)
-        layout.addWidget(QLineEdit(), 0, 2, 1, 2)
+        layout.addWidget(data_name, 0, 2, 1, 2)
 
         # Storage location
         layout.addWidget(QLabel('Storage location:'), 1, 1)
         storage = QComboBox()
         for item in self.storage:
-            storage.addItem(item['name'])
+            if item:
+                storage.addItem(item['name'])
         storage.currentIndexChanged.connect(self.onChangeStorage)
         layout.addWidget(storage, 1, 2, 1, 2)
 
@@ -194,10 +229,73 @@ class UploadDialog(QDialog):
         bottom.setAlignment(Qt.AlignRight)
         bottom.setSpacing(10)
         bottom.addStretch(1)
-        bottom.addWidget(QLabel('Cancel'))
-        bottom.addWidget(QPushButton('OK'))
+
+        cancel = QLabel('Cancel')
+        def closeListener(event):
+            self.close()
+        Binder.click(cancel, closeListener)
+        bottom.addWidget(cancel)
+
+        ok = QPushButton('OK')
+
+        def okListener(event):
+            # Find All needed values
+            storage = self.storage[self.storage_index]
+            dst = dict()
+            for option in storage['options']:
+                objName = storage['type'] + '-' + option['id']
+                child = self.findChild((QLineEdit,), objName)
+                dst[option['id']] = child.text()
+                if not dst[option['id']]:
+                    warning(self)
+                    return
+            # Data Name
+            dataname = data_name.text()
+            if not dataname:
+                warning(self, "Please input data name first")
+                return
+            # File
+            file = fileSlt.file
+            if not file:
+                warning(self, "Please drag a file or open a file first")
+                return
+            d_upload = deferToThread(fs.upload_file, file, storage['type'], dst)
+            d_upload.addCallback(self.handle_ok_callback)
+            self.hide()
+            self.loading = Loading()
+            self.loading.show()
+        ok.clicked.connect(okListener)
+        bottom.addWidget(ok)
 
         layout.addWidget(QLabel(""), 4, 1)
         layout.addLayout(bottom, 5 + self.max_row, 2)
         self.setLayout(layout)
         self.layout = layout
+    
+    def handle_ok_callback(self, file_id):
+        file_info = fs.get_file_by_id(file_id)
+        hashcode = file_info.hashcode
+        path = file_info.path
+        size = file_info.size
+        product_id = file_info.id
+        remote_type = file_info.remote_type
+        remote_uri = file_info.remote_uri
+        name = file_info.name
+        encrypted_key = RSACipher.encrypt(file_info.aes_key)
+        encrypted_key = Encoder.bytes_to_base64_str(encrypted_key)
+        d = wallet.market_client.upload_file_info(hashcode, path, size, product_id, remote_type, remote_uri, name, encrypted_key)
+        def handle_upload_resp(status):
+            self.loading.close()
+            self.show()
+            try:
+                if status == 1:
+                    QMessageBox.information(self, "Tips", "Uploaded successfuly")
+                    self.close()
+                else:
+                    QMessageBox.information(self, "Tips", "Uploaded fail")
+                    self.close()
+            except Exception as e:
+                traceback.print_exc()
+                QMessageBox.information(self, "Tips", "Uploaded fail")
+                self.close()
+        d.addCallback(handle_upload_resp)

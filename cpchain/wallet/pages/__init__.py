@@ -2,7 +2,7 @@ import os.path as osp
 import string
 from cpchain import config, root_dir
 
-from PyQt5.QtWidgets import QFrame
+from PyQt5.QtWidgets import QFrame, QMessageBox
 from PyQt5.QtGui import QIcon, QCursor, QPixmap, QFont, QFontDatabase
 
 from twisted.internet import reactor
@@ -43,3 +43,12 @@ def get_icon(name):
 def get_pixm(name):
     path = osp.join(root_dir, "cpchain/assets/wallet/icons", name)
     return QPixmap(path)
+
+class Binder:
+
+    @staticmethod
+    def click(obj, listener):
+        setattr(obj, 'mousePressEvent', listener)
+
+def warning(parent, msg="Please input all the required fields first"):
+    QMessageBox.warning(parent, "Warning", msg)
