@@ -21,16 +21,15 @@ import os.path as osp
 import string
 import logging
 
-from cpchain import config, root_dir
-from cpchain.wallet.pages.personal import Seller
-
-from cpchain.wallet.pages.product import Product2, TableWidget
+from cpchain import root_dir
 
 from cpchain.wallet.pages import main_wnd, HorizontalLine, abs_path, get_icon
 from cpchain.wallet.pages.other import PublishDialog
 
 from cpchain.wallet.components.table import Table
 from cpchain.wallet.components.product import Product
+from cpchain.wallet.components.product_list import ProductList
+from cpchain.wallet.components.upload import UploadDialog
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +55,7 @@ class MyDataTab(QScrollArea):
             {
                 'id': 'upload_btn',
                 'name': 'Upload Batch Data',
-                'call': self.handle_upload
+                'listener': self.onClickUpload
             }
         ]
         def buildBtnLayout(btn_group):
@@ -66,7 +65,7 @@ class MyDataTab(QScrollArea):
                 btn = QPushButton(item['name'])
                 btn.setObjectName(item['id'])
                 btn.setMaximumWidth(200)
-                btn.clicked.connect(item['call'])
+                btn.clicked.connect(item['listener'])
                 btn_layout.addWidget(btn)
                 btn_layout.addSpacing(5)
             return btn_layout
@@ -112,8 +111,12 @@ class MyDataTab(QScrollArea):
 
         # Product List
         test_dict = dict(image=abs_path('icons/test.png'), icon=abs_path('icons/icon_batch@2x.png'), name="Name of a some published data name of a data")
-        for i in range(1):
-            main_layout.addWidget(Product(**test_dict))
+        products = []
+        for i in range(3):
+            products.append(Product(**test_dict))
+
+        pdsWidget = ProductList(products)
+        main_layout.addWidget(pdsWidget)
 
         # Batch Data
         batch_label = QLabel('Batch Data')
@@ -129,7 +132,7 @@ class MyDataTab(QScrollArea):
         widget.setFixedWidth(750)
         widget.setStyleSheet("QWidget#parent_widget{background: white;}")
 
-        #Scroll Area Properties
+        # Scroll Area Properties
         scroll = QScrollArea()
         scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -140,6 +143,24 @@ class MyDataTab(QScrollArea):
         vLayout.addWidget(scroll)
         self.setLayout(vLayout)
         load_stylesheet(self, "my_data.qss")
+
+    def onClickUpload(self):
+        # if wallet.market_client.token == '':
+        #     QMessageBox.information(self, "Tips", "Please login first !")
+        #     return
+        upload = UploadDialog(self)
+        upload.show()
+        # self.dig = MyDataTab.StorageSelectionDlg(self)
+
+    def handle_delete_act(self):
+        self.file_table.removeRow(self.cur_clicked)
+
+    def handle_publish_act(self):
+        if wallet.market_client.token == '':
+            QMessageBox.information(self, "Tips", "Please login first !")
+        else:
+            product_id = self.file_table.item(self.cur_clicked, 5).text()
+            self.publish_dialog = PublishDialog(self, product_id=product_id, tab='cloud')
 
     class UploadDialog(QDialog):
         def __init__(self, storage_type=None):
@@ -338,19 +359,3 @@ class MyDataTab(QScrollArea):
 
         def handle_cancel(self):
             self.close()
-
-    def handle_upload(self):
-        if wallet.market_client.token == '':
-            QMessageBox.information(self, "Tips", "Please login first !")
-            return
-        self.storage_dialog = MyDataTab.StorageSelectionDlg(self)
-
-    def handle_delete_act(self):
-        self.file_table.removeRow(self.cur_clicked)
-
-    def handle_publish_act(self):
-        if wallet.market_client.token == '':
-            QMessageBox.information(self, "Tips", "Please login first !")
-        else:
-            product_id = self.file_table.item(self.cur_clicked, 5).text()
-            self.publish_dialog = PublishDialog(self, product_id=product_id, tab='cloud')
