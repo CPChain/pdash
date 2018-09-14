@@ -2,10 +2,7 @@
 
 import logging
 import json
-import treq
-from zope.interface import implementer
 
-from twisted.web.iweb import IPolicyForHTTPS
 from twisted.internet import reactor, protocol, ssl, defer
 from twisted.protocols.basic import NetstringReceiver
 
@@ -111,40 +108,6 @@ class ProxyClient:
     def stop(self):
         self.trans.disconnect()
 
-@implementer(IPolicyForHTTPS)
-class NoVerifySSLContextFactory(object):
-    """Context that doesn't verify SSL connections"""
-    def creatorForNetloc(self, hostname, port): # pylint: disable=unused-argument
-        return ssl.CertificateOptions(verify=False)
-
-def no_verify_agent(**kwargs):
-    reactor = treq.api.default_reactor(kwargs.get('reactor'))
-    pool = treq.api.default_pool(
-        reactor,
-        kwargs.get('pool'),
-        kwargs.get('persistent'))
-
-    no_verify_agent.agent = treq.api.Agent(
-        reactor,
-        contextFactory=NoVerifySSLContextFactory(),
-        pool=pool
-    )
-    return no_verify_agent.agent
-
-def upload_file(file_path, url):
-
-    data = open(file_path, 'rb')
-
-    return treq.post(url, agent=no_verify_agent(), data=data, stream=True)
-
-def download_file(file_path, url):
-
-    f = open(file_path, 'wb')
-    d = treq.get(url, agent=no_verify_agent())
-    d.addCallback(treq.collect, f.write)
-    d.addBoth(lambda _: f.close())
-
-    return d
 
 def pick_proxy():
     return Slave().pick_peer()

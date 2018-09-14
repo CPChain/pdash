@@ -7,7 +7,7 @@ import importlib
 
 from uuid import uuid1 as uuid
 
-from twisted.internet import threads, protocol, ssl
+from twisted.internet import protocol, ssl, defer
 from twisted.protocols.basic import NetstringReceiver
 
 from cpchain import config
@@ -62,6 +62,7 @@ class SSLServerProtocol(NetstringReceiver):
 
         self.handle_message(message)
 
+    @defer.inlineCallbacks
     def handle_message(self, message):
 
         proxy_db = self.proxy_db
@@ -97,32 +98,27 @@ class SSLServerProtocol(NetstringReceiver):
                 storage_type = data.storage.type
                 file_uri = data.storage.file_uri
 
-                def download_file():
-                    try:
-                        storage_module = importlib.import_module(
-                            "cpchain.storage-plugin." + storage_type
-                            )
+                try:
+                    storage_module = importlib.import_module(
+                        "cpchain.storage-plugin." + storage_type
+                        )
 
-                        storage = storage_module.Storage()
+                    storage = storage_module.Storage()
 
-                        storage.download_file(
-                            file_uri,
-                            file_path
-                            )
+                    yield storage.download_file(
+                        file_uri,
+                        file_path
+                        )
 
-                    except:
-                        logger.exception('failed to fetch file')
-                        return False
-                    else:
-                        return True
+                except:
+                    error = "failed to fetch file"
+                    logger.exception(error)
+                    self.proxy_reply_error(error)
+                else:
+                    self.fetch_data_finished(trade)
 
-                d = threads.deferToThread(
-                    download_file
-                )
-
-                d.addCallback(self.fetch_data_finished, trade)
             elif trade.order_type == 'stream':
-                self.fetch_data_finished(True, trade)
+                self.fetch_data_finished(trade)
 
         elif message.type == Message.BUYER_DATA:
             data = message.buyer_data
@@ -148,17 +144,13 @@ class SSLServerProtocol(NetstringReceiver):
                 error = "trade record not found in database"
                 self.proxy_reply_error(error)
 
-    def fetch_data_finished(self, success, trade):
-        if success:
-            if not claim_data_fetched_to_chain(trade.order_id):
-                error = "failed to claim data fetched to chain"
-                self.proxy_reply_error(error)
-            else:
-                self.proxy_db.insert(trade)
-                self.proxy_reply_success(trade)
-        else:
-            error = "failed to download file"
+    def fetch_data_finished(self, trade):
+        if not claim_data_fetched_to_chain(trade.order_id):
+            error = "failed to claim data fetched to chain"
             self.proxy_reply_error(error)
+        else:
+            self.proxy_db.insert(trade)
+            self.proxy_reply_success(trade)
 
     def proxy_reply_success(self, trade):
         message = Message()

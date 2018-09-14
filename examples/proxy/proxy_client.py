@@ -1,4 +1,5 @@
 import sys, os
+import importlib
 
 from twisted.python import log
 from twisted.internet import defer
@@ -9,7 +10,7 @@ from cpchain.utils import config, join_with_rc
 from cpchain.account import Accounts
 from cpchain.crypto import ECCipher
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
-from cpchain.proxy.client import pick_proxy, start_proxy_request, download_file
+from cpchain.proxy.client import pick_proxy, start_proxy_request
 
 log.startLogging(sys.stdout)
 
@@ -122,7 +123,10 @@ def buyer_request():
             os.makedirs(file_dir, exist_ok=True)
             file_path = os.path.join(file_dir, file_name)
 
-            yield download_file(file_path, urls[0])
+            storage_plugin = "cpchain.storage-plugin."
+            module = importlib.import_module(storage_plugin + 'proxy')
+            s = module.Storage()
+            yield s.download_file(urls[0], file_path)
 
 seller_request()
 buyer_request()
