@@ -5,7 +5,6 @@ from autobahn.twisted.websocket import WebSocketServerProtocol, \
     WebSocketServerFactory, listenWS
 
 from cpchain import config
-from cpchain.proxy.db import ProxyDB
 from cpchain.kafka import KafkaProducer, KafkaConsumer
 
 logger = logging.getLogger(__name__)
@@ -24,10 +23,6 @@ class WSProtocol(WebSocketServerProtocol):
                 self.error_request = True
 
         except:
-            self.error_request = True
-
-        proxy_db = self.factory.proxy_db
-        if not proxy_db.query_data_path(self.stream_id):
             self.error_request = True
 
         if self.error_request:
@@ -72,7 +67,6 @@ class WSServer:
         port = config.proxy.server_stream_ws_port
         self.factory = WebSocketServerFactory(u"ws://0.0.0.0:%d" % port)
         self.factory.protocol = WSProtocol
-        self.factory.proxy_db = ProxyDB()
 
         self.trans = None
 

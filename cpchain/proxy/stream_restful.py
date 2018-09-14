@@ -12,7 +12,6 @@ from twisted.internet import threads
 from cpchain.utils import reactor
 
 from cpchain import config
-from cpchain.proxy.db import ProxyDB
 from cpchain.kafka import KafkaProducer, KafkaConsumer
 
 logger = logging.getLogger(__name__)
@@ -53,15 +52,11 @@ def catch_exceptions(func):
 
 class RestfulServer:
     app = Klein()
-    proxy_db = ProxyDB()
 
     @app.route('/<stream_id>')
     @catch_exceptions
     @json_response
     def stream_handle(self, request, stream_id):
-        if not self.proxy_db.query_data_path(stream_id):
-            return {'status': 'forbidden'}
-
         if request.method == b'GET':
             brokers = config.proxy.kafka_brokers
             consumer = KafkaConsumer(brokers, str(uuid()))
