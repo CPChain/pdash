@@ -6,8 +6,6 @@ from twisted.web.iweb import IPolicyForHTTPS
 from twisted.internet import defer, ssl
 
 from cpchain.proxy.client import pick_proxy, get_proxy
-# from cpchain.proxy.client import upload_file
-# from cpchain.proxy.client import download_file
 
 @implementer(IPolicyForHTTPS)
 class NoVerifySSLContextFactory(object):
