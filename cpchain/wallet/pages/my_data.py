@@ -23,7 +23,7 @@ import logging
 
 from cpchain import root_dir
 
-from cpchain.wallet.pages import main_wnd, HorizontalLine, abs_path, get_icon
+from cpchain.wallet.pages import main_wnd, HorizontalLine, abs_path, get_icon, Binder, app
 from cpchain.wallet.pages.other import PublishDialog
 
 from cpchain.wallet.components.table import Table
@@ -31,27 +31,28 @@ from cpchain.wallet.components.product import Product
 from cpchain.wallet.components.product_list import ProductList
 from cpchain.wallet.components.upload import UploadDialog
 from cpchain.wallet.components.loading import Loading
+from cpchain.wallet.pages.publish import PublishProduct
 
 logger = logging.getLogger(__name__)
 
 class MyDataTab(QScrollArea):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, main_wnd=None):
         super().__init__(parent)
         self.parent = parent
         self.setObjectName("my_data_tab")
+        self.main_wnd = main_wnd
 
         self.init_ui()
 
     def update_table(self):
-        tab_index = main_wnd.main_tab_index[self.objectName]
+        tab_index = main_wnd.main_tab_index[self.objectName()]
         main_wnd.content_tabs.removeTab(tab_index)
         tab_index = main_wnd.content_tabs.addTab(MyDataTab(main_wnd.content_tabs), "")
         main_wnd.main_tab_index[self.objectName] = tab_index
         main_wnd.content_tabs.setCurrentIndex(tab_index)
 
     def init_ui(self):
-        self.cur_clicked = 0
         btn_group = [
             {
                 'id': 'upload_btn',
@@ -76,6 +77,10 @@ class MyDataTab(QScrollArea):
             'width': [252, 140, 140, 138]
         }
         data = fs.get_file_list()
+        def buildProductClickListener(product_id):
+            def listener(event):
+                app.router.redirectTo('publish_product', product_id=product_id)
+            return listener
         def itemHandler(data):
             items = []
             items.append(data.name)
@@ -86,6 +91,7 @@ class MyDataTab(QScrollArea):
             if not status:
                 wid.setText('Publish as product')
                 wid.setStyleSheet("QLabel{color: #006bcf;}")
+                Binder.click(wid, buildProductClickListener(data.id))
             items.append(wid)
             return items
 
@@ -108,14 +114,17 @@ class MyDataTab(QScrollArea):
         # My Product
         my_product_label = QLabel('My Product')
         my_product_label.setObjectName('label_hint')
+        productsDeferred = wallet.market_client.products()
+        def cb(products):
+            print(products)
+        productsDeferred.addCallbacks(cb)
         main_layout.addWidget(my_product_label)
 
         # Product List
-        test_dict = dict(image=abs_path('icons/test.png'), icon=abs_path('icons/icon_batch@2x.png'), name="Name of a some published data name of a data")
+        test_dict = dict(h=210, image=abs_path('icons/test.png'), icon=abs_path('icons/icon_batch@2x.png'), name="Name of a some published data name of a data")
         products = []
         for i in range(3):
             products.append(Product(**test_dict))
-
         pdsWidget = ProductList(products)
         main_layout.addWidget(pdsWidget)
 
@@ -131,7 +140,38 @@ class MyDataTab(QScrollArea):
         widget.setObjectName('parent_widget')
         widget.setLayout(main_layout)
         widget.setFixedWidth(750)
-        widget.setStyleSheet("QWidget#parent_widget{background: white;}")
+        widget.setStyleSheet("""
+            QWidget#parent_widget{background: white;}
+            QPushButton#upload_btn{
+                padding-left: 16px;
+                padding-right: 16px;
+                border: 1px solid #3173d8; 
+                border-radius: 3px;
+                color: #ffffff;
+                min-height: 30px;
+                max-height: 30px;
+                background: #3173d8;
+                margin-left: 20px;
+                /*background:linear-gradient(-120deg, #119bf0 1%, #167ce9 100%);*/
+                /*box-shadow:0 2px 7px 0 rgba(0,0,0,0.10);*/
+            }
+
+            QPushButton#upload_btn:hover{
+                background: #3984f7; 
+                border: 1px solid #3984f7;
+            }
+
+            QPushButton#upload_btn:pressed{
+                border: 1px solid #2e6dcd; 
+                background: #2e6dcd;
+            }
+
+            QPushbutton#upload_btn:disabled{
+                border: 1px solid #8cb8ea; 
+                background: #98b9eb;
+            }
+            
+        """)
 
         # Scroll Area Properties
         scroll = QScrollArea()
@@ -151,13 +191,3 @@ class MyDataTab(QScrollArea):
             return
         upload = UploadDialog(self)
         upload.show()
-
-    def handle_delete_act(self):
-        self.file_table.removeRow(self.cur_clicked)
-
-    def handle_publish_act(self):
-        if wallet.market_client.token == '':
-            QMessageBox.information(self, "Tips", "Please login first !")
-        else:
-            product_id = self.file_table.item(self.cur_clicked, 5).text()
-            self.publish_dialog = PublishDialog(self, product_id=product_id, tab='cloud')

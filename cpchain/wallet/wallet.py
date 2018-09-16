@@ -26,7 +26,7 @@ class Wallet:
 
 
 def main():
-        sys.exit(reactor.run())
+    sys.exit(reactor.run())
 
 
 

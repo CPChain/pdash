@@ -317,3 +317,15 @@ class MarketClient:
         comment_info = yield treq.json_content(resp)
         logger.debug('query by following tag confirm: %s', comment_info)
         return comment_info['data']
+
+    @inlineCallbacks
+    def products(self):
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        url = utils.build_url(self.url + "product/v1/products/", {})
+        logger.debug(url)
+        resp = yield treq.get(url, headers=header)
+        logger.debug(resp)
+        comment_info = yield treq.json_content(resp)
+        logger.debug('query by following tag confirm: %s', comment_info)
+        return comment_info['data']

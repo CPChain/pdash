@@ -26,14 +26,15 @@ from cpchain.wallet.pages.personal import Seller
 
 from cpchain.wallet.pages.product import Product2, TableWidget
 
-from cpchain.wallet.pages import main_wnd
+from cpchain.wallet.pages import app, Binder
 from cpchain.wallet.pages.other import PublishDialog
 
 from datetime import datetime as dt
 
-class Product(QFrame):
+class Product(QWidget):
 
-    def __init__(self, image=None, _id=None, name=None, icon=None, category='category', cpc=0, sales=0, timestamp=None, remain=0):
+    def __init__(self, image=None, _id=None, name=None, icon=None, category='category',
+                 cpc=0, sales=0, timestamp=None, remain=0, h=135):
         self.image = image
         self.id = _id
         self.name = name
@@ -43,6 +44,7 @@ class Product(QFrame):
         self.timestamp = timestamp
         self.remain = remain
         self.icon = icon
+        self.h = h
 
         super().__init__()
         self.initUI()
@@ -57,9 +59,15 @@ class Product(QFrame):
         # Image
         image = QLabel()
         image.setObjectName('image')
-        image.setPixmap(QPixmap(self.image))
-        image.setMaximumWidth(219)
-        image.setMaximumHeight(220)
+        pixmap = QPixmap(self.image)
+        pixmap = pixmap.scaled(220, self.h)
+        image.setPixmap(pixmap)
+
+        def listener(event):
+            app.router.redirectTo('product_detail', product_id=self.id)
+
+        Binder.click(image, listener)
+
         vbox.addWidget(image)
 
         # Name
@@ -141,7 +149,9 @@ class Product(QFrame):
 
         self.setLayout(vbox)
         self.setObjectName('Main')
-        self.setFrameShadow(QFrame.Sunken)
+        # self.setFrameShadow(QFrame.Sunken)
+
+
 
         self.setStyleSheet("""
             #Main {

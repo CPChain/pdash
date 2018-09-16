@@ -52,3 +52,10 @@ class Binder:
 
 def warning(parent, msg="Please input all the required fields first"):
     QMessageBox.warning(parent, "Warning", msg)
+
+class App:
+    
+    def __init__(self):
+        self.main_wnd = None
+
+app = App()
