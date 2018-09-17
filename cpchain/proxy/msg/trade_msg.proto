@@ -12,7 +12,7 @@ message Message {
 
 	message Storage {
 		string type = 1;
-		string file_uri = 2;
+		string path = 2;
 	}
 
 	message SellerData {

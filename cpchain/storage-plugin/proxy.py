@@ -28,6 +28,8 @@ def no_verify_agent(**kwargs):
     return no_verify_agent.agent
 
 class Storage:
+    data_type = 'file'
+
     @defer.inlineCallbacks
     def user_input_param(self):
         proxy_id = yield pick_proxy()
@@ -36,7 +38,7 @@ class Storage:
             }
 
     @defer.inlineCallbacks
-    def upload_file(self, src, dst):
+    def upload_data(self, src, dst):
         proxy_id = dst['proxy_id']
 
         proxy_addr = yield get_proxy(proxy_id)
@@ -54,7 +56,7 @@ class Storage:
                 return file_url
 
     @defer.inlineCallbacks
-    def download_file(self, src, dst):
+    def download_data(self, src, dst):
 
         f = open(dst, 'wb')
         resp = yield treq.get(src, agent=no_verify_agent())

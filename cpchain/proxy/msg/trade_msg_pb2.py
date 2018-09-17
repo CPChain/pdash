@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='trade_msg.proto',
   package='cpchain',
   syntax='proto3',
-  serialized_pb=_b('\n\x0ftrade_msg.proto\x12\x07\x63pchain\"\xb7\x05\n\x07Message\x12*\n\x04type\x18\x01 \x01(\x0e\x32\x1c.cpchain.Message.MessageType\x12\x30\n\x0bseller_data\x18\x02 \x01(\x0b\x32\x1b.cpchain.Message.SellerData\x12.\n\nbuyer_data\x18\x03 \x01(\x0b\x32\x1a.cpchain.Message.BuyerData\x12\x30\n\x0bproxy_reply\x18\x04 \x01(\x0b\x32\x1b.cpchain.Message.ProxyReply\x1a)\n\x07Storage\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x10\n\x08\x66ile_uri\x18\x02 \x01(\t\x1a\xac\x01\n\nSellerData\x12\x10\n\x08order_id\x18\x01 \x01(\x04\x12\x12\n\norder_type\x18\x02 \x01(\t\x12\x13\n\x0bseller_addr\x18\x03 \x01(\t\x12\x12\n\nbuyer_addr\x18\x04 \x01(\t\x12\x13\n\x0bmarket_hash\x18\x05 \x01(\t\x12\x0f\n\x07\x41\x45S_key\x18\x06 \x01(\x0c\x12)\n\x07storage\x18\x07 \x01(\x0b\x32\x18.cpchain.Message.Storage\x1ao\n\tBuyerData\x12\x10\n\x08order_id\x18\x01 \x01(\x04\x12\x12\n\norder_type\x18\x02 \x01(\t\x12\x13\n\x0bseller_addr\x18\x03 \x01(\t\x12\x12\n\nbuyer_addr\x18\x04 \x01(\t\x12\x13\n\x0bmarket_hash\x18\x05 \x01(\t\x1aR\n\nProxyReply\x12\r\n\x05\x65rror\x18\x01 \x01(\t\x12\x0f\n\x07\x41\x45S_key\x18\x02 \x01(\x0c\x12\x11\n\tport_conf\x18\x03 \x01(\t\x12\x11\n\tdata_path\x18\x04 \x01(\t\"M\n\x0bMessageType\x12\x0c\n\x08RESERVED\x10\x00\x12\x0f\n\x0bSELLER_DATA\x10\x01\x12\x0e\n\nBUYER_DATA\x10\x02\x12\x0f\n\x0bPROXY_REPLY\x10\x03\"B\n\x0bSignMessage\x12\x12\n\npublic_key\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c\x12\x11\n\tsignature\x18\x03 \x01(\x0c\x62\x06proto3')
+  serialized_pb=_b('\n\x0ftrade_msg.proto\x12\x07\x63pchain\"\xb3\x05\n\x07Message\x12*\n\x04type\x18\x01 \x01(\x0e\x32\x1c.cpchain.Message.MessageType\x12\x30\n\x0bseller_data\x18\x02 \x01(\x0b\x32\x1b.cpchain.Message.SellerData\x12.\n\nbuyer_data\x18\x03 \x01(\x0b\x32\x1a.cpchain.Message.BuyerData\x12\x30\n\x0bproxy_reply\x18\x04 \x01(\x0b\x32\x1b.cpchain.Message.ProxyReply\x1a%\n\x07Storage\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x0c\n\x04path\x18\x02 \x01(\t\x1a\xac\x01\n\nSellerData\x12\x10\n\x08order_id\x18\x01 \x01(\x04\x12\x12\n\norder_type\x18\x02 \x01(\t\x12\x13\n\x0bseller_addr\x18\x03 \x01(\t\x12\x12\n\nbuyer_addr\x18\x04 \x01(\t\x12\x13\n\x0bmarket_hash\x18\x05 \x01(\t\x12\x0f\n\x07\x41\x45S_key\x18\x06 \x01(\x0c\x12)\n\x07storage\x18\x07 \x01(\x0b\x32\x18.cpchain.Message.Storage\x1ao\n\tBuyerData\x12\x10\n\x08order_id\x18\x01 \x01(\x04\x12\x12\n\norder_type\x18\x02 \x01(\t\x12\x13\n\x0bseller_addr\x18\x03 \x01(\t\x12\x12\n\nbuyer_addr\x18\x04 \x01(\t\x12\x13\n\x0bmarket_hash\x18\x05 \x01(\t\x1aR\n\nProxyReply\x12\r\n\x05\x65rror\x18\x01 \x01(\t\x12\x0f\n\x07\x41\x45S_key\x18\x02 \x01(\x0c\x12\x11\n\tport_conf\x18\x03 \x01(\t\x12\x11\n\tdata_path\x18\x04 \x01(\t\"M\n\x0bMessageType\x12\x0c\n\x08RESERVED\x10\x00\x12\x0f\n\x0bSELLER_DATA\x10\x01\x12\x0e\n\nBUYER_DATA\x10\x02\x12\x0f\n\x0bPROXY_REPLY\x10\x03\"B\n\x0bSignMessage\x12\x12\n\npublic_key\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c\x12\x11\n\tsignature\x18\x03 \x01(\x0c\x62\x06proto3')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -50,8 +50,8 @@ _MESSAGE_MESSAGETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=647,
-  serialized_end=724,
+  serialized_start=643,
+  serialized_end=720,
 )
 _sym_db.RegisterEnumDescriptor(_MESSAGE_MESSAGETYPE)
 
@@ -71,7 +71,7 @@ _MESSAGE_STORAGE = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='file_uri', full_name='cpchain.Message.Storage.file_uri', index=1,
+      name='path', full_name='cpchain.Message.Storage.path', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -90,7 +90,7 @@ _MESSAGE_STORAGE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=232,
-  serialized_end=273,
+  serialized_end=269,
 )
 
 _MESSAGE_SELLERDATA = _descriptor.Descriptor(
@@ -161,8 +161,8 @@ _MESSAGE_SELLERDATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=276,
-  serialized_end=448,
+  serialized_start=272,
+  serialized_end=444,
 )
 
 _MESSAGE_BUYERDATA = _descriptor.Descriptor(
@@ -219,8 +219,8 @@ _MESSAGE_BUYERDATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=450,
-  serialized_end=561,
+  serialized_start=446,
+  serialized_end=557,
 )
 
 _MESSAGE_PROXYREPLY = _descriptor.Descriptor(
@@ -270,8 +270,8 @@ _MESSAGE_PROXYREPLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=563,
-  serialized_end=645,
+  serialized_start=559,
+  serialized_end=641,
 )
 
 _MESSAGE = _descriptor.Descriptor(
@@ -323,7 +323,7 @@ _MESSAGE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=29,
-  serialized_end=724,
+  serialized_end=720,
 )
 
 
@@ -367,8 +367,8 @@ _SIGNMESSAGE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=726,
-  serialized_end=792,
+  serialized_start=722,
+  serialized_end=788,
 )
 
 _MESSAGE_STORAGE.containing_type = _MESSAGE
