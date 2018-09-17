@@ -46,27 +46,43 @@ def seller_request():
     seller_data.market_hash = 'MARKET_HASH'
     seller_data.AES_key = b'AES_key'
 
-    # storage = seller_data.storage
+    storage = seller_data.storage
 
-    # # ipfs storage
-    # storage.type = 'ipfs'
+    #stream test
+    storage.type = 'stream'
 
-    # import importlib
+    storage_plugin = "cpchain.storage-plugin."
+    module = importlib.import_module(storage_plugin + storage.type)
+    s = module.Storage()
+    param = yield s.user_input_param()
+    storage.path = yield s.upload_data(None, param)
+
+    # proxy storage
+    # storage.type = 'proxy'
+
     # storage_plugin = "cpchain.storage-plugin."
     # module = importlib.import_module(storage_plugin + storage.type)
     # s = module.Storage()
-    # param = s.user_input_param()
-    # storage.file_uri = s.upload_file('/bin/bash', param)
+    # param = yield s.user_input_param()
+    # storage.path = yield s.upload_data('/bin/bash', param)
+
+    # ipfs storage
+    # storage.type = 'ipfs'
+
+    # storage_plugin = "cpchain.storage-plugin."
+    # module = importlib.import_module(storage_plugin + storage.type)
+    # s = module.Storage()
+    # param = yield s.user_input_param()
+    # storage.path = yield s.upload_data('/bin/bash', param)
 
     # # S3 storage
     # storage.type = 's3'
 
-    # import importlib
     # storage_plugin = "cpchain.storage-plugin."
     # module = importlib.import_module(storage_plugin + storage.type)
     # s = module.Storage()
-    # param = s.user_input_param()
-    # storage.file_uri  = s.upload_file('/bin/bash', param)
+    # param = yield s.user_input_param()
+    # storage.path = yield s.upload_data('/bin/bash', param)
 
     sign_message = SignMessage()
     sign_message.public_key = seller_public_key
@@ -126,7 +142,7 @@ def buyer_request():
             storage_plugin = "cpchain.storage-plugin."
             module = importlib.import_module(storage_plugin + 'proxy')
             s = module.Storage()
-            yield s.download_file(urls[0], file_path)
+            yield s.download_data(urls[0], file_path)
 
 seller_request()
 buyer_request()

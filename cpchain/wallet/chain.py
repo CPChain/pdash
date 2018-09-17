@@ -114,7 +114,7 @@ class Broker:
             .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash)) \
             .all()[0][0]
         storage.type = storage_type
-        storage.file_uri = remote_uri
+        storage.path = remote_uri
 
         sign_message = SignMessage()
         sign_message.public_key = self.wallet.market_client.public_key
@@ -180,7 +180,7 @@ class Broker:
             storage_plugin = "cpchain.storage-plugin."
             module = importlib.import_module(storage_plugin + 'proxy')
             s = module.Storage()
-            yield s.download_file(urls[0], file_path)
+            yield s.download_data(urls[0], file_path)
 
             logger.debug("downloaded file path: %s", file_path)
             decrypted_file = decrypt_file_aes(file_path, AES_key)

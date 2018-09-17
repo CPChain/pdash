@@ -173,7 +173,7 @@ class MyDataTab(QScrollArea):
                 "cpchain.storage-plugin." + self.storage_type
             )
             storage = storage_module.Storage()
-            self.dst_default = storage.user_input_param()
+            self.dst_default = yield storage.user_input_param()
             self.dst = self.dst_default
 
             def create_labels():
