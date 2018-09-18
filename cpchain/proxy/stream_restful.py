@@ -12,6 +12,7 @@ from twisted.internet import threads
 from cpchain.utils import reactor
 
 from cpchain import config
+from cpchain.proxy.db import ProxyDB
 from cpchain.kafka import KafkaProducer, KafkaConsumer
 
 logger = logging.getLogger(__name__)
@@ -52,12 +53,22 @@ def catch_exceptions(func):
 
 class RestfulServer:
     app = Klein()
+    proxy_db = ProxyDB()
 
     @app.route('/<stream_id>')
     @catch_exceptions
     @json_response
     def stream_handle(self, request, stream_id):
+        if stream_id == '':
+            return {'status': 'wrong request params'}
+
+        if self.proxy_db.query_data_path(stream_id) and \
+            request.method == b'POST':
+            # prevent wallet users to produce data to relay stream
+            return {'status': 'permission denied'}
+
         if request.method == b'GET':
+
             brokers = config.proxy.kafka_brokers
             consumer = KafkaConsumer(brokers, str(uuid()))
 
@@ -89,6 +100,7 @@ class RestfulServer:
             return str(records)
 
         elif request.method == b'POST':
+
             data = request.content.read()
 
             brokers = config.proxy.kafka_brokers
@@ -96,7 +108,7 @@ class RestfulServer:
             producer.produce(stream_id, data)
             producer.flush()
 
-        return {'status': 'ok'}
+            return {'status': 'ok'}
 
     def run(self):
         port = config.proxy.server_stream_restful_port
