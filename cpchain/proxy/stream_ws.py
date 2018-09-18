@@ -5,6 +5,7 @@ from autobahn.twisted.websocket import WebSocketServerProtocol, \
     WebSocketServerFactory, listenWS
 
 from cpchain import config
+from cpchain.proxy.db import ProxyDB
 from cpchain.kafka import KafkaProducer, KafkaConsumer
 
 logger = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ class WSProtocol(WebSocketServerProtocol):
         try:
             self.stream_id = request.path.strip('/')
             self.action = request.params['action'][0] # publish or subscribe
-            if self.action not in ['publish', 'subscribe']:
+            if self.action not in ['publish', 'subscribe'] or self.stream_id == '':
                 self.error_request = True
 
         except:
@@ -28,12 +29,18 @@ class WSProtocol(WebSocketServerProtocol):
         if self.error_request:
             raise Exception('wrong request params')
 
-        else:
-            brokers = config.proxy.kafka_brokers
-            if self.action == 'publish':
-                self.producer = KafkaProducer(brokers, str(request.peer))
-            elif self.action == 'subscribe':
-                self.consumer = KafkaConsumer(brokers, str(request.peer))
+        proxy_db = self.factory.proxy_db
+        if proxy_db.query_data_path(self.stream_id) and self.action == 'publish':
+            # prevent wallet users to produce data to relay stream
+            self.error_request = True
+            raise Exception('permission denied')
+
+        brokers = config.proxy.kafka_brokers
+
+        if self.action == 'publish':
+            self.producer = KafkaProducer(brokers, str(request.peer))
+        elif self.action == 'subscribe':
+            self.consumer = KafkaConsumer(brokers, str(request.peer))
 
     def onOpen(self):
         logger.debug("WebSocket connection open.")
@@ -67,6 +74,7 @@ class WSServer:
         port = config.proxy.server_stream_ws_port
         self.factory = WebSocketServerFactory(u"ws://0.0.0.0:%d" % port)
         self.factory.protocol = WSProtocol
+        self.factory.proxy_db = ProxyDB()
 
         self.trans = None
 
