@@ -5,5 +5,4 @@ cd "$(dirname "${BASH_SOURCE[0]}")"/..
 ROOT_PATH=$(pwd)
 export PYTHONPATH=$PYTHONPATH:$ROOT_PATH
 #export CPCHAIN_HOME_CONFIG_PATH="~/.cpchain/cpchain_market.toml"
-
 python3 cpchain/market/manage.py runserver 0.0.0.0:8083
