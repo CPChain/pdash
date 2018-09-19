@@ -38,7 +38,6 @@ class SideBar(QScrollArea):
         menuWidget.setCurrentRow(0)
 
         def list_clicked(item):
-            print(link_map[item.text()])
             app.router.redirectTo(link_map[item.text()])
         menuWidget.itemPressed.connect(list_clicked)
 

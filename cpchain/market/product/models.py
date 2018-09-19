@@ -98,7 +98,7 @@ class Product(models.Model):
             item.avg_rating = 1 if not comment else comment.avg_rating
             item.sales_number = 0 if not sale_status else sale_status.sales_number
         except Exception as e:
-            print(e)
+            logger.exception()
         return item
 
     def update_index_status(self):

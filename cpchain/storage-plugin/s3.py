@@ -4,6 +4,8 @@ from botocore import UNSIGNED
 from botocore.config import Config
 
 class Storage:
+    data_type = 'file'
+
     def user_input_param(self):
 
         return {
@@ -13,7 +15,7 @@ class Storage:
             'key': 'test'
         }
 
-    def upload_file(self, src, dst):
+    def upload_data(self, src, dst):
         aws_access_key_id = dst['aws_access_key_id']
         aws_secret_access_key = dst['aws_secret_access_key']
         bucket = dst['bucket']
@@ -33,7 +35,7 @@ class Storage:
 
         return json.dumps(file_addr)
 
-    def download_file(self, src, dst):
+    def download_data(self, src, dst):
         src = json.loads(src)
         bucket = src['bucket']
         key = src['key']

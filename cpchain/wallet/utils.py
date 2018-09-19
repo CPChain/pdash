@@ -1,8 +1,14 @@
 import urllib.parse
+import time
 from cpchain.crypto import ECCipher, Encoder
 
 
 def build_url(url, values):
+    if values:
+        if 'timestamp' not in values:
+            values['timestamp'] = str(time.time())
+    else:
+        values = dict(timestamp=str(time.time()))
     data = urllib.parse.urlencode(values)
     new_url = url + "?" + data
     return new_url

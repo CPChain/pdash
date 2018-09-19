@@ -1,5 +1,6 @@
 import logging
 import os
+
 from queue import Queue
 
 from twisted.internet.threads import deferToThread
@@ -26,7 +27,7 @@ from cpchain.wallet.fs import add_file
 from cpchain.wallet.utils import eth_addr_to_string, get_address_from_public_key_object
 from cpchain.wallet.fs import get_session, FileInfo, decrypt_file_aes
 
-from cpchain.proxy.client import start_proxy_request, download_file
+from cpchain.proxy.client import start_proxy_request, download_proxy_file
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 
 logger = logging.getLogger(__name__) # pylint: disable=locally-disabled, invalid-name
@@ -112,7 +113,7 @@ class Broker:
             .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash)) \
             .all()[0][0]
         storage.type = storage_type
-        storage.file_uri = remote_uri
+        storage.path = remote_uri
 
         sign_message = SignMessage()
         sign_message.public_key = self.wallet.market_client.public_key
@@ -169,11 +170,14 @@ class Broker:
         if error:
             logger.debug(error)
         else:
-            yield download_file(urls[0])
-
-            file_dir = join_with_rc(config.wallet.download_dir)
             file_name = urls[0].split('/')[3]
+            file_dir = join_with_rc(config.wallet.download_dir)
+            # create if not exists
+            os.makedirs(file_dir, exist_ok=True)
             file_path = os.path.join(file_dir, file_name)
+
+            yield download_proxy_file(urls[0], file_path)
+
             logger.debug("downloaded file path: %s", file_path)
             decrypted_file = decrypt_file_aes(file_path, AES_key)
             logger.debug('Decrypted file path: %s', str(decrypted_file))

@@ -66,7 +66,7 @@ class ProductPublishAPIViewSet(APIView):
             request.FIELS['cover_image']
             # data['cover_image'] = request.data['cover_image']
         except Exception as e:
-            traceback.print_exc()
+            logger.exception()
             raise e
         serializer = ProductSerializer(data=data)
         try:
@@ -76,7 +76,7 @@ class ProductPublishAPIViewSet(APIView):
                 serializer.save(owner=user)
                 return create_success_data_response({'market_hash': product.msg_hash})
         except Exception as e:
-            traceback.print_exc()
+            logger.exception()
             raise e
 
 
@@ -314,7 +314,7 @@ class ProductListViewSet(mixins.ListModelMixin,
             data['msg_hash'] = product.msg_hash
             data['seq'] = msg_seq.seq
         except Exception as e:
-            traceback.print_exc()
+            logger.exception()
             raise e
         serializer = ProductSerializer(data=data)
         try:
@@ -324,7 +324,7 @@ class ProductListViewSet(mixins.ListModelMixin,
                 serializer.save(owner=user)
                 return create_success_data_response({'market_hash': product.msg_hash})
         except Exception as e:
-            traceback.print_exc()
+            logger.exception()
             raise e
 
     def list(self, request, *args, **kwargs):

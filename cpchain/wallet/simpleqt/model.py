@@ -13,10 +13,7 @@ class Model:
     def value(self, val):
         self.value_ = val
         if self.view:
-            try:
-                self.view.change.emit(val)
-            except Exception as e:
-                print(e)
+            self.view.change.emit(val)
 
     def plain_set(self, val):
         self.value_ = val

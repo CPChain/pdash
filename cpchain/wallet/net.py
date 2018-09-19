@@ -87,7 +87,7 @@ class MarketClient:
             logger.debug('market_hash: %s', confirm_info['data']['market_hash'])
             market_hash = confirm_info['data']['market_hash']
         except Exception as e:
-            traceback.print_exc()
+            logger.exception()
         if ptype == 'file':
             publish_file_update(market_hash, selected_id)
         return market_hash
@@ -338,7 +338,7 @@ class MarketClient:
     def products(self):
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
                   'Content-Type': 'application/json'}
-        url = utils.build_url(self.url + "product/v1/allproducts/", {'timestamp': str(time.time())})
+        url = utils.build_url(self.url + "product/v1/allproducts/", {})
         logger.debug(url)
         resp = yield treq.get(url, headers=header)
         comment_info = yield treq.json_content(resp)

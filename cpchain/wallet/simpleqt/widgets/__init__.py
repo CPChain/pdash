@@ -4,7 +4,6 @@ from PyQt5.QtWidgets import QLabel, QLineEdit, QTextEdit, QCheckBox
 from cpchain.wallet.simpleqt.model import Model
 
 def init(self, *args, **kwargs):
-    # 对 args 和 kwargs 进行处理，遇到 Model 时进行value替换
     new_args = []
     for i in args:
         if isinstance(i, Model):

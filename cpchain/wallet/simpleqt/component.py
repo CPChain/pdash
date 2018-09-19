@@ -8,7 +8,6 @@ class Component(QtWidgets.QWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # 遍历所有经过装饰器装饰的函数
         # Execute Data
         if self.has('data'):
             self.data()

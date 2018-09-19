@@ -134,13 +134,14 @@ def upload_file(file_path, storage_type, dest, data_name=None):
         "cpchain.storage-plugin." + storage_type
     )
     storage = storage_module.Storage()
-    file_uri = storage.upload_file(encrypted_path, dest)  # d_upload file_uri: string save directly
+    file_uri = yield storage.upload_data(encrypted_path, dest)  # d_upload file_uri: string save directly
     file_name = list(os.path.split(file_path))[-1]
     file_size = os.path.getsize(file_path)
     logger.debug('start to write data into database')
     if data_name:
         file_name = data_name
-    file_md5 = hashlib.md5(open(encrypted_path, "rb").read()).hexdigest()
+    with open(encrypted_path, "rb") as file:
+        file_md5 = hashlib.md5(file.read()).hexdigest()
     hashcode = json.loads(file_uri)
     hashcode['file_hash'] = file_md5
     new_file_info = FileInfo(hashcode=json.dumps(hashcode), name=file_name, path=file_path, size=file_size,

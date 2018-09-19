@@ -35,10 +35,127 @@ from cpchain.wallet.components.loading import Loading
 from cpchain.wallet.simpleqt.page import Page
 from cpchain.wallet.simpleqt.decorator import page
 from cpchain.wallet.simpleqt.widgets.label import Label
+from cpchain.wallet.simpleqt.widgets import Input
 
 from datetime import datetime as dt
 
 logger = logging.getLogger(__name__)
+
+class PurchaseDialog(QDialog):
+
+    def __init__(self, parent, title="Purchase Confirmation", width=524, height=405,
+                 price=None, gas=None, account=None, password=None, storagePath=None):
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.resize(width, height)
+        self.price = price
+        self.gas = gas
+        self.account = account
+        self.password = password
+        self.storagePath = storagePath
+        self.ui()
+        self.style()
+
+    @page.ui
+    def ui(self):
+        layout = QGridLayout()
+        row = 1
+        layout.addWidget(QLabel('Price:'), row, 1)
+        layout.addWidget(Label(self.price), row, 2)
+
+        row += 1
+        layout.addWidget(QLabel('Gas:'), row, 1)
+        layout.addWidget(Label(self.gas), row, 2)
+
+        row += 1
+        layout.addWidget(QLabel('Account Ballance:'), row, 1)
+        layout.addWidget(Label(self.account), row, 2)
+
+        row += 1
+        layout.addWidget(QLabel('Payment Password:'), row, 1)
+        layout.addWidget(Input(self.password), row, 2)
+
+        row += 1
+        layout.addWidget(QLabel('Storage Path:'), row, 1)
+        layout.addWidget(Input(self.storagePath), row, 2)
+
+        row += 2
+        # Bottom
+        btm = QHBoxLayout()
+        btm.setAlignment(Qt.AlignRight)
+        btm.setContentsMargins(0, 0, 0, 0)
+        btm.setSpacing(20)
+        btm.addStretch(1)
+        cancel = QPushButton('Cancel')
+        cancel.setObjectName('pinfo_cancel_btn')
+        btm.addWidget(cancel)
+        ok = QPushButton('Publish')
+        ok.setObjectName('pinfo_publish_btn')
+        btm.addWidget(ok)
+        layout.addLayout(btm, row, 2)
+        return layout
+
+    @page.style
+    def style(self):
+        return """
+            QPushButton#pinfo_cancel_btn{
+                padding-left: 10px;
+                padding-right: 10px;
+                border: 1px solid #3173d8; 
+                border-radius: 3px;
+                color: #3173d8;
+                min-height: 30px;
+                max-height: 30px;
+                background: #ffffff;
+                min-width: 80px;
+                max-width: 80px;
+            }
+
+            QPushButton#pinfo_cancel_btn:hover{
+                border: 1px solid #3984f7; 
+                color: #3984f6;
+            }
+
+            QPushButton#pinfo_cancel_btn:pressed{
+                border: 1px solid #2e6dcd; 
+                color: #2e6dcd;
+                background: #e5ecf4;
+            }
+
+            QPushbutton#pinfo_cancel_btn:disabled{
+                border: 1px solid #8cb8ea; 
+                color: #8cb8ea;
+            }
+
+            QPushButton#pinfo_publish_btn{
+                padding-left: 10px;
+                padding-right: 10px;
+                border: 1px solid #3173d8; 
+                border-radius: 3px;
+                color: #ffffff;
+                min-height: 30px;
+                max-height: 30px;
+                min-width: 80px;
+                max-width: 80px;
+                background: #3173d8;
+            }
+
+            QPushButton#pinfo_publish_btn:hover{
+                background: #3984f7; 
+                border: 1px solid #3984f7;
+            }
+
+            QPushButton#pinfo_publish_btn:pressed{
+                border: 1px solid #2e6dcd; 
+                background: #2e6dcd;
+            }
+
+            QPushbutton#pinfo_publish_btn:disabled{
+                border: 1px solid #8cb8ea; 
+                background: #98b9eb;
+            }
+        """
+
 
 class ProductDetail(Page):
 
@@ -72,7 +189,12 @@ class ProductDetail(Page):
             "sales": self.sales,
             "cpc": self.cpc,
             "remain": self.remain,
-            "description": self.description
+            "description": self.description,
+
+            "gas": 1,
+            "account": 15,
+            "password": "",
+            "storagePath": ""
         }
 
     def setProduct(self, product):
@@ -159,6 +281,17 @@ class ProductDetail(Page):
         cpc_unit.setObjectName('cpc_unit')
         hbox.addWidget(cpc)
         hbox.addWidget(cpc_unit)
+
+        # Buy button
+        buy = QPushButton("Buy")
+        buy.setObjectName('buy')
+        hbox.addWidget(buy)
+        def openPurchaseDialog(_):
+            purchaseDlg = PurchaseDialog(self, price=self.cpc, gas=self.gas, account=self.account,
+                                         storagePath=self.storagePath, password=self.password)
+            purchaseDlg.show()
+        buy.clicked.connect(openPurchaseDialog)
+
         hbox.addStretch(1)
 
         right.addLayout(hbox)
@@ -191,6 +324,14 @@ class ProductDetail(Page):
                 font-size:20px;
                 color:#000000;
                 text-align:left;
+            }
+            QPushButton#buy {
+                /*background-image:linear-gradient(-120deg, #119bf0 1%, #1689e9 100%);*/
+                background: #1689e9;
+                border-radius:3px;
+                width:100px;
+                height:30px;
+                color: white;
             }
 
             #category {

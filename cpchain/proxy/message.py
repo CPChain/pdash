@@ -12,7 +12,7 @@ def message_sanity_check(message):
             seller_data.AES_key:
             if seller_data.order_type == 'file':
                 storage = seller_data.storage
-                if storage.type and storage.file_uri:
+                if storage.type and storage.path:
                     return True
             elif seller_data.order_type == 'stream':
                 return True

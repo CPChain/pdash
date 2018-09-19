@@ -1,22 +1,19 @@
 #!/usr/bin/env python3
 
-import os
 import logging
 import json
 import treq
-from zope.interface import implementer
 
-from twisted.web.iweb import IPolicyForHTTPS
 from twisted.internet import reactor, protocol, ssl, defer
 from twisted.protocols.basic import NetstringReceiver
 
-from cpchain import config
-from cpchain.utils import join_with_rc
 from cpchain.proxy.msg.trade_msg_pb2 import Message
 from cpchain.proxy.message import message_sanity_check
 
 from cpchain.proxy.kadnet import KadNode
 from cpchain.proxy.centralnet import Slave
+
+from cpchain.proxy.ssl_cert import no_verify_agent
 
 logger = logging.getLogger(__name__)
 
@@ -114,51 +111,6 @@ class ProxyClient:
     def stop(self):
         self.trans.disconnect()
 
-@implementer(IPolicyForHTTPS)
-class NoVerifySSLContextFactory(object):
-    """Context that doesn't verify SSL connections"""
-    def creatorForNetloc(self, hostname, port): # pylint: disable=unused-argument
-        return ssl.CertificateOptions(verify=False)
-
-def no_verify_agent(**kwargs):
-    reactor = treq.api.default_reactor(kwargs.get('reactor'))
-    pool = treq.api.default_pool(
-        reactor,
-        kwargs.get('pool'),
-        kwargs.get('persistent'))
-
-    no_verify_agent.agent = treq.api.Agent(
-        reactor,
-        contextFactory=NoVerifySSLContextFactory(),
-        pool=pool
-    )
-    return no_verify_agent.agent
-
-def upload_file(file_path, url):
-
-    upload_file = {'file': open(file_path, 'rb')}
-
-    # treq will switch to multipart/form-data content-type
-    # for file transaction if 'files' parameter is given.
-    # Check <treq package>/client.py for details.
-    d = treq.post(url, agent=no_verify_agent(), files=upload_file)
-
-    return d
-
-def download_file(url):
-
-    file_dir = join_with_rc(config.wallet.download_dir)
-    # create if not exists
-    os.makedirs(file_dir, exist_ok=True)
-
-    file_name = os.path.basename(url)
-    file_path = os.path.join(file_dir, file_name)
-
-    f = open(file_path, 'wb')
-    d = treq.get(url, agent=no_verify_agent())
-    d.addCallback(treq.collect, f.write)
-    d.addBoth(lambda _: f.close())
-    return d
 
 def pick_proxy():
     return Slave().pick_peer()
@@ -184,8 +136,9 @@ def start_proxy_request(sign_message, proxy_id):
             d.callback((proxy_reply.error, None, None))
 
     def get_proxy_done(proxy_addr):
+        # proxy addr format: (ip, ctrl_port, file_port, stream_ws_port, stream_restful_port)
         if proxy_addr:
-            proxy_client = ProxyClient(proxy_addr)
+            proxy_client = ProxyClient(proxy_addr[0:2])
             proxy_client.run(sign_message).addCallback(run_client_done, proxy_addr[0])
 
         else:
@@ -225,3 +178,13 @@ def concat_url(ip, proxy_reply):
         urls.append(url)
 
     return urls
+
+def download_proxy_file(url, file_path):
+
+    f = open(file_path, 'wb')
+
+    d = treq.get(url, agent=no_verify_agent())
+    d.addCallback(treq.collect, f.write)
+    d.addCallback(lambda _: f.close())
+
+    return d

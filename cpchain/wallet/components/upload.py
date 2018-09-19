@@ -298,7 +298,6 @@ class UploadDialog(QDialog):
                     QMessageBox.information(self, "Tips", "Uploaded fail")
                     self.close()
             except Exception as e:
-                traceback.print_exc()
                 QMessageBox.information(self, "Tips", "Uploaded fail")
                 self.close()
         d.addCallback(handle_upload_resp)

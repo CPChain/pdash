@@ -21,10 +21,7 @@ class page:
         def wrapper(*args, **kwargs):
             self = args[0]
             layout = func(*args, **kwargs)
-            try:
-                self.setLayout(layout)
-            except Exception as e:
-                print(e)
+            self.setLayout(layout)
             return layout
         return wrapper
 

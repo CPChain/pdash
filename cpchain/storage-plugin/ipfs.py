@@ -3,6 +3,8 @@ import os
 import ipfsapi
 
 class Storage:
+    data_type = 'file'
+
     def user_input_param(self):
         # fixme: should get user input from UI
 
@@ -11,7 +13,7 @@ class Storage:
             'port': '5001'
         }
 
-    def upload_file(self, src, dst):
+    def upload_data(self, src, dst):
         host = str(dst['host'])
         port = int(dst['port'])
 
@@ -26,7 +28,7 @@ class Storage:
 
         return json.dumps(file_addr)
 
-    def download_file(self, src, dst):
+    def download_data(self, src, dst):
         src = json.loads(src)
         host = str(src['host'])
         port = int(src['port'])

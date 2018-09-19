@@ -13,27 +13,20 @@ from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from twisted.logger import globalLogBeginner, textFileLogObserver
 
+
+from cpchain.crypto import ECCipher
+
 from cpchain.wallet.pages import load_stylesheet, wallet, main_wnd, app
-from twisted.internet.defer import inlineCallbacks
-
-globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
-logger = logging.getLogger(__name__)
-
-
-# widgets
-
-from cpchain.wallet.pages.personal import *
-from cpchain.wallet.pages.product import *
-from cpchain.wallet.pages.header import *
-from cpchain.wallet.pages.purchase import *
-from cpchain.wallet.pages.other import *
-
-from cpchain.wallet.components.sidebar import SideBar
-
+from cpchain.wallet.pages.header import Header
 from cpchain.wallet.pages.my_data import MyDataTab
 from cpchain.wallet.pages.publish import PublishProduct
 from cpchain.wallet.pages.market import MarketPage
 from cpchain.wallet.pages.detail import ProductDetail
+# widgets
+from cpchain.wallet.components.sidebar import SideBar
+
+globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
+logger = logging.getLogger(__name__)
 
 class Router:
 
@@ -138,31 +131,12 @@ class MainWindow(QMainWindow):
             content_tabs.tabBar().hide()
             content_tabs.setContentsMargins(0, 0, 0, 0)
 
-            # self.pop_index = content_tabs.addTab(PopularTab(content_tabs), "")
-            # self.cloud_index = content_tabs.addTab(CloudTab(content_tabs), "")
-            # self.follow_index = content_tabs.addTab(FollowingTab(content_tabs), "")
-            # self.sell_index = content_tabs.addTab(SellTab(content_tabs), "")
-            # content_tabs.addTab(PersonalProfileTab(content_tabs), "")
-            # content_tabs.addTab(TagHPTab(content_tabs), "")
-            # content_tabs.addTab(SellerHPTab(content_tabs), "")
-            # content_tabs.addTab(SecurityTab(content_tabs), "")
-            # content_tabs.addTab(PreferenceTab(content_tabs), "")
-            # content_tabs.addTab(PersonalInfoPage(content_tabs), "")
-            # self.purchase_index = content_tabs.addTab(PurchasedTab(content_tabs), "")
-            # self.collect_index = content_tabs.addTab(CollectedTab(content_tabs), "")
-
             my_data_index = content_tabs.addTab(MyDataTab(content_tabs, self), "")
             publish_product = content_tabs.addTab(PublishProduct(content_tabs), "")
             market = content_tabs.addTab(MarketPage(content_tabs), "")
             detail = content_tabs.addTab(ProductDetail(content_tabs), "")
 
             self.main_tab_index = {
-                # "popular_tab": self.pop_index,
-                # "follow_tab": self.follow_index,
-                # "cloud_tab": self.cloud_index,
-                # "selling_tab": self.sell_index,
-                # "purchase_tab": self.purchase_index,
-                # "collect_tab": self.collect_index,
                 "my_data_tab": my_data_index,
                 "publish_product_page": publish_product,
                 "market_page": market,
@@ -271,9 +245,6 @@ if __name__ == '__main__':
     main_wnd = buildMainWnd()
     app.main_wnd = main_wnd
     wallet.set_main_wnd(main_wnd)
-    try:
-        login()
-        reactor.run()
-        os._exit()
-    except Exception as e:
-        print(e)
+    login()
+    reactor.run()
+    os._exit()

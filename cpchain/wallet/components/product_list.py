@@ -68,10 +68,7 @@ class ProductList(QScrollArea):
         self.exec_(self.layout())
 
     def initUI(self):
-        try:
-            self.exec_(None)
-        except Exception as e:
-            print(e)
+        self.exec_(None)
 
     def exec_(self, layout=None):
         pds = self.products

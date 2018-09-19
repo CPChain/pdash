@@ -20,25 +20,27 @@ class WSProtocol(WebSocketServerProtocol):
         try:
             self.stream_id = request.path.strip('/')
             self.action = request.params['action'][0] # publish or subscribe
-            if self.action not in ['publish', 'subscribe']:
+            if self.action not in ['publish', 'subscribe'] or self.stream_id == '':
                 self.error_request = True
 
         except:
             self.error_request = True
 
-        proxy_db = self.factory.proxy_db
-        if not proxy_db.query_data_path(self.stream_id):
-            self.error_request = True
-
         if self.error_request:
             raise Exception('wrong request params')
 
-        else:
-            brokers = config.proxy.kafka_brokers
-            if self.action == 'publish':
-                self.producer = KafkaProducer(brokers, str(request.peer))
-            elif self.action == 'subscribe':
-                self.consumer = KafkaConsumer(brokers, str(request.peer))
+        proxy_db = self.factory.proxy_db
+        if proxy_db.query_data_path(self.stream_id) and self.action == 'publish':
+            # prevent wallet users to produce data to relay stream
+            self.error_request = True
+            raise Exception('permission denied')
+
+        brokers = config.proxy.kafka_brokers
+
+        if self.action == 'publish':
+            self.producer = KafkaProducer(brokers, str(request.peer))
+        elif self.action == 'subscribe':
+            self.consumer = KafkaConsumer(brokers, str(request.peer))
 
     def onOpen(self):
         logger.debug("WebSocket connection open.")

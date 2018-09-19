@@ -9,7 +9,10 @@ class Label(QLabel):
 
     def __init__(self, *args, **kwargs):
         args, kwargs = init(self, *args, **kwargs)
-        super().__init__(*args, **kwargs)
+        new_args = []
+        for i in args:
+            new_args.append(str(i))
+        super().__init__(*new_args, **kwargs)
         self.change.connect(self.modelChange)
 
     def modelChange(self, value):
