@@ -21,6 +21,7 @@ from cpchain.wallet.pages.personal import Seller
 logger = logging.getLogger(__name__)
 
 class Product(QScrollArea):
+
     def __init__(self, parent=None, item={}, mode=""):
         super().__init__(parent)
         self.parent = parent

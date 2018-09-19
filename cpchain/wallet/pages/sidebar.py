@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (QScrollArea, QVBoxLayout, QWidget, QFrame,
                              QListWidget, QListWidgetItem)
 
-from cpchain.wallet.pages import load_stylesheet, get_icon
+from cpchain.wallet.pages import load_stylesheet, get_icon, app
 
 
 class SideBar(QScrollArea):
@@ -25,6 +25,8 @@ class SideBar(QScrollArea):
 
         menuWidget = QListWidget()
         menuWidget.setMaximumHeight(100)
+        menuWidget.setFrameShape(QListWidget.NoFrame)
+
         link_map = dict()
         first = None
         for item in self.menu:
@@ -36,8 +38,7 @@ class SideBar(QScrollArea):
         menuWidget.setCurrentRow(0)
 
         def list_clicked(item):
-            wid = self.content_tabs.findChild(QWidget, link_map[item.text()])
-            self.content_tabs.setCurrentWidget(wid)
+            app.router.redirectTo(link_map[item.text()])
         menuWidget.itemPressed.connect(list_clicked)
 
         self.content_tabs.setCurrentWidget(self.content_tabs.findChild(QWidget, first))

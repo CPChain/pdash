@@ -8,7 +8,7 @@ QTabWidget#content_tabs {
     background: #006bcf;
 }
 
-QScrollArea{
+QScrollArea, #sidebar{
     border: none;
     outline: none; 
     background: #fafafa;
@@ -16,6 +16,4 @@ QScrollArea{
 
 QMessageBox{
     color: #006bcf;
-
 }
-

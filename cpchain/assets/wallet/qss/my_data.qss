@@ -90,7 +90,7 @@ QPushButton#search_btn_cloud {
     border-image: url(${asset_dir}/icons/search_btn.png); 
 }
 
-
+/*
 QScrollBar:vertical{
 width:12px;
 border:1px solid rgba(0,0,0,50);
@@ -151,7 +151,7 @@ min-width:17px;
 QScrollBar::down-arrow:vertical{
 border-style:outset;
 border-width:0px;
-}
+}*/
 
 QLabel#label_hint {
     font-family:SFUIDisplay-Regular;

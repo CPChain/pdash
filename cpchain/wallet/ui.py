@@ -13,65 +13,102 @@ from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from twisted.logger import globalLogBeginner, textFileLogObserver
 
-from cpchain.wallet.pages import load_stylesheet, wallet, main_wnd
+
+from cpchain.crypto import ECCipher
+
+from cpchain.wallet.pages import load_stylesheet, wallet, main_wnd, app
+from cpchain.wallet.pages.header import Header
+from cpchain.wallet.pages.my_data import MyDataTab
+from cpchain.wallet.pages.publish import PublishProduct
+from cpchain.wallet.pages.market import MarketPage
+from cpchain.wallet.pages.detail import ProductDetail
+# widgets
+from cpchain.wallet.components.sidebar import SideBar
 
 globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
 logger = logging.getLogger(__name__)
 
+class Router:
 
-# widgets
+    index = MarketPage
+    back_stack = [('market_page', [], {})]
+    forward_stack = []
+    listener = []
 
-from cpchain.wallet.pages.personal import *
-from cpchain.wallet.pages.product import *
-from cpchain.wallet.pages.header import *
-from cpchain.wallet.pages.purchase import *
-from cpchain.wallet.pages.sidebar import *
-from cpchain.wallet.pages.other import *
+    page = {
+        'market_page': MarketPage,
+        'my_data_tab': MyDataTab,
+        'publish_product': PublishProduct,
+        'product_detail': ProductDetail
+    }
 
-from cpchain.wallet.pages.my_data import MyDataTab
+    @staticmethod
+    def addListener(listener):
+        Router.listener.append(listener)
+
+    @staticmethod
+    def removeListener(listener):
+        Router.listener.remove(listener)
+
+    @staticmethod
+    def _redirectTo(page, *args, **kwargs):
+        _page = Router.page[page](app.main_wnd.body, *args, **kwargs)
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(_page)
+        QWidget().setLayout(app.main_wnd.body.layout())
+        app.main_wnd.body.setLayout(layout)
+
+    @staticmethod
+    def redirectTo(page, *args, **kwargs):
+        Router.forward_stack = []
+        Router.back_stack.append((page, args, kwargs))
+        for l in Router.listener:
+            l(page)
+        Router._redirectTo(page, *args, **kwargs)
+
+    @staticmethod
+    def hasBack():
+        return len(Router.back_stack) > 1
+
+    @staticmethod
+    def back():
+        if len(Router.back_stack) > 1:
+            Router.forward_stack.append(Router.back_stack[-1])
+            Router.back_stack = Router.back_stack[:-1]
+            page, args, kwargs = Router.back_stack[-1]
+            Router._redirectTo(page, *args, **kwargs)
+        print(Router.forward_stack)
+
+    @staticmethod
+    def forward():
+        print(Router.forward_stack)
+        if len(Router.forward_stack) > 0:
+            page, args, kwargs = Router.forward_stack[-1]
+            Router.back_stack.append((page, args, kwargs))
+            Router.forward_stack = Router.forward_stack[:-1]
+            Router._redirectTo(page, *args, **kwargs)
 
 sidebarMenu = [
     {
+        'name': 'Market',
+        'icon': 'market@2x.png',
+        'link': 'market_page'
+    }, {
         'name': 'My Data',
         'icon': 'my data@2x.png',
         'link': 'my_data_tab'
-    },
-    # {
-    #     'name': 'Popular',
-    #     'icon': 'pop.png',
-    #     'link': 'popular_tab'
-    # }, {
-    #     'name': 'Following',
-    #     'icon': 'following.png',
-    #     'link': 'follow_tab'
-    # }, {
-    #     'name': 'Cloud',
-    #     'icon': 'cloud.png',
-    #     'link': 'cloud_tab'
-    # }, {
-    #     'name': 'Selling',
-    #     'icon': 'store.png',
-    #     'link': 'selling_tab'
-    # }, {
-    #     'name': 'Purchased',
-    #     'icon': 'purchased.png',
-    #     'link': 'purchase_tab'
-    # }, {
-    #     'name': 'Collection',
-    #     'icon': 'collection.png',
-    #     'link': 'collect_tab'
-    # }, {
-    #     'name': 'Shopping Cart',
-    #     'icon': 'collection.png',
-    #     'link': 'collect_tab'
-    # }
+    }
 ]
 
 class MainWindow(QMainWindow):
     def __init__(self, reactor):
         super().__init__()
         self.reactor = reactor
+        self.body = None
         self.init_ui()
+        self.content_tabs = None
+
 
     def init_ui(self):
         self.setWindowTitle('CPChain Wallet')
@@ -93,50 +130,40 @@ class MainWindow(QMainWindow):
             content_tabs.setObjectName("content_tabs")
             content_tabs.tabBar().hide()
             content_tabs.setContentsMargins(0, 0, 0, 0)
-            self.pop_index = content_tabs.addTab(PopularTab(content_tabs), "")
-            self.cloud_index = content_tabs.addTab(CloudTab(content_tabs), "")
-            self.follow_index = content_tabs.addTab(FollowingTab(content_tabs), "")
-            self.sell_index = content_tabs.addTab(SellTab(content_tabs), "")
-            content_tabs.addTab(PersonalProfileTab(content_tabs), "")
-            content_tabs.addTab(TagHPTab(content_tabs), "")
-            content_tabs.addTab(SellerHPTab(content_tabs), "")
-            content_tabs.addTab(SecurityTab(content_tabs), "")
-            content_tabs.addTab(PreferenceTab(content_tabs), "")
-            content_tabs.addTab(PersonalInfoPage(content_tabs), "")
-            self.purchase_index = content_tabs.addTab(PurchasedTab(content_tabs), "")
-            self.collect_index = content_tabs.addTab(CollectedTab(content_tabs), "")
-            my_data_index = content_tabs.addTab(MyDataTab(content_tabs), "")
+
+            my_data_index = content_tabs.addTab(MyDataTab(content_tabs, self), "")
+            publish_product = content_tabs.addTab(PublishProduct(content_tabs), "")
+            market = content_tabs.addTab(MarketPage(content_tabs), "")
+            detail = content_tabs.addTab(ProductDetail(content_tabs), "")
+
             self.main_tab_index = {
-                "popular_tab": self.pop_index,
-                "follow_tab": self.follow_index,
-                "cloud_tab": self.cloud_index,
-                "selling_tab": self.sell_index,
-                "purchase_tab": self.purchase_index,
-                "collect_tab": self.collect_index,
-                "my_data_tab": my_data_index
+                "my_data_tab": my_data_index,
+                "publish_product_page": publish_product,
+                "market_page": market,
+                "product_detail": detail
             }
-        add_content_tabs()
+        # add_content_tabs()
 
         header = Header(self)
-        sidebar = SideBar(self, self, sidebarMenu)
+        sidebar = SideBar(sidebarMenu)
 
         def set_layout():
             main_layout = QVBoxLayout()
-            main_layout.setSpacing(0)
+            main_layout.setAlignment(Qt.AlignHCenter)
             main_layout.setContentsMargins(0, 0, 0, 0)
-            main_layout.addSpacing(0)
             main_layout.addWidget(header)
 
             content_layout = QHBoxLayout()
             content_layout.setSpacing(0)
             content_layout.setContentsMargins(0, 0, 0, 0)
-            content_layout.addSpacing(0)
             content_layout.addWidget(sidebar)
-            content_layout.addSpacing(0)
-            content_layout.addWidget(self.content_tabs)
-
+            self.body = QWidget()
+            layout = QVBoxLayout()
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.addWidget(Router.index(self.body))
+            self.body.setLayout(layout)
+            content_layout.addWidget(self.body)
             main_layout.addLayout(content_layout)
-
             wid = QWidget(self)
             wid.setLayout(main_layout)
             self.setCentralWidget(wid)
@@ -207,12 +234,17 @@ def buildMainWnd():
     # initialize_system()
     return main_wnd
 
+def login():
+    wallet.accounts.set_default_account(1)
+    wallet.market_client.account = wallet.accounts.default_account
+    wallet.market_client.public_key = ECCipher.serialize_public_key(wallet.market_client.account.public_key)
+    wallet.market_client.login()
 
 if __name__ == '__main__':
+    app.router = Router
     main_wnd = buildMainWnd()
+    app.main_wnd = main_wnd
     wallet.set_main_wnd(main_wnd)
-    try:
-        reactor.run()
-        os._exit()
-    except Exception as e:
-        print(e)
+    login()
+    reactor.run()
+    os._exit()

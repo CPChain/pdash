@@ -781,10 +781,10 @@ class PopularTab(QScrollArea):
         self.hot_label.setMinimumHeight(2)
         self.hot_label.setMaximumHeight(25)
 
-        self.more_btn_1 = more_btn_1 = QPushButton("More>", self)
+        self.more_btn_1 = more_btn_1 = QPushButton("More1>", self)
         more_btn_1.setObjectName("more_btn_1")
         self.more_btn_1.setCursor(QCursor(Qt.PointingHandCursor))
-        self.more_btn_2 = more_btn_2 = QPushButton("More>", self)
+        self.more_btn_2 = more_btn_2 = QPushButton("More2>", self)
         more_btn_2.setObjectName("more_btn_2")
         self.more_btn_2.setCursor(QCursor(Qt.PointingHandCursor))
 
@@ -855,7 +855,7 @@ class PopularTab(QScrollArea):
             self.recom_layout.addSpacing(0)
             self.recom_layout.addWidget(self.recom_label)
             self.recom_layout.addSpacing(50)
-            self.recom_layout.addWidget(more_btn_2)
+            # self.recom_layout.addWidget(more_btn_2)
             self.main_layout.addLayout(self.recom_layout)
             self.main_layout.addSpacing(1)
             self.main_layout.addWidget(self.horline2)

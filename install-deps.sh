@@ -15,6 +15,7 @@ web3
 apscheduler
 pytest-django
 psycopg2-binary
+Pillow==5.2.0
 "
 
 chain_pkgs="

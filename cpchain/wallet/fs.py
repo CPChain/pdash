@@ -2,6 +2,8 @@ import tempfile
 import os
 import logging
 import importlib
+import hashlib
+import json
 from cpchain.wallet.db import get_session, FileInfo, create_engine, sessionmaker, BuyerFileInfo, CollectInfo, FileInfoVersion
 from cpchain.crypto import AESCipher, RSACipher
 from cpchain.utils import join_with_rc
@@ -123,7 +125,7 @@ def decrypt_file(file_in_path, file_out_path):
     decrypter = AESCipher(aes_key)
     decrypter.decrypt(file_in_path, file_out_path)
 
-def upload_file(file_path, storage_type, dest):
+def upload_file(file_path, storage_type, dest, data_name=None):
     # fixed previous bugs of temporary file being deleted after function return
     tmp = tempfile.NamedTemporaryFile(delete=True)
     encrypted_path = tmp.name
@@ -136,7 +138,13 @@ def upload_file(file_path, storage_type, dest):
     file_name = list(os.path.split(file_path))[-1]
     file_size = os.path.getsize(file_path)
     logger.debug('start to write data into database')
-    new_file_info = FileInfo(hashcode=str(file_uri), name=file_name, path=file_path, size=file_size,
+    if data_name:
+        file_name = data_name
+    with open(encrypted_path, "rb") as file:
+        file_md5 = hashlib.md5(file.read()).hexdigest()
+    hashcode = json.loads(file_uri)
+    hashcode['file_hash'] = file_md5
+    new_file_info = FileInfo(hashcode=json.dumps(hashcode), name=file_name, path=file_path, size=file_size,
                              remote_type=str(storage_type), remote_uri=str(file_uri),
                              is_published=False, aes_key=this_key)
     add_file(new_file_info)

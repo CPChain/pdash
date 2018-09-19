@@ -33,8 +33,8 @@ QListWidget::item  {
     padding-left: 15px;
     border-left: 3px solid #eeeeee;
     background: none;
-    color: #1c1c1c; 
-    text-align: center; 
+    color: #1c1c1c;
+    text-align: center;
 }
 
 QListWidget::item:selected  {
