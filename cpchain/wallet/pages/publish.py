@@ -3,7 +3,10 @@ from PyQt5.QtWidgets import (QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLine
                              QMenu, QAction, QCheckBox, QVBoxLayout, QWidget, QDialog, QFrame, QTableWidgetItem,
                              QAbstractItemView, QMessageBox, QTextEdit, QHeaderView, QTableWidget, QRadioButton,
                              QFileDialog, QListWidget, QListWidgetItem, QComboBox)
-from PyQt5.QtGui import QCursor, QFont, QFontDatabase
+from PyQt5.QtGui import QCursor, QFont, QFontDatabase, QPixmap
+from PyQt5.QtGui import *
+from PyQt5 import QtGui
+
 
 from cpchain.crypto import ECCipher, RSACipher, Encoder
 
@@ -24,7 +27,7 @@ import hashlib
 
 from cpchain import root_dir
 
-from cpchain.wallet.pages import HorizontalLine, abs_path, get_icon, app
+from cpchain.wallet.pages import HorizontalLine, abs_path, get_icon, app, Binder
 from cpchain.wallet.pages.other import PublishDialog
 
 from cpchain.wallet.components.table import Table
@@ -33,34 +36,118 @@ from cpchain.wallet.components.product_list import ProductList
 from cpchain.wallet.components.upload import UploadDialog
 from cpchain.wallet.components.loading import Loading
 
+from cpchain.wallet.simpleqt.component import Component
+from cpchain.wallet.simpleqt.page import Page
+from cpchain.wallet.simpleqt.decorator import page, component
+from cpchain.wallet.simpleqt.widgets import Input, TextEdit, CheckBox
+from cpchain.wallet.simpleqt.widgets.label import Label
+
 logger = logging.getLogger(__name__)
+
+class Picture(QWidget):
+
+    def __init__(self, path, width, height):
+        self.width = width
+        self.height = height
+        self.path = path
+        super().__init__()
+        self.ui()
+        self.style()
+
+    @component.method
+    def brush(self):
+        palette1 = QtGui.QPalette()
+        palette1.setBrush(self.backgroundRole(), QtGui.QBrush(QtGui.QPixmap(abs_path('icons/close'))))
+        self.setPalette(palette1)
+        self.setAutoFillBackground(True)
+
+    @component.ui
+    def ui(self):
+        if self.layout():
+            QWidget().setLayout(self.layout())
+        # self.setMinimumWidth(self.width)
+        # self.setMaximumWidth(self.width)
+        # self.setMinimumHeight(self.height)
+        # self.setMaximumHeight(self.height)
+        pic = QLabel()
+        pic.setPixmap(QPixmap(self.path))
+        pic.setMinimumWidth(self.width)
+        pic.setMaximumWidth(self.width)
+        pic.setMinimumHeight(self.height)
+        pic.setMaximumHeight(self.height)
+
+        mylayout = QVBoxLayout()
+        mylayout.addWidget(pic)
+        mylayout.setAlignment(Qt.AlignHCenter)
+        return mylayout
+
+    @component.style
+    def style(self):
+        return """
+
+        """
 
 class Pictures(QFrame):
 
     def __init__(self):
         super().__init__()
-        self.initUI()
+        self.data()
+        self.ui()
+        self.style()
 
-    def initUI(self):
-        layout = QGridLayout()
-        self.setLayout(layout)
-        self.setStyleSheet("""
+    @component.data
+    def data(self):
+        return {
+            'pictures': [abs_path('icons/add@2x.jpg')]
+        }
+
+    def read_file(self, _):
+        file_choice = QFileDialog.getOpenFileName()[0]
+
+    @component.ui
+    def ui(self):
+        width = 150
+        height = 150
+        layout = QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setAlignment(Qt.AlignLeft)
+        for pic in self.pictures.value:
+            tmp = Picture(path=pic, width=width, height=height)
+            layout.addWidget(tmp)
+        add = Picture(path=abs_path('icons/add@2x.jpg'), width=width, height=height)
+        Binder.click(add, self.read_file)
+        layout.addWidget(add)
+        return layout
+
+    @component.style
+    def style(self):
+        return """
             QFrame {
                 background: white;
             }
-        """)
+        """
 
-class PublishProduct(QScrollArea):
+class PublishProduct(Page):
 
     def __init__(self, parent=None, product_id=None):
-        super().__init__(parent)
         self.parent = parent
         self.product_id = product_id
+        super().__init__(parent)
         self.setObjectName("publish_product_page")
 
-        self.init_ui()
+    @page.data
+    def data(self):
+        return {
+            'name': '',
+            'description': '',
+            'price': '',
+            'checked': False,
+            'cover_image': '',
+            'category': 'Advertising'
+        }
 
-    def init_ui(self):
+    @page.ui
+    def ui(self):
         layout = QGridLayout(self)
         layout.setAlignment(Qt.AlignTop)
         layout.setSpacing(20)
@@ -72,8 +159,7 @@ class PublishProduct(QScrollArea):
 
         # Name
         layout.addWidget(QLabel('Name:'), 3, 1, 1, 1)
-        self.pinfo_title_edit = QLineEdit()
-        layout.addWidget(self.pinfo_title_edit, 3, 2, 1, COL - 1)
+        layout.addWidget(Input(self.name), 3, 2, 1, COL - 1)
 
         # Type
         layout.addWidget(QLabel('Type:'), 4, 1, 1, 1)
@@ -82,32 +168,57 @@ class PublishProduct(QScrollArea):
         # Category
         layout.addWidget(QLabel('Category:'), 5, 1, 1, 1)
         category = [
+            'Advertising',
+            'Business Intelligence',
+            'Communications',
+            'Crypto',
+            'Energy',
+            'Entertainment',
+            'Environment',
+            'Finance',
+            'Health',
+            'Industrial',
+            'IoT',
+            'Other',
+            'Retail',
+            'Smart Cities',
+            'Social Media',
+            'Sports',
             'Transportation',
-            'Test1',
-            'Test2'
+            'Weather'
         ]
         categoryWid = QComboBox()
         for cate in category:
             categoryWid.addItem(cate)
+        def itemSelect(index):
+            self.category.value = category[index]
+        categoryWid.currentIndexChanged.connect(itemSelect)
         layout.addWidget(categoryWid, 5, 2, 1, 1)
 
         # Cover Picture
         layout.addWidget(QLabel('Cover picture:'), 6, 1, 1, 1)
-        layout.addWidget(Pictures(), 6, 2, 5, COL - 1)
+        openBtn = QLabel('open...')
+        openBtn.setObjectName('openBtn')
+        def onOpen(_):
+            tmp = QFileDialog.getOpenFileName()[0]
+            if tmp:
+                self.cover_image.value = tmp
+        Binder.click(openBtn, onOpen)
+        path = Label(self.cover_image)
+        layout.addWidget(openBtn, 6, 2)
+        layout.addWidget(path, 8, 2)
 
         # Description
         layout.addWidget(QLabel('Description:'), 12, 1, 1, 1)
         description = QTextEdit()
         description.setMaximumHeight(100)
-        self.pinfo_descrip_edit = description
-        layout.addWidget(description, 12, 2, 2, COL - 1)
+        layout.addWidget(TextEdit(self.description), 12, 2, 2, COL - 1)
 
         # Price
         layout.addWidget(QLabel('Price:'), 14, 1, 1, 1)
         priceHbox = QHBoxLayout()
         priceHbox.setContentsMargins(0, 0, 0, 0)
-        self.pinfo_price_edit = QLineEdit()
-        priceHbox.addWidget(self.pinfo_price_edit)
+        priceHbox.addWidget(Input(self.price))
         priceHbox.addWidget(QLabel('CPC'))
         priceHbox.addStretch(1)
         priceWidget = QWidget()
@@ -118,8 +229,7 @@ class PublishProduct(QScrollArea):
         aggHBox = QHBoxLayout()
         aggHBox.setContentsMargins(0, 0, 0, 0)
         aggHBox.setAlignment(Qt.AlignLeft)
-        self.pinfo_checkbox = QCheckBox()
-        aggHBox.addWidget(self.pinfo_checkbox)
+        aggHBox.addWidget(CheckBox(self.checked))
         aggHBox.addWidget(QLabel("I agree with the agreement of"))
         agreement = QLabel("xxxxxx")
         agreement.setObjectName('agreement')
@@ -150,8 +260,11 @@ class PublishProduct(QScrollArea):
         btmWidget.setLayout(btm)
         btmWidget.setStyleSheet("#btm {padding: 0px 0px 0px 0px;}")
         layout.addWidget(btmWidget, 16, 2)
-        self.setLayout(layout)
-        self.setStyleSheet("""
+        return layout
+    
+    @page.style
+    def style(self):
+        return """
             QLabel, QCheckBox, QPushButton {
                 font-family:SFUIDisplay-Regular;
             }
@@ -179,6 +292,10 @@ class PublishProduct(QScrollArea):
 
             QPushButton#pinfo_cancel_btn:hover{
                 border: 1px solid #3984f7; 
+                color: #3984f6;
+            }
+
+            QLabel#openBtn {
                 color: #3984f6;
             }
 
@@ -220,7 +337,7 @@ class PublishProduct(QScrollArea):
                 border: 1px solid #8cb8ea; 
                 background: #98b9eb;
             }
-        """)
+        """
 
     def setProduct(self, product_id):
         self.product_id = product_id
@@ -229,36 +346,36 @@ class PublishProduct(QScrollArea):
         if wallet.market_client.token == '':
             QMessageBox.information(self, "Tips", "Please login first !")
             return
-        self.pinfo_title = self.pinfo_title_edit.text()
-        self.pinfo_type = 'file'
-        self.pinfo_descrip = self.pinfo_descrip_edit.toPlainText()
-        self.pinfo_tag = 'tag1'
-        self.pinfo_price = self.pinfo_price_edit.text()
-        self.pinfo_checkbox_state = self.pinfo_checkbox.isChecked()
-        if self.pinfo_title and self.pinfo_descrip and self.pinfo_tag and self.pinfo_price and self.pinfo_checkbox_state:
-
+        name = self.name.value
+        _type = 'file'
+        description = self.description.value
+        tag = 'tag1'
+        price = self.price.value
+        checked = self.checked.value
+        if name and description and tag and price and checked and self.category.value and self.cover_image.value:
             file_info = fs.get_file_by_id(self.product_id)
             self.size = file_info.size
             self.start_date = '2018-04-01 10:10:10'
             self.end_date = '2018-04-01 10:10:10'
             self.path = file_info.path
-            self.file_md5 = hashlib.md5(open(self.path, "rb").read()).hexdigest()
-            logger.debug(self.file_md5)
-            d_publish = wallet.market_client.publish_product(self.product_id, self.pinfo_title, self.pinfo_type,
-                                                             self.pinfo_descrip, self.pinfo_price,
-                                                             self.pinfo_tag, self.start_date,
-                                                             self.end_date)
+            d_publish = wallet.market_client.publish_product(self.product_id, name, _type,
+                                                             description, price, tag, self.start_date,
+                                                             self.end_date, self.category.value, self.cover_image.value)
             def update_table(market_hash):
                 d = wallet.market_client.update_file_info(self.product_id, market_hash)
                 def handle_update_file(status):
                     if status == 1:
+                        def cb(products):
+                            pass
+                        wallet.market_client.products().addCallbacks(cb)
                         QMessageBox.information(self, "Tips", "Update market side product successfully !")
                         self.handle_cancel()
+                    else:
+                        QMessageBox.information(self, "Tips", "Update market side product Failed!")
                 d.addCallback(handle_update_file)
             d_publish.addCallback(update_table)
         else:
             QMessageBox.warning(self, "Warning", "Please fill out the necessary selling information first!")
 
     def handle_cancel(self):
-        wid = app.main_wnd.content_tabs.findChild(QWidget, 'my_data_tab')
-        app.main_wnd.content_tabs.setCurrentWidget(wid)
+        app.router.back()

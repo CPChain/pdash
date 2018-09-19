@@ -1,6 +1,6 @@
 from django.db.models import Q
 from django.utils.http import unquote
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -13,6 +13,8 @@ from cpchain.market.market.utils import *
 from cpchain.market.product.models import WalletMsgSequence
 from cpchain.market.product.serializers import *
 from cpchain.market.transaction.models import ProductSaleStatus
+
+import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +30,6 @@ class ProductPublishAPIViewSet(APIView):
     def post(self, request):
         public_key = get_header(self.request)
         logger.info("public_key:%s" % public_key)
-
         data = request.data
         try:
             msg_seq = WalletMsgSequence.objects.get(public_key=public_key)
@@ -36,9 +37,6 @@ class ProductPublishAPIViewSet(APIView):
         except WalletMsgSequence.DoesNotExist:
             msg_seq = WalletMsgSequence(seq=0, public_key=public_key,
                                         user=WalletUser.objects.get(public_key=public_key))
-            logger.debug("msg_seq:%s" % msg_seq.seq)
-
-        logger.debug("seq:%s" % msg_seq.seq)
         now = timezone.now()
         product = Product(data)
         product.seq = msg_seq.seq
@@ -54,31 +52,32 @@ class ProductPublishAPIViewSet(APIView):
         product.owner_address = data['owner_address']
 
         signature_source = product.get_signature_source()
-        logger.debug("owner_address:%s" % product.owner_address)
-        logger.debug("product.signature:%s" % product.signature)
-        logger.debug("signature_source:%s" % signature_source)
-
         is_valid_sign = is_valid_signature(public_key, signature_source, product.signature)
-        logger.debug("product.signature:%s" % str(product.signature))
-        logger.debug("is_valid_signature:%s,signature_source:%s" % (is_valid_sign, signature_source))
-
         if not is_valid_sign:
             logger.error("invalid_signature")
             return create_invalid_response()
-
         # generate msg hash
-        market_hash_source = product.get_msg_hash_source()
-        logger.debug("market_hash_source:%s" % market_hash_source)
-        product.msg_hash = generate_market_hash(market_hash_source)
-        logger.debug("market_hash:%s" % product.msg_hash)
-        data['msg_hash'] = product.msg_hash
-        data['seq'] = msg_seq.seq
-
+        try:
+            market_hash_source = product.get_msg_hash_source()
+            product.msg_hash = generate_market_hash(market_hash_source)
+            data._mutable = True
+            data['msg_hash'] = product.msg_hash
+            data['seq'] = msg_seq.seq
+            request.FIELS['cover_image']
+            # data['cover_image'] = request.data['cover_image']
+        except Exception as e:
+            traceback.print_exc()
+            raise e
         serializer = ProductSerializer(data=data)
-        if serializer.is_valid(raise_exception=True):
-            msg_seq.save()
-            serializer.save(owner=WalletUser.objects.get(public_key=public_key))
-            return create_success_data_response({'market_hash': product.msg_hash})
+        try:
+            if serializer.is_valid(raise_exception=True):
+                msg_seq.save()
+                user = WalletUser.objects.get(public_key=public_key)
+                serializer.save(owner=user)
+                return create_success_data_response({'market_hash': product.msg_hash})
+        except Exception as e:
+            traceback.print_exc()
+            raise e
 
 
 class MyProductSearchAPIViewSet(APIView):
@@ -94,7 +93,7 @@ class MyProductSearchAPIViewSet(APIView):
         logger.info("public_key:%s" % public_key)
         params = request.query_params
         keyword = params.get('keyword')
-        if keyword is not None and len(keyword)!=0:
+        if keyword is not None and len(keyword) != 0:
             logger.debug("keyword is %s" % keyword)
             queryset = Product.objects.filter(owner_address=public_key).filter(
                 Q(title__contains=keyword) | Q(description__contains=keyword) | Q(tags__contains=keyword))
@@ -116,7 +115,6 @@ class MyProductPagedSearchAPIViewSet(APIView):
     permission_classes = (AlreadyLoginUser,)
 
     def get(self, request):
-
         public_key = get_header(self.request)
         logger.info("public_key:%s" % public_key)
         params = request.query_params
@@ -241,7 +239,6 @@ class ProductHideAPIView(BaseProductStatusAPIView):
     def post(self, request):
         return self.update_product_status(request, "1")
 
-
 class ProductViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows query products.
@@ -266,9 +263,84 @@ class ProductViewSet(viewsets.ModelViewSet):
             queryset = Product.objects.filter(Q(title__contains=keyword) | Q(description__contains=keyword))
         else:
             queryset = Product.objects.all()
-
         serializer = ProductSerializer(queryset, many=True)
-        return Response(data=serializer.data)
+        data = serializer.data
+        return Response(data=data)
+
+class ProductListViewSet(mixins.ListModelMixin,
+                         mixins.CreateModelMixin,
+                         viewsets.GenericViewSet):
+    """
+    API endpoint that allows query products.
+    """
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    # permission_classes = (,)
+
+    def create(self, request):
+        public_key = get_header(self.request)
+        logger.info("public_key:%s" % public_key)
+        data = request.data
+        try:
+            msg_seq = WalletMsgSequence.objects.get(public_key=public_key)
+            msg_seq.seq = msg_seq.seq + 1
+        except WalletMsgSequence.DoesNotExist:
+            msg_seq = WalletMsgSequence(seq=0, public_key=public_key,
+                                        user=WalletUser.objects.get(public_key=public_key))
+        now = timezone.now()
+        product = Product(data)
+        product.seq = msg_seq.seq
+        product.owner_address = data['owner_address']
+        product.title = data['title']
+        product.ptype = data['ptype']
+        product.description = data['description']
+        product.price = data['price']
+        product.created = now
+        product.start_date = data['start_date']
+        product.end_date = data['end_date']
+        product.signature = data['signature']
+        product.owner_address = data['owner_address']
+
+        signature_source = product.get_signature_source()
+        is_valid_sign = is_valid_signature(public_key, signature_source, product.signature)
+        if not is_valid_sign:
+            logger.error("invalid_signature")
+            return create_invalid_response()
+        # generate msg hash
+        try:
+            market_hash_source = product.get_msg_hash_source()
+            product.msg_hash = generate_market_hash(market_hash_source)
+            data._mutable = True
+            data['msg_hash'] = product.msg_hash
+            data['seq'] = msg_seq.seq
+        except Exception as e:
+            traceback.print_exc()
+            raise e
+        serializer = ProductSerializer(data=data)
+        try:
+            if serializer.is_valid(raise_exception=True):
+                msg_seq.save()
+                user = WalletUser.objects.get(public_key=public_key)
+                serializer.save(owner=user)
+                return create_success_data_response({'market_hash': product.msg_hash})
+        except Exception as e:
+            traceback.print_exc()
+            raise e
+
+    def list(self, request, *args, **kwargs):
+        """
+        query product by keyword
+        """
+        params = request.query_params
+        keyword = params.get('keyword')
+        if keyword is not None:
+            logger.debug("keyword is %s" % keyword)
+            queryset = Product.objects.filter(Q(title__contains=keyword) | Q(description__contains=keyword))
+        else:
+            queryset = Product.objects.all()
+        serializer = ProductSerializer(queryset, many=True)
+        data = serializer.data
+        return Response(data=data)
 
 
 class RecommendProductsAPIView(APIView):

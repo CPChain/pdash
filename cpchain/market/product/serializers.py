@@ -28,7 +28,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'owner_address', 'title', 'ptype', 'description', 'tags', 'price',
             'created', 'start_date', 'end_date', 'seq',
-            'signature', 'msg_hash', 'status')
+            'signature', 'msg_hash', 'status', 'category', 'cover_image')
 
     def create(self, validated_data):
         now = timezone.now()
@@ -46,9 +46,11 @@ class ProductSerializer(serializers.ModelSerializer):
             seq=validated_data['seq'],
             msg_hash=validated_data['msg_hash'],
             tags=validated_data['tags'],
+            category=validated_data.get('category'),
+            cover_image=validated_data.get('cover_image')
         )
         product.save()
-        product.indexing()
+        # product.indexing()
         return product
 
 

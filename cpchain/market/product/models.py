@@ -1,15 +1,32 @@
 import logging
+import uuid
+import os, time, random
 
 from django.db import models
+from django.conf import settings
 from cpchain.market.account.models import WalletUser
 from cpchain.market.comment.models import SummaryComment
 from cpchain.market.transaction.models import ProductSaleStatus
+from django.core.files.storage import FileSystemStorage
+
 from .search_indexes import ProductIndex
 from elasticsearch.helpers import bulk
 from django.utils.translation import ugettext_lazy as _
 
 logger = logging.getLogger(__name__)
 
+class ImageStorage(FileSystemStorage):
+
+    def __init__(self, location=settings.MEDIA_ROOT, base_url=settings.MEDIA_URL):
+        super(ImageStorage, self).__init__(location, base_url)
+
+    def _save(self, name, content):
+        ext = os.path.splitext(name)[1]
+        d = os.path.dirname(name)
+        fn = time.strftime('%Y%m%d%H%M%S')
+        fn = fn + '_%d' % random.randint(0, 100)
+        name = os.path.join(d, fn + ext)
+        return super(ImageStorage, self)._save(name, content)
 
 class Product(models.Model):
     """
@@ -31,6 +48,9 @@ class Product(models.Model):
     signature = models.CharField('Signature created by client', max_length=200, null=True)
     msg_hash = models.CharField('Msg hash(owner_address,title,description,price,created,expired)'
                                 , max_length=256, null=True)
+    # New Field 2018/09/19
+    category = models.CharField('Category', max_length=100, null=True)
+    cover_image = models.ImageField(upload_to=settings.IMAGES_PATH, null=True, storage=ImageStorage())
 
     def get_signature_source(self):
         ss = self.owner_address + self.title + str(self.ptype) + str(self.description) + str(self.price) \
@@ -70,13 +90,15 @@ class Product(models.Model):
         except:
             logger.error('user %s not found' % pk)
             u = None
+        try:
+            comment, _ = SummaryComment.objects.get_or_create(market_hash=item.market_hash)
+            sale_status, _ = ProductSaleStatus.objects.get_or_create(market_hash=item.market_hash)
 
-        comment, _ = SummaryComment.objects.get_or_create(market_hash=item.market_hash)
-        sale_status, _ = ProductSaleStatus.objects.get_or_create(market_hash=item.market_hash)
-
-        item.username = '' if not u else u.username
-        item.avg_rating = 1 if not comment else comment.avg_rating
-        item.sales_number = 0 if not sale_status else sale_status.sales_number
+            item.username = '' if not u else u.username
+            item.avg_rating = 1 if not comment else comment.avg_rating
+            item.sales_number = 0 if not sale_status else sale_status.sales_number
+        except Exception as e:
+            print(e)
         return item
 
     def update_index_status(self):
@@ -122,7 +144,7 @@ class SalesQuantity(models.Model):
     """
     The SalesQuantity model.
     """
-    market_hash = models.CharField(_("market hash"), max_length=256,null=False)
+    market_hash = models.CharField(_("market hash"), max_length=256, null=False)
     quantity = models.IntegerField(default=1)
     created = models.DateTimeField('Created', auto_now_add=True)
 

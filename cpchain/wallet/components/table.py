@@ -1,3 +1,4 @@
+from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtWidgets import (QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLineEdit, QGridLayout, QPushButton,
                              QMenu, QAction, QCheckBox, QVBoxLayout, QWidget, QDialog, QFrame, QTableWidgetItem,
@@ -30,6 +31,8 @@ from cpchain.wallet.pages import main_wnd
 from cpchain.wallet.pages.other import PublishDialog
 
 class Table(TableWidget):
+
+    change = QtCore.pyqtSignal(list, name="modelChanged")
 
     def __init__(self, parent, header=None, data=None, itemHandler=None, sort=None, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
@@ -106,11 +109,12 @@ class Table(TableWidget):
     def setData(self, data, itemHandler):
         if not data:
             return
-        self.data = data
-        row_number = len(data)
+        data.setView(self)
+        self.data = data.value
+        row_number = len(data.value)
         self.setRowCount(row_number)
         for cur_row in range(row_number):
-            items = itemHandler(data[cur_row])
+            items = itemHandler(self.data[cur_row])
             i = 0
             for item in items:
                 if isinstance(item, str):

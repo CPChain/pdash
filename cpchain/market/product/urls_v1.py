@@ -6,6 +6,7 @@ from cpchain.market.product.views import *
 
 router = routers.DefaultRouter()
 router.register(r'products', ProductViewSet)
+router.register(r'allproducts', ProductListViewSet)
 
 urlpatterns = [
     url(r'^', include(router.urls)),

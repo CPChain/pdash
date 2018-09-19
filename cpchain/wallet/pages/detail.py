@@ -32,47 +32,61 @@ from cpchain.wallet.components.product_list import ProductList
 from cpchain.wallet.components.upload import UploadDialog
 from cpchain.wallet.components.loading import Loading
 
+from cpchain.wallet.simpleqt.page import Page
+from cpchain.wallet.simpleqt.decorator import page
+from cpchain.wallet.simpleqt.widgets.label import Label
+
 from datetime import datetime as dt
 
 logger = logging.getLogger(__name__)
 
-class ProductDetail(QScrollArea):
+class ProductDetail(Page):
 
-    def __init__(self, parent=None, product_id=None):
-        super().__init__(parent)
+    def __init__(self, parent=None, product_id=None, name="", image=abs_path('icons/test.png'),
+                 icon=abs_path('icons/icon_batch@2x.png'),
+                 category="Category", timestamp=dt.now(),
+                 sales=0, cpc=0, description="", remain=0):
         self.parent = parent
         self.product_id = product_id
+        self.name = name
+        self.image = image
+        self.icon = icon
+        self.category = category
+        self.timestamp = timestamp
+        self.sales = sales
+        self.cpc = cpc
+        self.description = description
+        self.remain = remain
+        super().__init__(parent)
         self.setObjectName("product_detail")
 
-        self.product = {
-            "id": 1,
-            "image": abs_path('icons/test.png'),
-            "icon": abs_path('icons/icon_batch@2x.png'),
-            "name": "Name of a some published data name of a data",
-            "category": "category",
+    @page.data
+    def data(self):
+        return {
+            "id": self.product_id,
+            "image": self.image,
+            "icon": self.icon,
+            "name": self.name,
+            "category": self.category,
             "timestamp": dt.now(),
-            "sales": 128,
-            "cpc": 25,
-            "remain": 0,
-            "description": ("The MarketPsych Indices is a cryptocurrency sentiment data feed."
-                            "  Over 43 sentiments and themes are extracted from the text of the top 2,000 "
-                            "global news and 800 financial social media sites covering 130+ cryptocurrencies.  "
-                            "News and social media feeds are aggregated independently.  The data is delivered "
-                            "in minutely, hourly, and daily feeds.")
+            "sales": self.sales,
+            "cpc": self.cpc,
+            "remain": self.remain,
+            "description": self.description
         }
-
-        self.init_ui()
 
     def setProduct(self, product):
         self.product = product
 
-    def init_ui(self):
+    @page.ui
+    def ui(self):
         layout = QVBoxLayout(self)
+        layout.setObjectName('body')
         layout.setAlignment(Qt.AlignTop)
         header = QHBoxLayout()
 
         # Image
-        image = QPixmap(self.product['image'])
+        image = QPixmap(self.image.value)
         image = image.scaled(240, 160)
         imageWid = QLabel()
         imageWid.setPixmap(image)
@@ -82,13 +96,13 @@ class ProductDetail(QScrollArea):
         right.setAlignment(Qt.AlignTop)
         right.setSpacing(15)
         # Title
-        title = QLabel(self.product['name'])
+        title = Label(self.name)
         title.setObjectName('name')
         right.addWidget(title)
 
         # category
         catbox = QHBoxLayout()
-        icon = self.product['icon']
+        icon = self.icon.value
         if icon:
             iconL = QLabel()
             iconL.setMaximumWidth(20)
@@ -96,7 +110,7 @@ class ProductDetail(QScrollArea):
             iconL.setObjectName('icon')
             iconL.setPixmap(QPixmap(icon))
             catbox.addWidget(iconL)
-        category = QLabel(self.product['category'])
+        category = Label(self.category)
         category.setObjectName('category')
         category.setAlignment(Qt.AlignCenter)
         category.setMaximumWidth(52)
@@ -107,7 +121,7 @@ class ProductDetail(QScrollArea):
 
         # Timestamp and Remain Days
         tbox = QHBoxLayout()
-        tmp = self.product['timestamp']
+        tmp = self.timestamp.value
         if not tmp:
             tmp = dt.now()
         months = [
@@ -128,7 +142,7 @@ class ProductDetail(QScrollArea):
         timestamp = QLabel(str(tmp_str))
         timestamp.setObjectName('timestamp')
         tbox.addWidget(timestamp)
-        sales = QLabel(str(self.product['sales']) + ' sales')
+        sales = QLabel(str(self.sales.value) + ' sales')
         sales.setObjectName('sales')
         tbox.addWidget(sales)
 
@@ -139,7 +153,7 @@ class ProductDetail(QScrollArea):
         hbox = QHBoxLayout()
         hbox.setObjectName('hbox1')
 
-        cpc = QLabel(str(self.product['cpc']))
+        cpc = QLabel(str(self.cpc.value))
         cpc.setObjectName('cpc')
         cpc_unit = QLabel('CPC')
         cpc_unit.setObjectName('cpc_unit')
@@ -148,21 +162,22 @@ class ProductDetail(QScrollArea):
         hbox.addStretch(1)
 
         right.addLayout(hbox)
-
         header.addLayout(right)
-
         layout.addLayout(header)
-
         tab = QLabel('Description')
         tab.setObjectName('desc_tap')
         layout.addWidget(tab)
-        desc = QLabel(self.product['description'])
+        desc = Label(self.description)
         desc.setWordWrap(True)
         layout.addWidget(desc)
+        return layout
 
-        self.setLayout(layout)
-
-        self.setStyleSheet("""
+    @page.style
+    def style(self):
+        return """
+            QVBoxLayout {
+                background: #fafafa;
+            }
             QLabel {
                 font-family:SFUIDisplay-Regular;
             }
@@ -208,4 +223,4 @@ class ProductDetail(QScrollArea):
             QHBoxLayout#hbox1::hover {
                 color:#4a90e2;
             }
-        """)
+        """

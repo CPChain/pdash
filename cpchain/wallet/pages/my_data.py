@@ -33,26 +33,46 @@ from cpchain.wallet.components.upload import UploadDialog
 from cpchain.wallet.components.loading import Loading
 from cpchain.wallet.pages.publish import PublishProduct
 
+from cpchain.wallet.simpleqt.page import Page
+from cpchain.wallet.simpleqt.decorator import page
+from cpchain.wallet.simpleqt.widgets.label import Label
+
 logger = logging.getLogger(__name__)
 
-class MyDataTab(QScrollArea):
+class MyDataTab(Page):
 
     def __init__(self, parent=None, main_wnd=None):
-        super().__init__(parent)
         self.parent = parent
-        self.setObjectName("my_data_tab")
         self.main_wnd = main_wnd
+        super().__init__(parent)
+        self.setObjectName("my_data_tab")
 
-        self.init_ui()
+    @page.create
+    def create(self):
+        # My Products
+        wallet.market_client.products().addCallbacks(self.renderProducts)
 
-    def update_table(self):
-        tab_index = main_wnd.main_tab_index[self.objectName()]
-        main_wnd.content_tabs.removeTab(tab_index)
-        tab_index = main_wnd.content_tabs.addTab(MyDataTab(main_wnd.content_tabs), "")
-        main_wnd.main_tab_index[self.objectName] = tab_index
-        main_wnd.content_tabs.setCurrentIndex(tab_index)
+    @page.method
+    def renderProducts(self, products):
+        _products = []
+        for i in products:
+            test_dict = dict(image=abs_path('icons/test.png'),
+                             icon=abs_path('icons/icon_batch@2x.png'),
+                             name=i['title'],
+                             cpc=i['price'],
+                             description=i['description'])
+            _products.append(test_dict)
+        self.products.value = _products
 
-    def init_ui(self):
+    @page.data
+    def data(self):
+        return {
+            'products': [],
+            'table_data': []
+        }
+
+    @page.ui
+    def ui(self):
         btn_group = [
             {
                 'id': 'upload_btn',
@@ -72,34 +92,40 @@ class MyDataTab(QScrollArea):
                 btn_layout.addSpacing(5)
             return btn_layout
 
-        header = {
-            'headers': ['Name', 'Location', 'Size', 'Status'],
-            'width': [252, 140, 140, 138]
-        }
-        data = fs.get_file_list()
-        def buildProductClickListener(product_id):
-            def listener(event):
-                app.router.redirectTo('publish_product', product_id=product_id)
-            return listener
-        def itemHandler(data):
-            items = []
-            items.append(data.name)
-            items.append(data.remote_type)
-            items.append(sizeof_fmt(data.size))
-            status = data.is_published
-            wid = QLabel('Published')
-            if not status:
-                wid.setText('Publish as product')
-                wid.setStyleSheet("QLabel{color: #006bcf;}")
-                Binder.click(wid, buildProductClickListener(data.id))
-            items.append(wid)
-            return items
+        def buildTable():
+            header = {
+                'headers': ['Name', 'Location', 'Size', 'Status'],
+                'width': [252, 140, 140, 138]
+            }
+            data = fs.get_file_list()
+            self.table_data.value = data
+            def buildProductClickListener(product_id):
+                def listener(event):
+                    app.router.redirectTo('publish_product', product_id=product_id)
+                return listener
+            def itemHandler(data):
+                items = []
+                items.append(data.name)
+                items.append(data.remote_type)
+                items.append(sizeof_fmt(data.size))
+                status = data.is_published
+                wid = QLabel('Published')
+                if not status:
+                    wid.setText('Publish as product')
+                    wid.setStyleSheet("QLabel{color: #006bcf;}")
+                    Binder.click(wid, buildProductClickListener(data.id))
+                items.append(wid)
+                return items
 
-        table = Table(self, header, data, itemHandler, sort=2)
-        table.setObjectName('my_table')
-        table.setFixedWidth(700)
-        table.setFixedHeight(180)
-        # table.setMaximumHeight()
+            table = Table(self, header, self.table_data, itemHandler, sort=2)
+            table.setObjectName('my_table')
+            table.setFixedWidth(700)
+            table.setMinimumHeight(180)
+            return table
+        table = buildTable()
+        self.table = table
+        self.buildTable = buildTable
+        
 
         main_layout = QVBoxLayout(self)
         main_layout.setAlignment(Qt.AlignTop)
@@ -114,18 +140,11 @@ class MyDataTab(QScrollArea):
         # My Product
         my_product_label = QLabel('My Product')
         my_product_label.setObjectName('label_hint')
-        productsDeferred = wallet.market_client.products()
-        def cb(products):
-            print(products)
-        productsDeferred.addCallbacks(cb)
         main_layout.addWidget(my_product_label)
 
         # Product List
-        test_dict = dict(h=210, image=abs_path('icons/test.png'), icon=abs_path('icons/icon_batch@2x.png'), name="Name of a some published data name of a data")
-        products = []
-        for i in range(3):
-            products.append(Product(**test_dict))
-        pdsWidget = ProductList(products)
+        pdsWidget = ProductList(self.products)
+        pdsWidget.setMinimumHeight(250)
         main_layout.addWidget(pdsWidget)
 
         # Batch Data
@@ -135,6 +154,7 @@ class MyDataTab(QScrollArea):
 
         main_layout.addWidget(table)
         main_layout.addStretch(1)
+        self.main_layout = main_layout
 
         widget = QWidget()
         widget.setObjectName('parent_widget')
@@ -177,17 +197,22 @@ class MyDataTab(QScrollArea):
         scroll = QScrollArea()
         scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll.setWidgetResizable(False)
+        scroll.setWidgetResizable(True)
         scroll.setWidget(widget)
 
         vLayout = QVBoxLayout(self)
         vLayout.addWidget(scroll)
-        self.setLayout(vLayout)
         load_stylesheet(self, "my_data.qss")
+        return vLayout
 
     def onClickUpload(self):
         if wallet.market_client.token == '':
             QMessageBox.information(self, "Tips", "Please login first !")
             return
-        upload = UploadDialog(self)
+        def oklistener():
+            self.main_layout.removeWidget(self.table)
+            self.table.deleteLater()
+            self.table = self.buildTable()
+            self.main_layout.addWidget(self.table)
+        upload = UploadDialog(self, oklistener)
         upload.show()

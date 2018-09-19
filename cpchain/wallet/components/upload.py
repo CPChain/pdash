@@ -83,12 +83,13 @@ class FileUpload(QFrame):
         self.target.setText(st)
 
 class UploadDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, oklistener=None):
         super().__init__(parent)
         self.resize(500, 180)
         self.setWindowTitle("Upload your file")
         self.storage_index = 0
         self.now_wid = None
+        self.oklistener = oklistener
         
         self.storage = [
             {
@@ -259,7 +260,7 @@ class UploadDialog(QDialog):
             if not file:
                 warning(self, "Please drag a file or open a file first")
                 return
-            d_upload = deferToThread(fs.upload_file, file, storage['type'], dst)
+            d_upload = deferToThread(fs.upload_file, file, storage['type'], dst, dataname)
             d_upload.addCallback(self.handle_ok_callback)
             self.hide()
             self.loading = Loading()
@@ -290,6 +291,8 @@ class UploadDialog(QDialog):
             try:
                 if status == 1:
                     QMessageBox.information(self, "Tips", "Uploaded successfuly")
+                    if self.oklistener:
+                        self.oklistener()
                     self.close()
                 else:
                     QMessageBox.information(self, "Tips", "Uploaded fail")

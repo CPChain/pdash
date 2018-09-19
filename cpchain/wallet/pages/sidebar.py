@@ -26,7 +26,7 @@ class SideBar(QScrollArea):
         menuWidget = QListWidget()
         menuWidget.setMaximumHeight(100)
         menuWidget.setFrameShape(QListWidget.NoFrame)
-        
+
         link_map = dict()
         first = None
         for item in self.menu:

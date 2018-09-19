@@ -1,5 +1,6 @@
 import logging
 import treq
+import traceback
 
 from twisted.internet.defer import inlineCallbacks
 
@@ -9,6 +10,8 @@ from cpchain.utils import config, Encoder
 
 from cpchain.wallet.fs import publish_file_update
 from cpchain.wallet import utils
+
+import time
 
 
 
@@ -52,26 +55,39 @@ class MarketClient:
 
 
     @inlineCallbacks
-    def publish_product(self, selected_id, title, ptype, description, price, tags, start_date, end_date):
-
+    def publish_product(self, selected_id, title, ptype, description, price,
+                        tags, start_date, end_date, category=None, cover_image=None):
         logger.debug("start publish product")
-        header = {'Content-Type': 'application/json'}
+        header = {'Content-Type': 'multipart/form-data'} # 'application/json'}
         header['MARKET-KEY'] = self.public_key
         header['MARKET-TOKEN'] = self.token
         logger.debug('header token: %s', self.token)
-        data = {'owner_address': self.public_key, 'title': title, 'ptype': ptype, 'description': description,
-                'price': price, 'tags': tags, 'start_date': start_date, 'end_date': end_date}
+        data = {
+            'owner_address': self.public_key,
+            'title': title,
+            'ptype': ptype,
+            'description': description,
+            'price': price,
+            'tags': tags,
+            'start_date': start_date,
+            'end_date': end_date,
+            'category': category
+        }
         signature_source = str(self.public_key) + str(title) + str(ptype) + str(description) + str(
             price) + MarketClient.str_to_timestamp(start_date) + MarketClient.str_to_timestamp(end_date)
         signature = ECCipher.create_signature(self.account.private_key, signature_source)
         data['signature'] = Encoder.bytes_to_hex(signature)
         logger.debug("signature: %s", data['signature'])
-        resp = yield treq.post(self.url + 'product/v1/product/publish/', headers=header, json=data, persistent=False)
-        confirm_info = yield treq.json_content(resp)
-        print(confirm_info)
-
-        logger.debug('market_hash: %s', confirm_info['data']['market_hash'])
-        market_hash = confirm_info['data']['market_hash']
+        try:
+            url = self.url + 'product/v1/allproducts/'
+            resp = yield treq.post(url,
+                                   files=dict(cover_image=open(cover_image, 'rb')),
+                                   headers=header, data=data, persistent=False)
+            confirm_info = yield treq.json_content(resp)
+            logger.debug('market_hash: %s', confirm_info['data']['market_hash'])
+            market_hash = confirm_info['data']['market_hash']
+        except Exception as e:
+            traceback.print_exc()
         if ptype == 'file':
             publish_file_update(market_hash, selected_id)
         return market_hash
@@ -322,10 +338,9 @@ class MarketClient:
     def products(self):
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
                   'Content-Type': 'application/json'}
-        url = utils.build_url(self.url + "product/v1/products/", {})
+        url = utils.build_url(self.url + "product/v1/allproducts/", {'timestamp': str(time.time())})
         logger.debug(url)
         resp = yield treq.get(url, headers=header)
-        logger.debug(resp)
         comment_info = yield treq.json_content(resp)
-        logger.debug('query by following tag confirm: %s', comment_info)
-        return comment_info['data']
+        logger.debug('query by following tag confirm: %s', len(comment_info))
+        return comment_info

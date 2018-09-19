@@ -26,7 +26,7 @@ from cpchain.wallet.pages.personal import Seller
 
 from cpchain.wallet.pages.product import Product2, TableWidget
 
-from cpchain.wallet.pages import main_wnd
+from cpchain.wallet.pages import main_wnd, app
 
 logger = logging.getLogger(__name__)
 
@@ -322,7 +322,7 @@ class Header(QFrame):
     def __init__(self, parent):
         super().__init__()
         self.parent = parent
-        self.content_tabs = parent.content_tabs
+        # self.content_tabs = parent.content_tabs
         self.init_ui()
 
     def init_ui(self):
@@ -343,10 +343,16 @@ class Header(QFrame):
 
         def create_btns():
             self.prev_btn = QPushButton("", self)
+            def back(event):
+                app.router.back()
             self.prev_btn.setObjectName("prev_btn")
+            self.prev_btn.clicked.connect(back)
 
             self.nex_btn = QPushButton("", self)
+            def forward(event):
+                app.router.forward()
             self.nex_btn.setObjectName("nex_btn")
+            self.nex_btn.clicked.connect(forward)
 
             self.download_btn = QPushButton("", self)
             self.download_btn.setObjectName("download_btn")
@@ -414,7 +420,9 @@ class Header(QFrame):
             all_layout.addSpacing(0)
 
             self.extra_layout = extra_layout = QHBoxLayout(self)
-            extra_layout.addStretch(1)
+            self.extra_layout.setObjectName('qh_1')
+            extra_layout.setContentsMargins(0, 0, 0, 0)
+            extra_layout.setAlignment(Qt.AlignRight)
             extra_layout.addWidget(self.minimize_btn)
             extra_layout.addSpacing(2)
             extra_layout.addWidget(self.maximize_btn)
@@ -448,11 +456,18 @@ class Header(QFrame):
             all_layout.addLayout(self.extra_layout)
             all_layout.addLayout(self.main_layout)
 
+            self.main_layout.setObjectName('Header')
+
             self.setLayout(self.all_layout)
 
         set_layout()
 
         load_stylesheet(self, "headertest.qss")
+        # self.setStyleSheet("""
+        #     QHBoxLayout#qh_1{
+        #         background:006bcf;
+        #     }
+        # """)
 
     def login(self):
         self.login_dialog = Header.LoginDialog(self)
