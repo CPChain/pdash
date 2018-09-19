@@ -1,6 +1,5 @@
 import logging
 import os
-import importlib
 
 from queue import Queue
 
@@ -28,7 +27,7 @@ from cpchain.wallet.fs import add_file
 from cpchain.wallet.utils import eth_addr_to_string, get_address_from_public_key_object
 from cpchain.wallet.fs import get_session, FileInfo, decrypt_file_aes
 
-from cpchain.proxy.client import start_proxy_request
+from cpchain.proxy.client import start_proxy_request, download_proxy_file
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 
 logger = logging.getLogger(__name__) # pylint: disable=locally-disabled, invalid-name
@@ -177,10 +176,7 @@ class Broker:
             os.makedirs(file_dir, exist_ok=True)
             file_path = os.path.join(file_dir, file_name)
 
-            storage_plugin = "cpchain.storage-plugin."
-            module = importlib.import_module(storage_plugin + 'proxy')
-            s = module.Storage()
-            yield s.download_data(urls[0], file_path)
+            yield download_proxy_file(urls[0], file_path)
 
             logger.debug("downloaded file path: %s", file_path)
             decrypted_file = decrypt_file_aes(file_path, AES_key)

@@ -1,31 +1,9 @@
 import treq
-from zope.interface import implementer
 
-from twisted.web.iweb import IPolicyForHTTPS
-
-from twisted.internet import defer, ssl
+from twisted.internet import defer
 
 from cpchain.proxy.client import pick_proxy, get_proxy
-
-@implementer(IPolicyForHTTPS)
-class NoVerifySSLContextFactory(object):
-    """Context that doesn't verify SSL connections"""
-    def creatorForNetloc(self, hostname, port): # pylint: disable=unused-argument
-        return ssl.CertificateOptions(verify=False)
-
-def no_verify_agent(**kwargs):
-    reactor = treq.api.default_reactor(kwargs.get('reactor'))
-    pool = treq.api.default_pool(
-        reactor,
-        kwargs.get('pool'),
-        kwargs.get('persistent'))
-
-    no_verify_agent.agent = treq.api.Agent(
-        reactor,
-        contextFactory=NoVerifySSLContextFactory(),
-        pool=pool
-    )
-    return no_verify_agent.agent
+from cpchain.proxy.ssl_cert import no_verify_agent
 
 class Storage:
     data_type = 'file'
