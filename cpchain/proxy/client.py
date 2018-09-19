@@ -2,6 +2,7 @@
 
 import logging
 import json
+import treq
 
 from twisted.internet import reactor, protocol, ssl, defer
 from twisted.protocols.basic import NetstringReceiver
@@ -11,6 +12,8 @@ from cpchain.proxy.message import message_sanity_check
 
 from cpchain.proxy.kadnet import KadNode
 from cpchain.proxy.centralnet import Slave
+
+from cpchain.proxy.ssl_cert import no_verify_agent
 
 logger = logging.getLogger(__name__)
 
@@ -175,3 +178,13 @@ def concat_url(ip, proxy_reply):
         urls.append(url)
 
     return urls
+
+def download_proxy_file(url, file_path):
+
+    f = open(file_path, 'wb')
+
+    d = treq.get(url, agent=no_verify_agent())
+    d.addCallback(treq.collect, f.write)
+    d.addCallback(lambda _: f.close())
+
+    return d

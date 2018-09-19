@@ -10,7 +10,7 @@ from cpchain.utils import config, join_with_rc
 from cpchain.account import Accounts
 from cpchain.crypto import ECCipher
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
-from cpchain.proxy.client import pick_proxy, start_proxy_request
+from cpchain.proxy.client import pick_proxy, start_proxy_request, download_proxy_file
 
 log.startLogging(sys.stdout)
 
@@ -139,10 +139,7 @@ def buyer_request():
             os.makedirs(file_dir, exist_ok=True)
             file_path = os.path.join(file_dir, file_name)
 
-            storage_plugin = "cpchain.storage-plugin."
-            module = importlib.import_module(storage_plugin + 'proxy')
-            s = module.Storage()
-            yield s.download_data(urls[0], file_path)
+            yield download_proxy_file(urls[0], file_path)
 
 seller_request()
 buyer_request()
