@@ -1,6 +1,5 @@
 import os
 import logging
-import cgi
 
 from uuid import uuid1 as uuid
 
@@ -35,25 +34,11 @@ class FileServerResource(Resource):
         return File(file_path).render(request)
 
     def render_POST(self, request):
-        headers = request.getAllHeaders()
-        cgi_form = cgi.FieldStorage(
-            fp=request.content,
-            headers=headers,
-            environ={
-                'REQUEST_METHOD':'POST',
-                'CONTENT_TYPE': headers[b'content-type'],
-            }
-        )
-        # check <treq package>/multipart.py for request format details
-        CRLF = "\r\n"
-        file_content = cgi_form[' filename'].value.split(CRLF)[4:-2][0]
-
         server_root = join_with_rc(config.proxy.server_root)
         file_name = str(uuid())
         file_path = os.path.join(server_root, file_name)
-        f = open(file_path, 'wb')
-        f.write(file_content.encode('utf8'))
-        f.close()
+        with open(file_path, 'wb') as f:
+            f.write(request.content.read())
 
         return file_name.encode('utf8')
 
