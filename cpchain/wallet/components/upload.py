@@ -32,7 +32,6 @@ class FileUpload(QFrame):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        ###初始化打开接受拖拽使能
         self.setAcceptDrops(True)
         self.initUI()
 
@@ -171,7 +170,7 @@ class UploadDialog(QDialog):
             if option['type'] == 'edit':
                 grid.addWidget(QLabel(option['name'] + ":"), row, 1)
                 wid = QLineEdit()
-                wid.setObjectName(f'{storage["type"]}-{option["id"]}')
+                wid.setObjectName('{}-{}'.format(storage["type"], option["id"]))
                 wid.setText(self.dst[option['id']])
                 grid.addWidget(wid, row, 3)
             elif option['type'] == 'combo':
@@ -272,7 +271,7 @@ class UploadDialog(QDialog):
         layout.addLayout(bottom, 5 + self.max_row, 2)
         self.setLayout(layout)
         self.layout = layout
-    
+
     def handle_ok_callback(self, file_id):
         file_info = fs.get_file_by_id(file_id)
         hashcode = file_info.hashcode

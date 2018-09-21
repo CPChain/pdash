@@ -58,7 +58,9 @@ class MarketPage(Page):
                              icon=abs_path('icons/icon_batch@2x.png'),
                              name=i['title'],
                              cpc=i['price'],
-                             description=i['description'])
+                             description=i['description'],
+                             market_hash=i["msg_hash"],
+                             owner_address=i['owner_address'])
             _products.append(test_dict)
         self.products.value = _products
 

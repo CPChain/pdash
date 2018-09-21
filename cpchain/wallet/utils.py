@@ -25,3 +25,20 @@ def get_address_from_public_key_object(pub_key_string):
 def get_public_key(public_key_string):
     pub_key_bytes = Encoder.hex_to_bytes(public_key_string)
     return ECCipher.create_public_key(pub_key_bytes)
+
+def formatTimestamp(timestamp):
+    months = [
+        ["Jan.", "January"],
+        ["Feb.", "February"],
+        ["Mar.", "March"],
+        ["Apr.", "April"],
+        ["May", "May"],
+        ["Jun.", "June"],
+        ["Jul.", "July"],
+        ["Aug.", "August"],
+        ["Sept.", "September"],
+        ["Oct.", "October"],
+        ["Nov.", "November"],
+        ["Dec.", "December"],
+    ]
+    return months[timestamp.month][0] + ' ' + timestamp.strftime('%d, %Y')

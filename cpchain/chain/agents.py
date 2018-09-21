@@ -3,6 +3,7 @@ import logging
 from cpchain import config
 from cpchain.chain import models
 from cpchain.chain import utils
+from cpchain.utils import Encoder
 
 from .wait_utils import wait_for_transaction_receipt
 
@@ -22,6 +23,41 @@ class Agent:
         if account:
             account = self.web3.toChecksumAddress(account)
         self.account = account or self.web3.eth.defaultAccount
+
+    def account_info(self):
+        return {
+            'balance': self.web3.eth.getBalance(self.account)
+        }
+
+    def claim_fetched(self, order_id,):
+        transaction = {'value': 0, 'from': self.account,}
+        transaction['gas'] = 1000000
+        tx_hash = self.contract.functions.proxyFetched(order_id).transact(transaction)
+        wait_for_transaction_receipt(self.web3, tx_hash)
+        return tx_hash
+
+    def claim_delivered(self, order_id, relay_hash, ):
+        transaction = {'value': 0, 'from': self.account,}
+        tx_hash = self.contract.functions.proxyDelivered(relay_hash, order_id).transact(transaction)
+        wait_for_transaction_receipt(self.web3, tx_hash)
+        return tx_hash
+
+    def query_orders(self):
+        num = self.contract.call().numOrders()
+        data = dict()
+        for i in range(num):
+            order = self.contract.call().orderRecords(i+1)
+            market_hash = Encoder.bytes_to_base64_str(order[0])
+            rsa = Encoder.bytes_to_base64_str(order[1])[:10]+"..."
+            status = order[10]
+            item = data.get(market_hash, [])
+            item.append({
+                'public_key': rsa,
+                'status': status,
+                'order_id': i + 1
+            })
+            data[market_hash] = item
+        return data
 
     def query_order(self, order_id) -> models.OrderInfo:
         order_record = self.contract.call().orderRecords(order_id)
@@ -154,11 +190,13 @@ class SellerAgent(Agent):
         offered_price = self.query_order(order_id)[6]
         if offered_price < 0:
             return None
-        transaction = {'value': offered_price, 'from': self.account,}
+        transaction = {'value': offered_price, 'from': self.account, 'gas': 100000}
         logger.debug("transaction: %s", transaction)
         tx_hash = self.contract.functions.sellerConfirm(order_id).transact(transaction)
         logger.debug("You have confirmed the order:{order_id} and deposited {value} to contract {address}".format(order_id=order_id, value=offered_price, address=self.contract.address))
         wait_for_transaction_receipt(self.web3, tx_hash)
+        from cpchain.wallet.pages import app
+        app.update()
         return tx_hash
 
     def confirm_dispute(self, order_id, if_agree,):
