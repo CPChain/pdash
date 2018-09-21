@@ -49,6 +49,12 @@ class Broker:
         self.handler = Handler(self)
         self.monitor = Monitor(self)
 
+    @defer.inlineCallbacks
+    def query_seller_products_order(self, seller):
+        # query all order of seller's products, then save it in memory
+        orders = yield self.seller.query_orders()
+        return orders
+
     # batch process
     def query_order_state(self, order_id_list):
         unready_order_list = []
@@ -67,6 +73,8 @@ class Broker:
         for current_id in order_id_list:
             self.buyer.confirm_order(current_id)
             logger.debug("order %s completed", current_id)
+        from cpchain.wallet.pages import app
+        app.update()
 
     @defer.inlineCallbacks
     def seller_send_request(self, order_info):
@@ -189,8 +197,6 @@ class Broker:
             self.wallet.main_wnd.update_purchased_tab('downloaded')
 
 
-
-
 class Monitor:
     def __init__(self, broker):
         self.broker = broker
@@ -222,6 +228,8 @@ class Monitor:
 
 
         new_order_list.addCallback(add_order)
+        from cpchain.wallet.pages import app
+        app.update()
         return self.broker.order_queue
 
 
@@ -258,7 +266,7 @@ class Monitor:
             else:
                 order_id = self.broker.confirmed_order_queue.get()
                 confirmed_order_list.append(order_id)
-        reactor.callInThread(self.broker.confirm_order, confirmed_order_list)
+        # reactor.callInThread(self.broker.confirm_order, confirmed_order_list)
 
 
 class Handler:
@@ -311,22 +319,21 @@ class Handler:
     def handle_new_order(self):
         logger.debug("in handle new order")
         logger.debug("before process new order, order queue size: %s", self.broker.order_queue.qsize())
-        while True:
-            if self.broker.order_queue.empty():
-                logger.debug("no new order")
-                break
-
-            else:
-                order_info = self.broker.order_queue.get()
-                logger.debug("process new order, order info: %s", order_info)
-                order_id = list(order_info.keys())[0]
-                logger.debug("seller confirm order, order id: %s", order_id)
-                d = deferToThread(self.broker.seller.confirm_order, order_id)
-                def start_proxy_request(tx):
-                    logger.debug("order %s has been confirmed by seller", tx)
-                    self.broker.seller_send_request(order_info)
-                d.addCallback(start_proxy_request)
-        logger.debug("new order process completed, order queue size: %s", self.broker.order_queue.qsize())
+        # while True:
+        #     if self.broker.order_queue.empty():
+        #         logger.debug("no new order")
+        #         break
+        #     else:
+        #         order_info = self.broker.order_queue.get()
+        #         logger.debug("process new order, order info: %s", order_info)
+        #         order_id = list(order_info.keys())[0]
+        #         logger.debug("seller confirm order, order id: %s", order_id)
+        #         d = deferToThread(self.broker.seller.confirm_order, order_id)
+        #         def start_proxy_request(tx):
+        #             logger.debug("order %s has been confirmed by seller", tx)
+        #             self.broker.seller_send_request(order_info)
+        #         d.addCallback(start_proxy_request)
+        # logger.debug("new order process completed, order queue size: %s", self.broker.order_queue.qsize())
 
 
     def handle_ready_order(self):

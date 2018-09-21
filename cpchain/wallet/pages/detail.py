@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import (QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLine
                              QAbstractItemView, QMessageBox, QTextEdit, QHeaderView, QTableWidget, QRadioButton,
                              QFileDialog, QListWidget, QListWidgetItem, QComboBox)
 from PyQt5.QtGui import QCursor, QFont, QFontDatabase, QPixmap
+from PyQt5 import QtGui
 
 from cpchain.crypto import ECCipher, RSACipher, Encoder
 
@@ -23,7 +24,8 @@ import logging
 
 from cpchain import root_dir
 
-from cpchain.wallet.pages import HorizontalLine, abs_path, get_icon
+from cpchain.wallet.utils import formatTimestamp
+from cpchain.wallet.pages import HorizontalLine, abs_path, get_icon, app
 from cpchain.wallet.pages.other import PublishDialog
 
 from cpchain.wallet.components.table import Table
@@ -31,73 +33,115 @@ from cpchain.wallet.components.product import Product
 from cpchain.wallet.components.product_list import ProductList
 from cpchain.wallet.components.upload import UploadDialog
 from cpchain.wallet.components.loading import Loading
+from cpchain.wallet.components.sales import Sale
+from cpchain.wallet.components.purchase import PurchaseDialog
 
 from cpchain.wallet.simpleqt.page import Page
 from cpchain.wallet.simpleqt.decorator import page
 from cpchain.wallet.simpleqt.widgets.label import Label
 from cpchain.wallet.simpleqt.widgets import Input
+from cpchain.wallet.simpleqt.model import Model
 
 from datetime import datetime as dt
 
 logger = logging.getLogger(__name__)
 
-class PurchaseDialog(QDialog):
+class DetailHeader(QWidget):
 
-    def __init__(self, parent, title="Purchase Confirmation", width=524, height=405,
-                 price=None, gas=None, account=None, password=None, storagePath=None):
-        super().__init__(parent)
-        self.setWindowTitle(title)
-        self.resize(width, height)
-        self.price = price
-        self.gas = gas
-        self.account = account
-        self.password = password
-        self.storagePath = storagePath
+    def __init__(self, name):
+        self.name = name
+        super().__init__()
         self.ui()
-        self.style()
 
-    @page.ui
     def ui(self):
-        layout = QGridLayout()
-        row = 1
-        layout.addWidget(QLabel('Price:'), row, 1)
-        layout.addWidget(Label(self.price), row, 2)
+        layout = QHBoxLayout()
+        self.setObjectName('main')
+        name = QLabel(self.name)
+        name.setStyleSheet("""
+            font-family:SFUIDisplay-Medium;
+            font-size:16px;
+            color:#000000;
+            text-align:left;
+            border-bottom: 3px solid #ddd;
+        """)
+        layout.addWidget(name)
+        layout.addStretch(1)
+        self.setLayout(layout)
+        self.setStyleSheet("""
+            padding-bottom: 5px;
+            border: none;
+            border-bottom: 1px solid #ddd;
+        """)
 
-        row += 1
-        layout.addWidget(QLabel('Gas:'), row, 1)
-        layout.addWidget(Label(self.gas), row, 2)
+class OrderDetail(QWidget):
 
-        row += 1
-        layout.addWidget(QLabel('Account Ballance:'), row, 1)
-        layout.addWidget(Label(self.account), row, 2)
+    def __init__(self, order_time, status):
+        self.order_time = order_time
+        self.status = status
+        super().__init__()
+        self.ui()
 
-        row += 1
-        layout.addWidget(QLabel('Payment Password:'), row, 1)
-        layout.addWidget(Input(self.password), row, 2)
+    def gen_row(self, name, widget):
+        layout = QHBoxLayout()
+        layout.setAlignment(Qt.AlignLeft)
+        nameWid = QLabel(name)
+        nameWid.setMinimumWidth(100)
+        nameWid.setObjectName("order_item_name")
+        layout.addWidget(nameWid)
+        layout.addWidget(widget)
+        if isinstance(widget, Label):
+            widget.setObjectName('order_item_value')
+        tmp = QWidget()
+        tmp.setLayout(layout)
+        tmp.setObjectName('order_item')
+        return tmp
 
-        row += 1
-        layout.addWidget(QLabel('Storage Path:'), row, 1)
-        layout.addWidget(Input(self.storagePath), row, 2)
+    def ui(self):
+        layout = QVBoxLayout()
+        layout.addWidget(self.gen_row('Order Time:', Label(self.order_time)))
+        layout.addWidget(self.gen_row('Staus:', Label(self.status)))
 
-        row += 2
         # Bottom
         btm = QHBoxLayout()
-        btm.setAlignment(Qt.AlignRight)
+        btm.setAlignment(Qt.AlignLeft)
         btm.setContentsMargins(0, 0, 0, 0)
-        btm.setSpacing(20)
-        btm.addStretch(1)
-        cancel = QPushButton('Cancel')
-        cancel.setObjectName('pinfo_cancel_btn')
-        btm.addWidget(cancel)
-        ok = QPushButton('Publish')
+        btm.setSpacing(15)
+        ok = QPushButton('Download')
         ok.setObjectName('pinfo_publish_btn')
         btm.addWidget(ok)
-        layout.addLayout(btm, row, 2)
-        return layout
+        cancel = QPushButton('Confirm')
+        cancel.setObjectName('pinfo_cancel_btn')
+        btm.addWidget(cancel)
+        btm.addStretch(1)
+        layout.addLayout(btm)
 
-    @page.style
-    def style(self):
-        return """
+        storage = QLabel('Open Storage Path…')
+        storage.setStyleSheet("""
+            margin-top: 12px;
+            font-family:SFUIDisplay-Medium;
+            font-size:14px;
+            color:#0073df;
+        """)
+        layout.addWidget(storage)
+
+        self.setLayout(layout)
+        self.setStyleSheet("""
+            QWidget#order_item {
+                margin-top: 20px;
+                margin-bottom: 20px;
+            }
+            QLabel#order_item_name {
+                font-family:SFUIDisplay-Regular;
+                font-size:14px;
+                color:#666666;
+                text-align:left;
+            }
+            Label#order_item_value {
+                font-family:SFUIDisplay-Regular;
+                font-size:14px;
+                color:#000000;
+                text-align:left;
+            }
             QPushButton#pinfo_cancel_btn{
                 padding-left: 10px;
                 padding-right: 10px;
@@ -154,7 +198,7 @@ class PurchaseDialog(QDialog):
                 border: 1px solid #8cb8ea; 
                 background: #98b9eb;
             }
-        """
+        """)
 
 
 class ProductDetail(Page):
@@ -162,7 +206,8 @@ class ProductDetail(Page):
     def __init__(self, parent=None, product_id=None, name="", image=abs_path('icons/test.png'),
                  icon=abs_path('icons/icon_batch@2x.png'),
                  category="Category", timestamp=dt.now(),
-                 sales=0, cpc=0, description="", remain=0):
+                 sales=0, cpc=0, description="", remain=0,
+                 market_hash=None, owner_address=None):
         self.parent = parent
         self.product_id = product_id
         self.name = name
@@ -174,8 +219,15 @@ class ProductDetail(Page):
         self.cpc = cpc
         self.description = description
         self.remain = remain
+        self.market_hash = market_hash
+        self.owner_address = owner_address
         super().__init__(parent)
         self.setObjectName("product_detail")
+
+    @page.create
+    def create(self):
+        # order list
+        pass
 
     @page.data
     def data(self):
@@ -190,7 +242,6 @@ class ProductDetail(Page):
             "cpc": self.cpc,
             "remain": self.remain,
             "description": self.description,
-
             "gas": 1,
             "account": 15,
             "password": "",
@@ -200,8 +251,8 @@ class ProductDetail(Page):
     def setProduct(self, product):
         self.product = product
 
-    @page.ui
     def ui(self):
+        height = 200
         layout = QVBoxLayout(self)
         layout.setObjectName('body')
         layout.setAlignment(Qt.AlignTop)
@@ -246,21 +297,7 @@ class ProductDetail(Page):
         tmp = self.timestamp.value
         if not tmp:
             tmp = dt.now()
-        months = [
-            ["Jan.", "January"],
-            ["Feb.", "February"],
-            ["Mar.", "March"],
-            ["Apr.", "April"],
-            ["May", "May"],
-            ["Jun.", "June"],
-            ["Jul.", "July"],
-            ["Aug.", "August"],
-            ["Sept.", "September"],
-            ["Oct.", "October"],
-            ["Nov.", "November"],
-            ["Dec.", "December"],
-        ]
-        tmp_str = months[tmp.month][1] + ' ' + tmp.strftime('%d, %Y')
+        tmp_str = formatTimestamp(tmp)
         timestamp = QLabel(str(tmp_str))
         timestamp.setObjectName('timestamp')
         tbox.addWidget(timestamp)
@@ -287,8 +324,11 @@ class ProductDetail(Page):
         buy.setObjectName('buy')
         hbox.addWidget(buy)
         def openPurchaseDialog(_):
+            market_hash = self.market_hash
+            owner_address = self.owner_address
             purchaseDlg = PurchaseDialog(self, price=self.cpc, gas=self.gas, account=self.account,
-                                         storagePath=self.storagePath, password=self.password)
+                                         storagePath=self.storagePath, password=self.password,
+                                         market_hash=market_hash, name=self.name.value, owner_address=owner_address)
             purchaseDlg.show()
         buy.clicked.connect(openPurchaseDialog)
 
@@ -297,17 +337,83 @@ class ProductDetail(Page):
         right.addLayout(hbox)
         header.addLayout(right)
         layout.addLayout(header)
-        tab = QLabel('Description')
-        tab.setObjectName('desc_tap')
-        layout.addWidget(tab)
+
+        # Sales
+        if app.products_order.get(self.market_hash):
+            sales_header = DetailHeader("{} Sales".format(len(app.products_order.get(self.market_hash))))
+            layout.addWidget(sales_header)
+
+            # enum State {
+            #     Created,
+            #     SellerConfirmed,
+            #     ProxyFetched,
+            #     ProxyDelivered,
+            #     BuyerConfirmed,
+            #     Finished,
+            #     SellerRated,
+            #     BuyerRated,
+            #     Disputed,
+            #     Withdrawn
+            # }
+            print(app.products_order)
+            for order in app.products_order[self.market_hash]:
+                status = order['status']
+                if status <= 2:
+                    current = 1
+                elif status <= 4:
+                    current = 2
+                elif status == 5:
+                    current = 3
+                else:
+                    current = 4
+                sale1 = Sale(image=abs_path('icons/avatar.jpeg'),
+                             name=order['public_key'],
+                             current=current,
+                             timestamps=["May 2, 08:09:08", "May 2, 08:09:08"],
+                             order_id=order["order_id"])
+                layout.addWidget(sale1)
+                height += 200
+
+        # Order Detail
+        order_header = DetailHeader('Order Detail')
+        layout.addWidget(order_header)
+
+        order_detail = OrderDetail(order_time=Model("2018/6/15  08:40:39"), status=Model("Delivered on May 2, 08:09:08"))
+        layout.addWidget(order_detail)
+
+        height += 200
+
+        # Description
+        desc = DetailHeader('Description')
+        layout.addWidget(desc)
         desc = Label(self.description)
         desc.setWordWrap(True)
         layout.addWidget(desc)
-        return layout
 
-    @page.style
+        height += 200
+        layout.addStretch(1)
+
+        widget = QWidget()
+        widget.setObjectName('parent_widget')
+        widget.setLayout(layout)
+        widget.setFixedWidth(720)
+        widget.setFixedHeight(height)
+        widget.setStyleSheet(self.style())
+
+        # Scroll Area Properties
+        scroll = QScrollArea()
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setWidgetResizable(True)
+        # scroll.setFixedHeight(800)
+        scroll.setWidget(widget)
+
+        self.setWidget(scroll)
+        self.setWidgetResizable(True)
+
     def style(self):
         return """
+            QWidget#parent_widget{background: transparent;}
             QVBoxLayout {
                 background: #fafafa;
             }

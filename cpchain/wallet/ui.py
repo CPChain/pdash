@@ -22,6 +22,8 @@ from cpchain.wallet.pages.my_data import MyDataTab
 from cpchain.wallet.pages.publish import PublishProduct
 from cpchain.wallet.pages.market import MarketPage
 from cpchain.wallet.pages.detail import ProductDetail
+from cpchain.wallet.pages.purchased import PurchasedPage
+
 # widgets
 from cpchain.wallet.components.sidebar import SideBar
 
@@ -39,7 +41,8 @@ class Router:
         'market_page': MarketPage,
         'my_data_tab': MyDataTab,
         'publish_product': PublishProduct,
-        'product_detail': ProductDetail
+        'product_detail': ProductDetail,
+        'purchased_page': PurchasedPage
     }
 
     @staticmethod
@@ -98,6 +101,10 @@ sidebarMenu = [
         'name': 'My Data',
         'icon': 'my data@2x.png',
         'link': 'my_data_tab'
+    }, {
+        'name': 'Purchased Data',
+        'icon': 'purchased data@2x.png',
+        'link': 'purchased_page'
     }
 ]
 
@@ -231,7 +238,7 @@ def buildMainWnd():
     main_wnd = MainWindow(reactor)
     _handle_keyboard_interrupt()
 
-    # initialize_system()
+    initialize_system()
     return main_wnd
 
 def login():
@@ -244,6 +251,7 @@ if __name__ == '__main__':
     app.router = Router
     main_wnd = buildMainWnd()
     app.main_wnd = main_wnd
+    app.update()
     wallet.set_main_wnd(main_wnd)
     login()
     reactor.run()

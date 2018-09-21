@@ -54,8 +54,16 @@ def warning(parent, msg="Please input all the required fields first"):
     QMessageBox.warning(parent, "Warning", msg)
 
 class App:
-    
+
     def __init__(self):
         self.main_wnd = None
+        self.products_order = {}
+
+    def update(self):
+        def callback(orders):
+            print(orders)
+            self.products_order = orders
+        d = wallet.chain_broker.query_seller_products_order(None)
+        d.addCallbacks(callback)
 
 app = App()

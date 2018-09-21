@@ -34,7 +34,8 @@ from datetime import datetime as dt
 class Product(QWidget):
 
     def __init__(self, image=None, _id=None, name=None, icon=None, category='category',
-                 cpc=0, sales=0, timestamp=None, remain=0, description="", h=135):
+                 cpc=0, sales=0, timestamp=None, remain=0, description="", market_hash=None, h=135,
+                 owner_address=None):
         self.image = image
         self.id = _id
         self.name = name
@@ -46,6 +47,8 @@ class Product(QWidget):
         self.icon = icon
         self.description = description
         self.h = h
+        self.market_hash = market_hash
+        self.owner_address = owner_address
 
         super().__init__()
         self.initUI()
@@ -69,7 +72,9 @@ class Product(QWidget):
                                   product_id=self.id,
                                   name=self.name,
                                   cpc=self.cpc,
-                                  description=self.description)
+                                  description=self.description,
+                                  market_hash=self.market_hash,
+                                  owner_address=self.owner_address)
 
         Binder.click(image, listener)
 
