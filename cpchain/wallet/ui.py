@@ -24,6 +24,7 @@ from cpchain.wallet.pages.market import MarketPage
 from cpchain.wallet.pages.detail import ProductDetail
 from cpchain.wallet.pages.purchased import PurchasedPage
 
+
 # widgets
 from cpchain.wallet.components.sidebar import SideBar
 
@@ -81,11 +82,9 @@ class Router:
             Router.back_stack = Router.back_stack[:-1]
             page, args, kwargs = Router.back_stack[-1]
             Router._redirectTo(page, *args, **kwargs)
-        print(Router.forward_stack)
 
     @staticmethod
     def forward():
-        print(Router.forward_stack)
         if len(Router.forward_stack) > 0:
             page, args, kwargs = Router.forward_stack[-1]
             Router.back_stack.append((page, args, kwargs))
@@ -131,25 +130,6 @@ class MainWindow(QMainWindow):
             qrect.moveCenter(center_pt)
             self.move(qrect.topLeft())
         set_geometry()
-
-        def add_content_tabs():
-            self.content_tabs = content_tabs = QTabWidget(self)
-            content_tabs.setObjectName("content_tabs")
-            content_tabs.tabBar().hide()
-            content_tabs.setContentsMargins(0, 0, 0, 0)
-
-            my_data_index = content_tabs.addTab(MyDataTab(content_tabs, self), "")
-            publish_product = content_tabs.addTab(PublishProduct(content_tabs), "")
-            market = content_tabs.addTab(MarketPage(content_tabs), "")
-            detail = content_tabs.addTab(ProductDetail(content_tabs), "")
-
-            self.main_tab_index = {
-                "my_data_tab": my_data_index,
-                "publish_product_page": publish_product,
-                "market_page": market,
-                "product_detail": detail
-            }
-        # add_content_tabs()
 
         header = Header(self)
         sidebar = SideBar(sidebarMenu)
@@ -234,6 +214,10 @@ def initialize_system():
         monitor_confirmed_order.start(30)
     monitor_chain_event()
 
+    update = LoopingCall(app.update)
+    update.start(10)
+    app.update()
+
 def buildMainWnd():
     main_wnd = MainWindow(reactor)
     _handle_keyboard_interrupt()
@@ -251,8 +235,9 @@ if __name__ == '__main__':
     app.router = Router
     main_wnd = buildMainWnd()
     app.main_wnd = main_wnd
-    app.update()
+
     wallet.set_main_wnd(main_wnd)
     login()
+    from cpchain.wallet.components.dialog import Dialog
     reactor.run()
     os._exit()

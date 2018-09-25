@@ -1,5 +1,5 @@
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QLabel, QLineEdit, QTextEdit, QCheckBox
+from PyQt5.QtWidgets import QLabel, QLineEdit, QTextEdit, QCheckBox, QComboBox
 
 from cpchain.wallet.simpleqt.model import Model
 
@@ -75,3 +75,34 @@ class CheckBox(QCheckBox):
 
     def viewChange(self):
         self.model.plain_set(self.isChecked())
+
+
+class ComboBox(QComboBox):
+
+    change = QtCore.pyqtSignal(list, name="modelChanged")
+
+    def __init__(self, *args, **kwargs):
+        new_args = []
+        for i in args:
+            if isinstance(i, Model):
+                print(i)
+                i.setView(self)
+            else:
+                new_args.append(i)
+        super().__init__(*new_args, **kwargs)
+        self.change.connect(self.modelChange)
+        self.currentIndexChanged.connect(self.viewChange)
+        for i in args:
+            if isinstance(i, Model):
+                self.model = i
+        self.value = self.model.value[0] if self.model.value else None
+        for val in self.model.value:
+            self.addItem(val)
+
+    def modelChange(self, value):
+        for i in value:
+            self.addItem(i)
+
+    def viewChange(self, index):
+        self.value = self.model.value[index]
+        self.model.index_set(index)

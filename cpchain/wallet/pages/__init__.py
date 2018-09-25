@@ -34,7 +34,7 @@ class HorizontalLine(QFrame):
         self.setFrameShape(QFrame.HLine)
         self.setFrameShadow(QFrame.Plain)
         self.setLineWidth(self.wid)
-        self.setStyleSheet("QFrame{{ border-top: 1px solid {};}}".format(color))
+        self.setStyleSheet("QFrame{{ border-top: {}px solid {};}}".format(wid, color))
 
 def get_icon(name):
     path = osp.join(root_dir, "cpchain/assets/wallet/icons", name)

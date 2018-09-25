@@ -28,6 +28,7 @@ from cpchain.wallet.pages.product import Product2, TableWidget
 
 from cpchain.wallet.pages import app, Binder
 from cpchain.wallet.pages.other import PublishDialog
+from cpchain.wallet.components.picture import Picture
 
 from datetime import datetime as dt
 
@@ -60,15 +61,12 @@ class Product(QWidget):
         vbox = QVBoxLayout()
         vbox.addStretch(1)
 
-        # Image
-        image = QLabel()
+        image = Picture(self.image, 220, int(self.h))
         image.setObjectName('image')
-        pixmap = QPixmap(self.image)
-        pixmap = pixmap.scaled(220, int(self.h))
-        image.setPixmap(pixmap)
 
         def listener(event):
             app.router.redirectTo('product_detail',
+                                  image=self.image,
                                   product_id=self.id,
                                   name=self.name,
                                   cpc=self.cpc,
@@ -111,15 +109,12 @@ class Product(QWidget):
         cpc.setObjectName('cpc')
         cpc_unit = QLabel('CPC')
         cpc_unit.setObjectName('cpc_unit')
-        sales = QLabel(str(self.sales))
+        sales = QLabel(str(self.sales) + ' sales')
         sales.setObjectName('sales')
-        sales_unit = QLabel('sales')
-        sales_unit.setObjectName('sales_unit')
 
         hbox.addWidget(cpc)
         hbox.addWidget(cpc_unit)
         hbox.addWidget(sales)
-        hbox.addWidget(sales_unit)
         hbox.addStretch(1)
 
         vbox.addLayout(hbox)
@@ -157,17 +152,27 @@ class Product(QWidget):
 
         vbox.addLayout(tbox)
 
-        self.setLayout(vbox)
-        self.setObjectName('Main')
+        tmp = QWidget()
+        tmp.setLayout(vbox)
+        tmp.setContentsMargins(0, 0, 0, 0)
+        tmp.setObjectName('main_product')
+        layout = QVBoxLayout()
+        layout.addWidget(tmp)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
         # self.setFrameShadow(QFrame.Sunken)
         self.setStyleSheet("""
-            #Main {
-                background: #ffffff;
-                border: 1px solid rgba(0, 0, 0, 0.05);
-                border-radius: 5px;
+            QWidget#main_product {
+                background:#ffffff;
+                border:1px solid #dddddd;
+                border-radius:5px;
             }
             QLabel {
                 font-family:SFUIDisplay-Regular;
+            }
+            QLabel#image {
+                border:1px solid #dddddd;
+                border-radius:5px;
             }
             #name {
                 font-family:SFUIDisplay-Semibold;
@@ -184,6 +189,7 @@ class Product(QWidget):
                 font-size:10px;
                 color:#3393ed;
                 text-align:center;
+                padding: 3px 4px;
             }
 
             #cpc_unit, #sales, #sales_unit{

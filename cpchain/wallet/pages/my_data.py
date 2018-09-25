@@ -56,7 +56,7 @@ class MyDataTab(Page):
     def renderProducts(self, products):
         _products = []
         for i in products:
-            test_dict = dict(image=abs_path('icons/test.png'),
+            test_dict = dict(image=i['cover_image'] or abs_path('icons/test.png'),
                              icon=abs_path('icons/icon_batch@2x.png'),
                              name=i['title'],
                              cpc=i['price'],
@@ -117,15 +117,17 @@ class MyDataTab(Page):
                 items.append(wid)
                 return items
 
-            table = Table(self, header, self.table_data, itemHandler, sort=2)
+            table = Table(self, header, self.table_data, itemHandler, sort=None)
             table.setObjectName('my_table')
             table.setFixedWidth(700)
-            table.setMinimumHeight(180)
+            if len(self.table_data.value) > 0:
+                table.setMinimumHeight(180)
+            else:
+                table.setMaximumHeight(40)
             return table
         table = buildTable()
         self.table = table
         self.buildTable = buildTable
-        
 
         main_layout = QVBoxLayout(self)
         main_layout.setAlignment(Qt.AlignTop)
@@ -153,6 +155,13 @@ class MyDataTab(Page):
         main_layout.addWidget(batch_label)
 
         main_layout.addWidget(table)
+
+        if len(self.table_data.value) == 0:
+            # No Data
+            nodata = QLabel('No Data!')
+            nodata.setObjectName('no_data')
+            main_layout.addWidget(nodata)
+
         main_layout.addStretch(1)
         self.main_layout = main_layout
 
@@ -161,6 +170,11 @@ class MyDataTab(Page):
         widget.setLayout(main_layout)
         widget.setFixedWidth(750)
         widget.setStyleSheet("""
+            QLabel#no_data {
+                text-align: center;
+                color: #aaa;
+                margin-left: 310px;
+            }
             QWidget#parent_widget{background: white;}
             QPushButton#upload_btn{
                 padding-left: 16px;

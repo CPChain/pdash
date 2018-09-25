@@ -27,6 +27,20 @@ class MarketClient:
         self.token = ''
         self.nonce = ''
 
+    @inlineCallbacks
+    def get(self, url, raw_content=False):
+        url = self.url + url
+        headers = {
+            "MARKET-KEY": self.public_key,
+            "MARKET-TOKEN": self.token,
+            "Content-Type": "application/json"
+        }
+        resp = yield treq.get(url, headers=headers)
+        if raw_content:
+            content = yield treq.content(resp)
+            return content
+        data = yield treq.json_content(resp)
+        return data
 
     @staticmethod
     def str_to_timestamp(s):

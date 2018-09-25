@@ -136,7 +136,7 @@ class BuyerAgent(Agent):
         return tx_hash
 
     def confirm_order(self, order_id,):
-        transaction = {'value': 0, 'from': self.account,}
+        transaction = {'value': 0, 'from': self.account, 'gas': 100000}
         tx_hash = self.contract.functions.buyerConfirmDeliver(order_id).transact(transaction)
         logger.debug("Thank you for confirming deliver! Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash)
@@ -190,13 +190,17 @@ class SellerAgent(Agent):
         offered_price = self.query_order(order_id)[6]
         if offered_price < 0:
             return None
-        transaction = {'value': offered_price, 'from': self.account, 'gas': 100000}
-        logger.debug("transaction: %s", transaction)
-        tx_hash = self.contract.functions.sellerConfirm(order_id).transact(transaction)
-        logger.debug("You have confirmed the order:{order_id} and deposited {value} to contract {address}".format(order_id=order_id, value=offered_price, address=self.contract.address))
-        wait_for_transaction_receipt(self.web3, tx_hash)
-        from cpchain.wallet.pages import app
-        app.update()
+        try:
+            transaction = {'value': offered_price, 'from': self.account, 'gas': 100000}
+            logger.debug("transaction: %s", transaction)
+            tx_hash = self.contract.functions.sellerConfirm(order_id).transact(transaction)
+            logger.debug("You have confirmed the order:{order_id} and deposited {value} to contract {address}".format(order_id=order_id, value=offered_price, address=self.contract.address))
+            wait_for_transaction_receipt(self.web3, tx_hash)
+            order = self.query_order(order_id)
+            print('----->>>>>')
+            print(order)
+        except Exception as e:
+            raise e
         return tx_hash
 
     def confirm_dispute(self, order_id, if_agree,):

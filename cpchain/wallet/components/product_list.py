@@ -68,11 +68,27 @@ class ProductList(QScrollArea):
         self.exec_(self.layout())
 
     def initUI(self):
-        self.exec_(None)
+        self.exec_(None, True)
 
-    def exec_(self, layout=None):
+    def exec_(self, layout=None, flag=False):
         pds = self.products
+        if flag:
+            return
         if len(self.products) == 0:
+            layout = QVBoxLayout()
+            nodata = QLabel('No Data!')
+            nodata.setObjectName('no_data')
+            nodata.setStyleSheet("""
+                text-align: center;
+                color: #aaa;
+                margin-left: 310px;
+            """)
+            layout.addWidget(nodata)
+            widget = QWidget()
+            widget.setObjectName('parent_widget')
+            widget.setLayout(layout)
+            widget.setStyleSheet("QWidget#parent_widget{background: transparent;}")
+            self.setWidget(widget)
             return
         row = int((len(pds) + self.col / 2) / self.col + 0.5)
         if not layout:
@@ -108,5 +124,8 @@ class ProductList(QScrollArea):
         self.setStyleSheet("""
             #main_layout {
                 height: 800px;
+            }
+            QWidget#product {
+                border: 1px solid red;
             }
         """)

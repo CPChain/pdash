@@ -4,6 +4,7 @@ import logging
 import importlib
 import hashlib
 import json
+from sqlalchemy import func
 from cpchain.wallet.db import get_session, FileInfo, create_engine, sessionmaker, BuyerFileInfo, CollectInfo, FileInfoVersion
 from cpchain.crypto import AESCipher, RSACipher
 from cpchain.utils import join_with_rc
@@ -19,7 +20,7 @@ def get_file_list():
     engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
     Session = sessionmaker(bind=engine)
     session = Session()
-    return session.query(FileInfo).all()
+    return session.query(FileInfo).order_by(FileInfo.id.desc()).all()
 
 
 def get_file_by_id(file_id):
@@ -134,7 +135,7 @@ def upload_file(file_path, storage_type, dest, data_name=None):
         "cpchain.storage-plugin." + storage_type
     )
     storage = storage_module.Storage()
-    file_uri = yield storage.upload_data(encrypted_path, dest)  # d_upload file_uri: string save directly
+    file_uri = storage.upload_data(encrypted_path, dest)  # d_upload file_uri: string save directly
     file_name = list(os.path.split(file_path))[-1]
     file_size = os.path.getsize(file_path)
     logger.debug('start to write data into database')
@@ -146,12 +147,13 @@ def upload_file(file_path, storage_type, dest, data_name=None):
     hashcode['file_hash'] = file_md5
     new_file_info = FileInfo(hashcode=json.dumps(hashcode), name=file_name, path=file_path, size=file_size,
                              remote_type=str(storage_type), remote_uri=str(file_uri),
-                             is_published=False, aes_key=this_key)
+                             is_published=False, aes_key=this_key, created=func.current_timestamp())
     add_file(new_file_info)
     logger.debug('file id: %s', new_file_info.id)
     tmp.close()
     file_id = new_file_info.id
     return file_id
+
 
 # Decrypt aes key with rsa key then decrypt file with aes key.
 def decrypt_file_aes(file_path, aes_key):

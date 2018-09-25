@@ -107,16 +107,21 @@ class Sale(QWidget):
         self.ui()
 
     def deliver(self, _):
-        # info = wallet.chain_broker.seller.account_info()
-        # print(info)
-        # d = deferToThread(wallet.chain_broker.seller.confirm_order, self.order_id)
         d1 = deferToThread(wallet.chain_broker.seller.confirm_order, self.order_id)
         def func(tx_hash):
-            print(tx_hash)
-            d2 = deferToThread(wallet.chain_broker.seller.claim_fetched, self.order_id)
-            def func2(_):
-                app.update()
-            d2.addCallbacks(func2)
+            app.update()
+        d1.addCallbacks(func)
+
+    def receive(self, _):
+        d1 = deferToThread(wallet.chain_broker.seller.claim_fetched, self.order_id)
+        def func(tx_hash):
+            app.update()
+        d1.addCallbacks(func)
+
+    def confirm(self, _):
+        d1 = deferToThread(wallet.chain_broker.buyer.confirm_order, self.order_id)
+        def func(tx_hash):
+            app.update()
         d1.addCallbacks(func)
 
 
@@ -142,10 +147,12 @@ class Sale(QWidget):
             'Deliver',
             'Receive',
             'Confirm',
-            'Comment'
+            # 'Comment'
         ]
         callbacks = {
             'Deliver': self.deliver,
+            'Receive': self.receive,
+            'Confirm': self.confirm
         }
         second = QHBoxLayout()
         second.setAlignment(Qt.AlignLeft)
@@ -163,7 +170,7 @@ class Sale(QWidget):
                          h2=h2,
                          width=width)
             cb = callbacks.get(item)
-            if cb:
+            if cb and mode == 'active':
                 Binder.click(tmp, cb)
             second.addWidget(tmp)
             if item != status[-1]:

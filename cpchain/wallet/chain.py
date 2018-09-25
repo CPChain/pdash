@@ -32,6 +32,10 @@ from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 
 logger = logging.getLogger(__name__) # pylint: disable=locally-disabled, invalid-name
 
+def update():
+    from cpchain.wallet.pages import app
+    app.update()
+
 
 class Broker:
     def __init__(self, wallet):
@@ -73,8 +77,6 @@ class Broker:
         for current_id in order_id_list:
             self.buyer.confirm_order(current_id)
             logger.debug("order %s completed", current_id)
-        from cpchain.wallet.pages import app
-        app.update()
 
     @defer.inlineCallbacks
     def seller_send_request(self, order_info):
@@ -225,11 +227,7 @@ class Monitor:
                 logger.debug("start to put new order info into queue, current order: %s", current_order)
                 self.broker.order_queue.put(current_order)
                 logger.debug("order queue size: %s", self.broker.order_queue.qsize())
-
-
         new_order_list.addCallback(add_order)
-        from cpchain.wallet.pages import app
-        app.update()
         return self.broker.order_queue
 
 
@@ -310,9 +308,7 @@ class Handler:
 
             # Update the purchased downloaded tab in the main window of wallet
             self.broker.wallet.main_wnd.update_purchased_tab('downloading')
-
         d_placed_order.addCallback(add_bought_order)
-
         return self.broker.bought_order_queue
 
 

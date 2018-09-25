@@ -35,6 +35,7 @@ from cpchain.wallet.components.upload import UploadDialog
 from cpchain.wallet.components.loading import Loading
 from cpchain.wallet.components.sales import Sale
 from cpchain.wallet.components.purchase import PurchaseDialog
+from cpchain.wallet.components.picture import Picture
 
 from cpchain.wallet.simpleqt.page import Page
 from cpchain.wallet.simpleqt.decorator import page
@@ -259,10 +260,7 @@ class ProductDetail(Page):
         header = QHBoxLayout()
 
         # Image
-        image = QPixmap(self.image.value)
-        image = image.scaled(240, 160)
-        imageWid = QLabel()
-        imageWid.setPixmap(image)
+        imageWid = Picture(self.image.value, 240, 160)
         header.addWidget(imageWid)
 
         right = QVBoxLayout()
@@ -355,21 +353,20 @@ class ProductDetail(Page):
             #     Disputed,
             #     Withdrawn
             # }
-            print(app.products_order)
             for order in app.products_order[self.market_hash]:
                 status = order['status']
-                if status <= 2:
+                if status == 0:
                     current = 1
-                elif status <= 4:
+                elif status == 1:
                     current = 2
-                elif status == 5:
+                elif status >= 2:
                     current = 3
                 else:
                     current = 4
                 sale1 = Sale(image=abs_path('icons/avatar.jpeg'),
                              name=order['public_key'],
                              current=current,
-                             timestamps=["May 2, 08:09:08", "May 2, 08:09:08"],
+                             timestamps=["May 2, 08:09:08", "May 2, 08:09:08", "May 2, 08:09:08", "May 2, 08:09:08"],
                              order_id=order["order_id"])
                 layout.addWidget(sale1)
                 height += 200

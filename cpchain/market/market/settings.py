@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'cpchain.market.user_data',
     'cpchain.market.comment',
     'cpchain.market.transaction',
+    'cpchain.market.proxy'
+
 
 ]
 # Application definition

@@ -1,6 +1,6 @@
 import logging
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QHBoxLayout, QLabel, QPushButton,
+from PyQt5.QtWidgets import (QHBoxLayout, QLabel, QPushButton, QComboBox,
                              QVBoxLayout, QWidget, QDialog, QFileDialog)
 
 from cpchain.wallet.pages import wallet
@@ -8,7 +8,8 @@ from cpchain.proxy.client import pick_proxy
 
 from cpchain.wallet.simpleqt.decorator import page
 from cpchain.wallet.simpleqt.widgets.label import Label
-from cpchain.wallet.simpleqt.widgets import Input
+from cpchain.wallet.simpleqt.widgets import Input, ComboBox
+from cpchain.wallet.simpleqt.model import ListModel
 
 logger = logging.getLogger(__name__)
 
@@ -27,11 +28,22 @@ class PurchaseDialog(QDialog):
         self.storagePath = storagePath
         self.market_hash = market_hash
         self.name = name
+        self.proxy = ListModel([])
         self.owner_address = owner_address
         self.ui()
         self.style()
+        self.get_proxy()
 
-    def gen_row(self, name, widget):
+
+    def get_proxy(self):
+        def cb(data):
+            result = []
+            for item in data:
+                result.append(item['host'] + ':' + str(item['port']))
+            self.proxy.value = result
+        wallet.market_client.get('proxy/v1/proxy').addCallbacks(cb)
+
+    def gen_row(self, name, widget, width=None):
         layout = QHBoxLayout()
         layout.setAlignment(Qt.AlignLeft)
         nameWid = QLabel(name)
@@ -39,6 +51,8 @@ class PurchaseDialog(QDialog):
         nameWid.setObjectName("name")
         layout.addWidget(nameWid)
         layout.addWidget(widget)
+        if width:
+            widget.setMinimumWidth(width)
         if isinstance(widget, Label):
             unit = Label('CPC')
             unit.setObjectName('unit')
@@ -58,7 +72,7 @@ class PurchaseDialog(QDialog):
         layout.addWidget(self.gen_row('Gas: ', Label(self.gas)))
         layout.addWidget(self.gen_row('Account Ballance: ', Label(self.account)))
         layout.addWidget(self.gen_row('Payment Password: ', Input(self.password)))
-        layout.addWidget(self.gen_row('Storage Path: ', Input(self.storagePath)))
+        layout.addWidget(self.gen_row('Proxy: ', ComboBox(self.proxy), 160))
 
         # Browse
         browse = QLabel('Browse...')
@@ -86,7 +100,6 @@ class PurchaseDialog(QDialog):
     def handle_confirm(self):
         d = pick_proxy()
         def get_proxy_address(proxy_addr):
-            print(proxy_addr)
             msg_hash = self.market_hash
             file_title = self.name
             proxy = proxy_addr

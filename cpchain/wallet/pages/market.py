@@ -54,7 +54,7 @@ class MarketPage(Page):
     def renderProducts(self, products):
         _products = []
         for i in products:
-            test_dict = dict(image=abs_path('icons/test.png'),
+            test_dict = dict(image=i['cover_image'] or abs_path('icons/test.png'),
                              icon=abs_path('icons/icon_batch@2x.png'),
                              name=i['title'],
                              cpc=i['price'],

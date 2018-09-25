@@ -26,7 +26,10 @@ import traceback
 from cpchain import root_dir
 
 from cpchain.wallet.pages import main_wnd, HorizontalLine, abs_path, get_icon, Binder, warning
-from cpchain.wallet.components.loading import Loading
+from cpchain.wallet.components.dialog import Dialog
+from cpchain.wallet.simpleqt.decorator import component
+from cpchain.wallet.simpleqt.widgets import Input, ComboBox
+from cpchain.wallet.simpleqt.widgets.label import Label
 
 class FileUpload(QFrame):
 
@@ -51,7 +54,7 @@ class FileUpload(QFrame):
         hbox = QHBoxLayout()
         hbox.setAlignment(Qt.AlignLeft)
         hbox.addWidget(hint)
-        self.open_text = QLabel('open...')
+        self.open_text = QLabel('browse...')
         self.open_text.setObjectName('open')
         Binder.click(self.open_text, self.onOpen)
 
@@ -63,9 +66,12 @@ class FileUpload(QFrame):
         layout.addWidget(self.target, 3, 0)
         layout.addWidget(QLabel(""), 4, 0)
         self.setLayout(layout)
+        self.setObjectName('main')
         self.setStyleSheet("""
-            QFrame {
+            QFrame#main {
                 background: white;
+                border: 1px dashed #bbb;
+                border-radius: 3px;
             }
             #open {
                 color:#4a90e2;
@@ -81,15 +87,15 @@ class FileUpload(QFrame):
         st = re.compile(r'\'file:\/\/(.*?)\'').findall(st)[0]
         self.target.setText(st)
 
-class UploadDialog(QDialog):
+class UploadDialog(Dialog):
     def __init__(self, parent=None, oklistener=None):
-        super().__init__(parent)
-        self.resize(500, 180)
-        self.setWindowTitle("Upload your file")
+        width = 550
+        height = 630
+        title = "Upload your file"
         self.storage_index = 0
         self.now_wid = None
         self.oklistener = oklistener
-        
+
         self.storage = [
             {
                 'name': 'Amazon S3',
@@ -99,15 +105,18 @@ class UploadDialog(QDialog):
                         'type': 'edit',
                         'name': 'Bucket',
                         'id': 'bucket'
-                    }, {
+                    },
+                    {
                         'type': 'edit',
                         'name': 'aws_secret_access_key',
                         'id': 'aws_secret_access_key'
-                    }, {
+                    },
+                    {
                         'type': 'edit',
                         'name': 'aws_access_key_id',
                         'id': 'aws_access_key_id'
-                    }, {
+                    },
+                    {
                         'type': 'edit',
                         'name': 'Key',
                         'id': 'key'
@@ -143,12 +152,13 @@ class UploadDialog(QDialog):
         for i in self.storage:
             if i:
                 self.max_row = max(self.max_row, len(i['options']))
-        self.initUI()
+        self.data()
+        super().__init__(wallet.main_wnd, title=title, width=width, height=height)
 
     def onChangeStorage(self, index):
         self.storage_index = index
         new_wid = self.build_option_widget(self.storage[self.storage_index])
-        self.layout.replaceWidget(self.now_wid, new_wid)
+        self.main.replaceWidget(self.now_wid, new_wid)
         self.now_wid.deleteLater()
         del self.now_wid
         self.now_wid = new_wid
@@ -161,29 +171,19 @@ class UploadDialog(QDialog):
         )
         self.dst = storage_module.Storage().user_input_param()
 
-        grid = QGridLayout()
-        grid.setObjectName('grid')
-        grid.setContentsMargins(0, 0, 0, 0)
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         row = 0
         options = storage['options']
         for option in options:
             if option['type'] == 'edit':
-                grid.addWidget(QLabel(option['name'] + ":"), row, 1)
                 wid = QLineEdit()
                 wid.setObjectName('{}-{}'.format(storage["type"], option["id"]))
                 wid.setText(self.dst[option['id']])
-                grid.addWidget(wid, row, 3)
-            elif option['type'] == 'combo':
-                items = QComboBox()
-                for item in option['items']:
-                    items.addItem(item)
-                grid.addWidget(items, row, 3)
-            row += 1
-        for i in range(self.max_row - len(options)):
-            grid.addWidget(QLabel(""), row, 3)
+                layout.addWidget(self.gen_row(option['name'] + ":", wid))
             row += 1
         wid = QWidget()
-        wid.setLayout(grid)
+        wid.setLayout(layout)
         wid.setContentsMargins(0, 0, 0, 0)
         wid.setStyleSheet("""
             QWidget {
@@ -195,82 +195,105 @@ class UploadDialog(QDialog):
         """)
         return wid
 
-    def initUI(self):
-        layout = QGridLayout(self)
-        layout.setSpacing(20)
-        # Data name
-        data_name = QLineEdit()
-        layout.addWidget(QLabel('Data Name:'), 0, 1)
-        layout.addWidget(data_name, 0, 2, 1, 2)
+    def gen_row(self, name, widget, width=None):
+        layout = QHBoxLayout()
+        layout.setAlignment(Qt.AlignLeft)
+        nameWid = QLabel(name)
+        nameWid.setMinimumWidth(160)
+        nameWid.setObjectName("name")
+        layout.addWidget(nameWid)
+        layout.addWidget(widget)
+        if width:
+            widget.setMinimumWidth(width)
+        if isinstance(widget, Label):
+            unit = Label('CPC')
+            unit.setObjectName('unit')
+            widget.setObjectName('value')
+            layout.addWidget(unit)
+        tmp = QWidget()
+        tmp.setLayout(layout)
+        tmp.setObjectName('item')
+        return tmp
 
-        # Storage location
-        layout.addWidget(QLabel('Storage location:'), 1, 1)
+    @component.data
+    def data(self):
+        return {
+            "data_name": ""
+        }
+
+    def ui(self, widget):
+        layout = QVBoxLayout(widget)
+        layout.setSpacing(1)
+        layout.addWidget(self.gen_row('Data Name:', Input(self.data_name)))
+
+        # Storage
         storage = QComboBox()
         for item in self.storage:
             if item:
                 storage.addItem(item['name'])
         storage.currentIndexChanged.connect(self.onChangeStorage)
-        layout.addWidget(storage, 1, 2, 1, 2)
-
-        # Storage Options
-        layout.addWidget(QLabel(""), 2, 1, self.max_row, 1)
+        layout.addWidget(self.gen_row('Storage Location:', storage))
 
         self.now_wid = self.build_option_widget(self.storage[self.storage_index])
-        layout.addWidget(self.now_wid, 2, 2, self.max_row, 2)
+        layout.addWidget(self.now_wid)
 
         # File Drop or Open
         fileSlt = FileUpload()
         fileSlt.setMinimumHeight(120)
         fileSlt.setMaximumHeight(120)
-        layout.addWidget(fileSlt, self.max_row + 2, 1, 3, 3)
+        layout.addWidget(self.gen_row("File:", fileSlt))
+        self.fileSlt = fileSlt
+
+        layout.addStretch(1)
 
         # Ok and Cancel
         bottom = QHBoxLayout()
         bottom.setAlignment(Qt.AlignRight)
-        bottom.setSpacing(10)
+        bottom.setSpacing(20)
         bottom.addStretch(1)
 
-        cancel = QLabel('Cancel')
-        def closeListener(event):
-            self.close()
-        Binder.click(cancel, closeListener)
+        cancel = QPushButton('Cancel')
+        cancel.setObjectName('pinfo_cancel_btn')
+        cancel.clicked.connect(self.closeListener)
         bottom.addWidget(cancel)
 
         ok = QPushButton('OK')
-
-        def okListener(event):
-            # Find All needed values
-            storage = self.storage[self.storage_index]
-            dst = dict()
-            for option in storage['options']:
-                objName = storage['type'] + '-' + option['id']
-                child = self.findChild((QLineEdit,), objName)
-                dst[option['id']] = child.text()
-                if not dst[option['id']]:
-                    warning(self)
-                    return
-            # Data Name
-            dataname = data_name.text()
-            if not dataname:
-                warning(self, "Please input data name first")
-                return
-            # File
-            file = fileSlt.file
-            if not file:
-                warning(self, "Please drag a file or open a file first")
-                return
-            d_upload = deferToThread(fs.upload_file, file, storage['type'], dst, dataname)
-            d_upload.addCallback(self.handle_ok_callback)
-            self.hide()
-            self.loading = Loading()
-            self.loading.show()
-        ok.clicked.connect(okListener)
+        ok.setObjectName('pinfo_publish_btn')
+        ok.clicked.connect(self.okListener)
         bottom.addWidget(ok)
+        layout.addLayout(bottom)
+        return layout
 
-        layout.addWidget(QLabel(""), 4, 1)
-        layout.addLayout(bottom, 5 + self.max_row, 2)
-        self.setLayout(layout)
-        self.layout = layout
+    def closeListener(self, _):
+        self.close()
+
+    def uploadFile(self, file, _type, dst, dataname):
+        file_id = fs.upload_file(file, _type, dst, dataname)
+        return file_id
+
+    def okListener(self, _):
+        # Find All needed values
+        storage = self.storage[self.storage_index]
+        dst = dict()
+        for option in storage['options']:
+            objName = storage['type'] + '-' + option['id']
+            child = self.findChild((QLineEdit,), objName)
+            dst[option['id']] = child.text()
+            if not dst[option['id']]:
+                warning(self)
+                return
+        # Data Name
+        dataname = self.data_name.value
+        if not dataname:
+            warning(self, "Please input data name first")
+            return
+        # File
+        file = self.fileSlt.file
+        if not file:
+            warning(self, "Please drag a file or open a file first")
+            return
+        deferToThread(self.uploadFile, file, storage['type'], dst, dataname).addCallbacks(self.handle_ok_callback)
+
 
     def handle_ok_callback(self, file_id):
         file_info = fs.get_file_by_id(file_id)
@@ -285,8 +308,6 @@ class UploadDialog(QDialog):
         encrypted_key = Encoder.bytes_to_base64_str(encrypted_key)
         d = wallet.market_client.upload_file_info(hashcode, path, size, product_id, remote_type, remote_uri, name, encrypted_key)
         def handle_upload_resp(status):
-            self.loading.close()
-            self.show()
             try:
                 if status == 1:
                     QMessageBox.information(self, "Tips", "Uploaded successfuly")
@@ -300,3 +321,81 @@ class UploadDialog(QDialog):
                 QMessageBox.information(self, "Tips", "Uploaded fail")
                 self.close()
         d.addCallback(handle_upload_resp)
+
+    def style(self):
+        return super().style() + """
+        QLabel {
+            font-family:SFUIDisplay-Regular;
+            font-size:14px;
+            color:#000000;
+            text-align:left;
+        }
+        QLineEdit, QComboBox {
+            font-family:SFUIDisplay-Regular;
+            font-size:13px;        
+        }
+        QLineEdit {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding-top: 6px;
+            padding-bottom: 6px;
+            padding-left: 3px;
+            background: white;
+        }
+        QPushButton#pinfo_cancel_btn{
+            padding-left: 10px;
+            padding-right: 10px;
+            border: 1px solid #3173d8; 
+            border-radius: 3px;
+            color: #3173d8;
+            min-height: 30px;
+            max-height: 30px;
+            background: #ffffff;
+            min-width: 80px;
+            max-width: 80px;
+        }
+
+        QPushButton#pinfo_cancel_btn:hover{
+            border: 1px solid #3984f7; 
+            color: #3984f6;
+        }
+
+        QPushButton#pinfo_cancel_btn:pressed{
+            border: 1px solid #2e6dcd; 
+            color: #2e6dcd;
+            background: #e5ecf4;
+        }
+
+        QPushButton#pinfo_cancel_btn:disabled{
+            border: 1px solid #8cb8ea; 
+            color: #8cb8ea;
+        }
+
+        QPushButton#pinfo_publish_btn{
+            padding-left: 10px;
+            padding-right: 10px;
+            border: 1px solid #3173d8; 
+            border-radius: 3px;
+            color: #ffffff;
+            min-height: 30px;
+            max-height: 30px;
+            min-width: 80px;
+            max-width: 80px;
+            background: #3173d8;
+        }
+
+        QPushButton#pinfo_publish_btn:hover{
+            background: #3984f7; 
+            border: 1px solid #3984f7;
+        }
+
+        QPushButton#pinfo_publish_btn:pressed{
+            border: 1px solid #2e6dcd; 
+            background: #2e6dcd;
+        }
+
+        QPushbutton#pinfo_publish_btn:disabled{
+            border: 1px solid #8cb8ea; 
+            background: #98b9eb;
+        }
+        """

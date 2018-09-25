@@ -12,7 +12,7 @@ class Model:
     @value.setter
     def value(self, val):
         self.value_ = val
-        if self.view:
+        if self.view is not None:
             self.view.change.emit(val)
 
     def plain_set(self, val):
@@ -20,3 +20,18 @@ class Model:
 
     def setView(self, view):
         self.view = view
+
+class ListModel(Model):
+
+    def __init__(self, value):
+        super().__init__(value)
+        self.index = 0 if value else -1
+
+    def index_set(self, index):
+        self.index = index
+
+    @property
+    def current(self):
+        if self.index == -1:
+            return None
+        return self.value[self.index]

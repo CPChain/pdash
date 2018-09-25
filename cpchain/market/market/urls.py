@@ -29,4 +29,5 @@ urlpatterns = [
     path('user_data/v1/', include('user_data.urls_v1')),
     path('main/v1/', include('main.urls_v1')),
     path('comment/v1/', include('comment.urls_v1')),
+    path('proxy/v1/', include('proxy.urls')) 
 ]
