@@ -8,6 +8,7 @@ mode = 'wallet'
 
 [account]
 keystore_dir = "keystore"
+charge_server = 'http://192.168.0.132:8400'
 
 
 [chain]
