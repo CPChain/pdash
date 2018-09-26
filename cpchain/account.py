@@ -128,3 +128,16 @@ def set_default_account():
         account = create_account(passwd)
 
     return account
+
+def get_balance(account):
+    return web3.eth.getBalance(account)
+
+def send_tranaction(from_account, to_account, value):
+    transaction = {
+        'from': from_account,
+        'to': to_account,
+        'value': value
+    }
+
+    # TODO: should change to web3.personal.sendTransaction(transaction, passphrase) in future.
+    web3.eth.sendTransaction(transaction)
