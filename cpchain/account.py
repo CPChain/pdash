@@ -141,3 +141,35 @@ def send_tranaction(from_account, to_account, value):
 
     # TODO: should change to web3.personal.sendTransaction(transaction, passphrase) in future.
     web3.eth.sendTransaction(transaction)
+
+def scan_transaction(start_block_id=None, end_block_id=None):
+    # scan all blocks by default
+    start_block_id = start_block_id or 0
+    end_block_id = end_block_id or web3.eth.blockNumber
+
+    transaction_records = []
+    for block_id in range(start_block_id, end_block_id + 1):
+        timestamp = web3.eth.getBlock(block_id).timestamp
+        timestamp = datetime.fromtimestamp(timestamp).isoformat()
+        transaction_cnt = web3.eth.getBlockTransactionCount(block_id)
+        for transaction_id in range(0, transaction_cnt):
+            transaction = web3.eth.getTransactionByBlock(block_id, transaction_id)
+            txhash = transaction.hash.hex()
+            to_account = transaction.to
+            # can't use transaction.from, for from is a reserverd keyword in python
+            from_account = transaction['from']
+            value = transaction.value
+            txfee = transaction.gas / transaction.gasPrice
+            # follow ethersacn.io output format
+            transaction_records.append(
+                {
+                    'txhash': txhash,
+                    'block': block_id,
+                    'date': timestamp,
+                    'from': from_account,
+                    'to': to_account,
+                    'value': value,
+                    'txfee': txfee
+                })
+
+    return transaction_records
