@@ -3,10 +3,16 @@ from PyQt5.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 from PyQt5.QtGui import QPixmap
 
 from twisted.internet.threads import deferToThread
+from twisted.internet.defer import inlineCallbacks, Deferred
 
 from cpchain.wallet.pages import Binder, app, wallet
+from cpchain.wallet.simpleqt.decorator import component
 
 import traceback
+import asyncio
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Status(QWidget):
 
@@ -92,6 +98,14 @@ class StatusLine(QWidget):
             color: #9d9d9d;
         """)
 
+class Operator:
+
+    def buyer_confirm(self, order_id):
+        logger.debug('Buyer Confirm Order: %s', str(order_id))
+        def func2(_):
+            logger.debug('Buyer Confirmed')
+            app.update()
+        deferToThread(wallet.chain_broker.buyer.confirm_order, order_id).addCallbacks(func2)
 
 class Sale(QWidget):
 
@@ -103,26 +117,32 @@ class Sale(QWidget):
         # action's timestamp, a list
         self.timestamps = timestamps
         self.order_id = order_id
+        self.operator = Operator()
+        print(app.products_order)
         super().__init__()
         self.ui()
 
+    def _deliver(self):
+        wallet.chain_broker.seller.confirm_order(self.order_id)
+
     def deliver(self, _):
-        d1 = deferToThread(wallet.chain_broker.seller.confirm_order, self.order_id)
-        def func(tx_hash):
-            app.update()
-        d1.addCallbacks(func)
+        def func(_):
+            order_info = dict()
+            order_info[self.order_id] = wallet.chain_broker.buyer.query_order(self.order_id)
+            wallet.chain_broker.seller_send_request(order_info)
+        deferToThread(self._deliver).addCallbacks(func)
+
+    @inlineCallbacks
+    def _receive(self):
+        order_info = dict()
+        order_info[self.order_id] = yield wallet.chain_broker.buyer.query_order(self.order_id)
+        yield wallet.chain_broker.buyer_send_request(order_info)
 
     def receive(self, _):
-        d1 = deferToThread(wallet.chain_broker.seller.claim_fetched, self.order_id)
-        def func(tx_hash):
-            app.update()
-        d1.addCallbacks(func)
+        self._receive()
 
     def confirm(self, _):
-        d1 = deferToThread(wallet.chain_broker.buyer.confirm_order, self.order_id)
-        def func(tx_hash):
-            app.update()
-        d1.addCallbacks(func)
+        self.operator.buyer_confirm(self.order_id)
 
 
     def ui(self):

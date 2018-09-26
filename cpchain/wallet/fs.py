@@ -194,3 +194,10 @@ def buyer_file_update(file_title):
         session.commit()
     except:
         logger.exception("error publish_file_update")
+
+def buyer_file_by_order_id(order_id):
+    try:
+        session = get_session()
+        return session.query(BuyerFileInfo).filter(BuyerFileInfo.order_id == order_id)[0]
+    except:
+        logger.exception("error: no order %s", order_id)

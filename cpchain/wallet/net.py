@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)  # pylint: disable=locally-disabled, invali
 
 
 class MarketClient:
-    def __init__(self, wallet):
+    def __init__(self, wallet, account=None):
         self.wallet = wallet
-        self.account = self.wallet.accounts.default_account
+        self.account = account or self.wallet.accounts.default_account
         self.public_key = ECCipher.serialize_public_key(self.account.public_key)
         self.url = config.market.market_url + '/'
         self.token = ''
@@ -139,7 +139,6 @@ class MarketClient:
                   'MARKET-TOKEN': self.token}
         resp = yield treq.get(url=url, headers=header)
         confirm_info = yield treq.json_content(resp)
-        print(confirm_info)
         logger.debug("carousel response: %s", confirm_info)
         return confirm_info['data']
 
@@ -151,7 +150,6 @@ class MarketClient:
                   'MARKET-TOKEN': self.token}
         resp = yield treq.get(url=url, headers=header)
         confirm_info = yield treq.json_content(resp)
-        print(confirm_info)
         logger.debug("hot tag: %s", confirm_info)
         return confirm_info['data']
 
@@ -174,7 +172,6 @@ class MarketClient:
                   'MARKET-TOKEN': self.token}
         resp = yield treq.get(url=url, headers=header)
         confirm_info = yield treq.json_content(resp)
-        print(confirm_info)
         logger.debug("recommend product: %s", confirm_info)
         return confirm_info['data']
 

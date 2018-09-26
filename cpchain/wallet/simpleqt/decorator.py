@@ -88,7 +88,8 @@ class component:
         @wraps(func)
         @inlineCallbacks
         def wrapper(*args, **kwargs):
-            yield func(*args, **kwargs)
+            r = yield func(*args, **kwargs)
+            return r
         return wrapper
 
     @staticmethod
@@ -96,5 +97,6 @@ class component:
         @wraps(func)
         @inlineCallbacks
         def wrapper(*args, **kwargs):
-            yield func(*args, **kwargs)
+            r = yield func(*args, **kwargs)
+            return r
         return wrapper

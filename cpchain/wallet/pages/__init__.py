@@ -61,7 +61,6 @@ class App:
 
     def update(self):
         def callback(orders):
-            print(orders)
             self.products_order = orders
         d = wallet.chain_broker.query_seller_products_order(None)
         d.addCallbacks(callback)

@@ -13,7 +13,7 @@ dbpath = join_with_rc(config.wallet.dbpath)
 dirpath = osp.dirname(dbpath)
 os.makedirs(dirpath, exist_ok=True)
 
-engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
+engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True, connect_args={"check_same_thread": False})
 
 Base = declarative_base()
 

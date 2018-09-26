@@ -1,5 +1,6 @@
 import logging
 import os
+import asyncio
 
 from queue import Queue
 
@@ -132,14 +133,16 @@ class Broker:
             self.wallet.accounts.default_account.private_key,
             sign_message.data
         )
+        try:
+            error, AES_key, urls = yield start_proxy_request(sign_message, proxy_id)
+            if error:
+                logger.error(error)
+            else:
+                logger.debug(AES_key)
+                logger.debug(urls)
+        except Exception as e:
+            logger.error(e)
 
-        error, AES_key, urls = yield start_proxy_request(sign_message, proxy_id)
-
-        if error:
-            logger.debug(error)
-        else:
-            logger.debug(AES_key)
-            logger.debug(urls)
 
     @defer.inlineCallbacks
     def buyer_send_request(self, order_info):
@@ -165,6 +168,7 @@ class Broker:
             self.wallet.accounts.default_account.private_key,
             sign_message.data
         )
+
         error, AES_key, urls = yield start_proxy_request(sign_message, proxy_id)
 
         def update_buyer_db(file_uri, file_path):
@@ -176,18 +180,15 @@ class Broker:
                  BuyerFileInfo.file_uuid: file_uuid, BuyerFileInfo.path: file_path,
                  BuyerFileInfo.size: os.path.getsize(file_path)}, synchronize_session=False)
             session.commit()
-
         if error:
-            logger.debug(error)
+            logger.error(error)
         else:
             file_name = urls[0].split('/')[3]
             file_dir = join_with_rc(config.wallet.download_dir)
             # create if not exists
             os.makedirs(file_dir, exist_ok=True)
             file_path = os.path.join(file_dir, file_name)
-
             yield download_proxy_file(urls[0], file_path)
-
             logger.debug("downloaded file path: %s", file_path)
             decrypted_file = decrypt_file_aes(file_path, AES_key)
             logger.debug('Decrypted file path: %s', str(decrypted_file))
@@ -206,33 +207,33 @@ class Monitor:
         self.chain_monitor = OrderMonitor(start_id, self.broker.seller)
 
     def get_new_order_info(self):
-        logger.debug("in get new order info")
+        # logger.debug("in get new order info")
         new_order_id_list = self.chain_monitor.get_new_order()
         new_order_info_list = []
         for current_id in new_order_id_list:
-            logger.debug("process order: %s", current_id)
+            # logger.debug("process order: %s", current_id)
             new_order_info_list.append({current_id: self.broker.seller.query_order(current_id)})
-            logger.debug("order info got, order id: %s", current_id)
+            # logger.debug("order info got, order id: %s", current_id)
         return new_order_info_list
 
 
     # this method should be called periodically in the main thread(reactor)
     def monitor_new_order(self):
-        logger.debug("in monitor new order")
-        logger.debug("order queue size: %s", self.broker.order_queue.qsize())
+        # logger.debug("in monitor new order")
+        # logger.debug("order queue size: %s", self.broker.order_queue.qsize())
         new_order_list = deferToThread(self.get_new_order_info)
 
         def add_order(order_list):
             for current_order in order_list:
-                logger.debug("start to put new order info into queue, current order: %s", current_order)
+                # logger.debug("start to put new order info into queue, current order: %s", current_order)
                 self.broker.order_queue.put(current_order)
-                logger.debug("order queue size: %s", self.broker.order_queue.qsize())
+                # logger.debug("order queue size: %s", self.broker.order_queue.qsize())
         new_order_list.addCallback(add_order)
         return self.broker.order_queue
 
 
     def monitor_ready_order(self):
-        logger.debug("in monitor ready order")
+        # logger.debug("in monitor ready order")
         bought_order_list = []
         while True:
             if self.broker.bought_order_queue.empty():
@@ -241,10 +242,11 @@ class Monitor:
                 order = self.broker.bought_order_queue.get()
                 bought_order_list.append(order)
         if not bought_order_list:
-            logger.debug("no bought order")
+            # logger.debug("no bought order")
+            pass
         else:
-            logger.debug("found bought order{%s}", bought_order_list)
-            logger.debug("check bought order state")
+            # logger.debug("found bought order{%s}", bought_order_list)
+            # logger.debug("check bought order state")
             d_unready_order = deferToThread(self.broker.query_order_state, bought_order_list)
 
             def reset_bought_order_queue(unready_order_list):
@@ -255,11 +257,11 @@ class Monitor:
 
 
     def monitor_confirmed_order(self):
-        logger.debug("in monitor confirmed order")
+        # logger.debug("in monitor confirmed order")
         confirmed_order_list = []
         while True:
             if self.broker.confirmed_order_queue.empty():
-                logger.debug("no confirmed order")
+                # logger.debug("no confirmed order")
                 break
             else:
                 order_id = self.broker.confirmed_order_queue.get()
@@ -295,10 +297,10 @@ class Handler:
         d_placed_order = deferToThread(self.broker.buyer.place_order, product)
 
         def add_bought_order(order_id):
-            logger.debug("order has been placed to chain")
-            self.broker.bought_order_queue.put(order_id)
-            logger.debug("new order has been put into bought order queue")
-            logger.debug("bought order queue size: %s", self.broker.bought_order_queue.qsize())
+            # logger.debug("order has been placed to chain")
+            # self.broker.bought_order_queue.put(order_id)
+            # logger.debug("new order has been put into bought order queue")
+            # logger.debug("bought order queue size: %s", self.broker.bought_order_queue.qsize())
             logger.debug("start to update local database")
             new_buyer_file_info = BuyerFileInfo(order_id=order_id,
                                                 market_hash=Encoder.bytes_to_base64_str(desc_hash),
@@ -307,14 +309,14 @@ class Handler:
             logger.debug("update local db completed")
 
             # Update the purchased downloaded tab in the main window of wallet
-            self.broker.wallet.main_wnd.update_purchased_tab('downloading')
         d_placed_order.addCallback(add_bought_order)
         return self.broker.bought_order_queue
 
 
     def handle_new_order(self):
-        logger.debug("in handle new order")
-        logger.debug("before process new order, order queue size: %s", self.broker.order_queue.qsize())
+        pass
+        # logger.debug("in handle new order")
+        # logger.debug("before process new order, order queue size: %s", self.broker.order_queue.qsize())
         # while True:
         #     if self.broker.order_queue.empty():
         #         logger.debug("no new order")
@@ -333,12 +335,13 @@ class Handler:
 
 
     def handle_ready_order(self):
-        logger.debug("in handle ready order")
-        while True:
-            if self.broker.ready_order_queue.empty():
-                logger.debug("no ready order")
-                break
-            else:
-                order_info = self.broker.ready_order_queue.get()
-                logger.debug("process ready order, current order: %s", order_info)
-                self.broker.buyer_send_request(order_info)
+        pass
+        # logger.debug("in handle ready order")
+        # while True:
+        #     if self.broker.ready_order_queue.empty():
+        #         logger.debug("no ready order")
+        #         break
+        #     else:
+        #         order_info = self.broker.ready_order_queue.get()
+        #         logger.debug("process ready order, current order: %s", order_info)
+        #         self.broker.buyer_send_request(order_info)

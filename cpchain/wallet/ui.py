@@ -178,7 +178,6 @@ class MainWindow(QMainWindow):
             logger.debug("Wrong parameter!")
 
     def closeEvent(self, event):
-        print('Close Event')
         self.reactor.stop()
         os._exit(0)
 
@@ -230,6 +229,7 @@ def login():
     wallet.market_client.account = wallet.accounts.default_account
     wallet.market_client.public_key = ECCipher.serialize_public_key(wallet.market_client.account.public_key)
     wallet.market_client.login()
+    wallet.init()
 
 if __name__ == '__main__':
     app.router = Router
@@ -238,6 +238,4 @@ if __name__ == '__main__':
 
     wallet.set_main_wnd(main_wnd)
     login()
-    from cpchain.wallet.components.dialog import Dialog
     reactor.run()
-    os._exit()
