@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+
+import sys
+from getpass import getpass
+
+from twisted.python import log
+from twisted.internet import reactor
+from twisted.web.resource import Resource
+from twisted.web.server import Site
+
+from cpchain import config
+from cpchain.chain.utils import default_w3 as web3
+
+form_input_html = """
+<html>
+    <title> Get free cpc </title>
+    <body>
+        <form method="POST">
+            <label for="eth_addr"> Please input your address to get free CPC: </label>
+            <input type="text" id="eth_addr" name="form-field" />
+            <input type="submit" />
+        </form>
+    </body>
+</html>
+"""
+
+wrong_address_html = """
+<html>
+    <title> Get free cpc </title>
+        <body> wrong address!!! </body>
+</html>
+"""
+
+success_response_html = """
+<html>
+    <title> Get free cpc </title>
+    <body> Congratulations! You got 100 CPC! </body>
+</html>
+"""
+
+class FormPage(Resource):
+    isLeaf = True
+    def render_GET(self, request):
+        return form_input_html.encode('utf8')
+
+    def render_POST(self, request):
+        try:
+            payee_account = web3.toChecksumAddress(request.args[b'form-field'][0].decode())
+            transaction = {
+                'from': payer_account,
+                'to': payee_account,
+                'value': 100
+            }
+            web3.personal.sendTransaction(transaction, passwd)
+
+        except:
+            return wrong_address_html.encode('utf8')
+
+        return success_response_html.encode('utf8')
+
+
+if __name__ == '__main__':
+
+    log.startLogging(sys.stdout)
+
+    if len(sys.argv) != 2:
+        print("Need payer account, i.e. 22114f40ed222e83bbd88dc6cbb3b9a136299a23")
+        sys.exit(1)
+
+    payer_account = web3.toChecksumAddress(sys.argv[1])
+    passwd = getpass('please input keyphrase for your account: ')
+
+    # verify passphrase
+    if web3.personal.unlockAccount(payer_account, passwd):
+        web3.personal.lockAccount(payer_account)
+    else:
+        raise Exception('wrong passphrase')
+
+    port = int(config.account.charge_server.split(':')[-1])
+    factory = Site(FormPage())
+    reactor.listenTCP(port, factory)
+    reactor.run()
