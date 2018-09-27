@@ -9,8 +9,8 @@ from cpchain.proxy.centralnet import Slave
 from cpchain.proxy.account import set_proxy_account
 
 class Node:
-    def __init__(self, account_id=0):
-        set_proxy_account(account_id)
+    def __init__(self):
+        set_proxy_account()
 
         self.proxy_server = ProxyServer()
         self.file_server = FileServer()

@@ -2,11 +2,16 @@ import glob
 import os
 import os.path as osp
 import json
+import logging
+
 from datetime import datetime
-from eth_account import Account as eth_account
+from getpass import getpass
 
 from cpchain import config, crypto
 from cpchain.utils import join_with_rc
+from cpchain.chain.utils import default_w3 as web3
+
+logger = logging.getLogger(__name__)
 
 _keystore_dir = join_with_rc(config.account.keystore_dir)
 os.makedirs(_keystore_dir, exist_ok=True)
@@ -44,7 +49,14 @@ class Account:
 
 def create_account(passwd):
 
-    acct = eth_account.create()
+    acct = web3.eth.account.create()
+
+    try:
+        web3.personal.importRawKey(acct.privateKey, passwd)
+    except:
+        logger.info("account already in node's keychain")
+
+    web3.personal.unlockAccount(acct.address, passwd)
 
     # follow eth keystore naming rule
     # go-ethereum/accounts/keystore/key.go:208
@@ -59,7 +71,7 @@ def create_account(passwd):
         _keystore_dir,
         "UTC--%s--%s" % (datetime.utcnow().isoformat(), acct.address[2:].lower())
     )
-    encrypted_key = eth_account.encrypt(acct.privateKey, passwd)
+    encrypted_key = web3.eth.account.encrypt(acct.privateKey, passwd)
 
     with open(key_file, 'w') as f:
         f.write(json.dumps(encrypted_key))
@@ -67,4 +79,52 @@ def create_account(passwd):
     return Account(key_file, passwd.encode('utf8'))
 
 def import_account(key_file, passwd):
+
+    with open(key_file) as f:
+        encrypted_key = json.load(f)
+
+    private_key = web3.eth.account.decrypt(encrypted_key, passwd)
+    acct = web3.eth.account.privateKeyToAccount(private_key)
+
+    try:
+        web3.personal.importRawKey(acct.privateKey, passwd)
+    except:
+        logger.info("account already in node's keychain")
+
+    web3.personal.unlockAccount(acct.address, passwd)
+
     return Account(key_file, passwd.encode('utf8'))
+
+def get_keystore_list():
+    ptn = osp.join(_keystore_dir, 'UTC-*')
+    return glob.glob(ptn)
+
+def new_passwd():
+    i = 3
+
+    while i:
+        i -= 1
+        passwd = getpass('new key passphrase: ')
+        confirm = getpass('retype key passphrase: ')
+
+        if passwd == confirm:
+            return passwd
+        else:
+            logger.info('passphrases do not match')
+
+    raise Exception('passphrases not match more than 3 times')
+
+def set_default_account():
+    keystore_list = get_keystore_list()
+
+    if keystore_list:
+        keystore_file = keystore_list[0]
+        logger.info('import eth account from %s' % os.path.basename(keystore_file))
+        passwd = getpass('enter key passphrase: ')
+        account = import_account(keystore_file, passwd)
+    else:
+        logger.info('create an eth account')
+        passwd = new_passwd()
+        account = create_account(passwd)
+
+    return account
