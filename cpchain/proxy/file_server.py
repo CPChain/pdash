@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 class FileServerResource(Resource):
     isLeaf = True
     server_root = join_with_rc(config.proxy.server_root)
+    os.makedirs(server_root, exist_ok=True)
     proxy_db = ProxyDB()
 
     def render_GET(self, request):
