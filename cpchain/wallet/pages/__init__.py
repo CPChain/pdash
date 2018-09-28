@@ -57,6 +57,7 @@ class App:
 
     def __init__(self):
         self.main_wnd = None
+        self.username = None
         self.products_order = {}
 
     def update(self):

@@ -48,9 +48,9 @@ class MarketClient:
 
 
     @inlineCallbacks
-    def login(self):
+    def login(self, username=None):
         header = {'Content-Type': 'application/json'}
-        data = {'public_key': self.public_key}
+        data = {'public_key': self.public_key, 'username': username}
         resp = yield treq.post(url=self.url + 'account/v1/login/', headers=header, json=data,
                                persistent=False)
         confirm_info = yield treq.json_content(resp)

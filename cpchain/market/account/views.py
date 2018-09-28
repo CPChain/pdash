@@ -23,6 +23,9 @@ class UserLoginAPIView(APIView):
     def post(self, request):
         data = request.data
         public_key = data.get(PUBLIC_KEY)
+        username = data.get('username')
+        print(public_key)
+        print(username)
 
         # if is existing public key, generate verify code and put it into cache
         if WalletUser.objects.filter(public_key__exact=public_key):
@@ -32,7 +35,8 @@ class UserLoginAPIView(APIView):
             address = get_address_from_public_key_object(public_key)
             logger.info("address:%s" % address)
             WalletUser(address=address,
-                       public_key=public_key
+                       public_key=public_key,
+                       username=username
                        ).save()
             return self.generate_verify_code(public_key, is_new=True)
         except:

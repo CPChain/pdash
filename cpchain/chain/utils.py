@@ -28,7 +28,7 @@ def _set_default_w3():
     default_w3 = Web3(provider)
     default_w3.eth.defaultAccount = default_w3.eth.accounts[0]
 
-_set_default_w3()
+# _set_default_w3()
 
 
 def read_contract_interface(bin_path, contract_name):

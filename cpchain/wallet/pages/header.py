@@ -8,6 +8,8 @@ from PyQt5.QtGui import QCursor, QFont, QFontDatabase
 from cpchain.crypto import ECCipher, RSACipher, Encoder
 
 from cpchain.wallet.pages import load_stylesheet, HorizontalLine, wallet, main_wnd, get_pixm
+from cpchain.wallet.pages.login import LoginWindow
+
 
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import deferToThread
@@ -328,12 +330,12 @@ class Header(QFrame):
     def init_ui(self):
         def create_logos():
             self.logo_label = logo_label = QLabel(self)
-            pixmap = get_pixm('cpc-logo-single.png')
-            pixmap = pixmap.scaled(45, 45)
+            pixmap = get_pixm('header_logo@2x.png')# 'cpc-logo-single.png')
+            pixmap = pixmap.scaled(280, 64)
             logo_label.setPixmap(pixmap)
-            self.word_label = QLabel(self)
-            self.word_label.setText("<b>CPChain</b>")
-            self.word_label.setFont(QFont("Roman times", 25, QFont.Bold))
+            # self.word_label = QLabel(self)
+            # self.word_label.setText("<b>CPChain</b>")
+            # self.word_label.setFont(QFont("Roman times", 25, QFont.Bold))
         create_logos()
 
         def create_search_bar():
@@ -354,26 +356,26 @@ class Header(QFrame):
             self.nex_btn.setObjectName("nex_btn")
             self.nex_btn.clicked.connect(forward)
 
-            self.download_btn = QPushButton("", self)
-            self.download_btn.setObjectName("download_btn")
-            self.download_btn.clicked.connect(self.handle_download)
+            # self.download_btn = QPushButton("", self)
+            # self.download_btn.setObjectName("download_btn")
+            # self.download_btn.clicked.connect(self.handle_download)
 
-            self.upload_btn = QPushButton("", self)
-            self.upload_btn.setObjectName("upload_btn")
-            self.upload_btn.clicked.connect(self.handle_upload)
-            self.upload_btn.setCursor(QCursor(Qt.PointingHandCursor))
+            # self.upload_btn = QPushButton("", self)
+            # self.upload_btn.setObjectName("upload_btn")
+            # self.upload_btn.clicked.connect(self.handle_upload)
+            # self.upload_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
-            self.message_btn = QPushButton("", self)
-            self.message_btn.setObjectName("message_btn")
-            self.message_btn.setCursor(QCursor(Qt.PointingHandCursor))
+            # self.message_btn = QPushButton("", self)
+            # self.message_btn.setObjectName("message_btn")
+            # self.message_btn.setCursor(QCursor(Qt.PointingHandCursor))
 
             self.profile_page_btn = QPushButton("", self)
             self.profile_page_btn.setObjectName("profile_page_btn")
             self.profile_page_btn.setCursor(QCursor(Qt.PointingHandCursor))
             self.profile_page_btn.clicked.connect(self.login)
 
-            self.profile_btn = QPushButton("", self)
-            self.profile_btn.setObjectName("profile_btn")
+            # self.profile_btn = QPushButton("", self)
+            # self.profile_btn.setObjectName("profile_btn")
 
             self.minimize_btn = QPushButton("", self)
             self.minimize_btn.setObjectName("minimize_btn")
@@ -409,8 +411,8 @@ class Header(QFrame):
                 profile_menu.addAction(profile_view_act)
                 profile_menu.addAction(preference_act)
                 profile_menu.addAction(security_act)
-            create_popmenu()
-            self.profile_btn.setMenu(self.profile_menu)
+            # create_popmenu()
+            # self.profile_btn.setMenu(self.profile_menu)
 
         create_btns()
 
@@ -435,7 +437,7 @@ class Header(QFrame):
             main_layout.setContentsMargins(0, 0, 0, 0)
             main_layout.addWidget(self.logo_label)
             main_layout.addSpacing(5)
-            main_layout.addWidget(self.word_label)
+            # main_layout.addWidget(self.word_label)
             main_layout.addSpacing(30)
             main_layout.addWidget(self.prev_btn)
             main_layout.addSpacing(0)
@@ -443,15 +445,15 @@ class Header(QFrame):
             main_layout.addSpacing(28)
             main_layout.addWidget(self.search_bar)
             main_layout.addStretch(20)
-            main_layout.addWidget(self.upload_btn)
+            # main_layout.addWidget(self.upload_btn)
             main_layout.addSpacing(18)
-            main_layout.addWidget(self.message_btn)
+            # main_layout.addWidget(self.message_btn)
             main_layout.addSpacing(18)
-            main_layout.addWidget(self.download_btn)
+            # main_layout.addWidget(self.download_btn)
             main_layout.addSpacing(20)
             main_layout.addWidget(self.profile_page_btn)
             main_layout.addSpacing(8)
-            main_layout.addWidget(self.profile_btn)
+            # main_layout.addWidget(self.profile_btn)
 
             all_layout.addLayout(self.extra_layout)
             all_layout.addLayout(self.main_layout)
@@ -470,7 +472,9 @@ class Header(QFrame):
         # """)
 
     def login(self):
-        self.login_dialog = Header.LoginDialog(self)
+        # self.login_dialog = Header.LoginDialog(self)
+        wnd = LoginWindow()
+        wnd.show()
 
     def mousePressEvent(self, event):
         if event.buttons() == Qt.LeftButton:

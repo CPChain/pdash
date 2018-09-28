@@ -33,8 +33,18 @@ from cpchain.wallet.simpleqt.widgets.label import Label
 
 class FileUpload(QFrame):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, width=None, height=None, text="Drop file here or", browse_text="browse"):
         super().__init__(parent)
+        self.width = width
+        self.height = height
+        self.text = text
+        self.browse_text = browse_text
+        if self.width:
+            self.setMinimumWidth(width)
+            self.setMaximumWidth(width)
+        if self.height:
+            self.setMinimumHeight(height)
+            self.setMaximumHeight(height)
         self.setAcceptDrops(True)
         self.initUI()
 
@@ -48,13 +58,13 @@ class FileUpload(QFrame):
 
     def initUI(self):
         layout = QGridLayout(self)
-        hint = QLabel('Drop file here or')
+        hint = QLabel(self.text)
         layout.addWidget(QLabel(""), 0, 0)
 
         hbox = QHBoxLayout()
         hbox.setAlignment(Qt.AlignLeft)
         hbox.addWidget(hint)
-        self.open_text = QLabel('browse...')
+        self.open_text = QLabel(self.browse_text)
         self.open_text.setObjectName('open')
         Binder.click(self.open_text, self.onOpen)
 

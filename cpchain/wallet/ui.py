@@ -3,6 +3,7 @@
 import sys
 import os
 import logging
+import shelve
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, QVBoxLayout, QGridLayout, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel, QWidget, QLineEdit, QTableWidget, QTextEdit, QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
 from PyQt5.QtCore import Qt, QPoint, QBasicTimer
@@ -24,9 +25,15 @@ from cpchain.wallet.pages.market import MarketPage
 from cpchain.wallet.pages.detail import ProductDetail
 from cpchain.wallet.pages.purchased import PurchasedPage
 
+from cpchain.wallet.pages.login import LoginWindow
+
 
 # widgets
 from cpchain.wallet.components.sidebar import SideBar
+
+from cpchain.wallet import events
+from cpchain.wallet.simpleqt import event
+from cpchain.account import Account
 
 globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
 logger = logging.getLogger(__name__)
@@ -211,11 +218,11 @@ def initialize_system():
 
         monitor_confirmed_order = LoopingCall(wallet.chain_broker.monitor.monitor_confirmed_order)
         monitor_confirmed_order.start(30)
-    monitor_chain_event()
-
-    update = LoopingCall(app.update)
-    update.start(10)
-    app.update()
+    if hasattr(wallet, 'chain_broker'):
+        monitor_chain_event()
+        update = LoopingCall(app.update)
+        update.start(10)
+        app.update()
 
 def buildMainWnd():
     main_wnd = MainWindow(reactor)
@@ -224,18 +231,59 @@ def buildMainWnd():
     initialize_system()
     return main_wnd
 
-def login():
-    wallet.accounts.set_default_account(1)
-    wallet.market_client.account = wallet.accounts.default_account
+def __login(account=None):
+    if account is None:
+        wallet.accounts.set_default_account(1)
+        account = wallet.accounts.default_account
+    wallet.market_client.account = account
     wallet.market_client.public_key = ECCipher.serialize_public_key(wallet.market_client.account.public_key)
-    wallet.market_client.login()
+    wallet.market_client.login(app.username).addCallbacks(lambda _: event.emit(events.LOGIN_COMPLETED))
     wallet.init()
 
-if __name__ == '__main__':
+def enterPDash(account=None):
+    if app.main_wnd:
+        __login(account)
+        return
     app.router = Router
     main_wnd = buildMainWnd()
     app.main_wnd = main_wnd
 
     wallet.set_main_wnd(main_wnd)
+    __login(account)
+
+def login():
+    path = os.path.expanduser('~/.cpchain')
+    if not os.path.exists(path):
+        os.mkdir(path)
+    with shelve.open(os.path.join(path, 'account')) as file:
+        key_path = file.get('key_path')
+        key_passphrase = file.get('key_passphrase')
+        try:
+            if key_path and key_passphrase:
+                enterPDash(Account(key_path, key_passphrase))
+                return
+        except Exception as e:
+            logger.error(e)
+    logger.debug('Init')
+    wnd = LoginWindow(reactor)
+    wnd.show()
+    wallet.set_main_wnd(wnd)
+
+def save_login_info():
+    path = os.path.expanduser('~/.cpchain')
+    if not os.path.exists(path):
+        os.mkdir(path)
+    with shelve.open(os.path.join(path, 'account')) as file:
+        file['key_path'] = wallet.market_client.account.key_path
+        file['key_passphrase'] = wallet.market_client.account.key_passphrase
+
+def init_handlers():
+    event.register(events.LOGIN_COMPLETED, lambda _: save_login_info())
+
+if __name__ == '__main__':
+    app.events = events
+    app.event = event
+    app.enterPDash = enterPDash
+    init_handlers()
     login()
     reactor.run()

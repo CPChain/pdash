@@ -167,7 +167,7 @@ QPushbutton#login_btn:disabled{
 }
 
 QPushButton#profile_page_btn:pressed {
-    background: #5ca7ee;
+    /*background: #5ca7ee;*/
 }
 
 QPushButton#profile_page_btn {

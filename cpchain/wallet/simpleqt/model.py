@@ -13,7 +13,10 @@ class Model:
     def value(self, val):
         self.value_ = val
         if self.view is not None:
-            self.view.change.emit(val)
+            try:
+                self.view.change.emit(val)
+            except Exception as e:
+                self.view.signals.change.emit(val)
 
     def plain_set(self, val):
         self.value_ = val

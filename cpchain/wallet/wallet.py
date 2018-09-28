@@ -20,7 +20,8 @@ class Wallet:
         self.init()
 
     def init(self):
-        self.chain_broker = Broker(self)
+        # self.chain_broker = Broker(self)
+        pass
 
     def _initialize_system(self):
         pass
