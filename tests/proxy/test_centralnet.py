@@ -74,4 +74,4 @@ class PeerProtocolTest(unittest.TestCase):
         msg = msgpack.unpackb(data, raw=False)
         self.assertEqual(addr, self.peer_addr)
         self.assertEqual(msg['type'], 'response')
-        self.assertEqual(msg['response'], peer_id)
+        self.assertEqual(msg['response'][0], peer_id)
