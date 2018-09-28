@@ -29,7 +29,7 @@ class Builder:
 
     @operate
     def text(self, text):
-        self.widget.setText(text)
+        self.widget.setText(str(text))
     
     @operate
     def align(self, align):

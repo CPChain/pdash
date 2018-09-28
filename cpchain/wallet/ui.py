@@ -26,6 +26,7 @@ from cpchain.wallet.pages.detail import ProductDetail
 from cpchain.wallet.pages.purchased import PurchasedPage
 
 from cpchain.wallet.pages.login import LoginWindow
+from cpchain.wallet.pages.wallet import WalletPage
 
 
 # widgets
@@ -40,12 +41,13 @@ logger = logging.getLogger(__name__)
 
 class Router:
 
-    index = MarketPage
+    index = WalletPage
     back_stack = [('market_page', [], {})]
     forward_stack = []
     listener = []
 
     page = {
+        'wallet': WalletPage,
         'market_page': MarketPage,
         'my_data_tab': MyDataTab,
         'publish_product': PublishProduct,
@@ -99,6 +101,11 @@ class Router:
             Router._redirectTo(page, *args, **kwargs)
 
 sidebarMenu = [
+    {
+        'name': 'Wallet',
+        'icon': 'market@2x.png',
+        'link': 'wallet'
+    },
     {
         'name': 'Market',
         'icon': 'market@2x.png',
@@ -166,23 +173,6 @@ class MainWindow(QMainWindow):
 
         self.show()
 
-    def update_purchased_tab(self, nex_tab='downloaded'):
-
-        tab_index = self.main_tab_index['purchase_tab']
-        self.content_tabs.removeTab(tab_index)
-        for key in self.main_tab_index:
-            if self.main_tab_index[key] > tab_index:
-                self.main_tab_index[key] -= 1
-        tab_index = self.content_tabs.addTab(PurchasedTab(main_wnd.content_tabs), "")
-        self.main_tab_index['purchase_tab'] = tab_index
-        self.content_tabs.setCurrentIndex(tab_index)
-        wid = self.content_tabs.currentWidget()
-        if nex_tab == 'downloading':
-            wid.purchased_main_tab.setCurrentIndex(1)
-        elif nex_tab == 'downloaded':
-            wid.purchased_main_tab.setCurrentIndex(0)
-        else:
-            logger.debug("Wrong parameter!")
 
     def closeEvent(self, event):
         self.reactor.stop()

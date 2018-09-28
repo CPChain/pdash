@@ -24,26 +24,7 @@ class Agent:
             account = self.web3.toChecksumAddress(account)
         self.account = account or self.web3.eth.defaultAccount
 
-
-    def account_info(self):
-        return {
-            'balance': self.web3.eth.getBalance(self.account)
-        }
-
-    def claim_fetched(self, order_id,):
-        transaction = {'value': 0, 'from': self.account,}
-        transaction['gas'] = 1000000
-        tx_hash = self.contract.functions.proxyFetched(order_id).transact(transaction)
-        wait_for_transaction_receipt(self.web3, tx_hash)
-        return tx_hash
-
-    def claim_delivered(self, order_id, relay_hash, ):
-        transaction = {'value': 0, 'from': self.account, 'gas': 1000000}
-        tx_hash = self.contract.functions.proxyDelivered(relay_hash, order_id).transact(transaction)
-        wait_for_transaction_receipt(self.web3, tx_hash)
-        return tx_hash
-
-    def query_orders(self):
+    def get_all_orders(self):
         num = self.contract.call().numOrders()
         data = dict()
         for i in range(num):
@@ -62,12 +43,12 @@ class Agent:
 
     def query_order(self, order_id) -> models.OrderInfo:
         order_record = self.contract.call().orderRecords(order_id)
-        # logger.debug("Order record NO.{:d}: {record}\n".format(order_id, record=order_record))
+        logger.debug("Order record NO.{:d}: {record}\n".format(order_id, record=order_record))
         return order_record
 
     def get_order_num(self) -> "number of orders":
         order_num = self.contract.call().numOrders()
-        # logger.debug("Total number of orders: {:d}\n".format(order_num))
+        logger.debug("Total number of orders: {:d}\n".format(order_num))
         return order_num
 
     def query_dispute(self, dispute_id):
@@ -206,7 +187,7 @@ class SellerAgent(Agent):
         gas_estimate = self.contract.functions.sellerAgreeOrNot(order_id, if_agree).estimateGas(transaction)
         transaction['gas'] = gas_estimate + 10000
         tx_hash = self.contract.functions.sellerAgreeOrNot(order_id, if_agree).transact(transaction)
-        logger.debug("You are %s agree with the dispute result", if_agree)
+        logger.debug("You are {} agree with the dispute result".format(if_agree))
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 

@@ -24,8 +24,6 @@ class UserLoginAPIView(APIView):
         data = request.data
         public_key = data.get(PUBLIC_KEY)
         username = data.get('username')
-        print(public_key)
-        print(username)
 
         # if is existing public key, generate verify code and put it into cache
         if WalletUser.objects.filter(public_key__exact=public_key):
