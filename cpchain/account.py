@@ -2,11 +2,16 @@ import glob
 import os
 import os.path as osp
 import json
+import logging
+
 from datetime import datetime
-from eth_account import Account as eth_account
+from getpass import getpass
 
 from cpchain import config, crypto
 from cpchain.utils import join_with_rc
+from cpchain.chain.utils import default_w3 as web3
+
+logger = logging.getLogger(__name__)
 
 _keystore_dir = join_with_rc(config.account.keystore_dir)
 os.makedirs(_keystore_dir, exist_ok=True)
@@ -46,7 +51,14 @@ class Account:
 
 def create_account(passwd, filepath=_keystore_dir, name=None):
 
-    acct = eth_account.create()
+    acct = web3.eth.account.create()
+
+    try:
+        web3.personal.importRawKey(acct.privateKey, passwd)
+    except:
+        logger.info("account already in node's keychain")
+
+    web3.personal.unlockAccount(acct.address, passwd)
 
     if not name:
         name = "UTC--%s--%s" % (datetime.utcnow().isoformat(), acct.address[2:].lower())
@@ -64,7 +76,7 @@ def create_account(passwd, filepath=_keystore_dir, name=None):
         filepath,
         name
     )
-    encrypted_key = eth_account.encrypt(acct.privateKey, passwd)
+    encrypted_key = web3.eth.account.encrypt(acct.privateKey, passwd)
 
     with open(key_file, 'w') as f:
         f.write(json.dumps(encrypted_key))
@@ -72,4 +84,97 @@ def create_account(passwd, filepath=_keystore_dir, name=None):
     return Account(key_file, passwd.encode('utf8'))
 
 def import_account(key_file, passwd):
+
+    with open(key_file) as f:
+        encrypted_key = json.load(f)
+
+    private_key = web3.eth.account.decrypt(encrypted_key, passwd)
+    acct = web3.eth.account.privateKeyToAccount(private_key)
+
+    try:
+        web3.personal.importRawKey(acct.privateKey, passwd)
+    except:
+        logger.info("account already in node's keychain")
+
+    web3.personal.unlockAccount(acct.address, passwd)
+
     return Account(key_file, passwd.encode('utf8'))
+
+def get_keystore_list():
+    ptn = osp.join(_keystore_dir, 'UTC-*')
+    return glob.glob(ptn)
+
+def new_passwd():
+    i = 3
+
+    while i:
+        i -= 1
+        passwd = getpass('new key passphrase: ')
+        confirm = getpass('retype key passphrase: ')
+
+        if passwd == confirm:
+            return passwd
+        else:
+            logger.info('passphrases do not match')
+
+    raise Exception('passphrases not match more than 3 times')
+
+def set_default_account():
+    keystore_list = get_keystore_list()
+
+    if keystore_list:
+        keystore_file = keystore_list[0]
+        logger.info('import eth account from %s' % os.path.basename(keystore_file))
+        passwd = getpass('enter key passphrase: ')
+        account = import_account(keystore_file, passwd)
+    else:
+        logger.info('create an eth account')
+        passwd = new_passwd()
+        account = create_account(passwd)
+
+    return account
+
+def get_balance(account):
+    return web3.eth.getBalance(account)
+
+def send_tranaction(from_account, to_account, value):
+    transaction = {
+        'from': from_account,
+        'to': to_account,
+        'value': value
+    }
+
+    # TODO: should change to web3.personal.sendTransaction(transaction, passphrase) in future.
+    web3.eth.sendTransaction(transaction)
+
+def scan_transaction(start_block_id=None, end_block_id=None):
+    # scan all blocks by default
+    start_block_id = start_block_id or 0
+    end_block_id = end_block_id or web3.eth.blockNumber
+
+    transaction_records = []
+    for block_id in range(start_block_id, end_block_id + 1):
+        timestamp = web3.eth.getBlock(block_id).timestamp
+        timestamp = datetime.fromtimestamp(timestamp).isoformat()
+        transaction_cnt = web3.eth.getBlockTransactionCount(block_id)
+        for transaction_id in range(0, transaction_cnt):
+            transaction = web3.eth.getTransactionByBlock(block_id, transaction_id)
+            txhash = transaction.hash.hex()
+            to_account = transaction.to
+            # can't use transaction.from, for from is a reserverd keyword in python
+            from_account = transaction['from']
+            value = transaction.value
+            txfee = transaction.gas / transaction.gasPrice
+            # follow ethersacn.io output format
+            transaction_records.append(
+                {
+                    'txhash': txhash,
+                    'block': block_id,
+                    'date': timestamp,
+                    'from': from_account,
+                    'to': to_account,
+                    'value': value,
+                    'txfee': txfee
+                })
+
+    return transaction_records

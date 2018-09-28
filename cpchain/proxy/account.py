@@ -1,12 +1,12 @@
 from msgpack import packb, unpackb
 
-from cpchain.account import Accounts
+from cpchain.account import set_default_account
 from cpchain.crypto import ECCipher
 
-
-def set_proxy_account(index=0):
+def set_proxy_account():
     global _proxy_account # pylint: disable=global-variable-undefined
-    _proxy_account = Accounts()[index]
+
+    _proxy_account = set_default_account()
 
 def get_proxy_id():
     return ECCipher.get_address_from_public_key(

@@ -2,7 +2,7 @@ import logging
 import time
 
 from hashlib import sha1
-from random import randint, choice
+from random import randint
 
 import socket
 
@@ -143,18 +143,14 @@ class PeerProtocol(protocol.DatagramProtocol):
 
         elif msg['type'] == 'pick_peer':
 
-            pick_peer = None
-
-            if self.peers:
-                pick_peer = choice(list(self.peers))
-
+            peer_list = list(self.peers)
             response = {
                 'type': 'response',
                 'tid': tid,
-                'response': pick_peer
+                'response': peer_list
             }
 
-            logger.debug("pick peer %s to %s" % (str(pick_peer), str(addr)))
+            logger.debug("pick peer %s to %s" % (str(peer_list), str(addr)))
             self.send_msg(response, addr)
 
         elif msg['type'] == 'response':

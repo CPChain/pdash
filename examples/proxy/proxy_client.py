@@ -55,6 +55,7 @@ def seller_request():
     module = importlib.import_module(storage_plugin + storage.type)
     s = module.Storage()
     param = yield s.user_input_param()
+    param['proxy_id'] = param['proxy_id'][0] # should be selected by UI from proxy list
     storage.path = yield s.upload_data(None, param)
 
     # proxy storage
@@ -64,6 +65,7 @@ def seller_request():
     # module = importlib.import_module(storage_plugin + storage.type)
     # s = module.Storage()
     # param = yield s.user_input_param()
+    # param['proxy_id'] = param['proxy_id'][0] # should be selected by UI from proxy list
     # storage.path = yield s.upload_data('/bin/bash', param)
 
     # ipfs storage
@@ -92,7 +94,8 @@ def seller_request():
         sign_message.data
         )
 
-    proxy_id = yield pick_proxy()
+    proxy_list = yield pick_proxy()
+    proxy_id = proxy_list[0] # should be selected by UI from proxy list
 
     if proxy_id:
         error, AES_key, urls = yield start_proxy_request(sign_message, proxy_id)
@@ -122,7 +125,8 @@ def buyer_request():
         sign_message.data
         )
 
-    proxy_id = yield pick_proxy()
+    proxy_list = yield pick_proxy()
+    proxy_id = proxy_list[0] # should be selected by UI from proxy list
 
     if proxy_id:
         error, AES_key, urls = yield start_proxy_request(sign_message, proxy_id)

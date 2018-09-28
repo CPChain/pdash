@@ -2,6 +2,7 @@
 #     python3 -m twisted.trial ./test_server.py
 
 import os
+import json
 
 from twisted.test import proto_helpers
 from twisted.trial import unittest
@@ -10,7 +11,7 @@ from twisted.internet.protocol import Factory
 
 from cpchain.utils import reactor, join_with_rc
 
-from cpchain.account import Accounts
+from cpchain.account import Account
 from cpchain.crypto import ECCipher
 
 from cpchain.proxy import chain
@@ -23,9 +24,15 @@ from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.db import ProxyDB
 from cpchain import config
 
-accounts = Accounts()
-buyer_account = accounts[0]
-seller_account = accounts[1]
+encrypted_key = {"address": "757a2b31af15fd539f3a461a15d5b95ad33b4eee", "id": "30d6b02e-d39c-4d9e-a580-8752850a8324", "version": 3, "crypto": {"kdf": "pbkdf2", "cipherparams": {"iv": "d2418cff6a0f23871fe21b288fe5fe18"}, "kdfparams": {"dklen": 32, "prf": "hmac-sha256", "salt": "34281e437ca600e159d8f7533ffc0e3f", "c": 1000000}, "mac": "ce0eaa5e65b57a2c224ff71437b55d3ca7c739a646723a7e09c916bb3990e319", "ciphertext": "b47aed1b93acaa270d14f3dce9084cb073e67dbe687340f75845817d4668e6fe", "cipher": "aes-128-ctr"}}
+
+keystore = '/tmp/keystore'
+
+with open(keystore, 'w') as f:
+    f.write(json.dumps(encrypted_key))
+
+buyer_account = Account(keystore, b'passwd')
+seller_account = Account(keystore, b'passwd')
 
 buyer_private_key = buyer_account.private_key  #object type
 buyer_public_key = ECCipher.serialize_public_key(
@@ -54,7 +61,7 @@ def fake_seller_message():
     seller_data.AES_key = b'AES_key'
     storage = seller_data.storage
     storage.type = 'template'
-    storage.file_uri = 'fake_file_uri'
+    storage.path = 'fake_file_uri'
 
     return message
 
