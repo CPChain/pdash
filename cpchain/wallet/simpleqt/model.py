@@ -38,3 +38,9 @@ class ListModel(Model):
         if self.index == -1:
             return None
         return self.value[self.index]
+    
+    def append(self, val):
+        self.value_.append(val)
+        if self.view:
+            if self.view.change:
+                self.view.change.emit(val)

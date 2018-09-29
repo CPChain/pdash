@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QLabel
+from PyQt5.QtWidgets import QLabel, QFrame
 from functools import wraps
 import sys
 sys.path.append('.')
@@ -17,10 +17,20 @@ def operate(func):
         return self
     return wrapper
 
+class Line(QFrame):
+    def __init__(self, parent=None, wid=2, color="#ccc"):
+        super().__init__(parent)
+        self.parent = parent
+        self.wid = wid
+        self.setFrameShape(QFrame.HLine)
+        self.setFrameShadow(QFrame.Plain)
+        self.setLineWidth(self.wid)
+        self.setStyleSheet("QFrame{{ border-top: {}px solid {};}}".format(wid, color))
+
 class Builder:
 
-    def __init__(self, widget=QLabel):
-        self.widget = widget("")
+    def __init__(self, widget=QLabel, *args, **kw):
+        self.widget = widget("", *args, **kw)
 
     @operate
     def model(self, model):

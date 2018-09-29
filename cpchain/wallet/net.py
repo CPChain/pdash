@@ -346,10 +346,24 @@ class MarketClient:
         return comment_info['data']
 
     @inlineCallbacks
-    def products(self):
+    def products(self, search=None):
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
                   'Content-Type': 'application/json'}
-        url = utils.build_url(self.url + "product/v1/allproducts/", {})
+        query = {}
+        if search:
+            query['keyword'] = search
+        url = utils.build_url(self.url + "product/v1/allproducts/", query)
+        logger.debug(url)
+        resp = yield treq.get(url, headers=header)
+        comment_info = yield treq.json_content(resp)
+        logger.debug('query by following tag confirm: %s', len(comment_info))
+        return comment_info
+    
+    @inlineCallbacks
+    def myproducts(self):
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        url = utils.build_url(self.url + "product/v1/allproducts/my_products/", {})
         logger.debug(url)
         resp = yield treq.get(url, headers=header)
         comment_info = yield treq.json_content(resp)

@@ -15,6 +15,7 @@ from cpchain.market.market.utils import *
 from cpchain.market.product.models import WalletMsgSequence
 from cpchain.market.product.serializers import *
 from cpchain.market.transaction.models import ProductSaleStatus
+from cpchain.market.market.utils import get_header, HTTP_MARKET_TOKEN
 
 import traceback
 import os
@@ -278,7 +279,6 @@ class ProductListViewSet(mixins.ListModelMixin,
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    # permission_classes = (,)
 
     def create(self, request):
         public_key = get_header(self.request)
@@ -344,6 +344,18 @@ class ProductListViewSet(mixins.ListModelMixin,
         except Exception as e:
             logger.exception()
         return Response(status=404)
+
+    @list_route(methods=['GET'])
+    def my_products(self, request):
+        pk = get_header(request)
+        if not pk:
+            return Response(data=[])
+        queryset = Product.objects.filter(owner_address=pk)
+        queryset = queryset.order_by('-created')
+        serializer = ProductSerializer(queryset, many=True)
+        data = serializer.data
+        return Response(data=data)
+
 
     def list(self, request, *args, **kwargs):
         """

@@ -250,13 +250,26 @@ class ProductDetail(Page):
                 height += 200
 
         # Order Detail
+        order = {
+            'order_id': 1
+        }
         if order:
             order_header = DetailHeader('Order Detail')
             layout.addWidget(order_header)
+            self.data_type = 'batch'
             order_detail = OrderDetail(order_time=Model("2018/6/15  08:40:39"),
-                                       status=Model("Delivered on May 2, 08:09:08"),
-                                       order_id=order["order_id"],
-                                       name=self.name.value)
+                                        status=Model("Delivered on May 2, 08:09:08"),
+                                        order_id=order["order_id"],
+                                        name=self.name.value,
+                                        data_type=self.data_type)
+            layout.addWidget(order_detail)
+            height += 200
+            self.data_type = 'stream'
+            order_detail = OrderDetail(order_time=Model("2018/6/15  08:40:39"),
+                                        status=Model("Delivered on May 2, 08:09:08"),
+                                        order_id=order["order_id"],
+                                        name=self.name.value,
+                                        data_type=self.data_type)
             layout.addWidget(order_detail)
 
             height += 200

@@ -24,10 +24,8 @@ class Input(QLineEdit):
 
     class Builder(Builder):
         
-        def __init__(self, widget=None):
-            if not widget:
-                widget = Input
-            self.widget = widget()
+        def __init__(self, *args, **kw):
+            super().__init__(Input, *args, **kw)
         
         @operate
         def placeholder(self, text):

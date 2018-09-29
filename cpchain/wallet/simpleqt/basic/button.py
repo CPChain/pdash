@@ -13,13 +13,22 @@ class Button(QPushButton):
     
     class Builder(Builder):
         
-        def __init__(self):
-            super().__init__(Button)
+        def __init__(self, *args, **kw):
+            super().__init__(Button, *args, **kw)
         
         @operate
         def style(self, _type):
             if _type == 'primary':
                 self.widget.setStyleSheet(self.widget.primary_style())
+        
+        @operate
+        def width(self, width):
+            self.widget.setMinimumWidth(width)
+            self.widget.setMaximumWidth(width)
+
+        @operate
+        def height(self, height):
+            self.widget.setMinimumHeight(height)
 
     def primary_style(self):
         return self.blank_style() + """

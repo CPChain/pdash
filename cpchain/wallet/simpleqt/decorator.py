@@ -1,5 +1,5 @@
 
-from .model import Model
+from .model import Model, ListModel
 from functools import wraps
 from twisted.internet.defer import inlineCallbacks
 
@@ -60,7 +60,8 @@ class component:
             self = args[0]
             data = func(*args, **kwargs)
             for key in data:
-                setattr(self, key, Model(data[key]))
+                model = Model if not isinstance(data[key], list) else ListModel
+                setattr(self, key, model(data[key]))
         return wrapper
 
     @staticmethod

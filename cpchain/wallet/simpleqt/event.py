@@ -8,7 +8,9 @@ from twisted.internet import reactor
 logger = logging.getLogger(__name__)
 
 class Event:
-    pass
+    
+    def __init__(self, data=None):
+        self.data = data
 
 # Event Queue
 event_queue = Queue()
@@ -16,7 +18,9 @@ event_queue = Queue()
 # Handler
 handler_map = dict()
 
-def emit(event):
+def emit(event, data=None):
+    if event:
+        event.data = data
     event_queue.put(event)
 
 def register(event, handler):

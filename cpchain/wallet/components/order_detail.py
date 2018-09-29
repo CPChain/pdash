@@ -46,18 +46,21 @@ from cpchain.wallet.simpleqt.model import Model
 
 from cpchain.wallet.components.sales import Operator
 
+from cpchain.wallet.components.stream_upload import StreamUploadedDialog, PreviewDialog
+
 from datetime import datetime as dt
 
 logger = logging.getLogger(__name__)
 
 class OrderDetail(QWidget):
 
-    def __init__(self, order_time, status, order_id, name=None, storage_path=None):
+    def __init__(self, order_time, status, order_id, name=None, storage_path=None, data_type='batch'):
         self.order_time = order_time
         self.status = status
         self.order_id = order_id
         self.operator = Operator()
         self.storage_path = storage_path
+        self.data_type = data_type
         self.name = name
         super().__init__()
         self.ui()
@@ -105,26 +108,49 @@ class OrderDetail(QWidget):
         btm.setAlignment(Qt.AlignLeft)
         btm.setContentsMargins(0, 0, 0, 0)
         btm.setSpacing(15)
-        ok = QPushButton('Download')
-        ok.setObjectName('pinfo_publish_btn')
-        btm.addWidget(ok)
-        ok.clicked.connect(self.download)
-        cancel = QPushButton('Confirm')
-        cancel.setObjectName('pinfo_cancel_btn')
-        cancel.clicked.connect(self.confirm)
-        btm.addWidget(cancel)
-        btm.addStretch(1)
-        layout.addLayout(btm)
 
-        storage = QLabel('Open Storage Path…')
-        storage.setStyleSheet("""
-            margin-top: 12px;
-            font-family:SFUIDisplay-Medium;
-            font-size:14px;
-            color:#0073df;
-        """)
-        Binder.click(storage, self.select_storage_path)
-        layout.addWidget(storage)
+
+        if self.data_type == 'batch':
+            ok = QPushButton('Download')
+            ok.setObjectName('pinfo_publish_btn')
+            btm.addWidget(ok)
+            ok.clicked.connect(self.download)
+            cancel = QPushButton('Confirm')
+            cancel.setObjectName('pinfo_cancel_btn')
+            cancel.clicked.connect(self.confirm)
+            btm.addWidget(cancel)
+            btm.addStretch(1)
+            layout.addLayout(btm)
+
+            storage = QLabel('Open Storage Path…')
+            storage.setStyleSheet("""
+                margin-top: 12px;
+                font-family:SFUIDisplay-Medium;
+                font-size:14px;
+                color:#0073df;
+            """)
+            Binder.click(storage, self.select_storage_path)
+            layout.addWidget(storage)
+        else:
+            ok = QPushButton('Get Streaming ID')
+            ok.setObjectName('pinfo_stream_btn')
+            def openStreamID(_):
+                dlg = StreamUploadedDialog()
+                dlg.show()
+            ok.clicked.connect(openStreamID)
+            btm.addWidget(ok)
+            preview = QPushButton('Preview')
+            preview.setObjectName('pinfo_cancel_btn')
+            def openPreview(_):
+                dlg = PreviewDialog()
+                dlg.show()
+            preview.clicked.connect(openPreview)
+            btm.addWidget(preview)
+            confirm = QPushButton('Confirm')
+            confirm.setObjectName('pinfo_cancel_btn')
+            btm.addWidget(confirm)
+            btm.addStretch(1)
+            layout.addLayout(btm)
 
         self.setLayout(layout)
         self.setStyleSheet("""
@@ -173,7 +199,7 @@ class OrderDetail(QWidget):
                 color: #8cb8ea;
             }
 
-            QPushButton#pinfo_publish_btn{
+            QPushButton#pinfo_publish_btn, QPushButton#pinfo_stream_btn{
                 padding-left: 10px;
                 padding-right: 10px;
                 border: 1px solid #3173d8; 
@@ -186,18 +212,23 @@ class OrderDetail(QWidget):
                 background: #3173d8;
             }
 
-            QPushButton#pinfo_publish_btn:hover{
+            QPushButton#pinfo_publish_btn:hover, QPushButton#pinfo_stream_btn:hover{
                 background: #3984f7; 
                 border: 1px solid #3984f7;
             }
 
-            QPushButton#pinfo_publish_btn:pressed{
+            QPushButton#pinfo_publish_btn:pressed, QPushButton#pinfo_stream_btn:pressed{
                 border: 1px solid #2e6dcd; 
                 background: #2e6dcd;
             }
 
-            QPushbutton#pinfo_publish_btn:disabled{
+            QPushbutton#pinfo_publish_btn:disabled, QPushButton#pinfo_stream_btn:disabled{
                 border: 1px solid #8cb8ea; 
                 background: #98b9eb;
+            }
+
+            QPushButton#pinfo_stream_btn {
+                min-width: 120px;
+                max-width: 120px;
             }
         """)

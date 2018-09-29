@@ -7,6 +7,7 @@ import shelve
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, QVBoxLayout, QGridLayout, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel, QWidget, QLineEdit, QTableWidget, QTextEdit, QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
 from PyQt5.QtCore import Qt, QPoint, QBasicTimer
+from PyQt5 import QtCore
 
 from cpchain.proxy.client import pick_proxy
 
@@ -26,7 +27,7 @@ from cpchain.wallet.pages.detail import ProductDetail
 from cpchain.wallet.pages.purchased import PurchasedPage
 
 from cpchain.wallet.pages.login import LoginWindow
-from cpchain.wallet.pages.wallet import WalletPage
+from cpchain.wallet.pages.wallet_page import WalletPage
 
 
 # widgets
@@ -103,7 +104,7 @@ class Router:
 sidebarMenu = [
     {
         'name': 'Wallet',
-        'icon': 'market@2x.png',
+        'icon': 'wallet@2x.png',
         'link': 'wallet'
     },
     {
@@ -122,10 +123,17 @@ sidebarMenu = [
 ]
 
 class MainWindow(QMainWindow):
+    
+    def search_handler(self, val):
+        app.router.redirectTo('market_page', search=val)
+
+    search_signal = QtCore.pyqtSignal(str, name="modelChanged")
+
     def __init__(self, reactor):
         super().__init__()
         self.reactor = reactor
         self.body = None
+        self.search_signal.connect(self.search_handler)
         self.init_ui()
         self.content_tabs = None
 
@@ -217,8 +225,6 @@ def initialize_system():
 def buildMainWnd():
     main_wnd = MainWindow(reactor)
     _handle_keyboard_interrupt()
-
-    initialize_system()
     return main_wnd
 
 def __login(account=None):
@@ -229,6 +235,7 @@ def __login(account=None):
     wallet.market_client.public_key = ECCipher.serialize_public_key(wallet.market_client.account.public_key)
     wallet.market_client.login(app.username).addCallbacks(lambda _: event.emit(events.LOGIN_COMPLETED))
     wallet.init()
+    initialize_system()
 
 def enterPDash(account=None):
     if app.main_wnd:
@@ -267,12 +274,20 @@ def save_login_info():
         file['key_path'] = wallet.market_client.account.key_path
         file['key_passphrase'] = wallet.market_client.account.key_passphrase
 
+
+def search(event):
+    search = event.data
+    wallet.main_wnd.search_signal.emit(search)
+    
+
 def init_handlers():
     event.register(events.LOGIN_COMPLETED, lambda _: save_login_info())
+    event.register(events.SEARCH, search)
 
 if __name__ == '__main__':
     app.events = events
     app.event = event
+    wallet.app = app
     app.enterPDash = enterPDash
     init_handlers()
     login()

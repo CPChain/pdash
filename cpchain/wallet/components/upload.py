@@ -30,6 +30,7 @@ from cpchain.wallet.components.dialog import Dialog
 from cpchain.wallet.simpleqt.decorator import component
 from cpchain.wallet.simpleqt.widgets import Input, ComboBox
 from cpchain.wallet.simpleqt.widgets.label import Label
+from cpchain.wallet.components.gif import LoadingGif
 
 class FileUpload(QFrame):
 
@@ -271,15 +272,16 @@ class UploadDialog(Dialog):
         ok.setObjectName('pinfo_publish_btn')
         ok.clicked.connect(self.okListener)
         bottom.addWidget(ok)
+
+        self.loading = LoadingGif()
+        self.ok = ok
+        self.loading.hide()
+        bottom.addWidget(self.loading)
         layout.addLayout(bottom)
         return layout
 
     def closeListener(self, _):
         self.close()
-
-    def uploadFile(self, file, _type, dst, dataname):
-        file_id = fs.upload_file(file, _type, dst, dataname)
-        return file_id
 
     def okListener(self, _):
         # Find All needed values
@@ -302,7 +304,9 @@ class UploadDialog(Dialog):
         if not file:
             warning(self, "Please drag a file or open a file first")
             return
-        deferToThread(self.uploadFile, file, storage['type'], dst, dataname).addCallbacks(self.handle_ok_callback)
+        self.loading.show()
+        self.ok.hide()
+        deferToThread(fs.upload_file, file, storage['type'], dst, dataname).addCallbacks(self.handle_ok_callback)
 
 
     def handle_ok_callback(self, file_id):
@@ -318,6 +322,8 @@ class UploadDialog(Dialog):
         encrypted_key = Encoder.bytes_to_base64_str(encrypted_key)
         d = wallet.market_client.upload_file_info(hashcode, path, size, product_id, remote_type, remote_uri, name, encrypted_key)
         def handle_upload_resp(status):
+            self.loading.hide()
+            self.ok.show()
             try:
                 if status == 1:
                     QMessageBox.information(self, "Tips", "Uploaded successfuly")
@@ -328,6 +334,7 @@ class UploadDialog(Dialog):
                     QMessageBox.information(self, "Tips", "Uploaded fail")
                     self.close()
             except Exception as e:
+                logger.error(e)
                 QMessageBox.information(self, "Tips", "Uploaded fail")
                 self.close()
         d.addCallback(handle_upload_resp)

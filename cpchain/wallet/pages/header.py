@@ -238,10 +238,11 @@ class Header(QFrame):
             main_wnd.findChild(QWidget, 'search_tab').update_item(item, promo)
 
         def search_act(self):
-            content_tabs = main_wnd.content_tabs
-            content_tabs.addTab(SearchProductTab(content_tabs, str(self.text())), "")
-            wid = content_tabs.findChild(QWidget, "search_tab")
-            content_tabs.setCurrentWidget(wid)
+            # content_tabs = main_wnd.content_tabs
+            # content_tabs.addTab(SearchProductTab(content_tabs, str(self.text())), "")
+            # wid = content_tabs.findChild(QWidget, "search_tab")
+            # content_tabs.setCurrentWidget(wid)
+            wallet.app.event.emit(wallet.app.events.SEARCH, self.text())
 
 
     class LoginDialog(QDialog):

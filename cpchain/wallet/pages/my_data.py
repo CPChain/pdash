@@ -30,12 +30,14 @@ from cpchain.wallet.components.table import Table
 from cpchain.wallet.components.product import Product
 from cpchain.wallet.components.product_list import ProductList
 from cpchain.wallet.components.upload import UploadDialog
+from cpchain.wallet.components.stream_upload import StreamUploadDialog
 from cpchain.wallet.components.loading import Loading
 from cpchain.wallet.pages.publish import PublishProduct
 
-from cpchain.wallet.simpleqt.page import Page
+from cpchain.wallet.simpleqt import Page
 from cpchain.wallet.simpleqt.decorator import page
 from cpchain.wallet.simpleqt.widgets.label import Label
+from cpchain.wallet.simpleqt.basic import Builder, Button, Line
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +52,7 @@ class MyDataTab(Page):
     @page.create
     def create(self):
         # My Products
-        wallet.market_client.products().addCallbacks(self.renderProducts)
+        wallet.market_client.myproducts().addCallbacks(self.renderProducts)
 
     @page.method
     def renderProducts(self, products):
@@ -68,34 +70,18 @@ class MyDataTab(Page):
     def data(self):
         return {
             'products': [],
-            'table_data': []
+            'table_data': [],
+            'stream_data': [
+
+            ]
         }
 
     @page.ui
-    def ui(self):
-        btn_group = [
-            {
-                'id': 'upload_btn',
-                'name': 'Upload Batch Data',
-                'listener': self.onClickUpload
-            }
-        ]
-        def buildBtnLayout(btn_group):
-            btn_layout = QHBoxLayout(self)
-            btn_layout.setAlignment(Qt.AlignLeft)
-            for item in btn_group:
-                btn = QPushButton(item['name'])
-                btn.setObjectName(item['id'])
-                btn.setMaximumWidth(200)
-                btn.clicked.connect(item['listener'])
-                btn_layout.addWidget(btn)
-                btn_layout.addSpacing(5)
-            return btn_layout
-
+    def ui(self, vLayout):
         def buildTable():
             header = {
                 'headers': ['Name', 'Location', 'Size', 'Status'],
-                'width': [252, 140, 140, 138]
+                'width': [282, 170, 170, 54]
             }
             data = fs.get_file_list()
             self.table_data.value = data
@@ -119,7 +105,7 @@ class MyDataTab(Page):
 
             table = Table(self, header, self.table_data, itemHandler, sort=None)
             table.setObjectName('my_table')
-            table.setFixedWidth(700)
+            table.setFixedWidth(800)
             if len(self.table_data.value) > 0:
                 table.setMinimumHeight(180)
             else:
@@ -129,104 +115,135 @@ class MyDataTab(Page):
         self.table = table
         self.buildTable = buildTable
 
-        main_layout = QVBoxLayout(self)
-        main_layout.setAlignment(Qt.AlignTop)
+        def buildStreamTable():
+            header = {
+                'headers': ['Name', 'Location', 'Status'],
+                'width': [327, 295, 54]
+            }
+            data = fs.get_file_list()
+            self.stream_data.value = data
+            def buildProductClickListener(product_id):
+                def listener(event):
+                    app.router.redirectTo('publish_product', product_id=product_id, type_='stream')
+                return listener
+            def itemHandler(data):
+                items = []
+                items.append(data.name)
+                items.append(data.remote_type)
+                status = data.is_published
+                wid = QLabel('Published')
+                if not status:
+                    wid.setText('Publish as product')
+                    wid.setStyleSheet("QLabel{color: #006bcf;}")
+                    Binder.click(wid, buildProductClickListener(data.id))
+                items.append(wid)
+                return items
 
-        # Button Group
-        main_layout.addLayout(buildBtnLayout(btn_group))
-        main_layout.addSpacing(2)
+            table = Table(self, header, self.stream_data, itemHandler, sort=None)
+            table.setObjectName('my_table')
+            table.setFixedWidth(800)
+            if len(self.table_data.value) > 0:
+                table.setMinimumHeight(180)
+            else:
+                table.setMaximumHeight(40)
+            return table
+        stream_table = buildStreamTable()
+        self.stream_table = stream_table
+        self.buildStreamTable = buildStreamTable
+        
+        self.addH(Button.Builder(width=150, height=30)
+                        .style('primary').name('btn')
+                        .text('Upload Batch Data')
+                        .click(self.onClickUpload).build(), 6)
+        self.addH(Button.Builder(width=180, height=30)
+                        .name('btn')
+                        .text('Upload Streaming Data')
+                        .click(self.onClickStreamUpload).build())
+        self.add(space=10)
 
         # Line
-        main_layout.addWidget(HorizontalLine(self, 2))
+        self.add(Line(wid=1, color="#dadada"))
 
         # My Product
-        my_product_label = QLabel('My Product')
-        my_product_label.setObjectName('label_hint')
-        main_layout.addWidget(my_product_label)
+        self.add(Builder().text('My Product').name('label_hint').build())
 
         # Product List
-        pdsWidget = ProductList(self.products)
-        pdsWidget.setMinimumHeight(250)
-        main_layout.addWidget(pdsWidget)
+        pdsWidget = ProductList(self.products, scroll=False)
+        width = 800
+        pdsWidget.setMinimumWidth(width)
+        pdsWidget.setMaximumWidth(width)
+        self.add(pdsWidget)
 
         # Batch Data
-        batch_label = QLabel('Batch Data')
-        batch_label.setObjectName('label_hint')
-        main_layout.addWidget(batch_label)
-
-        main_layout.addWidget(table)
+        self.add(Builder().text('Batch Data').name('label_hint').build())
+        self.add(table)
 
         if len(self.table_data.value) == 0:
             # No Data
-            nodata = QLabel('No Data!')
-            nodata.setObjectName('no_data')
-            main_layout.addWidget(nodata)
+            self.add(Builder().text('0 Batch Data!').name('no_data').build())
+        
+        # Stream Data
+        self.add(Builder().text('Streaming Data').name('label_hint').build())
+        self.add(stream_table)
 
-        main_layout.addStretch(1)
-        self.main_layout = main_layout
+        if len(self.stream_data.value) == 0:
+            # No Data
+            self.add(Builder().text('0 Streaming Data!').name('no_data').build())
+        
 
-        widget = QWidget()
-        widget.setObjectName('parent_widget')
-        widget.setLayout(main_layout)
-        widget.setFixedWidth(750)
-        widget.setStyleSheet("""
-            QLabel#no_data {
-                text-align: center;
-                color: #aaa;
-                margin-left: 310px;
-            }
-            QWidget#parent_widget{background: white;}
-            QPushButton#upload_btn{
-                padding-left: 16px;
-                padding-right: 16px;
-                border: 1px solid #3173d8; 
-                border-radius: 3px;
-                color: #ffffff;
-                min-height: 30px;
-                max-height: 30px;
-                background: #3173d8;
-                margin-left: 20px;
-                /*background:linear-gradient(-120deg, #119bf0 1%, #167ce9 100%);*/
-                /*box-shadow:0 2px 7px 0 rgba(0,0,0,0.10);*/
-            }
-
-            QPushButton#upload_btn:hover{
-                background: #3984f7; 
-                border: 1px solid #3984f7;
-            }
-
-            QPushButton#upload_btn:pressed{
-                border: 1px solid #2e6dcd; 
-                background: #2e6dcd;
-            }
-
-            QPushbutton#upload_btn:disabled{
-                border: 1px solid #8cb8ea; 
-                background: #98b9eb;
-            }
-            
-        """)
-
-        # Scroll Area Properties
-        scroll = QScrollArea()
-        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(widget)
-
-        vLayout = QVBoxLayout(self)
-        vLayout.addWidget(scroll)
-        load_stylesheet(self, "my_data.qss")
         return vLayout
+    
+    def style(self):
+        margin_left = '20'
+        return """
+        QPushButton#btn {
+            margin-top: 20px;
+            margin-left: 20px;
+        }
+        QLabel#no_data {
+            text-align: center;
+            color: #aaa;
+            margin-left: 310px;
+        }
+
+        QLabel#label_hint {
+            font-family:SFUIDisplay-Regular;
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            margin-left: 20px;
+        }
+
+        QTableWidgetItem#publishText {
+            color: blue;
+        }
+        """
 
     def onClickUpload(self):
         if wallet.market_client.token == '':
             QMessageBox.information(self, "Tips", "Please login first !")
             return
         def oklistener():
-            self.main_layout.removeWidget(self.table)
-            self.table.deleteLater()
-            self.table = self.buildTable()
-            self.main_layout.addWidget(self.table)
-        upload = UploadDialog(self, oklistener)
-        upload.show()
+            app.router.redirectTo('my_data_tab')
+            # self.main_layout.removeWidget(self.table)
+            # self.table.deleteLater()
+            # self.table = self.buildTable()
+            # self.main_layout.addWidget(self.table)
+            self.upload.close()
+        self.upload = UploadDialog(self, oklistener)
+        self.upload.show()
+    
+    def onClickStreamUpload(self):
+        if wallet.market_client.token == '':
+            QMessageBox.information(self, "Tips", "Please login first !")
+            return
+        def oklistener():
+            app.router.redirectTo('my_data_tab')
+            # self.main_layout.removeWidget(self.table)
+            # self.table.deleteLater()
+            # self.table = self.buildTable()
+            # self.main_layout.addWidget(self.table)
+            self.upload.close()
+        self.upload = StreamUploadDialog(self, oklistener)
+        self.upload.show()

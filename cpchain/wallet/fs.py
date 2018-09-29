@@ -24,6 +24,7 @@ def get_file_list():
 
 
 def get_file_by_id(file_id):
+    print('》》》》》》》》》', file_id)
     return get_session().query(FileInfo).filter(FileInfo.id == file_id).all()[0]
 
 
@@ -135,7 +136,7 @@ def upload_file(file_path, storage_type, dest, data_name=None):
         "cpchain.storage-plugin." + storage_type
     )
     storage = storage_module.Storage()
-    file_uri = yield storage.upload_data(encrypted_path, dest)  # d_upload file_uri: string save directly
+    file_uri = storage.upload_data(encrypted_path, dest)  # d_upload file_uri: string save directly
     file_name = list(os.path.split(file_path))[-1]
     file_size = os.path.getsize(file_path)
     logger.debug('start to write data into database')

@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMessageBox, QScrollArea, QVBoxLayout, QWidget, QHBoxLayout
+from PyQt5.QtWidgets import QMessageBox, QScrollArea, QVBoxLayout, QWidget, QHBoxLayout, QFrame
 from PyQt5.QtCore import Qt
 from PyQt5 import QtCore
 import sys
@@ -12,21 +12,35 @@ class Page(QScrollArea):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setContentsMargins(0, 0, 0, 0)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setWidgetResizable(True)
+
         self.parent = parent
         self.init()
         self.data()
         self.create()
+        
         main = self.__ui()
         main.setContentsMargins(0, 0, 0, 0)
-        self.layout = main
+
+        self._layout = main
         self.hlayout = None
-        self.layout.setAlignment(Qt.AlignCenter)
-        self.ui(self.layout)
-        main.addLayout(self.layout)
-        self.setLayout(main)
+        self._layout.setAlignment(Qt.AlignCenter)
+        self.ui(self._layout)
+        main.addLayout(self._layout)
+
+
         __style = self.__style()
         style = self.style()
         self.setStyleSheet(__style + style)
+        
+        wid = QWidget()
+        wid.setStyleSheet("background: #fafafa;")
+        wid.setLayout(main)
+        wid.setContentsMargins(0, 0, 0, 0)
+        self.setWidget(wid)
     
     def init(self):
         pass
@@ -42,6 +56,9 @@ class Page(QScrollArea):
     
     def __style(self):
         return """
+            QScrollArea {
+                background: #fafafa;
+            }
             QLabel {
                 font-family:SFUIDisplay-Regular;
             }
@@ -53,21 +70,24 @@ class Page(QScrollArea):
     def ui(self, layout):
         pass
     
-    def add(self, elem, space=None):
-        if isinstance(elem, QWidget):
-            self.layout.addWidget(elem)
-        else:
-            self.layout.addLayout(elem)
+    def add(self, elem=None, space=None):
+        if elem:
+            if isinstance(elem, QWidget):
+                self._layout.addWidget(elem)
+            else:
+                self._layout.addLayout(elem)
         if space:
             self.spacing(space)
         self.hlayout = None
     
-    def addH(self, elem, space=None):
+    def addH(self, elem, space=None, align=None):
         if not self.hlayout:
             self.hlayout = QHBoxLayout()
+            self.hlayout.setSpacing(0)
             self.hlayout.setAlignment(Qt.AlignLeft)
-            self.layout.addLayout(self.hlayout)
-
+            self._layout.addLayout(self.hlayout)
+        if align:
+            self.hlayout.setAlignment(align)
         if isinstance(elem, QWidget):
             self.hlayout.addWidget(elem)
         else:
@@ -76,13 +96,14 @@ class Page(QScrollArea):
             self.hlayout.addSpacing(space)
     
     def spacing(self, space):
-        self.layout.addSpacing(space)
+        self._layout.addSpacing(space)
 
 def validate(self, validator, error, *args):
     if not validator(*args):
         QMessageBox.information(self, "Error", error)
         return False
     return True
+
 
 from .model import Model
 

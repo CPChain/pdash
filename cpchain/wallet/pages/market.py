@@ -41,14 +41,15 @@ logger = logging.getLogger(__name__)
 
 class MarketPage(Page):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, search=None):
         self.parent = parent
+        self.search = search
         super().__init__(parent)
         self.setObjectName("market_page")
 
     @page.create
     def create(self):
-        wallet.market_client.products().addCallbacks(self.renderProducts)
+        wallet.market_client.products(self.search).addCallbacks(self.renderProducts)
 
     @page.method
     def renderProducts(self, products):

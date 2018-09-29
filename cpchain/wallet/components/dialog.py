@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QDialog, QWidget, QDesktopWidget
+from PyQt5.QtWidgets import QApplication, QScrollArea, QLabel, QVBoxLayout, QDialog, QWidget, QDesktopWidget
 from PyQt5.QtCore import Qt, QEvent
 
 class Dialog(QDialog):
@@ -21,6 +21,7 @@ class Dialog(QDialog):
         self.main = self.ui(widget)
         widget.setObjectName('main')
         widget.setLayout(self.main)
+
         layout.addWidget(widget)
         self.setLayout(layout)
         self.setStyleSheet(self.style())
