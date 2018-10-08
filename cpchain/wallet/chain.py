@@ -197,7 +197,6 @@ class Broker:
             logger.debug("file has been downloaded")
             logger.debug("put order into confirmed queue, order id: %s", order_id)
             self.confirmed_order_queue.put(order_id)
-            self.wallet.main_wnd.update_purchased_tab('downloaded')
 
 
 class Monitor:

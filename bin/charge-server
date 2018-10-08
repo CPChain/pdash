@@ -3,6 +3,8 @@
 import sys
 from getpass import getpass
 
+sys.path.append('.')
+
 from twisted.python import log
 from twisted.internet import reactor
 from twisted.web.resource import Resource
@@ -49,7 +51,7 @@ class FormPage(Resource):
             transaction = {
                 'from': payer_account,
                 'to': payee_account,
-                'value': 100
+                'value': 100000000
             }
             web3.personal.sendTransaction(transaction, passwd)
 

@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QVBoxLayout
 
 from cpchain.wallet.pages import wallet
 from cpchain.wallet.pages import abs_path
+from cpchain.wallet import fs
 from cpchain.wallet.components.product_list import ProductList
 from cpchain.wallet.simpleqt.page import Page
 from cpchain.wallet.simpleqt.decorator import page
@@ -23,6 +24,7 @@ class PurchasedPage(Page):
 
     @page.method
     def renderProducts(self, products):
+        records = fs.get_buyer_file_list()
         _products = []
         for i in products:
             test_dict = dict(image=abs_path('icons/test.png'),

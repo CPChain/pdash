@@ -101,6 +101,8 @@ class StatusLine(QWidget):
 class Operator:
 
     def buyer_confirm(self, order_id):
+        from cpchain.wallet.pages import app
+        app.unlock()
         logger.debug('Buyer Confirm Order: %s', str(order_id))
         def func2(_):
             logger.debug('Buyer Confirmed')
@@ -129,11 +131,15 @@ class Sale(QWidget):
         def func(_):
             order_info = dict()
             order_info[self.order_id] = wallet.chain_broker.buyer.query_order(self.order_id)
+            from cpchain.wallet.pages import app
+            app.unlock()
             wallet.chain_broker.seller_send_request(order_info)
         deferToThread(self._deliver).addCallbacks(func)
 
     @inlineCallbacks
     def _receive(self):
+        from cpchain.wallet.pages import app
+        app.unlock()
         order_info = dict()
         order_info[self.order_id] = yield wallet.chain_broker.buyer.query_order(self.order_id)
         yield wallet.chain_broker.buyer_send_request(order_info)

@@ -27,9 +27,12 @@ class FileInfo(Base):
     __tablename__ = 'fileinfo'
     id = Column(Integer, primary_key=True)
     hashcode = Column(String)
+    public_key = Column(String)
     name = Column(String)
     path = Column(String)
     size = Column(Integer)
+    data_type = Column(String)
+    proxy = Column(String)
     remote_type = Column(String)
     remote_uri = Column(String)
     is_published = Column(Boolean)

@@ -85,8 +85,9 @@ class OrderDetail(QWidget):
 
     def download(self):
         order_info = wallet.chain_broker.buyer.query_order(self.order_id)
-        if order_info[10] < 5:
-            return
+        print('>>>>>', order_info[10])
+        # if order_info[10] < 5:
+        #     return
         # Select Storage Path
         if self.storage_path is None:
             self.select_storage_path()

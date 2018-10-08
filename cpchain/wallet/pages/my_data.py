@@ -62,7 +62,10 @@ class MyDataTab(Page):
                              icon=abs_path('icons/icon_batch@2x.png'),
                              name=i['title'],
                              cpc=i['price'],
-                             description=i['description'])
+                             ptype=i['ptype'],
+                             description=i['description'],
+                             market_hash=i["msg_hash"],
+                             owner_address=i['owner_address'])
             _products.append(test_dict)
         self.products.value = _products
 
@@ -83,7 +86,7 @@ class MyDataTab(Page):
                 'headers': ['Name', 'Location', 'Size', 'Status'],
                 'width': [282, 170, 170, 54]
             }
-            data = fs.get_file_list()
+            data = fs.get_file_by_data_type()
             self.table_data.value = data
             def buildProductClickListener(product_id):
                 def listener(event):
@@ -93,7 +96,7 @@ class MyDataTab(Page):
                 items = []
                 items.append(data.name)
                 items.append(data.remote_type)
-                items.append(sizeof_fmt(data.size))
+                items.append(str(sizeof_fmt(data.size)))
                 status = data.is_published
                 wid = QLabel('Published')
                 if not status:
@@ -120,7 +123,7 @@ class MyDataTab(Page):
                 'headers': ['Name', 'Location', 'Status'],
                 'width': [327, 295, 54]
             }
-            data = fs.get_file_list()
+            data = fs.get_file_by_data_type('stream')
             self.stream_data.value = data
             def buildProductClickListener(product_id):
                 def listener(event):
@@ -162,7 +165,7 @@ class MyDataTab(Page):
         self.add(space=10)
 
         # Line
-        self.add(Line(wid=1, color="#dadada"))
+        self.add(Line(wid=1, color="#dadada"), 20)
 
         # My Product
         self.add(Builder().text('My Product').name('label_hint').build())
@@ -170,6 +173,7 @@ class MyDataTab(Page):
         # Product List
         pdsWidget = ProductList(self.products, scroll=False)
         width = 800
+        height = 200
         pdsWidget.setMinimumWidth(width)
         pdsWidget.setMaximumWidth(width)
         self.add(pdsWidget)
@@ -190,7 +194,7 @@ class MyDataTab(Page):
             # No Data
             self.add(Builder().text('0 Streaming Data!').name('no_data').build())
         
-
+        vLayout.addStretch(1)
         return vLayout
     
     def style(self):

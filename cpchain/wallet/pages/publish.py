@@ -349,7 +349,7 @@ class PublishProduct(Page):
             QMessageBox.information(self, "Tips", "Please login first !")
             return
         name = self.name.value
-        _type = 'file'
+        _type = 'file' if self.type_ == 'batch' else 'stream'
         description = self.description.value
         tag = 'tag1'
         price = self.price.value

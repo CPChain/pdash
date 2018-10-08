@@ -82,7 +82,7 @@ class ProductDetail(Page):
                  icon=abs_path('icons/icon_batch@2x.png'),
                  category="Category", timestamp=dt.now(),
                  sales=0, cpc=0, description="", remain=0,
-                 market_hash=None, owner_address=None):
+                 market_hash=None, owner_address=None, ptype=None):
         self.parent = parent
         self.product_id = product_id
         self.name = name
@@ -94,15 +94,20 @@ class ProductDetail(Page):
         self.cpc = cpc
         self.description = description
         self.remain = remain
+        self.ptype = ptype
         self.market_hash = market_hash
         self.owner_address = owner_address
+        self.is_owner = False
         super().__init__(parent)
         self.setObjectName("product_detail")
 
     @page.create
     def create(self):
-        # order list
-        pass
+        # whether purchased or not ?
+        data = fs.get_buy_file_by_market_hash(self.market_hash)
+        # mine product ?
+        self.buy.setEnabled(len(data) == 0 and self.owner_address != wallet.market_client.public_key)
+
 
     @page.data
     def data(self):
@@ -194,6 +199,7 @@ class ProductDetail(Page):
         # Buy button
         buy = QPushButton("Buy")
         buy.setObjectName('buy')
+        self.buy = buy
         hbox.addWidget(buy)
         def openPurchaseDialog(_):
             market_hash = self.market_hash
@@ -211,6 +217,7 @@ class ProductDetail(Page):
         layout.addLayout(header)
 
         order = None
+        status = 0
 
         # Sales
         if app.products_order.get(self.market_hash):
@@ -250,29 +257,28 @@ class ProductDetail(Page):
                 height += 200
 
         # Order Detail
-        order = {
-            'order_id': 1
-        }
-        if order:
-            order_header = DetailHeader('Order Detail')
-            layout.addWidget(order_header)
-            self.data_type = 'batch'
-            order_detail = OrderDetail(order_time=Model("2018/6/15  08:40:39"),
-                                        status=Model("Delivered on May 2, 08:09:08"),
-                                        order_id=order["order_id"],
-                                        name=self.name.value,
-                                        data_type=self.data_type)
-            layout.addWidget(order_detail)
-            height += 200
+        if order and self.owner_address != wallet.market_client.public_key:
+            if status > 2:
+                order_header = DetailHeader('Order Detail')
+                layout.addWidget(order_header)
+                if self.ptype == 'file':
+                    self.data_type = 'batch'
+                    order_detail = OrderDetail(order_time=Model("2018/6/15  08:40:39"),
+                                                status=Model("Delivered on May 2, 08:09:08"),
+                                                order_id=order["order_id"],
+                                                name=self.name.value,
+                                                data_type=self.data_type)
+                    layout.addWidget(order_detail)
+        if self.ptype == 'stream':
             self.data_type = 'stream'
             order_detail = OrderDetail(order_time=Model("2018/6/15  08:40:39"),
                                         status=Model("Delivered on May 2, 08:09:08"),
-                                        order_id=order["order_id"],
+                                        order_id=None,
                                         name=self.name.value,
                                         data_type=self.data_type)
             layout.addWidget(order_detail)
 
-            height += 200
+        height += 200
 
         # Description
         desc = DetailHeader('Description')
@@ -329,6 +335,10 @@ class ProductDetail(Page):
                 width:100px;
                 height:30px;
                 color: white;
+            }
+
+            QPushButton#buy:disabled {
+                background: #aaa;
             }
 
             #category {

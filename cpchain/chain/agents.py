@@ -87,7 +87,7 @@ class BuyerAgent(Agent):
             order_info.proxy_value,
             order_info.time_allowed
         ).estimateGas(transaction)
-        transaction['gas'] = gas_estimate + 100000
+        transaction['gas'] = gas_estimate
         logger.debug("issue transaction ...")
         tx_hash = self.contract.functions.placeOrder(
             order_info.desc_hash,

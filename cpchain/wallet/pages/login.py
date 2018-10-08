@@ -17,6 +17,7 @@ from cpchain.wallet.components.agreement import Agreement
 from cpchain.wallet.components.upload import FileUpload
 from cpchain.account import create_account, import_account
 
+from datetime import datetime as dt
 import shutil
 
 logger = logging.getLogger(__name__)
@@ -249,7 +250,7 @@ class CreateWindow(MyWindow):
         self.repeat = Model("")
         self.check = Model(False)
         self.PATH = os.getcwd()
-        self.NAME = 'pdash-account'
+        self.NAME = 'pdash-account-' + dt.now().strftime('%Y-%m-%d %H:%M:%S')
         super().__init__(reactor, parent)
         self.loading = GeneratingWindow(reactor, self)
         self.username = UserNameWindow(reactor, self)

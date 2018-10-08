@@ -32,16 +32,14 @@ class PurchaseDialog(QDialog):
         self.owner_address = owner_address
         self.ui()
         self.style()
-        self.get_proxy()
+        self.init_proxy()
 
-
-    def get_proxy(self):
-        def cb(data):
-            result = []
-            for item in data:
-                result.append(item['host'] + ':' + str(item['port']))
-            self.proxy.value = result
-        wallet.market_client.get('proxy/v1/proxy').addCallbacks(cb)
+    @page.method
+    def init_proxy(self):
+        def set_proxy(proxy):
+            self.proxy.value = proxy
+        pick_proxy().addCallbacks(set_proxy)
+    
 
     def gen_row(self, name, widget, width=None):
         layout = QHBoxLayout()
@@ -71,13 +69,11 @@ class PurchaseDialog(QDialog):
         layout.addWidget(self.gen_row('Price: ', Label(self.price)))
         layout.addWidget(self.gen_row('Gas: ', Label(self.gas)))
         layout.addWidget(self.gen_row('Account Ballance: ', Label(self.account)))
-        layout.addWidget(self.gen_row('Payment Password: ', Input(self.password)))
+        pwd = Input(self.password)
+        pwd.setEchoMode(Input.Password)
+        layout.addWidget(self.gen_row('Payment Password: ', pwd))
         layout.addWidget(self.gen_row('Proxy: ', ComboBox(self.proxy), 160))
 
-        # Browse
-        browse = QLabel('Browse...')
-        browse.setObjectName('browse')
-        layout.addWidget(browse)
 
         # Bottom
         btm = QHBoxLayout()
@@ -98,14 +94,13 @@ class PurchaseDialog(QDialog):
         return layout
 
     def handle_confirm(self):
-        d = pick_proxy()
         def get_proxy_address(proxy_addr):
             msg_hash = self.market_hash
             file_title = self.name
             proxy = proxy_addr
             seller = self.owner_address
             wallet.chain_broker.handler.buy_product(msg_hash, file_title, proxy, seller)
-        d.addCallback(get_proxy_address)
+        get_proxy_address(self.proxy.current)
         self.close()
 
     def handle_cancel(self):

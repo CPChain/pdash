@@ -35,7 +35,9 @@ from cpchain.wallet.components.sidebar import SideBar
 
 from cpchain.wallet import events
 from cpchain.wallet.simpleqt import event
-from cpchain.account import Account
+from cpchain.account import Account, get_balance
+from cpchain.wallet import utils
+from cpchain.chain.utils import default_w3 as web3
 
 globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
 logger = logging.getLogger(__name__)
@@ -200,6 +202,12 @@ def _handle_keyboard_interrupt():
     timer.start(300)
     timer.timeout.connect(lambda: None)
 
+def __unlock():
+    try:
+        web3.personal.unlockAccount(app.addr, app.pwd)
+    except Exception as e:
+        logger.error(e)
+
 def initialize_system():
     def monitor_chain_event():
         monitor_new_order = LoopingCall(wallet.chain_broker.monitor.monitor_new_order)
@@ -221,6 +229,8 @@ def initialize_system():
         update = LoopingCall(app.update)
         update.start(10)
         app.update()
+    unlock = LoopingCall(__unlock)
+    unlock.start(5)
 
 def buildMainWnd():
     main_wnd = MainWindow(reactor)
@@ -257,7 +267,16 @@ def login():
         key_passphrase = file.get('key_passphrase')
         try:
             if key_path and key_passphrase:
-                enterPDash(Account(key_path, key_passphrase))
+                account = Account(key_path, key_passphrase)
+                public_key = ECCipher.serialize_public_key(account.public_key)
+                addr = utils.get_address_from_public_key_object(public_key)
+                addr = web3.toChecksumAddress(addr)
+                logger.info(addr)
+                logger.info(get_balance(addr))
+                app.addr = addr
+                app.pwd = key_passphrase.decode()
+                __unlock
+                enterPDash(account)
                 return
         except Exception as e:
             logger.error(e)
@@ -287,6 +306,7 @@ def init_handlers():
 if __name__ == '__main__':
     app.events = events
     app.event = event
+    app.unlock = __unlock
     wallet.app = app
     app.enterPDash = enterPDash
     init_handlers()

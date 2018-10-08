@@ -24,16 +24,22 @@ def get_file_list():
 
 
 def get_file_by_id(file_id):
-    print('》》》》》》》》》', file_id)
     return get_session().query(FileInfo).filter(FileInfo.id == file_id).all()[0]
 
 
 def get_file_by_hash(file_hash):
     return get_session().query(FileInfo).filter(FileInfo.hashcode == file_hash)
 
-def get_file_by_market_hash(market_hash):
-    return get_session().query(FileInfo).filter(FileInfo.market_hash == market_hash)
+def get_file_by_data_type(data_type=None):
+    from cpchain.wallet.pages import wallet
+    return get_session().query(FileInfo).filter(FileInfo.public_key == wallet.market_client.public_key)\
+        .filter(FileInfo.data_type == data_type).order_by(FileInfo.id.desc()).all()
 
+def get_file_by_market_hash(market_hash):
+    return get_session().query(FileInfo).filter(FileInfo.market_hash == market_hash).all()
+
+def get_buy_file_by_market_hash(market_hash):
+    return get_session().query(BuyerFileInfo).filter(BuyerFileInfo.market_hash == market_hash).all()
 
 def get_file_id_new(file_id):
     return get_session().query(FileInfo).filter(FileInfo.id == file_id).all()[0]
@@ -146,8 +152,9 @@ def upload_file(file_path, storage_type, dest, data_name=None):
         file_md5 = hashlib.md5(file.read()).hexdigest()
     hashcode = json.loads(file_uri)
     hashcode['file_hash'] = file_md5
+    from cpchain.wallet.pages import wallet
     new_file_info = FileInfo(hashcode=json.dumps(hashcode), name=file_name, path=file_path, size=file_size,
-                             remote_type=str(storage_type), remote_uri=str(file_uri),
+                             remote_type=str(storage_type), remote_uri=str(file_uri), public_key= wallet.market_client.public_key,
                              is_published=False, aes_key=this_key, created=func.current_timestamp())
     add_file(new_file_info)
     logger.debug('file id: %s', new_file_info.id)
