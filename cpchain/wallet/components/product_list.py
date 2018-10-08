@@ -34,12 +34,13 @@ from cpchain.wallet.components.product import Product
 
 from datetime import datetime as dt
 
-class ProductList(QScrollArea):
+class ProductList(QWidget):
 
     change = QtCore.pyqtSignal(list, name="modelChanged")
 
-    def __init__(self, products, col=3):
+    def __init__(self, products, col=3, scroll=True):
         self.col = col
+        self.scroll = scroll
         super().__init__()
         self.change.connect(self.modelChanged)
         self.setProducts(products)
@@ -68,11 +69,29 @@ class ProductList(QScrollArea):
         self.exec_(self.layout())
 
     def initUI(self):
-        self.exec_(None)
+        self.exec_(None, True)
 
-    def exec_(self, layout=None):
+    def exec_(self, layout=None, flag=False):
         pds = self.products
+        if flag:
+            return
         if len(self.products) == 0:
+            layout = QVBoxLayout()
+            nodata = QLabel('0 Products!')
+            nodata.setObjectName('no_data')
+            nodata.setStyleSheet("""
+                text-align: center;
+                color: #aaa;
+                margin-left: 310px;
+            """)
+            layout.addWidget(nodata)
+            widget = QWidget()
+            widget.setObjectName('parent_widget')
+            widget.setLayout(layout)
+            widget.setStyleSheet("QWidget#parent_widget{background: transparent;}")
+            tmpLayout = QVBoxLayout()
+            tmpLayout.addWidget(widget)
+            self.setLayout(tmpLayout)
             return
         row = int((len(pds) + self.col / 2) / self.col + 0.5)
         if not layout:
@@ -85,15 +104,20 @@ class ProductList(QScrollArea):
             widget.setStyleSheet("QWidget#parent_widget{background: transparent;}")
 
             # Scroll Area Properties
-            scroll = QScrollArea()
-            scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-            scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-            scroll.setWidgetResizable(True)
-            # scroll.setFixedHeight(800)
-            scroll.setWidget(widget)
+            main = QVBoxLayout()
+            if self.scroll:
+                scroll = QScrollArea()
+                scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+                scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+                scroll.setWidgetResizable(True)
+                # scroll.setFixedHeight(800)
+                scroll.setWidget(widget)
+                main.addWidget(scroll)
+            else:
+                main.addWidget(widget)
 
-            self.setWidget(scroll)
-            self.setWidgetResizable(True)
+            self.setLayout(main)
+            # self.setWidgetResizable(True)
 
         layout.setAlignment(Qt.AlignTop)
         for i in range(row):
@@ -108,5 +132,8 @@ class ProductList(QScrollArea):
         self.setStyleSheet("""
             #main_layout {
                 height: 800px;
+            }
+            QWidget#product {
+                border: 1px solid red;
             }
         """)

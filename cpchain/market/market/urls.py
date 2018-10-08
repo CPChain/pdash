@@ -17,6 +17,9 @@ from django.contrib import admin
 from django.urls import path, include
 
 from cpchain.market.main.models import Carousel, HotTag, Promotion
+from cpchain.market.records.monitor import run_monitor
+
+import sys
 
 admin.site.register(Carousel)
 admin.site.register(HotTag)
@@ -29,4 +32,9 @@ urlpatterns = [
     path('user_data/v1/', include('user_data.urls_v1')),
     path('main/v1/', include('main.urls_v1')),
     path('comment/v1/', include('comment.urls_v1')),
+    path('proxy/v1/', include('proxy.urls')),
+    path('records/v1/', include('records.urls')) 
 ]
+
+if sys.argv[1] == 'runserver':
+    run_monitor()

@@ -1,10 +1,12 @@
 from django.db.models import Q
 from django.utils.http import unquote
+from django.http.response import HttpResponse
 from rest_framework import viewsets, mixins
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.decorators import list_route
 
 from cpchain.market.account.models import WalletUser
 from cpchain.market.account.permissions import AlreadyLoginUser
@@ -13,8 +15,10 @@ from cpchain.market.market.utils import *
 from cpchain.market.product.models import WalletMsgSequence
 from cpchain.market.product.serializers import *
 from cpchain.market.transaction.models import ProductSaleStatus
+from cpchain.market.market.utils import get_header, HTTP_MARKET_TOKEN
 
 import traceback
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -275,7 +279,6 @@ class ProductListViewSet(mixins.ListModelMixin,
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    # permission_classes = (,)
 
     def create(self, request):
         public_key = get_header(self.request)
@@ -327,6 +330,33 @@ class ProductListViewSet(mixins.ListModelMixin,
             logger.exception()
             raise e
 
+    @list_route(methods=['GET'])
+    def images(self, request):
+        path = request.GET.get('path')
+        try:
+            if path is not None:
+                if path[0] == '/':
+                    path = path[1:]
+                if os.path.exists(path):
+                    _type = path.split('.')[-1]
+                    with open(path, 'rb') as file:
+                        return HttpResponse(file.read(), content_type='image/' + _type)
+        except Exception as e:
+            logger.exception()
+        return Response(status=404)
+
+    @list_route(methods=['GET'])
+    def my_products(self, request):
+        pk = get_header(request)
+        if not pk:
+            return Response(data=[])
+        queryset = Product.objects.filter(owner_address=pk)
+        queryset = queryset.order_by('-created')
+        serializer = ProductSerializer(queryset, many=True)
+        data = serializer.data
+        return Response(data=data)
+
+
     def list(self, request, *args, **kwargs):
         """
         query product by keyword
@@ -338,6 +368,7 @@ class ProductListViewSet(mixins.ListModelMixin,
             queryset = Product.objects.filter(Q(title__contains=keyword) | Q(description__contains=keyword))
         else:
             queryset = Product.objects.all()
+        queryset = queryset.order_by('-created')
         serializer = ProductSerializer(queryset, many=True)
         data = serializer.data
         return Response(data=data)
@@ -428,7 +459,7 @@ class ProductSalesQuantityAddAPIView(APIView):
         logger.debug("public_key:%s market_hash:%s" % (public_key, market_hash))
 
         obj, created = SalesQuantity.objects.get_or_create(market_hash=request.data['market_hash'])
-        if not created :
+        if not created:
             serializer = ProductSalesQuantitySerializer(obj, data=request.data)
             if not serializer.is_valid(raise_exception=True):
                 return create_invalid_response()

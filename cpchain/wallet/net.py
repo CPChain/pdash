@@ -19,14 +19,28 @@ logger = logging.getLogger(__name__)  # pylint: disable=locally-disabled, invali
 
 
 class MarketClient:
-    def __init__(self, wallet):
+    def __init__(self, wallet, account=None):
         self.wallet = wallet
-        self.account = self.wallet.accounts.default_account
+        self.account = account or self.wallet.accounts.default_account
         self.public_key = ECCipher.serialize_public_key(self.account.public_key)
         self.url = config.market.market_url + '/'
         self.token = ''
         self.nonce = ''
 
+    @inlineCallbacks
+    def get(self, url, raw_content=False):
+        url = self.url + url
+        headers = {
+            "MARKET-KEY": self.public_key,
+            "MARKET-TOKEN": self.token,
+            "Content-Type": "application/json"
+        }
+        resp = yield treq.get(url, headers=headers)
+        if raw_content:
+            content = yield treq.content(resp)
+            return content
+        data = yield treq.json_content(resp)
+        return data
 
     @staticmethod
     def str_to_timestamp(s):
@@ -34,9 +48,9 @@ class MarketClient:
 
 
     @inlineCallbacks
-    def login(self):
+    def login(self, username=None):
         header = {'Content-Type': 'application/json'}
-        data = {'public_key': self.public_key}
+        data = {'public_key': self.public_key, 'username': username}
         resp = yield treq.post(url=self.url + 'account/v1/login/', headers=header, json=data,
                                persistent=False)
         confirm_info = yield treq.json_content(resp)
@@ -88,7 +102,7 @@ class MarketClient:
             market_hash = confirm_info['data']['market_hash']
         except Exception as e:
             logger.exception()
-        if ptype == 'file':
+        if ptype == 'file' or ptype == 'stream':
             publish_file_update(market_hash, selected_id)
         return market_hash
 
@@ -125,7 +139,6 @@ class MarketClient:
                   'MARKET-TOKEN': self.token}
         resp = yield treq.get(url=url, headers=header)
         confirm_info = yield treq.json_content(resp)
-        print(confirm_info)
         logger.debug("carousel response: %s", confirm_info)
         return confirm_info['data']
 
@@ -137,7 +150,6 @@ class MarketClient:
                   'MARKET-TOKEN': self.token}
         resp = yield treq.get(url=url, headers=header)
         confirm_info = yield treq.json_content(resp)
-        print(confirm_info)
         logger.debug("hot tag: %s", confirm_info)
         return confirm_info['data']
 
@@ -160,7 +172,6 @@ class MarketClient:
                   'MARKET-TOKEN': self.token}
         resp = yield treq.get(url=url, headers=header)
         confirm_info = yield treq.json_content(resp)
-        print(confirm_info)
         logger.debug("recommend product: %s", confirm_info)
         return confirm_info['data']
 
@@ -335,10 +346,24 @@ class MarketClient:
         return comment_info['data']
 
     @inlineCallbacks
-    def products(self):
+    def products(self, search=None):
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
                   'Content-Type': 'application/json'}
-        url = utils.build_url(self.url + "product/v1/allproducts/", {})
+        query = {}
+        if search:
+            query['keyword'] = search
+        url = utils.build_url(self.url + "product/v1/allproducts/", query)
+        logger.debug(url)
+        resp = yield treq.get(url, headers=header)
+        comment_info = yield treq.json_content(resp)
+        logger.debug('query by following tag confirm: %s', len(comment_info))
+        return comment_info
+    
+    @inlineCallbacks
+    def myproducts(self):
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
+                  'Content-Type': 'application/json'}
+        url = utils.build_url(self.url + "product/v1/allproducts/my_products/", {})
         logger.debug(url)
         resp = yield treq.get(url, headers=header)
         comment_info = yield treq.json_content(resp)

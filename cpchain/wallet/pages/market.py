@@ -41,24 +41,28 @@ logger = logging.getLogger(__name__)
 
 class MarketPage(Page):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, search=None):
         self.parent = parent
+        self.search = search
         super().__init__(parent)
         self.setObjectName("market_page")
 
     @page.create
     def create(self):
-        wallet.market_client.products().addCallbacks(self.renderProducts)
+        wallet.market_client.products(self.search).addCallbacks(self.renderProducts)
 
     @page.method
     def renderProducts(self, products):
         _products = []
         for i in products:
-            test_dict = dict(image=abs_path('icons/test.png'),
+            test_dict = dict(image=i['cover_image'] or abs_path('icons/test.png'),
                              icon=abs_path('icons/icon_batch@2x.png'),
                              name=i['title'],
                              cpc=i['price'],
-                             description=i['description'])
+                             ptype=i['ptype'],
+                             description=i['description'],
+                             market_hash=i["msg_hash"],
+                             owner_address=i['owner_address'])
             _products.append(test_dict)
         self.products.value = _products
 

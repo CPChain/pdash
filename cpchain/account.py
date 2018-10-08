@@ -44,10 +44,12 @@ class Account:
     def __init__(self, key_path, key_passphrase=None):
         if not key_passphrase:
             key_passphrase = input("Input Key Passphrase: ")
+        self.key_path = key_path
+        self.key_passphrase = key_passphrase
         self.private_key, self.public_key = crypto.ECCipher.load_key_pair(key_path, key_passphrase)
 
 
-def create_account(passwd):
+def create_account(passwd, filepath=_keystore_dir, name=None):
 
     acct = web3.eth.account.create()
 
@@ -57,6 +59,9 @@ def create_account(passwd):
         logger.info("account already in node's keychain")
 
     web3.personal.unlockAccount(acct.address, passwd)
+
+    if not name:
+        name = "UTC--%s--%s" % (datetime.utcnow().isoformat(), acct.address[2:].lower())
 
     # follow eth keystore naming rule
     # go-ethereum/accounts/keystore/key.go:208
@@ -68,8 +73,8 @@ def create_account(passwd):
     # }
 
     key_file = osp.join(
-        _keystore_dir,
-        "UTC--%s--%s" % (datetime.utcnow().isoformat(), acct.address[2:].lower())
+        filepath,
+        name
     )
     encrypted_key = web3.eth.account.encrypt(acct.privateKey, passwd)
 

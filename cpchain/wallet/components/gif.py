@@ -1,15 +1,27 @@
 # -*- coding: utf-8 -*-
-import sys
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QLabel, QWidget, QMovie
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QLabel, QWidget, QVBoxLayout
 
-class loadingGif(QWidget):
+from cpchain.wallet.simpleqt.decorator import component
+from cpchain.wallet.pages import abs_path
 
-    def __init__(self, parent=None):
-        super(loadingGif, self).__init__(parent)
-        self.label = QLabel('', self)
-        self.setFixedSize(200, 200)
-        self.setWindowFlags(QtCore.Qt.Dialog|QtCore.Qt.CustomizeWindowHint)
-        self.movie = QtGui.QMovie("loading.gif")
-        self.label.setMovie(self.movie)
-        self.movie.start()
+class LoadingGif(QWidget):
+
+    def __init__(self, path=None):
+        super().__init__()
+        self.path = path
+        if not path:
+            self.path = abs_path('icons/loading.gif')
+        self.ui()
+
+    @component.ui
+    def ui(self):
+        layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignCenter)
+        label = QLabel('', self)
+        movie = QtGui.QMovie(self.path)
+        label.setMovie(movie)
+        movie.start()
+        layout.addWidget(label)
+        return layout

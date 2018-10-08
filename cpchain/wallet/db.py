@@ -3,7 +3,7 @@ import os.path as osp
 
 # https://qiita.com/zakuro9715/items/7e393ef1c80da8811027
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine, Column, Integer, String, Boolean
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, TIMESTAMP
 from sqlalchemy.orm import sessionmaker
 
 from cpchain import config
@@ -13,8 +13,7 @@ dbpath = join_with_rc(config.wallet.dbpath)
 dirpath = osp.dirname(dbpath)
 os.makedirs(dirpath, exist_ok=True)
 
-print(dirpath)
-engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
+engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True, connect_args={"check_same_thread": False})
 
 Base = declarative_base()
 
@@ -28,14 +27,18 @@ class FileInfo(Base):
     __tablename__ = 'fileinfo'
     id = Column(Integer, primary_key=True)
     hashcode = Column(String)
+    public_key = Column(String)
     name = Column(String)
     path = Column(String)
     size = Column(Integer)
+    data_type = Column(String)
+    proxy = Column(String)
     remote_type = Column(String)
     remote_uri = Column(String)
     is_published = Column(Boolean)
     aes_key = Column(String)
     market_hash = Column(String)
+    created = Column(TIMESTAMP)
 
     def __repr__(self):
         return "<FileInfo(path='%s', remote_uri='%s')>" % (self.path, self.remote_uri)

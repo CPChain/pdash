@@ -3,9 +3,11 @@
 import sys
 import os
 import logging
+import shelve
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, QVBoxLayout, QGridLayout, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel, QWidget, QLineEdit, QTableWidget, QTextEdit, QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
 from PyQt5.QtCore import Qt, QPoint, QBasicTimer
+from PyQt5 import QtCore
 
 from cpchain.proxy.client import pick_proxy
 
@@ -22,24 +24,38 @@ from cpchain.wallet.pages.my_data import MyDataTab
 from cpchain.wallet.pages.publish import PublishProduct
 from cpchain.wallet.pages.market import MarketPage
 from cpchain.wallet.pages.detail import ProductDetail
+from cpchain.wallet.pages.purchased import PurchasedPage
+
+from cpchain.wallet.pages.login import LoginWindow
+from cpchain.wallet.pages.wallet_page import WalletPage
+
+
 # widgets
 from cpchain.wallet.components.sidebar import SideBar
+
+from cpchain.wallet import events
+from cpchain.wallet.simpleqt import event
+from cpchain.account import Account, get_balance
+from cpchain.wallet import utils
+from cpchain.chain.utils import default_w3 as web3
 
 globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
 logger = logging.getLogger(__name__)
 
 class Router:
 
-    index = MarketPage
+    index = WalletPage
     back_stack = [('market_page', [], {})]
     forward_stack = []
     listener = []
 
     page = {
+        'wallet': WalletPage,
         'market_page': MarketPage,
         'my_data_tab': MyDataTab,
         'publish_product': PublishProduct,
-        'product_detail': ProductDetail
+        'product_detail': ProductDetail,
+        'purchased_page': PurchasedPage
     }
 
     @staticmethod
@@ -78,11 +94,9 @@ class Router:
             Router.back_stack = Router.back_stack[:-1]
             page, args, kwargs = Router.back_stack[-1]
             Router._redirectTo(page, *args, **kwargs)
-        print(Router.forward_stack)
 
     @staticmethod
     def forward():
-        print(Router.forward_stack)
         if len(Router.forward_stack) > 0:
             page, args, kwargs = Router.forward_stack[-1]
             Router.back_stack.append((page, args, kwargs))
@@ -91,6 +105,11 @@ class Router:
 
 sidebarMenu = [
     {
+        'name': 'Wallet',
+        'icon': 'wallet@2x.png',
+        'link': 'wallet'
+    },
+    {
         'name': 'Market',
         'icon': 'market@2x.png',
         'link': 'market_page'
@@ -98,14 +117,25 @@ sidebarMenu = [
         'name': 'My Data',
         'icon': 'my data@2x.png',
         'link': 'my_data_tab'
+    }, {
+        'name': 'Purchased Data',
+        'icon': 'purchased data@2x.png',
+        'link': 'purchased_page'
     }
 ]
 
 class MainWindow(QMainWindow):
+    
+    def search_handler(self, val):
+        app.router.redirectTo('market_page', search=val)
+
+    search_signal = QtCore.pyqtSignal(str, name="modelChanged")
+
     def __init__(self, reactor):
         super().__init__()
         self.reactor = reactor
         self.body = None
+        self.search_signal.connect(self.search_handler)
         self.init_ui()
         self.content_tabs = None
 
@@ -124,25 +154,6 @@ class MainWindow(QMainWindow):
             qrect.moveCenter(center_pt)
             self.move(qrect.topLeft())
         set_geometry()
-
-        def add_content_tabs():
-            self.content_tabs = content_tabs = QTabWidget(self)
-            content_tabs.setObjectName("content_tabs")
-            content_tabs.tabBar().hide()
-            content_tabs.setContentsMargins(0, 0, 0, 0)
-
-            my_data_index = content_tabs.addTab(MyDataTab(content_tabs, self), "")
-            publish_product = content_tabs.addTab(PublishProduct(content_tabs), "")
-            market = content_tabs.addTab(MarketPage(content_tabs), "")
-            detail = content_tabs.addTab(ProductDetail(content_tabs), "")
-
-            self.main_tab_index = {
-                "my_data_tab": my_data_index,
-                "publish_product_page": publish_product,
-                "market_page": market,
-                "product_detail": detail
-            }
-        # add_content_tabs()
 
         header = Header(self)
         sidebar = SideBar(sidebarMenu)
@@ -172,26 +183,8 @@ class MainWindow(QMainWindow):
 
         self.show()
 
-    def update_purchased_tab(self, nex_tab='downloaded'):
-
-        tab_index = self.main_tab_index['purchase_tab']
-        self.content_tabs.removeTab(tab_index)
-        for key in self.main_tab_index:
-            if self.main_tab_index[key] > tab_index:
-                self.main_tab_index[key] -= 1
-        tab_index = self.content_tabs.addTab(PurchasedTab(main_wnd.content_tabs), "")
-        self.main_tab_index['purchase_tab'] = tab_index
-        self.content_tabs.setCurrentIndex(tab_index)
-        wid = self.content_tabs.currentWidget()
-        if nex_tab == 'downloading':
-            wid.purchased_main_tab.setCurrentIndex(1)
-        elif nex_tab == 'downloaded':
-            wid.purchased_main_tab.setCurrentIndex(0)
-        else:
-            logger.debug("Wrong parameter!")
 
     def closeEvent(self, event):
-        print('Close Event')
         self.reactor.stop()
         os._exit(0)
 
@@ -209,6 +202,12 @@ def _handle_keyboard_interrupt():
     timer.start(300)
     timer.timeout.connect(lambda: None)
 
+def __unlock():
+    try:
+        web3.personal.unlockAccount(app.addr, app.pwd)
+    except Exception as e:
+        logger.error(e)
+
 def initialize_system():
     def monitor_chain_event():
         monitor_new_order = LoopingCall(wallet.chain_broker.monitor.monitor_new_order)
@@ -225,26 +224,91 @@ def initialize_system():
 
         monitor_confirmed_order = LoopingCall(wallet.chain_broker.monitor.monitor_confirmed_order)
         monitor_confirmed_order.start(30)
-    monitor_chain_event()
+    if hasattr(wallet, 'chain_broker'):
+        monitor_chain_event()
+        update = LoopingCall(app.update)
+        update.start(10)
+        app.update()
+    unlock = LoopingCall(__unlock)
+    unlock.start(5)
 
 def buildMainWnd():
     main_wnd = MainWindow(reactor)
     _handle_keyboard_interrupt()
-
-    # initialize_system()
     return main_wnd
 
-def login():
-    wallet.accounts.set_default_account(1)
-    wallet.market_client.account = wallet.accounts.default_account
+def __login(account=None):
+    if account is None:
+        wallet.accounts.set_default_account(1)
+        account = wallet.accounts.default_account
+    wallet.market_client.account = account
     wallet.market_client.public_key = ECCipher.serialize_public_key(wallet.market_client.account.public_key)
-    wallet.market_client.login()
+    wallet.market_client.login(app.username).addCallbacks(lambda _: event.emit(events.LOGIN_COMPLETED))
+    wallet.init()
+    initialize_system()
 
-if __name__ == '__main__':
+def enterPDash(account=None):
+    if app.main_wnd:
+        __login(account)
+        return
     app.router = Router
     main_wnd = buildMainWnd()
     app.main_wnd = main_wnd
+
     wallet.set_main_wnd(main_wnd)
+    __login(account)
+
+def login():
+    path = os.path.expanduser('~/.cpchain')
+    if not os.path.exists(path):
+        os.mkdir(path)
+    with shelve.open(os.path.join(path, 'account')) as file:
+        key_path = file.get('key_path')
+        key_passphrase = file.get('key_passphrase')
+        try:
+            if key_path and key_passphrase:
+                account = Account(key_path, key_passphrase)
+                public_key = ECCipher.serialize_public_key(account.public_key)
+                addr = utils.get_address_from_public_key_object(public_key)
+                addr = web3.toChecksumAddress(addr)
+                logger.info(addr)
+                logger.info(get_balance(addr))
+                app.addr = addr
+                app.pwd = key_passphrase.decode()
+                __unlock
+                enterPDash(account)
+                return
+        except Exception as e:
+            logger.error(e)
+    logger.debug('Init')
+    wnd = LoginWindow(reactor)
+    wnd.show()
+    wallet.set_main_wnd(wnd)
+
+def save_login_info():
+    path = os.path.expanduser('~/.cpchain')
+    if not os.path.exists(path):
+        os.mkdir(path)
+    with shelve.open(os.path.join(path, 'account')) as file:
+        file['key_path'] = wallet.market_client.account.key_path
+        file['key_passphrase'] = wallet.market_client.account.key_passphrase
+
+
+def search(event):
+    search = event.data
+    wallet.main_wnd.search_signal.emit(search)
+    
+
+def init_handlers():
+    event.register(events.LOGIN_COMPLETED, lambda _: save_login_info())
+    event.register(events.SEARCH, search)
+
+if __name__ == '__main__':
+    app.events = events
+    app.event = event
+    app.unlock = __unlock
+    wallet.app = app
+    app.enterPDash = enterPDash
+    init_handlers()
     login()
     reactor.run()
-    os._exit()

@@ -129,9 +129,10 @@ class Pictures(QFrame):
 
 class PublishProduct(Page):
 
-    def __init__(self, parent=None, product_id=None):
+    def __init__(self, parent=None, product_id=None, type_='batch'):
         self.parent = parent
         self.product_id = product_id
+        self.type_ = type_
         super().__init__(parent)
         self.setObjectName("publish_product_page")
 
@@ -163,7 +164,8 @@ class PublishProduct(Page):
 
         # Type
         layout.addWidget(QLabel('Type:'), 4, 1, 1, 1)
-        layout.addWidget(QLabel('Batch data'), 4, 2, 1, 2)
+        type_label = 'Batch' if self.type_ == 'batch' else 'Streaming'
+        layout.addWidget(QLabel('{} data'.format(type_label)), 4, 2, 1, 2)
 
         # Category
         layout.addWidget(QLabel('Category:'), 5, 1, 1, 1)
@@ -347,7 +349,7 @@ class PublishProduct(Page):
             QMessageBox.information(self, "Tips", "Please login first !")
             return
         name = self.name.value
-        _type = 'file'
+        _type = 'file' if self.type_ == 'batch' else 'stream'
         description = self.description.value
         tag = 'tag1'
         price = self.price.value

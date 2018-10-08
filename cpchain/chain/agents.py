@@ -3,6 +3,7 @@ import logging
 from cpchain import config
 from cpchain.chain import models
 from cpchain.chain import utils
+from cpchain.utils import Encoder
 
 from .wait_utils import wait_for_transaction_receipt
 
@@ -22,6 +23,23 @@ class Agent:
         if account:
             account = self.web3.toChecksumAddress(account)
         self.account = account or self.web3.eth.defaultAccount
+
+    def get_all_orders(self):
+        num = self.contract.call().numOrders()
+        data = dict()
+        for i in range(num):
+            order = self.contract.call().orderRecords(i+1)
+            market_hash = Encoder.bytes_to_base64_str(order[0])
+            rsa = Encoder.bytes_to_base64_str(order[1])[:10]+"..."
+            status = order[10]
+            item = data.get(market_hash, [])
+            item.append({
+                'public_key': rsa,
+                'status': status,
+                'order_id': i + 1
+            })
+            data[market_hash] = item
+        return data
 
     def query_order(self, order_id) -> models.OrderInfo:
         order_record = self.contract.call().orderRecords(order_id)
@@ -69,7 +87,7 @@ class BuyerAgent(Agent):
             order_info.proxy_value,
             order_info.time_allowed
         ).estimateGas(transaction)
-        transaction['gas'] = gas_estimate + 100000
+        transaction['gas'] = gas_estimate
         logger.debug("issue transaction ...")
         tx_hash = self.contract.functions.placeOrder(
             order_info.desc_hash,
@@ -100,7 +118,7 @@ class BuyerAgent(Agent):
         return tx_hash
 
     def confirm_order(self, order_id,):
-        transaction = {'value': 0, 'from': self.account,}
+        transaction = {'value': 0, 'from': self.account, 'gas': 100000}
         tx_hash = self.contract.functions.buyerConfirmDeliver(order_id).transact(transaction)
         logger.debug("Thank you for confirming deliver! Tx hash {tx}".format(tx=tx_hash))
         wait_for_transaction_receipt(self.web3, tx_hash)
@@ -148,17 +166,20 @@ class SellerAgent(Agent):
                 id_list.append(current_id)
         return id_list
 
-    def confirm_order(self, order_id,):
+    def confirm_order(self, order_id):
         logger.debug("in seller confirm order, order id: %s", order_id)
         logger.debug("seller address: %s", self.account)
         offered_price = self.query_order(order_id)[6]
         if offered_price < 0:
             return None
-        transaction = {'value': offered_price, 'from': self.account,}
-        logger.debug("transaction: %s", transaction)
-        tx_hash = self.contract.functions.sellerConfirm(order_id).transact(transaction)
-        logger.debug("You have confirmed the order:{order_id} and deposited {value} to contract {address}".format(order_id=order_id, value=offered_price, address=self.contract.address))
-        wait_for_transaction_receipt(self.web3, tx_hash)
+        try:
+            transaction = {'value': offered_price, 'from': self.account, 'gas': 100000, 'sender': self.account}
+            logger.debug("transaction: %s", transaction)
+            tx_hash = self.contract.functions.sellerConfirm(order_id).transact(transaction)
+            logger.debug("You have confirmed the order:{order_id} and deposited {value} to contract {address}".format(order_id=order_id, value=offered_price, address=self.contract.address))
+            wait_for_transaction_receipt(self.web3, tx_hash)
+        except Exception as e:
+            raise e
         return tx_hash
 
     def confirm_dispute(self, order_id, if_agree,):
@@ -207,9 +228,9 @@ class ProxyAgent(Agent):
         return order_state == 1
 
     def claim_fetched(self, order_id,):
-        transaction = {'value': 0, 'from': self.account,}
-        gas_estimate = self.contract.functions.proxyFetched(order_id).estimateGas(transaction)
-        transaction['gas'] = gas_estimate + 10000
+        transaction = {'value': 0, 'from': self.account, 'gas': 100000}
+        # gas_estimate = self.contract.functions.proxyFetched(order_id).estimateGas(transaction)
+        # transaction['gas'] = gas_estimate + 10000
         tx_hash = self.contract.functions.proxyFetched(order_id).transact(transaction)
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash

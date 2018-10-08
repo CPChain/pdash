@@ -16,6 +16,10 @@ class Wallet:
         self.reactor = reactor
         self.accounts = Accounts()
         self.market_client = MarketClient(self)
+        self.main_wnd = None
+        self.init()
+
+    def init(self):
         self.chain_broker = Broker(self)
 
     def _initialize_system(self):

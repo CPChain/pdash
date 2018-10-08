@@ -34,7 +34,7 @@ class HorizontalLine(QFrame):
         self.setFrameShape(QFrame.HLine)
         self.setFrameShadow(QFrame.Plain)
         self.setLineWidth(self.wid)
-        self.setStyleSheet("QFrame{{ border-top: 1px solid {};}}".format(color))
+        self.setStyleSheet("QFrame{{ border-top: {}px solid {};}}".format(wid, color))
 
 def get_icon(name):
     path = osp.join(root_dir, "cpchain/assets/wallet/icons", name)
@@ -54,8 +54,16 @@ def warning(parent, msg="Please input all the required fields first"):
     QMessageBox.warning(parent, "Warning", msg)
 
 class App:
-    
+
     def __init__(self):
         self.main_wnd = None
+        self.username = None
+        self.products_order = {}
+
+    def update(self):
+        def callback(orders):
+            self.products_order = orders
+        d = wallet.chain_broker.query_seller_products_order(None)
+        d.addCallbacks(callback)
 
 app = App()

@@ -4,6 +4,7 @@ import logging
 import importlib
 import hashlib
 import json
+from sqlalchemy import func
 from cpchain.wallet.db import get_session, FileInfo, create_engine, sessionmaker, BuyerFileInfo, CollectInfo, FileInfoVersion
 from cpchain.crypto import AESCipher, RSACipher
 from cpchain.utils import join_with_rc
@@ -19,7 +20,7 @@ def get_file_list():
     engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
     Session = sessionmaker(bind=engine)
     session = Session()
-    return session.query(FileInfo).all()
+    return session.query(FileInfo).order_by(FileInfo.id.desc()).all()
 
 
 def get_file_by_id(file_id):
@@ -29,9 +30,16 @@ def get_file_by_id(file_id):
 def get_file_by_hash(file_hash):
     return get_session().query(FileInfo).filter(FileInfo.hashcode == file_hash)
 
-def get_file_by_market_hash(market_hash):
-    return get_session().query(FileInfo).filter(FileInfo.market_hash == market_hash)
+def get_file_by_data_type(data_type=None):
+    from cpchain.wallet.pages import wallet
+    return get_session().query(FileInfo).filter(FileInfo.public_key == wallet.market_client.public_key)\
+        .filter(FileInfo.data_type == data_type).order_by(FileInfo.id.desc()).all()
 
+def get_file_by_market_hash(market_hash):
+    return get_session().query(FileInfo).filter(FileInfo.market_hash == market_hash).all()
+
+def get_buy_file_by_market_hash(market_hash):
+    return get_session().query(BuyerFileInfo).filter(BuyerFileInfo.market_hash == market_hash).all()
 
 def get_file_id_new(file_id):
     return get_session().query(FileInfo).filter(FileInfo.id == file_id).all()[0]
@@ -134,7 +142,7 @@ def upload_file(file_path, storage_type, dest, data_name=None):
         "cpchain.storage-plugin." + storage_type
     )
     storage = storage_module.Storage()
-    file_uri = yield storage.upload_data(encrypted_path, dest)  # d_upload file_uri: string save directly
+    file_uri = storage.upload_data(encrypted_path, dest)  # d_upload file_uri: string save directly
     file_name = list(os.path.split(file_path))[-1]
     file_size = os.path.getsize(file_path)
     logger.debug('start to write data into database')
@@ -144,14 +152,16 @@ def upload_file(file_path, storage_type, dest, data_name=None):
         file_md5 = hashlib.md5(file.read()).hexdigest()
     hashcode = json.loads(file_uri)
     hashcode['file_hash'] = file_md5
+    from cpchain.wallet.pages import wallet
     new_file_info = FileInfo(hashcode=json.dumps(hashcode), name=file_name, path=file_path, size=file_size,
-                             remote_type=str(storage_type), remote_uri=str(file_uri),
-                             is_published=False, aes_key=this_key)
+                             remote_type=str(storage_type), remote_uri=str(file_uri), public_key= wallet.market_client.public_key,
+                             is_published=False, aes_key=this_key, created=func.current_timestamp())
     add_file(new_file_info)
     logger.debug('file id: %s', new_file_info.id)
     tmp.close()
     file_id = new_file_info.id
     return file_id
+
 
 # Decrypt aes key with rsa key then decrypt file with aes key.
 def decrypt_file_aes(file_path, aes_key):
@@ -192,3 +202,10 @@ def buyer_file_update(file_title):
         session.commit()
     except:
         logger.exception("error publish_file_update")
+
+def buyer_file_by_order_id(order_id):
+    try:
+        session = get_session()
+        return session.query(BuyerFileInfo).filter(BuyerFileInfo.order_id == order_id)[0]
+    except:
+        logger.exception("error: no order %s", order_id)

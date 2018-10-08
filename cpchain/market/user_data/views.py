@@ -61,7 +61,7 @@ class UploadFileInfoUpdateAPIView(APIView):
         data = request.data
         data['public_key'] = public_key
         # public_key + client_id -->market_hash + is_published
-        info = UploadFileInfo.objects.get(public_key=public_key, client_id=data['client_id'])
+        info = UploadFileInfo.objects.filter(public_key=public_key, client_id=data['client_id'])[0]
 
         # update profile
         serializer = UploadFileInfoSerializer(info, data=data)

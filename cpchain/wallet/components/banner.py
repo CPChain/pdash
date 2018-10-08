@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QScrollArea, QVBoxLayout, QFrame, QWidget,
                              QListWidget, QListWidgetItem, QLabel)
 from cpchain.wallet.simpleqt.component import Component
 from cpchain.wallet.simpleqt.decorator import component
-from cpchain.wallet.pages import load_stylesheet, get_icon, app
+from cpchain.wallet.pages import load_stylesheet, get_icon, app, HorizontalLine
 
 
 class Banner(QWidget):
@@ -43,8 +43,13 @@ class Banner(QWidget):
         subtitle.setObjectName('subtitle')
         subtitle.setMaximumWidth(self.width / 2)
         subtitle.setWordWrap(True)
+        # 短横线
+        line = HorizontalLine(color="white", wid=10)
+        line.setMaximumWidth(58)
+        line.setObjectName('line')
         mylayout.addWidget(title)
         mylayout.addWidget(subtitle)
+        mylayout.addWidget(line)
         return mylayout
 
     @component.style
@@ -62,5 +67,8 @@ class Banner(QWidget):
             }
             QLabel#subtitle {
                 font-size:20px;
+            }
+            QFrame#line {
+                margin-left: 38px;
             }
         """
