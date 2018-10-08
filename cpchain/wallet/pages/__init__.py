@@ -7,6 +7,8 @@ from PyQt5.QtGui import QIcon, QCursor, QPixmap, QFont, QFontDatabase
 
 from twisted.internet import reactor
 from cpchain.wallet.wallet import Wallet
+from cpchain.wallet import events
+from cpchain.wallet.simpleqt import event
 
 wallet = Wallet(reactor)
 
@@ -59,11 +61,67 @@ class App:
         self.main_wnd = None
         self.username = None
         self.products_order = {}
+        self.event = event
+        self.events = events
+        self.status_ = {}
+        self.init()
+    
+    def init(self):
+        @event.register(events.UPDATE_ORDER_STATUS)
+        def updateProdctStatus(event):
+            self.setStatus(event.data['mhash'], event.data['order_id'], event.data['status'])
+
+    def find(self, new_, order_id):
+        for item in new_:
+            if order_id == item['order_id']:
+                return item
+        return None
+    
+    def trigger(self, order_id, old, new_):
+        # enum State {
+        #     Created,
+        #     SellerConfirmed,
+        #     ProxyFetched,
+        #     ProxyDelivered,
+        #     BuyerConfirmed,
+        #     Finished,
+        #     SellerRated,
+        #     BuyerRated,
+        #     Disputed,
+        #     Withdrawn
+        # }
+        # self.event.emit(self.events.NEW_TRANSACTION_EVENT, (old, new_))
+        if old != new_:
+            if old == 0 and new_ == 1:
+                self.event.emit(self.events.SELLER_DELIVERY, order_id)
+            elif old == 1 and new_ == 2:
+                pass # Receive
+            elif old == 2 and new_ == 3:
+                pass # Receive
+            elif old < 5 and new_ == 5:
+                pass # Comfirm
 
     def update(self):
         def callback(orders):
+            # Trigger Events
+            if not self.products_order:
+                self.products_order = orders
+                return
+            for mhash, new_ in orders.items():
+                 old = self.products_order.get(mhash, [])
+                 for item in old:
+                     new_item = self.find(new_, item['order_id'])
+                     self.trigger(item['order_id'], item['status'], new_item['status'])
             self.products_order = orders
         d = wallet.chain_broker.query_seller_products_order(None)
         d.addCallbacks(callback)
+    
+    def status(self, mhash, order_id):
+        return self.status_.get(mhash, {}).get(order_id)
+    
+    def setStatus(self, mhash, order_id, status):
+        if not self.status_.get(mhash):
+            self.status_[mhash] = {}
+        self.status_[mhash][order_id] = status
 
 app = App()

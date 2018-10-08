@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt, QPoint
-from PyQt5.QtWidgets import (QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLineEdit, QGridLayout, QPushButton,
+from PyQt5.QtWidgets import (QApplication, QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLineEdit, QGridLayout, QPushButton,
                              QMenu, QAction, QCheckBox, QVBoxLayout, QWidget, QDialog, QFrame, QTableWidgetItem,
                              QAbstractItemView, QMessageBox, QTextEdit, QHeaderView, QTableWidget, QRadioButton,
                              QFileDialog, QListWidget, QListWidgetItem, QComboBox)
@@ -107,6 +107,11 @@ class ProductDetail(Page):
         data = fs.get_buy_file_by_market_hash(self.market_hash)
         # mine product ?
         self.buy.setEnabled(len(data) == 0 and self.owner_address != wallet.market_client.public_key)
+        @app.event.register(app.events.NEW_TRANSACTION_EVENT)
+        def listenDeliver(event):
+            # QWidget().setLayout(self.layout())
+            # self.ui()
+            pass
 
 
     @page.data
@@ -252,7 +257,7 @@ class ProductDetail(Page):
                              name=order['public_key'],
                              current=current,
                              timestamps=["May 2, 08:09:08", "May 2, 08:09:08", "May 2, 08:09:08", "May 2, 08:09:08"],
-                             order_id=order["order_id"])
+                             order_id=order["order_id"], mhash=self.market_hash)
                 layout.addWidget(sale1)
                 height += 200
 

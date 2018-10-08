@@ -30,6 +30,10 @@ class Input(QLineEdit):
         @operate
         def placeholder(self, text):
             self.widget.setPlaceholderText(text)
+        
+        @operate
+        def mode(self, mode):
+            self.widget.setEchoMode(mode)
     
     def modelChange(self, value):
         self.setText(value)

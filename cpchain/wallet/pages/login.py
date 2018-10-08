@@ -172,6 +172,8 @@ class UserNameWindow(MyWindow):
 
     def __init__(self, reactor, parent):
         self.account = None
+        self.is_registered_ = False
+        self.username_ = ""
         self.username = Model("")
         super().__init__(reactor, parent)
 
@@ -182,6 +184,17 @@ class UserNameWindow(MyWindow):
         self.hide()
         app.username = self.username.value
         app.enterPDash(self.account)
+
+    @property
+    def is_registered(self):
+        return self.is_registered_
+    
+    @is_registered.setter
+    def is_registered(self, val):
+        self.is_registered_ = val
+        if self.username_:
+            self.username_elem.setEnabled(False)
+            self.username.value = self.username_
 
     def ui(self, layout):
         title = Builder().text('Create a user name')\
@@ -198,6 +211,7 @@ class UserNameWindow(MyWindow):
                                   .name('pwd')\
                                   .model(self.username)\
                                   .build()
+        self.username_elem = username
         self.add(username, 10)
         self.add(Button.Builder().text('Enter PDash')\
                                  .style('primary')\
@@ -244,7 +258,7 @@ class BackupWindow(MyWindow):
 
 
 class CreateWindow(MyWindow):
-    
+
     def __init__(self, reactor=None, parent=None):
         self.password = Model("")
         self.repeat = Model("")
@@ -287,11 +301,13 @@ class CreateWindow(MyWindow):
         self.add(desc, 40)
         password = Input.Builder().placeholder('Password')\
                                   .name('pwd')\
+                                  .mode(Input.Password)\
                                   .model(self.password)\
                                   .build()
         self.add(password, 10)
         repeat = Input.Builder().placeholder('Repeat Password')\
                                 .name('repeat')\
+                                .mode(Input.Password)\
                                 .model(self.repeat)\
                                 .build()
         self.add(repeat, 10)
@@ -321,7 +337,12 @@ class ImportWindow(MyWindow):
         try:
             account = import_account(self.file.file, self.password.value)
             self.username.account = account
-            self.to(self.username)
+            def cb(status):
+                self.username.username_ = status
+                self.username.is_registered = True
+                self.to(self.username)
+            public_key = ECCipher.serialize_public_key(account.public_key)
+            wallet.market_client.isRegistered(public_key).addCallbacks(cb)
         except Exception as e:
             logger.error(e)
             QMessageBox.information(self, "error", "Failed!")
@@ -340,6 +361,7 @@ class ImportWindow(MyWindow):
         self.add(desc, 30)
         password = Input.Builder().placeholder('Password')\
                                   .name('pwd')\
+                                  .mode(Input.Password)\
                                   .model(self.password)\
                                   .build()
         self.add(password, 10)

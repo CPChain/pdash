@@ -45,7 +45,15 @@ class MarketClient:
     @staticmethod
     def str_to_timestamp(s):
         return s
-
+    
+    @inlineCallbacks
+    def isRegistered(self, public_key):
+        header = {'Content-Type': 'application/json'}
+        data = {'public_key': public_key}
+        resp = yield treq.post(url=self.url + 'account/v1/isregistered/', headers=header, json=data,
+                               persistent=False)
+        result = yield treq.json_content(resp)
+        return result['status']
 
     @inlineCallbacks
     def login(self, username=None):

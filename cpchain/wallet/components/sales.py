@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 from PyQt5.QtGui import QPixmap
 
@@ -7,6 +7,7 @@ from twisted.internet.defer import inlineCallbacks, Deferred
 
 from cpchain.wallet.pages import Binder, app, wallet
 from cpchain.wallet.simpleqt.decorator import component
+from cpchain.wallet.components.gif import LoadingGif
 
 import traceback
 import asyncio
@@ -16,7 +17,10 @@ logger = logging.getLogger(__name__)
 
 class Status(QWidget):
 
-    def __init__(self, name, mode=None, timestamp=None, line=True, h1=100, h2=20, width=100):
+    loadingSignal = pyqtSignal(str, name="loading")
+
+    def __init__(self, name, mode=None, timestamp=None, line=True, h1=100, 
+                 h2=20, width=100, status=False):
         """
         @param mode: finish, active, todo
         """
@@ -26,9 +30,34 @@ class Status(QWidget):
         self.line = line
         self.h1 = h1
         self.h2 = h2
+        self.status = status
         self.width = width
+        self.status_elem = None
         super().__init__()
+        self.init()
         self.ui()
+        if self.isloading(self.status):
+            self.loadingSignal.emit("")
+    
+    def isloading(self, status):
+        if status == 'delivering' and self.name == 'Deliver':
+            return True
+        return False
+
+    def init(self):
+        @app.event.register(app.events.UPDATE_ORDER_STATUS)
+        def callback(event):
+            status = event.data['status']
+            if not self.isloading(self.status):
+                if self.isloading(status):
+                    self.loadingSignal.emit("")
+        self.loadingSignal.connect(self.setLoading)
+    
+    @pyqtSlot(str)
+    def setLoading(self, s):
+        self.layout().removeWidget(self.status_elem)
+        self.status_elem.deleteLater()
+        self.layout().addWidget(LoadingGif())
 
     def getColor(self):
         color = {
@@ -51,6 +80,7 @@ class Status(QWidget):
         status.setMinimumWidth(miniWidth)
         status.setMinimumHeight(self.h1)
         layout.addWidget(status)
+        self.status_elem = status
         if self.timestamp:
             timestamp = QLabel(self.timestamp)
             timestamp.setObjectName('timestamp')
@@ -101,7 +131,6 @@ class StatusLine(QWidget):
 class Operator:
 
     def buyer_confirm(self, order_id):
-        from cpchain.wallet.pages import app
         app.unlock()
         logger.debug('Buyer Confirm Order: %s', str(order_id))
         def func2(_):
@@ -111,7 +140,7 @@ class Operator:
 
 class Sale(QWidget):
 
-    def __init__(self, image, name, current, timestamps, order_id=None):
+    def __init__(self, image, name, current, timestamps, order_id=None, mhash=None):
         self.image = image
         self.name = name
         # currrent status index
@@ -119,10 +148,18 @@ class Sale(QWidget):
         # action's timestamp, a list
         self.timestamps = timestamps
         self.order_id = order_id
+        self.mhash = mhash
         self.operator = Operator()
         print(app.products_order)
         super().__init__()
+        self.init()
         self.ui()
+    
+    def init(self):
+        @app.event.register(app.events.SELLER_DELIVERY)
+        def listenDeliver(event):
+            print('>>>>>>>>>>>>', event.data)
+
 
     def _deliver(self):
         wallet.chain_broker.seller.confirm_order(self.order_id)
@@ -131,14 +168,13 @@ class Sale(QWidget):
         def func(_):
             order_info = dict()
             order_info[self.order_id] = wallet.chain_broker.buyer.query_order(self.order_id)
-            from cpchain.wallet.pages import app
             app.unlock()
             wallet.chain_broker.seller_send_request(order_info)
-        deferToThread(self._deliver).addCallbacks(func)
+        # deferToThread(self._deliver).addCallbacks(func)
+        app.event.emit(app.events.UPDATE_ORDER_STATUS, {'mhash': self.mhash, 'order_id': self.order_id, 'status': 'delivering'})
 
     @inlineCallbacks
     def _receive(self):
-        from cpchain.wallet.pages import app
         app.unlock()
         order_info = dict()
         order_info[self.order_id] = yield wallet.chain_broker.buyer.query_order(self.order_id)
@@ -194,7 +230,7 @@ class Sale(QWidget):
                          timestamp=timestamp,
                          h1=h1,
                          h2=h2,
-                         width=width)
+                         width=width, status=app.status(self.mhash, self.order_id))
             cb = callbacks.get(item)
             if cb and mode == 'active':
                 Binder.click(tmp, cb)

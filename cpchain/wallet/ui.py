@@ -275,7 +275,7 @@ def login():
                 logger.info(get_balance(addr))
                 app.addr = addr
                 app.pwd = key_passphrase.decode()
-                __unlock
+                __unlock()
                 enterPDash(account)
                 return
         except Exception as e:
@@ -303,9 +303,11 @@ def init_handlers():
     event.register(events.LOGIN_COMPLETED, lambda _: save_login_info())
     event.register(events.SEARCH, search)
 
+@event.register(events.NEW_TRANSACTION_EVENT)
+def echo(event):
+    print(event.data)
+
 if __name__ == '__main__':
-    app.events = events
-    app.event = event
     app.unlock = __unlock
     wallet.app = app
     app.enterPDash = enterPDash
