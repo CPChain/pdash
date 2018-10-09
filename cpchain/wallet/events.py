@@ -26,3 +26,12 @@ BUYER_COMFIRM = Event()
 
 # Update Order Status
 UPDATE_ORDER_STATUS = Event()
+
+# Pay
+PAY = Event()
+
+# Click Pay
+CLICK_PAY = Event()
+
+# New order
+NEW_ORDER = Event()

@@ -1,6 +1,7 @@
 
 import logging
 from queue import Queue
+from PyQt5 import QtCore
 from twisted.internet.threads import deferToThread
 from twisted.internet import reactor
 from functools import wraps
@@ -12,6 +13,7 @@ class Event:
     
     def __init__(self, data=None):
         self.data = data
+        super().__init__()
 
 # Event Queue
 event_queue = Queue()

@@ -7,7 +7,8 @@ import shelve
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, QVBoxLayout, QGridLayout, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel, QWidget, QLineEdit, QTableWidget, QTextEdit, QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
 from PyQt5.QtCore import Qt, QPoint, QBasicTimer
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtWidgets
+
 
 from cpchain.proxy.client import pick_proxy
 
@@ -214,7 +215,7 @@ def initialize_system():
         monitor_new_order.start(10)
 
         handle_new_order = LoopingCall(wallet.chain_broker.handler.handle_new_order)
-        handle_new_order.start(15)
+        handle_new_order.start(10)
 
         monitor_ready_order = LoopingCall(wallet.chain_broker.monitor.monitor_ready_order)
         monitor_ready_order.start(20)
@@ -229,8 +230,6 @@ def initialize_system():
         update = LoopingCall(app.update)
         update.start(10)
         app.update()
-    unlock = LoopingCall(__unlock)
-    unlock.start(5)
 
 def buildMainWnd():
     main_wnd = MainWindow(reactor)
@@ -253,6 +252,8 @@ def enterPDash(account=None):
         return
     app.router = Router
     main_wnd = buildMainWnd()
+    QtWidgets.qApp.setApplicationDisplayName('PDash')
+
     app.main_wnd = main_wnd
 
     wallet.set_main_wnd(main_wnd)
@@ -307,10 +308,12 @@ def init_handlers():
 def echo(event):
     print(event.data)
 
+
 if __name__ == '__main__':
     app.unlock = __unlock
     wallet.app = app
     app.enterPDash = enterPDash
     init_handlers()
     login()
+    app.unlock()
     reactor.run()

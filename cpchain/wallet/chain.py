@@ -30,6 +30,8 @@ from cpchain.wallet.fs import get_session, FileInfo, decrypt_file_aes
 
 from cpchain.proxy.client import start_proxy_request, download_proxy_file
 from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
+from cpchain.wallet.simpleqt import event
+from cpchain.wallet import events
 
 logger = logging.getLogger(__name__) # pylint: disable=locally-disabled, invalid-name
 
@@ -130,7 +132,7 @@ class Broker:
         sign_message.public_key = self.wallet.market_client.public_key
         sign_message.data = message.SerializeToString()
         sign_message.signature = ECCipher.create_signature(
-            self.wallet.accounts.default_account.private_key,
+            self.wallet.market_client.account.private_key,
             sign_message.data
         )
         try:
@@ -216,7 +218,6 @@ class Monitor:
     # this method should be called periodically in the main thread(reactor)
     def monitor_new_order(self):
         new_order_list = deferToThread(self.get_new_order_info)
-
         def add_order(order_list):
             for current_order in order_list:
                 self.broker.order_queue.put(current_order)
@@ -252,7 +253,6 @@ class Monitor:
             else:
                 order_id = self.broker.confirmed_order_queue.get()
                 confirmed_order_list.append(order_id)
-        # reactor.callInThread(self.broker.confirm_order, confirmed_order_list)
 
 
 class Handler:
@@ -289,7 +289,7 @@ class Handler:
                                                 file_title=file_title, is_downloaded=False)
             add_file(new_buyer_file_info)
             logger.debug("update local db completed")
-
+            event.emit(events.PAY, (order_id, msg_hash))
             # Update the purchased downloaded tab in the main window of wallet
         d_placed_order.addCallback(add_bought_order)
         return self.broker.bought_order_queue

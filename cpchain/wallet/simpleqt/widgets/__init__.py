@@ -2,6 +2,7 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QLabel, QLineEdit, QTextEdit, QCheckBox, QComboBox
 
 from cpchain.wallet.simpleqt.model import Model
+from .. import Signals
 
 def init(self, *args, **kwargs):
     new_args = []
@@ -54,8 +55,6 @@ class TextEdit(QTextEdit):
 
 class CheckBox(QCheckBox):
 
-    change = QtCore.pyqtSignal(str, name="modelChanged")
-
     def __init__(self, *args, **kwargs):
         new_args = []
         for i in args:
@@ -64,7 +63,8 @@ class CheckBox(QCheckBox):
             else:
                 new_args.append(i)
         super().__init__(*new_args, **kwargs)
-        self.change.connect(self.modelChange)
+        self.signals = Signals()
+        self.signals.change.connect(self.modelChange)
         self.toggled.connect(self.viewChange)
         for i in args:
             if isinstance(i, Model):
@@ -79,7 +79,6 @@ class CheckBox(QCheckBox):
 
 class ComboBox(QComboBox):
 
-    change = QtCore.pyqtSignal(list, name="modelChanged")
 
     def __init__(self, *args, **kwargs):
         new_args = []
@@ -90,7 +89,8 @@ class ComboBox(QComboBox):
             else:
                 new_args.append(i)
         super().__init__(*new_args, **kwargs)
-        self.change.connect(self.modelChange)
+        self.signals = Signals()
+        self.signals.change.connect(self.modelChange)
         self.currentIndexChanged.connect(self.viewChange)
         for i in args:
             if isinstance(i, Model):

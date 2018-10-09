@@ -1,5 +1,6 @@
 import os.path as osp
 import string
+import copy
 from cpchain import config, root_dir
 
 from PyQt5.QtWidgets import QFrame, QMessageBox
@@ -70,6 +71,11 @@ class App:
         @event.register(events.UPDATE_ORDER_STATUS)
         def updateProdctStatus(event):
             self.setStatus(event.data['mhash'], event.data['order_id'], event.data['status'])
+        
+        @event.register(events.PAY)
+        def pay(event):
+            self.update()
+            self.event.emit(events.NEW_ORDER, event.data)
 
     def find(self, new_, order_id):
         for item in new_:
@@ -101,21 +107,30 @@ class App:
             elif old < 5 and new_ == 5:
                 pass # Comfirm
 
+    def list2dict(self, orders):
+        result = dict()
+        for item in orders:
+            result[item['order_id']] = item
+        return result
+                
+
     def update(self):
         def callback(orders):
             # Trigger Events
+            old_orders = copy.deepcopy(self.products_order)
+            self.products_order = copy.deepcopy(orders)
             if not self.products_order:
-                self.products_order = orders
                 return
+            # New Order
             for mhash, new_ in orders.items():
-                 old = self.products_order.get(mhash, [])
+                 old = old_orders.get(mhash, [])
                  for item in old:
                      new_item = self.find(new_, item['order_id'])
                      self.trigger(item['order_id'], item['status'], new_item['status'])
-            self.products_order = orders
+
         d = wallet.chain_broker.query_seller_products_order(None)
         d.addCallbacks(callback)
-    
+
     def status(self, mhash, order_id):
         return self.status_.get(mhash, {}).get(order_id)
     

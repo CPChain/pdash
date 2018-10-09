@@ -6,6 +6,7 @@ from twisted.internet.threads import deferToThread
 from twisted.internet.defer import inlineCallbacks, Deferred
 
 from cpchain.wallet.pages import Binder, app, wallet
+from cpchain.wallet.simpleqt import Signals
 from cpchain.wallet.simpleqt.decorator import component
 from cpchain.wallet.components.gif import LoadingGif
 
@@ -17,13 +18,12 @@ logger = logging.getLogger(__name__)
 
 class Status(QWidget):
 
-    loadingSignal = pyqtSignal(str, name="loading")
-
     def __init__(self, name, mode=None, timestamp=None, line=True, h1=100, 
                  h2=20, width=100, status=False):
         """
         @param mode: finish, active, todo
         """
+        self.signals = Signals()
         self.name = name
         self.mode = mode
         self.timestamp = timestamp
@@ -37,7 +37,7 @@ class Status(QWidget):
         self.init()
         self.ui()
         if self.isloading(self.status):
-            self.loadingSignal.emit("")
+            self.signals.loading.emit()
     
     def isloading(self, status):
         if status == 'delivering' and self.name == 'Deliver':
@@ -48,16 +48,23 @@ class Status(QWidget):
         @app.event.register(app.events.UPDATE_ORDER_STATUS)
         def callback(event):
             status = event.data['status']
-            if not self.isloading(self.status):
-                if self.isloading(status):
-                    self.loadingSignal.emit("")
-        self.loadingSignal.connect(self.setLoading)
+            if status == 'delivering' and self.name == 'Deliver':
+                self.signals.loading.emit()
+            else:
+                self.signals.loading_over.emit()
+        self.signals.loading.connect(self.setLoading)
+        self.signals.loading_over.connect(self.hideLoading)
+
     
-    @pyqtSlot(str)
-    def setLoading(self, s):
-        self.layout().removeWidget(self.status_elem)
-        self.status_elem.deleteLater()
-        self.layout().addWidget(LoadingGif())
+    @pyqtSlot()
+    def setLoading(self):
+        self.loading.show()
+        self.status_elem.hide()
+    
+    @pyqtSlot()
+    def hideLoading(self):
+        self.loading.hide()
+        self.status_elem.show()
 
     def getColor(self):
         color = {
@@ -73,7 +80,7 @@ class Status(QWidget):
         miniWidth = self.width
         self.setMinimumWidth(miniWidth)
         layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignCenter)
+        layout.setAlignment(Qt.AlignTop)
         status = QLabel(self.name)
         status.setObjectName('status')
         status.setAlignment(Qt.AlignCenter)
@@ -88,6 +95,12 @@ class Status(QWidget):
             timestamp.setMinimumWidth(miniWidth)
             timestamp.setMinimumHeight(self.h2)
             layout.addWidget(timestamp)
+        self.loading = LoadingGif()
+        self.loading.setObjectName('loading')
+        layout.addWidget(self.loading)
+        self.loading.hide()
+        self.loading.setMinimumWidth(miniWidth)
+        self.loading.setMinimumHeight(self.h1)
         layout.addStretch(1)
         self.setLayout(layout)
         self.setStyleSheet("""
@@ -99,6 +112,10 @@ class Status(QWidget):
                     border: 1px solid #d0d0d0;
                     border-radius: 15px;
                     text-align: center;
+                }}
+                QWidget#loading {{
+                    margin: 6px 2px;
+                    margin-top: 20px;
                 }}
                 #timestamp {{
                     font-size: 10px;
@@ -140,7 +157,7 @@ class Operator:
 
 class Sale(QWidget):
 
-    def __init__(self, image, name, current, timestamps, order_id=None, mhash=None):
+    def __init__(self, image, name, current, timestamps, order_id=None, mhash=None, is_buyer=False, is_seller=False):
         self.image = image
         self.name = name
         # currrent status index
@@ -149,8 +166,9 @@ class Sale(QWidget):
         self.timestamps = timestamps
         self.order_id = order_id
         self.mhash = mhash
+        self.is_buyer = is_buyer
+        self.is_seller = is_seller
         self.operator = Operator()
-        print(app.products_order)
         super().__init__()
         self.init()
         self.ui()
@@ -159,6 +177,7 @@ class Sale(QWidget):
         @app.event.register(app.events.SELLER_DELIVERY)
         def listenDeliver(event):
             print('>>>>>>>>>>>>', event.data)
+            app.event.emit(app.events.UPDATE_ORDER_STATUS, {'mhash': self.mhash, 'order_id': self.order_id, 'status': 'delivery'})
 
 
     def _deliver(self):
@@ -170,7 +189,7 @@ class Sale(QWidget):
             order_info[self.order_id] = wallet.chain_broker.buyer.query_order(self.order_id)
             app.unlock()
             wallet.chain_broker.seller_send_request(order_info)
-        # deferToThread(self._deliver).addCallbacks(func)
+        deferToThread(self._deliver).addCallbacks(func)
         app.event.emit(app.events.UPDATE_ORDER_STATUS, {'mhash': self.mhash, 'order_id': self.order_id, 'status': 'delivering'})
 
     @inlineCallbacks
@@ -224,6 +243,8 @@ class Sale(QWidget):
         width = 78
         for item in status:
             mode = 'active' if i == self.current else ('todo' if i > self.current else 'finish')
+            if item =='Deliver' and self.current == 1 and self.is_buyer and not self.is_seller:
+                mode = 'finish'
             timestamp = self.timestamps[i] if i < self.current else None
             tmp = Status(name=item,
                          mode=mode,

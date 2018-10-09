@@ -6,7 +6,15 @@ sys.path.append('.')
 
 class Signals(QtCore.QObject):
 
-    change = QtCore.pyqtSignal(str, name="modelChanged")
+    change = QtCore.pyqtSignal(object, name="modelChanged")
+
+    disabled = QtCore.pyqtSignal(name='Diabled')
+
+    refresh = QtCore.pyqtSignal(name='Refresh')
+
+    loading = QtCore.pyqtSignal(name='loading')
+
+    loading_over = QtCore.pyqtSignal(name='loading over')
 
 class Page(QScrollArea):
     
