@@ -177,6 +177,7 @@ class SellerAgent(Agent):
         if offered_price < 0:
             return None
         try:
+            print('>>>>>>>>', self.account)
             transaction = {'value': offered_price, 'from': self.account, 'gas': 100000, 'sender': self.account}
             logger.debug("transaction: %s", transaction)
             tx_hash = self.contract.functions.sellerConfirm(order_id).transact(transaction)

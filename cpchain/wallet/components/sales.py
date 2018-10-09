@@ -188,9 +188,9 @@ class Sale(QWidget):
             order_info = dict()
             order_info[self.order_id] = wallet.chain_broker.buyer.query_order(self.order_id)
             app.unlock()
-            wallet.chain_broker.seller_send_request(order_info)
+            # wallet.chain_broker.seller_send_request(order_info)
         deferToThread(self._deliver).addCallbacks(func)
-        app.event.emit(app.events.UPDATE_ORDER_STATUS, {'mhash': self.mhash, 'order_id': self.order_id, 'status': 'delivering'})
+        # app.event.emit(app.events.UPDATE_ORDER_STATUS, {'mhash': self.mhash, 'order_id': self.order_id, 'status': 'delivering'})
 
     @inlineCallbacks
     def _receive(self):
@@ -243,7 +243,7 @@ class Sale(QWidget):
         width = 78
         for item in status:
             mode = 'active' if i == self.current else ('todo' if i > self.current else 'finish')
-            if item =='Deliver' and self.current == 1 and self.is_buyer and not self.is_seller:
+            if item =='Deliver' and self.current == 1 and self.is_buyer:
                 mode = 'finish'
             timestamp = self.timestamps[i] if i < self.current else None
             tmp = Status(name=item,

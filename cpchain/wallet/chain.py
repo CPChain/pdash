@@ -51,6 +51,8 @@ class Broker:
         bin_path = join_with_root(config.chain.contract_bin_path)
         # deploy_contract(bin_path, config.chain.contract_name, default_w3)
         account = get_address_from_public_key_object(self.wallet.market_client.public_key)
+        account = default_w3.toChecksumAddress(account)
+        print(account)
         self.buyer = BuyerAgent(default_w3, bin_path, config.chain.contract_name, account)
         self.seller = SellerAgent(default_w3, bin_path, config.chain.contract_name, account)
         self.handler = Handler(self)
@@ -274,7 +276,7 @@ class Handler:
             secondary_proxy=self.broker.buyer.web3.toChecksumAddress(proxy),
             proxy_value=10,
             value=20,
-            time_allowed=1000
+            time_allowed=3600 * 24
         )
         logger.debug("product info has been created")
         logger.debug("product info: %s", product)

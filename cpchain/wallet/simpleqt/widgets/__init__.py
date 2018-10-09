@@ -16,12 +16,11 @@ def init(self, *args, **kwargs):
 
 class Input(QLineEdit):
 
-    change = QtCore.pyqtSignal(str, name="modelChanged")
-
     def __init__(self, *args, **kwargs):
         _args, _kwargs = init(self, *args, **kwargs)
         super().__init__(*_args, **_kwargs)
-        self.change.connect(self.modelChange)
+        self.signals = Signals()
+        self.signals.change.connect(self.modelChange)
         self.editingFinished.connect(self.viewChange)
         for i in args:
             if isinstance(i, Model):
@@ -35,12 +34,11 @@ class Input(QLineEdit):
 
 class TextEdit(QTextEdit):
 
-    change = QtCore.pyqtSignal(str, name="modelChanged")
-
     def __init__(self, *args, **kwargs):
         _args, _kwargs = init(self, *args, **kwargs)
         super().__init__(*_args, **_kwargs)
-        self.change.connect(self.modelChange)
+        self.signals = Signals()
+        self.signals.change.connect(self.modelChange)
         self.textChanged.connect(self.viewChange)
         for i in args:
             if isinstance(i, Model):
@@ -78,7 +76,6 @@ class CheckBox(QCheckBox):
 
 
 class ComboBox(QComboBox):
-
 
     def __init__(self, *args, **kwargs):
         new_args = []
