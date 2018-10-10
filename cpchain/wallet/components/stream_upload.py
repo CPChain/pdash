@@ -13,6 +13,7 @@ from cpchain.wallet.pages import load_stylesheet, HorizontalLine, wallet, main_w
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import deferToThread
 from cpchain.wallet import fs
+from cpchain.crypto import AESCipher
 from cpchain.utils import open_file, sizeof_fmt
 from cpchain.proxy.client import pick_proxy
 
@@ -95,7 +96,18 @@ class StreamUploadDialog(Dialog):
         # Upload to proxy, get streaming id
         def callback(path):
             try:
-                wallet.market_client.upload_file_info(None, None, 0, self._id, 'proxy', path, self.data_name.value, None)
+                # Save
+                proxy = self.proxy.current
+                self.aes_key = AESCipher.generate_key()
+                remote_uri = str(path)
+                new_file_info = FileInfo(name=self.data_name.value, data_type='stream', proxy=proxy,
+                                        remote_type='stream', remote_uri=remote_uri, public_key=wallet.market_client.public_key,
+                                        is_published=False, created=func.current_timestamp(), aes_key=self.aes_key)
+                fs.add_file(new_file_info)
+                self._id = new_file_info.id
+                encrypted_key = RSACipher.encrypt(self.aes_key)
+                encrypted_key = Encoder.bytes_to_base64_str(encrypted_key)
+                wallet.market_client.upload_file_info(None, None, 0, self._id, 'stream', json.dumps(remote_uri), self.data_name.value, encrypted_key)
                 path = json.loads(path)
                 result = StreamUploadedDialog(oklistener=self.oklistener, data_name=self.data_name.value, stream_id=path['ws_url'])
                 result.show()
@@ -114,12 +126,6 @@ class StreamUploadDialog(Dialog):
         param = dict()
         param['proxy_id'] = proxy # should be selected by UI from proxy list
         path = s.upload_data(None, param)
-        # Save
-        new_file_info = FileInfo(name=self.data_name.value, data_type='stream', proxy=proxy,
-                                 remote_type='proxy', remote_uri=str(path), public_key=wallet.market_client.public_key,
-                                 is_published=False, created=func.current_timestamp())
-        fs.add_file(new_file_info)
-        self._id = new_file_info.id
         return path
 
     def style(self):

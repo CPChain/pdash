@@ -363,9 +363,8 @@ class MarketClient:
         url = utils.build_url(self.url + "product/v1/allproducts/", query)
         logger.debug(url)
         resp = yield treq.get(url, headers=header)
-        comment_info = yield treq.json_content(resp)
-        logger.debug('query by following tag confirm: %s', len(comment_info))
-        return comment_info
+        product_info = yield treq.json_content(resp)
+        return product_info
     
     @inlineCallbacks
     def myproducts(self):
@@ -374,6 +373,14 @@ class MarketClient:
         url = utils.build_url(self.url + "product/v1/allproducts/my_products/", {})
         logger.debug(url)
         resp = yield treq.get(url, headers=header)
-        comment_info = yield treq.json_content(resp)
-        logger.debug('query by following tag confirm: %s', len(comment_info))
-        return comment_info
+        products_info = yield treq.json_content(resp)
+        return products_info
+    
+    @inlineCallbacks
+    def query_data(self, market_hash):
+        url = self.url + 'user_data/v1/uploaded_file/item/'
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token, 'Content-Type': 'application/json'}
+        url = utils.build_url(url, {'market_hash': market_hash})
+        resp = yield treq.get(url, headers=header, persistent=False)
+        data_info = yield treq.json_content(resp)
+        return data_info

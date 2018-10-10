@@ -27,7 +27,7 @@ from cpchain import root_dir
 from cpchain.wallet.utils import formatTimestamp
 from cpchain.wallet.utils import eth_addr_to_string, get_address_from_public_key_object
 
-from cpchain.wallet.pages import HorizontalLine, abs_path, get_icon, app
+from cpchain.wallet.pages import HorizontalLine, abs_path, get_icon, app, Binder
 from cpchain.wallet.pages.other import PublishDialog
 
 from cpchain.wallet.components.table import Table
@@ -40,6 +40,7 @@ from cpchain.wallet.components.purchase import PurchaseDialog
 from cpchain.wallet.components.picture import Picture
 from cpchain.wallet.components.order_detail import OrderDetail
 from cpchain.wallet.components.gif import LoadingGif
+from cpchain.wallet.components.loading import Loading
 
 from cpchain.wallet.simpleqt import Signals
 from cpchain.wallet.simpleqt.page import Page
@@ -47,6 +48,7 @@ from cpchain.wallet.simpleqt.decorator import page
 from cpchain.wallet.simpleqt.widgets.label import Label
 from cpchain.wallet.simpleqt.widgets import Input
 from cpchain.wallet.simpleqt.model import Model
+from cpchain.wallet.simpleqt.basic import Button
 
 from datetime import datetime as dt
 
@@ -109,8 +111,14 @@ class ProductDetail(Page):
 
     @page.create
     def create(self):
+        @app.event.register(app.events.DETAIL_UPDATE)
+        def detail_update(event):
+            self.signals.refresh.emit()
         @app.event.register(app.events.NEW_ORDER)
         def listenNewOrder(event):
+            self.signals.refresh.emit()
+        @app.event.register(app.events.CANCEL_PURCHASE)
+        def cancel_purchase(event):
             self.signals.refresh.emit()
         def render(_):
             self.buying(False)
@@ -119,10 +127,10 @@ class ProductDetail(Page):
     
     def buying(self, is_buying):
         if is_buying:
-            self.buy.hide()
+            self.buy.setEnabled(False)
             self.buy_loading.show()
         else:
-            self.buy.show()
+            self.buy.setEnabled(True)
             self.buy_loading.hide()
 
     @page.data
@@ -156,7 +164,6 @@ class ProductDetail(Page):
         start = 1
 
         is_seller = self.owner_address == wallet.market_client.public_key
-
         # Sales
         if app.products_order.get(self.market_hash):
             sales_header = DetailHeader("{} Sales".format(len(app.products_order.get(self.market_hash))))
@@ -177,8 +184,6 @@ class ProductDetail(Page):
             # }
             myaddress = get_address_from_public_key_object(wallet.market_client.public_key)
             self.salesElem = []
-            print('>>>>>>>>')
-            print(app.products_order[self.market_hash])
             for order in app.products_order[self.market_hash]:
                 # not buyer and not seller
                 buyer_addr = eth_addr_to_string(order['buyer_addr'])
@@ -204,7 +209,8 @@ class ProductDetail(Page):
                              order_id=order["order_id"],
                              mhash=self.market_hash,
                              is_buyer=is_buyer,
-                             is_seller=is_seller)
+                             is_seller=is_seller,
+                             order_type='stream' if self.ptype == 'stream' else 'file')
                 layout.insertWidget(start, sale1)
                 self.salesElem.append(sale1)
                 start += 1
@@ -228,10 +234,11 @@ class ProductDetail(Page):
         if self.ptype == 'stream':
             self.data_type = 'stream'
             order_detail = OrderDetail(order_time=Model("2018/6/15  08:40:39"),
-                                        status=Model("Delivered on May 2, 08:09:08"),
-                                        order_id=None,
-                                        name=self.name.value,
-                                        data_type=self.data_type)
+                                       status=Model("Delivered on May 2, 08:09:08"),
+                                       order_id=None,
+                                       market_hash=self.market_hash,
+                                       name=self.name.value,
+                                       data_type=self.data_type)
             layout.insertWidget(start, order_detail)
             start += 1
         height += 200
@@ -247,6 +254,7 @@ class ProductDetail(Page):
 
         # Image
         imageWid = Picture(self.image.value, 240, 160)
+        Binder.click(imageWid, lambda _: app.event.emit(app.events.DETAIL_UPDATE))
         header.addWidget(imageWid)
 
         right = QVBoxLayout()
@@ -304,10 +312,6 @@ class ProductDetail(Page):
         hbox.addWidget(cpc_unit)
 
         # Buy button
-        buy = QPushButton("Buy")
-        buy.setObjectName('buy')
-        self.buy = buy
-        hbox.addWidget(buy)
         def openPurchaseDialog(_):
             self.buying(True)
             if not self.paying:
@@ -323,14 +327,18 @@ class ProductDetail(Page):
                                              name=self.name.value,
                                              owner_address=owner_address)
                 purchaseDlg.show()
-        buy.clicked.connect(openPurchaseDialog)
+        self.buy = Button.Builder(width=100, height=30).text('Buy')\
+                                   .style('primary')\
+                                   .click(openPurchaseDialog)\
+                                   .build()
+        hbox.addWidget(self.buy)
         if self.owner_address == wallet.market_client.public_key:
             self.buy.setEnabled(False)
 
         # Buy Loading
-        self.buy_loading = LoadingGif()
+        self.buy_loading = Loading()
         hbox.addWidget(self.buy_loading)
-        self.buying(False)
+        self.buy_loading.hide()
 
         hbox.addStretch(1)
 
@@ -388,18 +396,6 @@ class ProductDetail(Page):
                 font-size:20px;
                 color:#000000;
                 text-align:left;
-            }
-            QPushButton#buy {
-                /*background-image:linear-gradient(-120deg, #119bf0 1%, #1689e9 100%);*/
-                background: #1689e9;
-                border-radius:3px;
-                width:100px;
-                height:30px;
-                color: white;
-            }
-
-            QPushButton#buy:disabled {
-                background: #aaa;
             }
 
             #category {

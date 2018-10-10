@@ -68,9 +68,15 @@ class App:
         self.init()
     
     def init(self):
-        @event.register(events.UPDATE_ORDER_STATUS)
-        def updateProdctStatus(event):
-            self.setStatus(event.data['mhash'], event.data['order_id'], event.data['status'])
+        @event.register(events.SELLER_DELIVERY)
+        def seller_delivery(event):
+            self.update(events.DETAIL_UPDATE, event.data)
+        @event.register(events.BUYER_RECEIVE)
+        def buyer_receive(event):
+            self.update(events.DETAIL_UPDATE, event.data)
+        @event.register(events.BUYER_CONFIRM)
+        def buyer_receive(event):
+            self.update(events.DETAIL_UPDATE, event.data)
         
         @event.register(events.PAY)
         def pay(event):
@@ -82,30 +88,7 @@ class App:
             if order_id == item['order_id']:
                 return item
         return None
-    
-    def trigger(self, order_id, old, new_):
-        # enum State {
-        #     Created,
-        #     SellerConfirmed,
-        #     ProxyFetched,
-        #     ProxyDelivered,
-        #     BuyerConfirmed,
-        #     Finished,
-        #     SellerRated,
-        #     BuyerRated,
-        #     Disputed,
-        #     Withdrawn
-        # }
-        # self.event.emit(self.events.NEW_TRANSACTION_EVENT, (old, new_))
-        if old != new_:
-            if old == 0 and new_ == 1:
-                self.event.emit(self.events.SELLER_DELIVERY, order_id)
-            elif old == 1 and new_ == 2:
-                pass # Receive
-            elif old == 2 and new_ == 3:
-                pass # Receive
-            elif old < 5 and new_ == 5:
-                pass # Comfirm
+
 
     def list2dict(self, orders):
         result = dict()
@@ -114,29 +97,16 @@ class App:
         return result
                 
 
-    def update(self):
+    def update(self, pre_event=None, data=None):
         def callback(orders):
             # Trigger Events
             old_orders = copy.deepcopy(self.products_order)
             self.products_order = copy.deepcopy(orders)
+            if pre_event:
+                self.event.emit(pre_event, data)
             if not self.products_order:
                 return
-            # New Order
-            for mhash, new_ in orders.items():
-                 old = old_orders.get(mhash, [])
-                 for item in old:
-                     new_item = self.find(new_, item['order_id'])
-                     self.trigger(item['order_id'], item['status'], new_item['status'])
-
         d = wallet.chain_broker.query_seller_products_order(None)
         d.addCallbacks(callback)
-
-    def status(self, mhash, order_id):
-        return self.status_.get(mhash, {}).get(order_id)
-    
-    def setStatus(self, mhash, order_id, status):
-        if not self.status_.get(mhash):
-            self.status_[mhash] = {}
-        self.status_[mhash][order_id] = status
 
 app = App()

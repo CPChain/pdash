@@ -18,11 +18,14 @@ SEARCH = Event()
 # Seller Delivery
 SELLER_DELIVERY = Event()
 
+# Detail Update
+DETAIL_UPDATE = Event()
+
 # Buyer Receive
 BUYER_RECEIVE = Event()
 
-# Buyer Comfirm
-BUYER_COMFIRM = Event()
+# Buyer Confirm
+BUYER_CONFIRM = Event()
 
 # Update Order Status
 UPDATE_ORDER_STATUS = Event()
@@ -35,3 +38,6 @@ CLICK_PAY = Event()
 
 # New order
 NEW_ORDER = Event()
+
+# Cancel Purchase Dialog
+CANCEL_PURCHASE = Event()

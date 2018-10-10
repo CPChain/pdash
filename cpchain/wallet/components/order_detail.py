@@ -21,12 +21,13 @@ import os
 import os.path as osp
 import string
 import logging
+import json
 import shutil
 
 from cpchain import root_dir
 
 from cpchain.wallet.utils import formatTimestamp
-from cpchain.wallet.pages import HorizontalLine, abs_path, get_icon, app, Binder
+from cpchain.wallet.pages import HorizontalLine, abs_path, get_icon, app, Binder, wallet
 from cpchain.wallet.pages.other import PublishDialog
 
 from cpchain.wallet.components.table import Table
@@ -54,14 +55,17 @@ logger = logging.getLogger(__name__)
 
 class OrderDetail(QWidget):
 
-    def __init__(self, order_time, status, order_id, name=None, storage_path=None, data_type='batch'):
+    def __init__(self, order_time, status, order_id, name=None, storage_path=None, data_type='batch',
+                 stream_id=None, market_hash=None):
         self.order_time = order_time
         self.status = status
         self.order_id = order_id
         self.operator = Operator()
         self.storage_path = storage_path
         self.data_type = data_type
+        self.market_hash = market_hash
         self.name = name
+        self.stream_id = stream_id
         super().__init__()
         self.ui()
 
@@ -85,9 +89,6 @@ class OrderDetail(QWidget):
 
     def download(self):
         order_info = wallet.chain_broker.buyer.query_order(self.order_id)
-        print('>>>>>', order_info[10])
-        # if order_info[10] < 5:
-        #     return
         # Select Storage Path
         if self.storage_path is None:
             self.select_storage_path()
@@ -136,8 +137,15 @@ class OrderDetail(QWidget):
             ok = QPushButton('Get Streaming ID')
             ok.setObjectName('pinfo_stream_btn')
             def openStreamID(_):
-                dlg = StreamUploadedDialog()
-                dlg.show()
+                def cb(data_info):
+                    if data_info:
+                        stream_id = data_info['remote_uri']
+                        if stream_id:
+                            stream_id = json.loads(json.loads(stream_id))
+                            stream_id = stream_id['ws_url']
+                        dlg = StreamUploadedDialog(data_name=self.name, stream_id=stream_id)
+                        dlg.show()
+                wallet.market_client.query_data(market_hash=self.market_hash).addCallbacks(cb)
             ok.clicked.connect(openStreamID)
             btm.addWidget(ok)
             preview = QPushButton('Preview')

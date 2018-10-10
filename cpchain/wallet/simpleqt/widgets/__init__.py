@@ -97,8 +97,9 @@ class ComboBox(QComboBox):
             self.addItem(val)
 
     def modelChange(self, value):
-        for i in value:
-            self.addItem(i)
+        if value:
+            for i in value:
+                self.addItem(i)
 
     def viewChange(self, index):
         self.value = self.model.value[index]

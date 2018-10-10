@@ -230,10 +230,6 @@ class MyDataTab(Page):
             return
         def oklistener():
             app.router.redirectTo('my_data_tab')
-            # self.main_layout.removeWidget(self.table)
-            # self.table.deleteLater()
-            # self.table = self.buildTable()
-            # self.main_layout.addWidget(self.table)
             self.upload.close()
         self.upload = UploadDialog(self, oklistener)
         self.upload.show()
@@ -244,10 +240,6 @@ class MyDataTab(Page):
             return
         def oklistener():
             app.router.redirectTo('my_data_tab')
-            # self.main_layout.removeWidget(self.table)
-            # self.table.deleteLater()
-            # self.table = self.buildTable()
-            # self.main_layout.addWidget(self.table)
             self.upload.close()
         self.upload = StreamUploadDialog(self, oklistener)
         self.upload.show()

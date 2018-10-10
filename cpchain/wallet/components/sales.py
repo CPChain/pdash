@@ -36,22 +36,23 @@ class Status(QWidget):
         super().__init__()
         self.init()
         self.ui()
-        if self.isloading(self.status):
-            self.signals.loading.emit()
-    
-    def isloading(self, status):
-        if status == 'delivering' and self.name == 'Deliver':
-            return True
-        return False
+
 
     def init(self):
         @app.event.register(app.events.UPDATE_ORDER_STATUS)
         def callback(event):
             status = event.data['status']
-            if status == 'delivering' and self.name == 'Deliver':
-                self.signals.loading.emit()
-            else:
-                self.signals.loading_over.emit()
+            tmp_map = {
+                'Deliver': ('delivering', 'delivery'),
+                'Receive': ('receiving', 'receive'),
+                'Confirm': ('confirming', 'confirm')
+            }
+            for k, v in tmp_map.items():
+                if self.name == k:
+                    if status == v[0]:
+                        self.signals.loading.emit()
+                    elif status == v[1]:
+                        self.signals.loading_over.emit()
         self.signals.loading.connect(self.setLoading)
         self.signals.loading_over.connect(self.hideLoading)
 
@@ -146,18 +147,25 @@ class StatusLine(QWidget):
         """)
 
 class Operator:
-
+    
+    order_id = False
+    
     def buyer_confirm(self, order_id):
-        app.unlock()
-        logger.debug('Buyer Confirm Order: %s', str(order_id))
-        def func2(_):
-            logger.debug('Buyer Confirmed')
-            app.update()
-        deferToThread(wallet.chain_broker.buyer.confirm_order, order_id).addCallbacks(func2)
+        self.order_id = order_id
+        app.event.emit(app.events.UPDATE_ORDER_STATUS, {'order_id': order_id, 'status': 'confirming'})
+        def exec_():
+            app.unlock()
+            logger.debug('Buyer Confirm Order: %s', str(order_id))
+            def func2(_):
+                logger.debug('Buyer Confirmed')
+                app.event.emit(app.events.BUYER_CONFIRM, order_id)
+            deferToThread(wallet.chain_broker.buyer.confirm_order, order_id).addCallbacks(func2)
+        deferToThread(exec_)
 
 class Sale(QWidget):
 
-    def __init__(self, image, name, current, timestamps, order_id=None, mhash=None, is_buyer=False, is_seller=False):
+    def __init__(self, image, name, current, timestamps, order_id=None, mhash=None,
+                 is_buyer=False, is_seller=False, order_type='file'):
         self.image = image
         self.name = name
         # currrent status index
@@ -168,6 +176,7 @@ class Sale(QWidget):
         self.mhash = mhash
         self.is_buyer = is_buyer
         self.is_seller = is_seller
+        self.order_type = order_type
         self.operator = Operator()
         super().__init__()
         self.init()
@@ -176,30 +185,44 @@ class Sale(QWidget):
     def init(self):
         @app.event.register(app.events.SELLER_DELIVERY)
         def listenDeliver(event):
-            print('>>>>>>>>>>>>', event.data)
-            app.event.emit(app.events.UPDATE_ORDER_STATUS, {'mhash': self.mhash, 'order_id': self.order_id, 'status': 'delivery'})
+            if event.data == self.order_id:
+                app.event.emit(app.events.UPDATE_ORDER_STATUS, {'order_id': self.order_id, 'status': 'delivery'})
+        @app.event.register(app.events.BUYER_RECEIVE)
+        def listenDeliver(event):
+            if event.data == self.order_id:
+                app.event.emit(app.events.UPDATE_ORDER_STATUS, {'order_id': self.order_id, 'status': 'receive'})
+        @app.event.register(app.events.BUYER_CONFIRM)
+        def listenDeliver(event):
+            if event.data == self.order_id:
+                app.event.emit(app.events.UPDATE_ORDER_STATUS, {'order_id': self.order_id, 'status': 'confirm'})
 
 
     def _deliver(self):
+        app.unlock()
         wallet.chain_broker.seller.confirm_order(self.order_id)
+        
 
     def deliver(self, _):
         def func(_):
             order_info = dict()
             order_info[self.order_id] = wallet.chain_broker.buyer.query_order(self.order_id)
             app.unlock()
-            # wallet.chain_broker.seller_send_request(order_info)
+            if self.order_type == 'file':
+                wallet.chain_broker.seller_send_request(order_info)
+            else:
+                wallet.chain_broker.seller_send_request_stream(order_info)
         deferToThread(self._deliver).addCallbacks(func)
-        # app.event.emit(app.events.UPDATE_ORDER_STATUS, {'mhash': self.mhash, 'order_id': self.order_id, 'status': 'delivering'})
+        app.event.emit(app.events.UPDATE_ORDER_STATUS, {'order_id': self.order_id, 'status': 'delivering'})
 
     @inlineCallbacks
     def _receive(self):
         app.unlock()
         order_info = dict()
-        order_info[self.order_id] = yield wallet.chain_broker.buyer.query_order(self.order_id)
+        order_info[self.order_id] = wallet.chain_broker.buyer.query_order(self.order_id)
         yield wallet.chain_broker.buyer_send_request(order_info)
 
     def receive(self, _):
+        app.event.emit(app.events.UPDATE_ORDER_STATUS, {'order_id': self.order_id, 'status': 'receiving'})
         self._receive()
 
     def confirm(self, _):
@@ -243,15 +266,19 @@ class Sale(QWidget):
         width = 78
         for item in status:
             mode = 'active' if i == self.current else ('todo' if i > self.current else 'finish')
-            if item =='Deliver' and self.current == 1 and self.is_buyer:
-                mode = 'finish'
+            if item == 'Deliver' and self.current == 1 and self.is_buyer:
+                mode = 'todo'
+            if item == 'Receive' and self.current == 2 and self.is_seller:
+                mode = 'todo'
+            if item == 'Confirm' and self.current == 3 and self.is_seller:
+                mode = 'todo'
             timestamp = self.timestamps[i] if i < self.current else None
             tmp = Status(name=item,
                          mode=mode,
                          timestamp=timestamp,
                          h1=h1,
                          h2=h2,
-                         width=width, status=app.status(self.mhash, self.order_id))
+                         width=width)
             cb = callbacks.get(item)
             if cb and mode == 'active':
                 Binder.click(tmp, cb)

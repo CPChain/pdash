@@ -15,6 +15,8 @@ from cpchain.wallet.simpleqt.basic import Builder, Button, Input
 from cpchain.wallet.simpleqt import Model, validate
 from cpchain.wallet.components.agreement import Agreement
 from cpchain.wallet.components.upload import FileUpload
+from cpchain.wallet.components.loading import Loading
+from cpchain.wallet.components.gif import LoadingGif
 from cpchain.account import create_account, import_account
 
 from datetime import datetime as dt
@@ -163,9 +165,11 @@ class GeneratingWindow(MyWindow):
         self.add(title)
         self.spacing(60)
         # Loading
-        loading  = QPixmap(abs_path('icons/loading.png'))
-        loading = loading.scaled(228, 200)
-        self.add(Builder().name('loading').pixmap(loading).click(lambda _: self.ok()).build())
+        # loading  = QPixmap(abs_path('icons/loading.png'))
+        # loading = loading.scaled(228, 200)
+        # self.add(Builder().name('loading').pixmap(loading).click(lambda _: self.ok()).build())
+        loading = LoadingGif(path=abs_path('icons/GIF_generating.gif'), width=228, height=228)
+        self.add(loading)
 
 
 class UserNameWindow(MyWindow):
@@ -330,22 +334,37 @@ class ImportWindow(MyWindow):
         self.username = UserNameWindow(reactor, self)
     
     def _import(self):
+        self.loading_start()
         if not validate(self, lambda x: x, "Please input the password", self.password.value):
+            self.loading_over()
             return
         if not validate(self, lambda x: x, "Please select a file", self.file.file):
+            self.loading_over()
             return
         try:
-            account = import_account(self.file.file, self.password.value)
-            self.username.account = account
-            def cb(status):
-                self.username.username_ = status
-                self.username.is_registered = True
-                self.to(self.username)
-            public_key = ECCipher.serialize_public_key(account.public_key)
-            wallet.market_client.isRegistered(public_key).addCallbacks(cb)
+            def exec_():
+                account = import_account(self.file.file, self.password.value)
+                self.username.account = account
+                def cb(status):
+                    self.username.username_ = status
+                    self.username.is_registered = True
+                    self.loading_over()
+                    self.to(self.username)
+                public_key = ECCipher.serialize_public_key(account.public_key)
+                wallet.market_client.isRegistered(public_key).addCallbacks(cb)
+            deferToThread(exec_)
         except Exception as e:
             logger.error(e)
             QMessageBox.information(self, "error", "Failed!")
+            self.loading_over()
+    
+    def loading_start(self):
+        self.import_.setEnabled(False)
+        self.loading.show()
+    
+    def loading_over(self):
+        self.import_.setEnabled(True)
+        self.loading.hide()
 
     def ui(self, layout):
         title = Builder().text('Import a keystore file')\
@@ -358,23 +377,27 @@ class ImportWindow(MyWindow):
                         .height(100)\
                         .build()
         self.add(title)
-        self.add(desc, 30)
+        self.add(desc, 25)
         password = Input.Builder().placeholder('Password')\
                                   .name('pwd')\
                                   .mode(Input.Password)\
                                   .model(self.password)\
                                   .build()
-        self.add(password, 10)
+        self.add(password, 5)
 
         self.file = FileUpload(width=247,
                                height=110,
                                text="Drop keystore file here or",
                                browse_text="browse…")
-        self.add(self.file, 30)
-        self.add(Button.Builder().text('Import')\
+        self.add(self.file, 20)
+        self.import_ = Button.Builder().text('Import')\
                                  .style('primary')\
                                  .click(lambda _: self._import())\
-                                 .build())
+                                 .build()
+        self.add(self.import_, 5)
+        self.loading = Loading()
+        self.loading.hide()
+        self.add(self.loading)
 
     def style(self):
         return """ """

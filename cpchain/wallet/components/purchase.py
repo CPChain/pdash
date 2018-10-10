@@ -99,12 +99,14 @@ class PurchaseDialog(QDialog):
             file_title = self.name
             proxy = proxy_addr
             seller = self.owner_address
+            app.unlock()
             wallet.chain_broker.handler.buy_product(msg_hash, file_title, proxy, seller)
         get_proxy_address(self.proxy.current)
         app.event.emit(app.events.CLICK_PAY)
         self.close()
 
     def handle_cancel(self):
+        app.event.emit(app.events.CANCEL_PURCHASE)
         self.close()
 
     @page.style

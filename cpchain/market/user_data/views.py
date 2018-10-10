@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 
+from rest_framework.response import Response
 from cpchain.market.account.permissions import AlreadyLoginUser
 from cpchain.market.market.utils import *
 from cpchain.market.user_data.models import UploadFileInfo, BuyerFileInfo, UserInfoVersion, ProductTag, Bookmark
@@ -20,6 +21,26 @@ def increase_data_version(public_key):
     user_version.save()
     return user_version.version
 
+class UploadFileInfoItemAPIView(APIView):
+    """
+    API endpoint that allows add UploadFileInfo.
+    """
+    queryset = UploadFileInfo.objects.filter()
+    serializer_class = UploadFileInfoSerializer
+    permission_classes = (AlreadyLoginUser,)
+
+    @ExceptionHandler
+    def get(self, request):
+        market_hash = request.query_params.get('market_hash')
+        if market_hash:
+            market_hash = market_hash.replace(' ', '+')
+            qs = self.queryset.filter(market_hash=market_hash)
+            if qs.count() > 0:
+                serializer = UploadFileInfoSerializer(qs[0])
+                data = serializer.data
+                del data['aes_key']
+                return Response(data)
+        return Response({})
 
 class UploadFileInfoAddAPIView(APIView):
     """

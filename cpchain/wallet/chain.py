@@ -51,12 +51,12 @@ class Broker:
         bin_path = join_with_root(config.chain.contract_bin_path)
         # deploy_contract(bin_path, config.chain.contract_name, default_w3)
         account = get_address_from_public_key_object(self.wallet.market_client.public_key)
-        account = default_w3.toChecksumAddress(account)
-        print(account)
-        self.buyer = BuyerAgent(default_w3, bin_path, config.chain.contract_name, account)
-        self.seller = SellerAgent(default_w3, bin_path, config.chain.contract_name, account)
-        self.handler = Handler(self)
-        self.monitor = Monitor(self)
+        if default_w3:
+            account = default_w3.toChecksumAddress(account)
+            self.buyer = BuyerAgent(default_w3, bin_path, config.chain.contract_name, account)
+            self.seller = SellerAgent(default_w3, bin_path, config.chain.contract_name, account)
+            self.handler = Handler(self)
+            self.monitor = Monitor(self)
 
     @defer.inlineCallbacks
     def query_seller_products_order(self, seller):
@@ -82,6 +82,71 @@ class Broker:
         for current_id in order_id_list:
             self.buyer.confirm_order(current_id)
             logger.debug("order %s completed", current_id)
+
+    @defer.inlineCallbacks
+    def seller_send_request_stream(self, order_info):
+        logger.debug("seller send request to proxy ...")
+        order_id = list(order_info.keys())[0]
+        new_order_info = order_info[order_id]
+        market_hash = new_order_info[0]
+        seller_addr = eth_addr_to_string(new_order_info[3])
+        buyer_addr = eth_addr_to_string(new_order_info[2])
+        buyer_rsa_public_key = new_order_info[1]
+        proxy_id = eth_addr_to_string(new_order_info[4])
+        session = get_session()
+        raw_aes_key = session.query(FileInfo.aes_key) \
+            .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash)) \
+            .all()[0][0]
+        logger.debug("start to encrypt aes key with buyer rsa public key")
+        logger.debug("raw aes key: %s", raw_aes_key)
+        logger.debug("buyer rsa public key: %s", buyer_rsa_public_key)
+        encrypted_aes_key = load_der_public_key(buyer_rsa_public_key, backend=default_backend()).encrypt(
+            raw_aes_key,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
+        logger.debug("encrypted aes key: %s", encrypted_aes_key)
+        logger.debug("order info got generated")
+        message = Message()
+        seller_data = message.seller_data
+        message.type = Message.SELLER_DATA
+        seller_data.order_id = order_id
+        seller_data.order_type = 'stream'
+        seller_data.seller_addr = seller_addr
+        seller_data.buyer_addr = buyer_addr
+        seller_data.market_hash = Encoder.bytes_to_base64_str(market_hash)
+        seller_data.AES_key = encrypted_aes_key
+        storage = seller_data.storage
+
+        storage_type = session.query(FileInfo.remote_type) \
+            .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash)) \
+            .all()[0][0]
+        remote_uri = session.query(FileInfo.remote_uri) \
+            .filter(FileInfo.market_hash == Encoder.bytes_to_base64_str(market_hash)) \
+            .all()[0][0]
+        storage.type = storage_type
+        storage.path = remote_uri
+
+        sign_message = SignMessage()
+        sign_message.public_key = self.wallet.market_client.public_key
+        sign_message.data = message.SerializeToString()
+        sign_message.signature = ECCipher.create_signature(
+            self.wallet.market_client.account.private_key,
+            sign_message.data
+        )
+        try:
+            error, AES_key, urls = yield start_proxy_request(sign_message, proxy_id)
+            if error:
+                logger.error(error)
+            else:
+                logger.debug(AES_key)
+                logger.debug(urls)
+                event.emit(events.SELLER_DELIVERY, order_id)
+        except Exception as e:
+            logger.error(e)
 
     @defer.inlineCallbacks
     def seller_send_request(self, order_info):
@@ -144,6 +209,7 @@ class Broker:
             else:
                 logger.debug(AES_key)
                 logger.debug(urls)
+                event.emit(events.SELLER_DELIVERY, order_id)
         except Exception as e:
             logger.error(e)
 
@@ -169,7 +235,7 @@ class Broker:
         sign_message.public_key = self.wallet.market_client.public_key
         sign_message.data = message.SerializeToString()
         sign_message.signature = ECCipher.create_signature(
-            self.wallet.accounts.default_account.private_key,
+            self.wallet.market_client.account.private_key,
             sign_message.data
         )
 
@@ -201,6 +267,7 @@ class Broker:
             logger.debug("file has been downloaded")
             logger.debug("put order into confirmed queue, order id: %s", order_id)
             self.confirmed_order_queue.put(order_id)
+        event.emit(events.BUYER_RECEIVE, order_id)
 
 
 class Monitor:
