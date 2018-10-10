@@ -288,7 +288,7 @@ class ECCipher:
         return hex_str
 
     @staticmethod
-    def _create_private_key(key: 'bytes'):
+    def create_private_key(key: 'bytes'):
         private_value = int.from_bytes(key, byteorder='big')
         private_key = ec.derive_private_key(private_value, ec.SECP256K1(), default_backend())
         return private_key
@@ -300,7 +300,7 @@ class ECCipher:
     @staticmethod
     def load_private_key(key_path, password):
         key_bytes = load_private_key_from_keystore(key_path, password)
-        private_key = ECCipher._create_private_key(key_bytes)
+        private_key = ECCipher.create_private_key(key_bytes)
         return private_key
 
     @staticmethod
