@@ -137,15 +137,12 @@ class OrderDetail(QWidget):
             ok = QPushButton('Get Streaming ID')
             ok.setObjectName('pinfo_stream_btn')
             def openStreamID(_):
-                def cb(data_info):
-                    if data_info:
-                        stream_id = data_info['remote_uri']
-                        if stream_id:
-                            stream_id = json.loads(json.loads(stream_id))
-                            stream_id = stream_id['ws_url']
-                        dlg = StreamUploadedDialog(data_name=self.name, stream_id=stream_id)
+                def cb(path):
+                    if path:
+                        stream_id = json.loads(path)
+                        dlg = StreamUploadedDialog(data_name=self.name, stream_id=stream_id[0])
                         dlg.show()
-                wallet.market_client.query_data(market_hash=self.market_hash).addCallbacks(cb)
+                deferToThread(lambda: fs.buyer_file_by_order_id(self.order_id).path).addCallback(cb)
             ok.clicked.connect(openStreamID)
             btm.addWidget(ok)
             preview = QPushButton('Preview')

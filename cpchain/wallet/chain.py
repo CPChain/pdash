@@ -1,6 +1,7 @@
 import logging
 import os
 import asyncio
+import json
 
 from queue import Queue
 
@@ -266,6 +267,49 @@ class Broker:
             update_buyer_db(urls[0], decrypted_file)
             logger.debug("file has been downloaded")
             logger.debug("put order into confirmed queue, order id: %s", order_id)
+            self.confirmed_order_queue.put(order_id)
+        event.emit(events.BUYER_RECEIVE, order_id)
+    
+    @defer.inlineCallbacks
+    def buyer_send_request_stream(self, order_info):
+        logger.debug("buyer send request to proxy ...")
+        order_id = list(order_info.keys())[0]
+        new_order_info = order_info[order_id]
+        seller_addr = eth_addr_to_string(new_order_info[3])
+        buyer_addr = eth_addr_to_string(new_order_info[2])
+        proxy_id = eth_addr_to_string(new_order_info[4])
+        message = Message()
+        buyer_data = message.buyer_data
+        message.type = Message.BUYER_DATA
+        buyer_data.order_id = order_id
+        buyer_data.order_type = 'stream'
+        buyer_data.seller_addr = seller_addr
+        buyer_data.buyer_addr = buyer_addr
+        buyer_data.market_hash = Encoder.bytes_to_base64_str(new_order_info[0])
+
+        sign_message = SignMessage()
+        sign_message.public_key = self.wallet.market_client.public_key
+        sign_message.data = message.SerializeToString()
+        sign_message.signature = ECCipher.create_signature(
+            self.wallet.market_client.account.private_key,
+            sign_message.data
+        )
+
+        error, AES_key, urls = yield start_proxy_request(sign_message, proxy_id)
+
+        def update_buyer_db(stream_id):
+            session = get_session()
+            session.query(BuyerFileInfo).filter(BuyerFileInfo.order_id == order_id).update(
+                {
+                    BuyerFileInfo.is_downloaded: True,
+                    BuyerFileInfo.path: stream_id,
+                }, synchronize_session=False)
+            session.commit()
+        if error:
+            logger.error(error)
+        else:
+            update_buyer_db(json.dumps(urls))
+            logger.debug("Stream data has been geted")
             self.confirmed_order_queue.put(order_id)
         event.emit(events.BUYER_RECEIVE, order_id)
 

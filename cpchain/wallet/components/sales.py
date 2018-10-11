@@ -219,7 +219,10 @@ class Sale(QWidget):
         app.unlock()
         order_info = dict()
         order_info[self.order_id] = wallet.chain_broker.buyer.query_order(self.order_id)
-        yield wallet.chain_broker.buyer_send_request(order_info)
+        if self.order_type == 'file':
+            yield wallet.chain_broker.buyer_send_request(order_info)
+        else:
+            yield wallet.chain_broker.buyer_send_request_stream(order_info)
 
     def receive(self, _):
         app.event.emit(app.events.UPDATE_ORDER_STATUS, {'order_id': self.order_id, 'status': 'receiving'})

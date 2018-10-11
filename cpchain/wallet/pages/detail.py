@@ -231,17 +231,18 @@ class ProductDetail(Page):
                                                     data_type=self.data_type)
                     layout.insertWidget(start, self.order_detail)
                     start += 1
-        if self.ptype == 'stream':
-            self.data_type = 'stream'
-            order_detail = OrderDetail(order_time=Model("2018/6/15  08:40:39"),
-                                       status=Model("Delivered on May 2, 08:09:08"),
-                                       order_id=None,
-                                       market_hash=self.market_hash,
-                                       name=self.name.value,
-                                       data_type=self.data_type)
-            layout.insertWidget(start, order_detail)
-            start += 1
-        height += 200
+                height += 100
+            if self.ptype == 'stream':
+                self.data_type = 'stream'
+                order_detail = OrderDetail(order_time=Model("2018/6/15  08:40:39"),
+                                        status=Model("Delivered on May 2, 08:09:08"),
+                                        order_id=order["order_id"],
+                                        market_hash=self.market_hash,
+                                        name=self.name.value,
+                                        data_type=self.data_type)
+                layout.insertWidget(start, order_detail)
+                start += 1
+                height += 100
         widget.setFixedHeight(height)
         
 
