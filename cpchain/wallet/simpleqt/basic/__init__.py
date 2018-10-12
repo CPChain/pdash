@@ -2,6 +2,8 @@ from PyQt5.QtWidgets import QLabel, QFrame
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCursor
 from functools import wraps
+from ..model import Model
+from .. import Signals
 import sys
 sys.path.append('.')
 
@@ -85,4 +87,28 @@ from .button import Button
 from .input import Input
 from .checkbox import CheckBox
 
-__all__ = [Builder, Button, Input, CheckBox]
+def init(self, *args, **kwargs):
+    new_args = []
+    for i in args:
+        if isinstance(i, Model):
+            i.setView(self)
+            new_args.append(i.value)
+        else:
+            new_args.append(i)
+    return new_args, kwargs
+
+class Label(QLabel):
+    
+    def __init__(self, *args, **kwargs):
+        args, kwargs = init(self, *args, **kwargs)
+        new_args = []
+        for i in args:
+            new_args.append(str(i))
+        super().__init__(*new_args, **kwargs)
+        self.signals = Signals()
+        self.signals.change.connect(self.modelChange)
+
+    def modelChange(self, value):
+        self.setText(str(value))
+
+__all__ = [Builder, Button, Input, CheckBox, Label]

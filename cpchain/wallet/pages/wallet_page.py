@@ -22,10 +22,13 @@ from cpchain.chain.utils import default_w3 as web3
 from cpchain.wallet.components.loading import Loading
 
 
-from cpchain.wallet.simpleqt.basic import Builder, Button, Input, Line
+from cpchain.wallet.simpleqt.basic import Builder, Button, Input, Line, Label
 from cpchain import account
 
 logger = logging.getLogger(__name__)
+
+UPDATE = app.event.Event()
+
 
 class Record:
     category = "category"
@@ -53,6 +56,10 @@ class ReceiveDialog(Dialog):
         return {
             "address": self.address
         }
+    
+    def close(self):
+        app.event.emit(UPDATE)
+        super().close()
 
     def show_copyed(self):
         self.copyed.show()
@@ -227,6 +234,7 @@ class PasswordDialog(Dialog):
         def cb(err):
             self.setLoading(False)
             if not err:
+                app.event.emit(UPDATE)
                 self.close()
         self.setLoading(True)
         deferToThread(self.send).addCallback(cb)
@@ -268,6 +276,9 @@ class WalletPage(Page):
     def __init__(self, parent=None):
         self.parent = parent
         super().__init__(parent)
+        def update(_):
+            self.balance.value = account.get_balance(app.addr)
+        app.event.register(UPDATE, update)
 
     @page.create
     def create(self):
@@ -291,7 +302,7 @@ class WalletPage(Page):
     def ui(self, layout):
         layout.setAlignment(Qt.AlignTop)
         self.add(Builder().text('Balance').name('title').build())
-        self.addH(Builder().text(self.balance.value).name('amount').build(), 0, align=Qt.AlignBottom | Qt.AlignLeft)
+        self.addH(Builder(Label).model(self.balance).name('amount').build(), 0, align=Qt.AlignBottom | Qt.AlignLeft)
         self.addH(Builder().text('CPC').name('unit').build())
 
         self.add()

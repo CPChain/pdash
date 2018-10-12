@@ -20,6 +20,7 @@ import os
 import os.path as osp
 import string
 import logging
+import json
 
 from cpchain import root_dir
 
@@ -30,7 +31,7 @@ from cpchain.wallet.components.table import Table
 from cpchain.wallet.components.product import Product
 from cpchain.wallet.components.product_list import ProductList
 from cpchain.wallet.components.upload import UploadDialog
-from cpchain.wallet.components.stream_upload import StreamUploadDialog
+from cpchain.wallet.components.stream_upload import StreamUploadDialog, StreamUploadedDialog
 from cpchain.wallet.components.loading import Loading
 from cpchain.wallet.pages.publish import PublishProduct
 
@@ -74,9 +75,7 @@ class MyDataTab(Page):
         return {
             'products': [],
             'table_data': [],
-            'stream_data': [
-
-            ]
+            'stream_data': []
         }
 
     @page.ui
@@ -119,6 +118,29 @@ class MyDataTab(Page):
         self.buildTable = buildTable
 
         def buildStreamTable():
+            def right_menu(row):
+                self.menu = QMenu(self.stream_table)
+                show_id = QAction('Stream ID', self)
+                def open():
+                    uri = self.stream_data.value[row].remote_uri
+                    name = self.stream_data.value[row].name
+                    if uri:
+                        try:
+                            uri = json.loads(uri)
+                            ws_url = uri.get('ws_url')
+                            dlg = StreamUploadedDialog(data_name=name, stream_id=ws_url)
+                            dlg.show()
+                        except Exception as e:
+                            logger.debug(uri)
+                            logger.error(e)
+                show_id.triggered.connect(lambda: open())
+                self.menu.addAction(show_id)
+                self.menu.popup(QCursor.pos())
+                self.menu.setStyleSheet("""
+                    QMenu::item::selected {
+                        color: #666;
+                    }
+                """)
             header = {
                 'headers': ['Name', 'Location', 'Status'],
                 'width': [327, 295, 54]
@@ -149,6 +171,9 @@ class MyDataTab(Page):
                 table.setMinimumHeight(180)
             else:
                 table.setMaximumHeight(40)
+            def record_check(item):
+                right_menu(item.row())
+            table.itemClicked.connect(record_check)
             return table
         stream_table = buildStreamTable()
         self.stream_table = stream_table
@@ -193,7 +218,7 @@ class MyDataTab(Page):
         if len(self.stream_data.value) == 0:
             # No Data
             self.add(Builder().text('0 Streaming Data!').name('no_data').build())
-        
+
         vLayout.addStretch(1)
         return vLayout
     
@@ -221,6 +246,10 @@ class MyDataTab(Page):
 
         QTableWidgetItem#publishText {
             color: blue;
+        }
+        QTableWidget::item:selected, QTableWidget::item:focus {
+            background: #3173d8;
+            color: #aaa;
         }
         """
 

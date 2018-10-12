@@ -117,7 +117,7 @@ QTableWidget::item {
 
 QTableWidget::item:selected, QTableWidget::item:focus {
     background: #3173d8;
-    color: #ffffff;
+    /*color: #ffffff;*/
 }
 
 QScrollBar:vertical{

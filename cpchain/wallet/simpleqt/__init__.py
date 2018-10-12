@@ -37,7 +37,6 @@ class Page(QScrollArea):
         self.hlayout = None
         self._layout.setAlignment(Qt.AlignCenter)
         self.ui(self._layout)
-        main.addLayout(self._layout)
 
 
         __style = self.__style()

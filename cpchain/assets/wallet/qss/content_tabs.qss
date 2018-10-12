@@ -72,7 +72,7 @@ QScrollBar::sub-line:vertical {
 /* context menu */
 QMenu {
     background: #3d2f2f;
-    color: #efe6e6;
+    /*color: #efe6e6;*/
 }
 
 QMenu::item:selected {
