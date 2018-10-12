@@ -40,7 +40,7 @@ from cpchain.wallet.components.purchase import PurchaseDialog
 from cpchain.wallet.components.picture import Picture
 
 from cpchain.wallet.simpleqt.page import Page
-from cpchain.wallet.simpleqt.decorator import page
+from cpchain.wallet.simpleqt.decorator import page, component
 from cpchain.wallet.simpleqt.widgets.label import Label
 from cpchain.wallet.simpleqt.widgets import Input
 from cpchain.wallet.simpleqt.model import Model
@@ -66,8 +66,17 @@ class OrderDetail(QWidget):
         self.market_hash = market_hash
         self.name = name
         self.stream_id = stream_id
+        self.create()
         super().__init__()
         self.ui()
+    
+    @component.create
+    def create(self):
+        def cb(path):
+            if path:
+                stream_id = json.loads(path)
+                self.ws_url = stream_id[0]
+        deferToThread(lambda: fs.buyer_file_by_order_id(self.order_id).path).addCallback(cb)
 
     def gen_row(self, name, widget):
         layout = QHBoxLayout()
@@ -148,7 +157,7 @@ class OrderDetail(QWidget):
             preview = QPushButton('Preview')
             preview.setObjectName('pinfo_cancel_btn')
             def openPreview(_):
-                dlg = PreviewDialog()
+                dlg = PreviewDialog(ws_url=self.ws_url)
                 dlg.show()
             preview.clicked.connect(openPreview)
             btm.addWidget(preview)

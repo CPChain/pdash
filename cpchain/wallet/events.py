@@ -41,3 +41,6 @@ NEW_ORDER = Event()
 
 # Cancel Purchase Dialog
 CANCEL_PURCHASE = Event()
+
+# New Record
+PREVIEW_NEW_RECORD = Event()

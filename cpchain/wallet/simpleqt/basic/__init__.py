@@ -1,4 +1,6 @@
 from PyQt5.QtWidgets import QLabel, QFrame
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QCursor
 from functools import wraps
 import sys
 sys.path.append('.')
@@ -31,11 +33,14 @@ class Builder:
 
     def __init__(self, widget=QLabel, *args, **kw):
         self.widget = widget("", *args, **kw)
+        if widget == QLabel:
+            self.widget.setTextInteractionFlags(Qt.TextSelectableByMouse)
 
     @operate
     def model(self, model):
         self.widget.model = model
         model.setView(self.widget)
+        self.widget.setText(str(model.value))
 
     @operate
     def text(self, text):
@@ -65,6 +70,7 @@ class Builder:
     def click(self, callback):
         if isinstance(self.widget, QLabel):
             Binder.click(self.widget, callback)
+            self.widget.setCursor(QCursor(Qt.PointingHandCursor))
             return
         self.widget.clicked.connect(callback)
 

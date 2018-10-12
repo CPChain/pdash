@@ -166,8 +166,8 @@ class ProductDetail(Page):
         is_seller = self.owner_address == wallet.market_client.public_key
         # Sales
         if app.products_order.get(self.market_hash):
-            sales_header = DetailHeader("{} Sales".format(len(app.products_order.get(self.market_hash))))
-            layout.insertWidget(start, sales_header)
+            self.sales_header = DetailHeader("{} Sales".format(len(app.products_order.get(self.market_hash))))
+            layout.insertWidget(start, self.sales_header)
             start += 1
 
             # enum State {
@@ -184,12 +184,14 @@ class ProductDetail(Page):
             # }
             myaddress = get_address_from_public_key_object(wallet.market_client.public_key)
             self.salesElem = []
+            need_show = False
             for order in app.products_order[self.market_hash]:
                 # not buyer and not seller
                 buyer_addr = eth_addr_to_string(order['buyer_addr'])
                 is_buyer = buyer_addr == myaddress
                 if not is_buyer and not is_seller:
                     continue
+                need_show = True
                 self.buy.setEnabled(False)
                 status = order['status']
                 if status == 0:
@@ -215,6 +217,9 @@ class ProductDetail(Page):
                 self.salesElem.append(sale1)
                 start += 1
                 height += 200
+            
+            if not need_show:
+                self.sales_header.hide()
 
         # Order Detail
         if order and self.owner_address != wallet.market_client.public_key:
@@ -232,17 +237,17 @@ class ProductDetail(Page):
                     layout.insertWidget(start, self.order_detail)
                     start += 1
                 height += 100
-            if self.ptype == 'stream':
-                self.data_type = 'stream'
-                order_detail = OrderDetail(order_time=Model("2018/6/15  08:40:39"),
-                                        status=Model("Delivered on May 2, 08:09:08"),
-                                        order_id=order["order_id"],
-                                        market_hash=self.market_hash,
-                                        name=self.name.value,
-                                        data_type=self.data_type)
-                layout.insertWidget(start, order_detail)
-                start += 1
-                height += 100
+                if self.ptype == 'stream':
+                    self.data_type = 'stream'
+                    order_detail = OrderDetail(order_time=Model("2018/6/15  08:40:39"),
+                                            status=Model("Delivered on May 2, 08:09:08"),
+                                            order_id=order["order_id"],
+                                            market_hash=self.market_hash,
+                                            name=self.name.value,
+                                            data_type=self.data_type)
+                    layout.insertWidget(start, order_detail)
+                    start += 1
+                    height += 100
         widget.setFixedHeight(height)
         
 

@@ -1,6 +1,7 @@
 import time
 
 from twisted.internet import threads
+from twisted.internet.task import LoopingCall
 from autobahn.twisted.websocket import WebSocketClientProtocol, \
     WebSocketClientFactory, connectWS
 
@@ -11,19 +12,14 @@ class MyClientProtocol(WebSocketClientProtocol):
 
     def onOpen(self):
         self.running = True
-
+        self.record_id = 0
         def produce_stream():
-            record_id = 0
-            while self.running:
-                record = 'record %d' % record_id
-                record_id += 1
-                print('sending record: {0}'.format(record))
-                self.sendMessage(record.encode('utf8'))
-                time.sleep(1)
-
-        return threads.deferToThread(
-            produce_stream
-            )
+            record = 'record %d' % self.record_id
+            self.record_id += 1
+            print('sending record: {0}'.format(record))
+            self.sendMessage(record.encode('utf8'))
+        loop = LoopingCall(produce_stream)
+        loop.start(2)
 
     def onMessage(self, payload, isBinary):
 

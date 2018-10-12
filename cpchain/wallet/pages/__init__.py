@@ -64,6 +64,7 @@ class App:
         self.products_order = {}
         self.event = event
         self.events = events
+        self.addr = None
         self.status_ = {}
         self.init()
     

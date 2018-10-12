@@ -13,7 +13,6 @@ from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import deferToThread
 from cpchain.wallet import fs
 from cpchain.utils import open_file, sizeof_fmt
-from cpchain.proxy.client import pick_proxy
 
 import importlib
 import os

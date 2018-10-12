@@ -168,7 +168,7 @@ class GeneratingWindow(MyWindow):
         # loading  = QPixmap(abs_path('icons/loading.png'))
         # loading = loading.scaled(228, 200)
         # self.add(Builder().name('loading').pixmap(loading).click(lambda _: self.ok()).build())
-        loading = LoadingGif(path=abs_path('icons/GIF_generating.gif'), width=228, height=228)
+        loading = LoadingGif(path=abs_path('icons/GIF_3dot.gif'), width=228, height=228)
         self.add(loading)
 
 

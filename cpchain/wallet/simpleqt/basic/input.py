@@ -9,6 +9,8 @@ class Input(QLineEdit):
     signals = Signals()
 
     def __init__(self, model=None, width=228, height=30, *args, **kw):
+        if 'model' in kw:
+            del kw['model']
         super().__init__(*args, **kw)
         self.model = model
         if model:

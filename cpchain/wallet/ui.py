@@ -240,6 +240,13 @@ def __login(account=None):
     if account is None:
         wallet.accounts.set_default_account(1)
         account = wallet.accounts.default_account
+    public_key = ECCipher.serialize_public_key(account.public_key)
+    addr = utils.get_address_from_public_key_object(public_key)
+    addr = web3.toChecksumAddress(addr)
+    logger.info(addr)
+    logger.info(get_balance(addr))
+    app.addr = addr
+    app.pwd = account.key_passphrase.decode()
     wallet.market_client.account = account
     wallet.market_client.public_key = ECCipher.serialize_public_key(wallet.market_client.account.public_key)
     wallet.market_client.login(app.username).addCallbacks(lambda _: event.emit(events.LOGIN_COMPLETED))
@@ -258,6 +265,7 @@ def enterPDash(account=None):
 
     wallet.set_main_wnd(main_wnd)
     __login(account)
+
 
 def login():
     path = os.path.expanduser('~/.cpchain')
@@ -303,10 +311,6 @@ def search(event):
 def init_handlers():
     event.register(events.LOGIN_COMPLETED, lambda _: save_login_info())
     event.register(events.SEARCH, search)
-
-@event.register(events.NEW_TRANSACTION_EVENT)
-def echo(event):
-    print(event.data)
 
 
 if __name__ == '__main__':
