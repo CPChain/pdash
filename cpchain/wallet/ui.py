@@ -209,32 +209,18 @@ def __unlock():
     except Exception as e:
         logger.error(e)
 
+
 def initialize_system():
-    def monitor_chain_event():
-        monitor_new_order = LoopingCall(wallet.chain_broker.monitor.monitor_new_order)
-        monitor_new_order.start(10)
-
-        handle_new_order = LoopingCall(wallet.chain_broker.handler.handle_new_order)
-        handle_new_order.start(10)
-
-        monitor_ready_order = LoopingCall(wallet.chain_broker.monitor.monitor_ready_order)
-        monitor_ready_order.start(20)
-
-        handle_ready_order = LoopingCall(wallet.chain_broker.handler.handle_ready_order)
-        handle_ready_order.start(25)
-
-        monitor_confirmed_order = LoopingCall(wallet.chain_broker.monitor.monitor_confirmed_order)
-        monitor_confirmed_order.start(30)
     if hasattr(wallet, 'chain_broker'):
-        monitor_chain_event()
         update = LoopingCall(app.update)
-        update.start(10)
-        app.update()
+        update.start(5)
+
 
 def buildMainWnd():
     main_wnd = MainWindow(reactor)
     _handle_keyboard_interrupt()
     return main_wnd
+
 
 def __login(account=None):
     if account is None:

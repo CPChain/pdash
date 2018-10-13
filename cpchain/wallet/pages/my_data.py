@@ -25,7 +25,6 @@ import json
 from cpchain import root_dir
 
 from cpchain.wallet.pages import main_wnd, HorizontalLine, abs_path, get_icon, Binder, app
-from cpchain.wallet.pages.other import PublishDialog
 
 from cpchain.wallet.components.table import Table
 from cpchain.wallet.components.product import Product

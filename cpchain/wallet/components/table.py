@@ -23,12 +23,29 @@ import string
 import logging
 
 from cpchain import config, root_dir
-from cpchain.wallet.pages.personal import Seller
-
-from cpchain.wallet.pages.product import Product2, TableWidget
-
 from cpchain.wallet.pages import main_wnd
-from cpchain.wallet.pages.other import PublishDialog
+
+class TableWidget(QTableWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+        self.init_ui()
+
+    def init_ui(self):
+
+        self.setMinimumWidth(self.parent.width())
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.horizontalHeader().setStretchLastSection(True)
+        self.verticalHeader().setVisible(False)
+        self.setShowGrid(False)
+        self.setAlternatingRowColors(True)
+        self.horizontalHeader().setHighlightSections(False)
+
+
+    def set_right_menu(self, func):
+        self.customContextMenuRequested[QPoint].connect(func)
 
 class Table(TableWidget):
 

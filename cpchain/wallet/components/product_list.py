@@ -23,12 +23,7 @@ import logging
 import sip
 
 from cpchain import config, root_dir
-from cpchain.wallet.pages.personal import Seller
-
-from cpchain.wallet.pages.product import Product2, TableWidget
-
 from cpchain.wallet.pages import main_wnd
-from cpchain.wallet.pages.other import PublishDialog
 from cpchain.wallet.components.product import Product
 from cpchain.wallet.simpleqt import Signals
 

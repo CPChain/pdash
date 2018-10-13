@@ -28,7 +28,6 @@ from cpchain import root_dir
 
 from cpchain.wallet.utils import formatTimestamp
 from cpchain.wallet.pages import HorizontalLine, abs_path, get_icon, app, Binder, wallet
-from cpchain.wallet.pages.other import PublishDialog
 
 from cpchain.wallet.components.table import Table
 from cpchain.wallet.components.product import Product

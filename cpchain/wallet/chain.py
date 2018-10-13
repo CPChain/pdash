@@ -44,11 +44,6 @@ def update():
 class Broker:
     def __init__(self, wallet):
         self.wallet = wallet
-        # order_queue: info, ready_order_queue: info, bought_order_queue: id, confirmed_order_queue: id
-        self.order_queue = Queue()
-        self.bought_order_queue = Queue()
-        self.ready_order_queue = Queue()
-        self.confirmed_order_queue = Queue()
         bin_path = join_with_root(config.chain.contract_bin_path)
         # deploy_contract(bin_path, config.chain.contract_name, default_w3)
         account = get_address_from_public_key_object(self.wallet.market_client.public_key)
@@ -64,19 +59,6 @@ class Broker:
         # query all order of seller's products, then save it in memory
         orders = yield self.seller.get_all_orders()
         return orders
-
-    # batch process
-    def query_order_state(self, order_id_list):
-        unready_order_list = []
-        for current_id in order_id_list:
-            state = self.buyer.query_order(current_id)[10]
-            if state == 2:
-                order_info = {current_id: self.buyer.query_order(current_id)}
-                self.ready_order_queue.put(order_info)
-            else:
-                unready_order_list.append(current_id)
-        return unready_order_list
-
 
     def confirm_order(self, order_id_list):
         logger.debug("in buyer confirm order")
@@ -267,7 +249,6 @@ class Broker:
             update_buyer_db(urls[0], decrypted_file)
             logger.debug("file has been downloaded")
             logger.debug("put order into confirmed queue, order id: %s", order_id)
-            self.confirmed_order_queue.put(order_id)
         event.emit(events.BUYER_RECEIVE, order_id)
     
     @defer.inlineCallbacks
@@ -310,7 +291,6 @@ class Broker:
         else:
             update_buyer_db(json.dumps(urls))
             logger.debug("Stream data has been geted")
-            self.confirmed_order_queue.put(order_id)
         event.emit(events.BUYER_RECEIVE, order_id)
 
 
@@ -319,54 +299,6 @@ class Monitor:
         self.broker = broker
         start_id = self.broker.seller.get_order_num()
         self.chain_monitor = OrderMonitor(start_id, self.broker.seller)
-
-    def get_new_order_info(self):
-        new_order_id_list = self.chain_monitor.get_new_order()
-        new_order_info_list = []
-        for current_id in new_order_id_list:
-            new_order_info_list.append({current_id: self.broker.seller.query_order(current_id)})
-        return new_order_info_list
-
-
-    # this method should be called periodically in the main thread(reactor)
-    def monitor_new_order(self):
-        new_order_list = deferToThread(self.get_new_order_info)
-        def add_order(order_list):
-            for current_order in order_list:
-                self.broker.order_queue.put(current_order)
-        new_order_list.addCallback(add_order)
-        return self.broker.order_queue
-
-
-    def monitor_ready_order(self):
-        bought_order_list = []
-        while True:
-            if self.broker.bought_order_queue.empty():
-                break
-            else:
-                order = self.broker.bought_order_queue.get()
-                bought_order_list.append(order)
-        if not bought_order_list:
-            pass
-        else:
-            d_unready_order = deferToThread(self.broker.query_order_state, bought_order_list)
-
-            def reset_bought_order_queue(unready_order_list):
-                for current_id in unready_order_list:
-                    self.broker.bought_order_queue.put(current_id)
-
-            d_unready_order.addCallback(reset_bought_order_queue)
-
-
-    def monitor_confirmed_order(self):
-        confirmed_order_list = []
-        while True:
-            if self.broker.confirmed_order_queue.empty():
-                break
-            else:
-                order_id = self.broker.confirmed_order_queue.get()
-                confirmed_order_list.append(order_id)
-
 
 class Handler:
     def __init__(self, broker):
@@ -392,7 +324,6 @@ class Handler:
         logger.debug("product info has been created")
         logger.debug("product info: %s", product)
         logger.debug("seller address: %s", product.seller)
-        logger.debug("bought order queue size: %s", self.broker.bought_order_queue.qsize())
         d_placed_order = deferToThread(self.broker.buyer.place_order, product)
 
         def add_bought_order(order_id):
@@ -405,12 +336,3 @@ class Handler:
             event.emit(events.PAY, (order_id, msg_hash))
             # Update the purchased downloaded tab in the main window of wallet
         d_placed_order.addCallback(add_bought_order)
-        return self.broker.bought_order_queue
-
-
-    def handle_new_order(self):
-        pass
-
-
-    def handle_ready_order(self):
-        pass

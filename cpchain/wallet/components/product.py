@@ -21,12 +21,7 @@ import string
 import logging
 
 from cpchain import config, root_dir
-from cpchain.wallet.pages.personal import Seller
-
-from cpchain.wallet.pages.product import Product2, TableWidget
-
 from cpchain.wallet.pages import app, Binder
-from cpchain.wallet.pages.other import PublishDialog
 from cpchain.wallet.components.picture import Picture
 
 from datetime import datetime as dt
