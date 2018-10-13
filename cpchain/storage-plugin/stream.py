@@ -47,4 +47,5 @@ class Storage:
 
         cmd_path = join_with_root('cpchain/storage-plugin/bin/replicate-stream')
         args = ['nohup', cmd_path, ws_url, dest_stream_id]
-        subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        log = open('/tmp/' + dest_stream_id, 'w')
+        subprocess.Popen(args, stdout=log, stderr=log)
