@@ -1,6 +1,6 @@
 from msgpack import packb, unpackb
 
-from cpchain.account import set_default_account
+from cpchain.account import set_default_account, lock_account, unlock_account
 from cpchain.crypto import ECCipher
 
 def set_proxy_account():
@@ -11,6 +11,12 @@ def set_proxy_account():
 def get_proxy_id():
     return ECCipher.get_address_from_public_key(
         _proxy_account.public_key)
+
+def lock_proxy_account():
+    lock_account(_proxy_account)
+
+def unlock_proxy_account():
+    unlock_account(_proxy_account)
 
 def sign_proxy_data(data):
     public_key = _proxy_account.public_key

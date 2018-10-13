@@ -1,7 +1,7 @@
 import logging
 
 from cpchain import chain, config
-from cpchain.proxy.account import get_proxy_id
+from cpchain.proxy.account import get_proxy_id, lock_proxy_account, unlock_proxy_account
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,9 @@ def order_is_ready_on_chain(order_id):
 
 def claim_data_fetched_to_chain(order_id):
     try:
+        unlock_proxy_account()
         get_proxy_agent().claim_fetched(order_id)
+        lock_proxy_account()
         record = get_proxy_agent().query_order(order_id)
     except:
         logger.exception("failed to claim fetched order %d to chain" % order_id)
@@ -49,7 +51,9 @@ def claim_data_delivered_to_chain(order_id, signature=None):
 
     signature = signature or b'dummy'
     try:
+        unlock_proxy_account()
         get_proxy_agent().claim_delivered(order_id, signature)
+        lock_proxy_account()
         record = get_proxy_agent().query_order(order_id)
     except:
         logger.exception("failed to claim delivered order %d to chain" % order_id)
