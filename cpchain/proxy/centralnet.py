@@ -30,6 +30,7 @@ class PeerProtocol(protocol.DatagramProtocol):
     def __init__(self):
         self.request = {}
         self.peers = {}
+        self.ping_timeouts = {}
 
     def send_msg(self, msg, addr):
         try:
@@ -121,6 +122,7 @@ class PeerProtocol(protocol.DatagramProtocol):
             peer_id = msg['peer_id']
 
             self.peers[peer_id] = addr
+            self.ping_timeouts[peer_id] = 0
 
             response = {
                 'type': 'response',
@@ -165,8 +167,12 @@ class PeerProtocol(protocol.DatagramProtocol):
 
         def ping_response(response, peer_id):
             if response is None:
-                logger.debug("remove peer %s at %s" % (peer_id, str(self.peers[peer_id])))
-                del self.peers[peer_id]
+                if self.ping_timeouts[peer_id] == 5:
+                    logger.debug("remove peer %s at %s" % (peer_id, str(self.peers[peer_id])))
+                    del self.peers[peer_id]
+                    del self.ping_timeouts[peer_id]
+                else:
+                    self.ping_timeouts[peer_id] += 1
 
         for peer_id in self.peers:
             addr = self.peers[peer_id]

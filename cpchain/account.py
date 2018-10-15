@@ -29,7 +29,7 @@ class Accounts(list):
 
         key_passphrase = open(osp.join(_keystore_dir, 'password')).read()
         for key_path in glob.glob(ptn):
-            account = Account(key_path, key_passphrase)
+            account = Account(key_path=key_path, key_passphrase=key_passphrase)
             self.append(account)
 
         if len(self):
@@ -41,13 +41,30 @@ class Accounts(list):
 
 
 class Account:
-    def __init__(self, key_path, key_passphrase=None):
-        if not key_passphrase:
-            key_passphrase = input("Input Key Passphrase: ")
-        self.key_path = key_path
-        self.key_passphrase = key_passphrase
-        self.private_key, self.public_key = crypto.ECCipher.load_key_pair(key_path, key_passphrase)
+    def __init__(self, key_path=None, key_passphrase=None, private_key=None):
 
+        if key_passphrase:
+            self.key_passphrase = key_passphrase
+
+        if private_key:
+            self.private_key = crypto.ECCipher.create_private_key(private_key)
+            self.public_key = crypto.ECCipher.create_public_key_from_private_key(self.private_key)
+
+        elif key_path:
+            if not key_passphrase:
+                key_passphrase = input("Input Key Passphrase: ")
+                self.key_passphrase = key_passphrase
+            self.key_path = key_path
+            self.private_key, self.public_key = crypto.ECCipher.load_key_pair(key_path, key_passphrase)
+
+
+def unlock_account(account):
+    addr = crypto.ECCipher.get_address_from_public_key(account.public_key)
+    web3.personal.unlockAccount(web3.toChecksumAddress(addr), account.key_passphrase)
+
+def lock_account(account):
+    addr = crypto.ECCipher.get_address_from_public_key(account.public_key)
+    web3.personal.lockAccount(web3.toChecksumAddress(addr))
 
 def create_account(passwd, filepath=_keystore_dir, name=None):
 
@@ -57,8 +74,6 @@ def create_account(passwd, filepath=_keystore_dir, name=None):
         web3.personal.importRawKey(acct.privateKey, passwd)
     except:
         logger.info("account already in node's keychain")
-
-    web3.personal.unlockAccount(acct.address, passwd)
 
     if not name:
         name = "UTC--%s--%s" % (datetime.utcnow().isoformat(), acct.address[2:].lower())
@@ -81,7 +96,8 @@ def create_account(passwd, filepath=_keystore_dir, name=None):
     with open(key_file, 'w') as f:
         f.write(json.dumps(encrypted_key))
 
-    return Account(key_file, passwd.encode('utf8'))
+    return Account(key_passphrase=passwd, private_key=acct.privateKey)
+
 
 def import_account(key_file, passwd):
 
@@ -96,9 +112,7 @@ def import_account(key_file, passwd):
     except:
         logger.info("account already in node's keychain")
 
-    web3.personal.unlockAccount(acct.address, passwd)
-
-    return Account(key_file, passwd.encode('utf8'))
+    return Account(key_passphrase=passwd, private_key=acct.privateKey)
 
 def get_keystore_list():
     ptn = osp.join(_keystore_dir, 'UTC-*')

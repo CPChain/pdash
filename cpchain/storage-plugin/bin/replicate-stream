@@ -21,7 +21,7 @@ class MyClientProtocol(WebSocketClientProtocol):
 
     def onClose(self, wasClean, code, reason):
         print("WebSocket connection closed: {0}".format(reason))
-
+        reactor.callLater(5, connect_ws)
 
 if __name__ == '__main__':
 
@@ -42,5 +42,8 @@ if __name__ == '__main__':
     factory.protocol = MyClientProtocol
     factory.protocol.stream_id = stream_id
 
-    connectWS(factory)
+    def connect_ws():
+        connectWS(factory)
+
+    connect_ws()
     reactor.run()
