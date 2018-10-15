@@ -3,9 +3,9 @@ from PyQt5.QtWidgets import QLabel
 from simpleqt.model import Model
 from simpleqt.widgets import init
 
-class Label(QLabel):
+from .. import Signals
 
-    change = QtCore.pyqtSignal(str, name="modelChanged")
+class Label(QLabel):
 
     def __init__(self, *args, **kwargs):
         args, kwargs = init(self, *args, **kwargs)
@@ -13,7 +13,8 @@ class Label(QLabel):
         for i in args:
             new_args.append(str(i))
         super().__init__(*new_args, **kwargs)
-        self.change.connect(self.modelChange)
+        self.signals = Signals()
+        self.signals.change.connect(self.modelChange)
 
     def modelChange(self, value):
         self.setText(value)

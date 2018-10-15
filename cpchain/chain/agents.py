@@ -33,10 +33,14 @@ class Agent:
             rsa = Encoder.bytes_to_base64_str(order[1])[:10]+"..."
             status = order[10]
             item = data.get(market_hash, [])
+            seller_addr = order[3]
+            buyer_addr = order[2]
             item.append({
                 'public_key': rsa,
                 'status': status,
-                'order_id': i + 1
+                'order_id': i + 1,
+                'seller_addr': seller_addr,
+                'buyer_addr': buyer_addr
             })
             data[market_hash] = item
         return data

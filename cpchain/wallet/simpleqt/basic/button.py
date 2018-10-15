@@ -1,14 +1,22 @@
-from PyQt5.QtWidgets import QPushButton
+from PyQt5.QtWidgets import QPushButton, QGraphicsOpacityEffect
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QCursor
 
 from . import Builder, operate
 
 class Button(QPushButton):
     
+    NO_TRANSPARENT = 0.9999
+
     def __init__(self, text, width=228, height=38, *args, **kw):
         super().__init__(text, *args, **kw)
         self.width = width
         self.height = height
+        self.op = QGraphicsOpacityEffect(self)
+        self.op.setOpacity(self.NO_TRANSPARENT)
+        self.setGraphicsEffect(self.op)
+        self.setAutoFillBackground(True)
+        self.setCursor(QCursor(Qt.PointingHandCursor))
         self.setStyleSheet(self.blank_style())
     
     class Builder(Builder):
@@ -29,8 +37,13 @@ class Button(QPushButton):
         @operate
         def height(self, height):
             self.widget.setMinimumHeight(height)
+    
+    def setEnabled(self, status):
+        super().setEnabled(status)
+        self.op.setOpacity(0.5 if not status else self.NO_TRANSPARENT)
 
     def primary_style(self):
+        # background:rgb(22,124,233)
         return self.blank_style() + """
             QPushButton {
                 background: #167ce9;
@@ -38,7 +51,7 @@ class Button(QPushButton):
             }
             QPushButton:hover, QPushButton:pressed {
                 background: #187def;
-                color: #fff
+                color: #fff;
             }
         """
 

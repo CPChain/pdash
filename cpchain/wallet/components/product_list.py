@@ -14,7 +14,6 @@ from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import deferToThread
 from cpchain.wallet import fs
 from cpchain.utils import open_file, sizeof_fmt
-from cpchain.proxy.client import pick_proxy
 
 import importlib
 import os
@@ -24,25 +23,20 @@ import logging
 import sip
 
 from cpchain import config, root_dir
-from cpchain.wallet.pages.personal import Seller
-
-from cpchain.wallet.pages.product import Product2, TableWidget
-
 from cpchain.wallet.pages import main_wnd
-from cpchain.wallet.pages.other import PublishDialog
 from cpchain.wallet.components.product import Product
+from cpchain.wallet.simpleqt import Signals
 
 from datetime import datetime as dt
 
 class ProductList(QWidget):
 
-    change = QtCore.pyqtSignal(list, name="modelChanged")
-
     def __init__(self, products, col=3, scroll=True):
         self.col = col
         self.scroll = scroll
+        self.signals = Signals()
         super().__init__()
-        self.change.connect(self.modelChanged)
+        self.signals.change.connect(self.modelChanged)
         self.setProducts(products)
 
     def setProducts(self, products):

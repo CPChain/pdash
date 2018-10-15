@@ -6,7 +6,15 @@ sys.path.append('.')
 
 class Signals(QtCore.QObject):
 
-    change = QtCore.pyqtSignal(str, name="modelChanged")
+    change = QtCore.pyqtSignal(object, name="modelChanged")
+
+    disabled = QtCore.pyqtSignal(name='Diabled')
+
+    refresh = QtCore.pyqtSignal(name='Refresh')
+
+    loading = QtCore.pyqtSignal(name='loading')
+
+    loading_over = QtCore.pyqtSignal(name='loading over')
 
 class Page(QScrollArea):
     
@@ -29,7 +37,6 @@ class Page(QScrollArea):
         self.hlayout = None
         self._layout.setAlignment(Qt.AlignCenter)
         self.ui(self._layout)
-        main.addLayout(self._layout)
 
 
         __style = self.__style()

@@ -21,13 +21,13 @@ import os
 import os.path as osp
 import string
 import logging
+import json
 import shutil
 
 from cpchain import root_dir
 
 from cpchain.wallet.utils import formatTimestamp
-from cpchain.wallet.pages import HorizontalLine, abs_path, get_icon, app, Binder
-from cpchain.wallet.pages.other import PublishDialog
+from cpchain.wallet.pages import HorizontalLine, abs_path, get_icon, app, Binder, wallet
 
 from cpchain.wallet.components.table import Table
 from cpchain.wallet.components.product import Product
@@ -39,7 +39,7 @@ from cpchain.wallet.components.purchase import PurchaseDialog
 from cpchain.wallet.components.picture import Picture
 
 from cpchain.wallet.simpleqt.page import Page
-from cpchain.wallet.simpleqt.decorator import page
+from cpchain.wallet.simpleqt.decorator import page, component
 from cpchain.wallet.simpleqt.widgets.label import Label
 from cpchain.wallet.simpleqt.widgets import Input
 from cpchain.wallet.simpleqt.model import Model
@@ -54,16 +54,28 @@ logger = logging.getLogger(__name__)
 
 class OrderDetail(QWidget):
 
-    def __init__(self, order_time, status, order_id, name=None, storage_path=None, data_type='batch'):
+    def __init__(self, order_time, status, order_id, name=None, storage_path=None, data_type='batch',
+                 stream_id=None, market_hash=None):
         self.order_time = order_time
         self.status = status
         self.order_id = order_id
         self.operator = Operator()
         self.storage_path = storage_path
         self.data_type = data_type
+        self.market_hash = market_hash
         self.name = name
+        self.stream_id = stream_id
+        self.create()
         super().__init__()
         self.ui()
+    
+    @component.create
+    def create(self):
+        def cb(path):
+            if path:
+                stream_id = json.loads(path)
+                self.ws_url = stream_id[0]
+        deferToThread(lambda: fs.buyer_file_by_order_id(self.order_id).path).addCallback(cb)
 
     def gen_row(self, name, widget):
         layout = QHBoxLayout()
@@ -85,9 +97,6 @@ class OrderDetail(QWidget):
 
     def download(self):
         order_info = wallet.chain_broker.buyer.query_order(self.order_id)
-        print('>>>>>', order_info[10])
-        # if order_info[10] < 5:
-        #     return
         # Select Storage Path
         if self.storage_path is None:
             self.select_storage_path()
@@ -136,14 +145,18 @@ class OrderDetail(QWidget):
             ok = QPushButton('Get Streaming ID')
             ok.setObjectName('pinfo_stream_btn')
             def openStreamID(_):
-                dlg = StreamUploadedDialog()
-                dlg.show()
+                def cb(path):
+                    if path:
+                        stream_id = json.loads(path)
+                        dlg = StreamUploadedDialog(data_name=self.name, stream_id=stream_id[0])
+                        dlg.show()
+                deferToThread(lambda: fs.buyer_file_by_order_id(self.order_id).path).addCallback(cb)
             ok.clicked.connect(openStreamID)
             btm.addWidget(ok)
             preview = QPushButton('Preview')
             preview.setObjectName('pinfo_cancel_btn')
             def openPreview(_):
-                dlg = PreviewDialog()
+                dlg = PreviewDialog(ws_url=self.ws_url)
                 dlg.show()
             preview.clicked.connect(openPreview)
             btm.addWidget(preview)

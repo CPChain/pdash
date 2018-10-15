@@ -7,7 +7,8 @@ import shelve
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, QVBoxLayout, QGridLayout, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel, QWidget, QLineEdit, QTableWidget, QTextEdit, QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
 from PyQt5.QtCore import Qt, QPoint, QBasicTimer
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtWidgets
+
 
 from cpchain.proxy.client import pick_proxy
 
@@ -20,14 +21,7 @@ from cpchain.crypto import ECCipher
 
 from cpchain.wallet.pages import load_stylesheet, wallet, main_wnd, app
 from cpchain.wallet.pages.header import Header
-from cpchain.wallet.pages.my_data import MyDataTab
-from cpchain.wallet.pages.publish import PublishProduct
-from cpchain.wallet.pages.market import MarketPage
-from cpchain.wallet.pages.detail import ProductDetail
-from cpchain.wallet.pages.purchased import PurchasedPage
-
 from cpchain.wallet.pages.login import LoginWindow
-from cpchain.wallet.pages.wallet_page import WalletPage
 
 
 # widgets
@@ -39,69 +33,11 @@ from cpchain.account import Account, get_balance
 from cpchain.wallet import utils
 from cpchain.chain.utils import default_w3 as web3
 
+from cpchain.wallet.router import Router
+
 globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
 logger = logging.getLogger(__name__)
 
-class Router:
-
-    index = WalletPage
-    back_stack = [('market_page', [], {})]
-    forward_stack = []
-    listener = []
-
-    page = {
-        'wallet': WalletPage,
-        'market_page': MarketPage,
-        'my_data_tab': MyDataTab,
-        'publish_product': PublishProduct,
-        'product_detail': ProductDetail,
-        'purchased_page': PurchasedPage
-    }
-
-    @staticmethod
-    def addListener(listener):
-        Router.listener.append(listener)
-
-    @staticmethod
-    def removeListener(listener):
-        Router.listener.remove(listener)
-
-    @staticmethod
-    def _redirectTo(page, *args, **kwargs):
-        _page = Router.page[page](app.main_wnd.body, *args, **kwargs)
-        layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(_page)
-        QWidget().setLayout(app.main_wnd.body.layout())
-        app.main_wnd.body.setLayout(layout)
-
-    @staticmethod
-    def redirectTo(page, *args, **kwargs):
-        Router.forward_stack = []
-        Router.back_stack.append((page, args, kwargs))
-        for l in Router.listener:
-            l(page)
-        Router._redirectTo(page, *args, **kwargs)
-
-    @staticmethod
-    def hasBack():
-        return len(Router.back_stack) > 1
-
-    @staticmethod
-    def back():
-        if len(Router.back_stack) > 1:
-            Router.forward_stack.append(Router.back_stack[-1])
-            Router.back_stack = Router.back_stack[:-1]
-            page, args, kwargs = Router.back_stack[-1]
-            Router._redirectTo(page, *args, **kwargs)
-
-    @staticmethod
-    def forward():
-        if len(Router.forward_stack) > 0:
-            page, args, kwargs = Router.forward_stack[-1]
-            Router.back_stack.append((page, args, kwargs))
-            Router.forward_stack = Router.forward_stack[:-1]
-            Router._redirectTo(page, *args, **kwargs)
 
 sidebarMenu = [
     {
@@ -208,44 +144,36 @@ def __unlock():
     except Exception as e:
         logger.error(e)
 
+
 def initialize_system():
-    def monitor_chain_event():
-        monitor_new_order = LoopingCall(wallet.chain_broker.monitor.monitor_new_order)
-        monitor_new_order.start(10)
-
-        handle_new_order = LoopingCall(wallet.chain_broker.handler.handle_new_order)
-        handle_new_order.start(15)
-
-        monitor_ready_order = LoopingCall(wallet.chain_broker.monitor.monitor_ready_order)
-        monitor_ready_order.start(20)
-
-        handle_ready_order = LoopingCall(wallet.chain_broker.handler.handle_ready_order)
-        handle_ready_order.start(25)
-
-        monitor_confirmed_order = LoopingCall(wallet.chain_broker.monitor.monitor_confirmed_order)
-        monitor_confirmed_order.start(30)
     if hasattr(wallet, 'chain_broker'):
-        monitor_chain_event()
         update = LoopingCall(app.update)
-        update.start(10)
-        app.update()
-    unlock = LoopingCall(__unlock)
-    unlock.start(5)
+        update.start(5)
+
 
 def buildMainWnd():
     main_wnd = MainWindow(reactor)
     _handle_keyboard_interrupt()
     return main_wnd
 
+
 def __login(account=None):
     if account is None:
         wallet.accounts.set_default_account(1)
         account = wallet.accounts.default_account
+    public_key = ECCipher.serialize_public_key(account.public_key)
+    addr = utils.get_address_from_public_key_object(public_key)
+    addr = web3.toChecksumAddress(addr)
+    logger.info(addr)
+    logger.info(get_balance(addr))
+    app.addr = addr
+    app.pwd = account.key_passphrase.decode()
     wallet.market_client.account = account
     wallet.market_client.public_key = ECCipher.serialize_public_key(wallet.market_client.account.public_key)
     wallet.market_client.login(app.username).addCallbacks(lambda _: event.emit(events.LOGIN_COMPLETED))
     wallet.init()
     initialize_system()
+    app.router.redirectTo('market_page')
 
 def enterPDash(account=None):
     if app.main_wnd:
@@ -253,10 +181,13 @@ def enterPDash(account=None):
         return
     app.router = Router
     main_wnd = buildMainWnd()
+    QtWidgets.qApp.setApplicationDisplayName('PDash')
+
     app.main_wnd = main_wnd
 
     wallet.set_main_wnd(main_wnd)
     __login(account)
+
 
 def login():
     path = os.path.expanduser('~/.cpchain')
@@ -275,7 +206,7 @@ def login():
                 logger.info(get_balance(addr))
                 app.addr = addr
                 app.pwd = key_passphrase.decode()
-                __unlock
+                __unlock()
                 enterPDash(account)
                 return
         except Exception as e:
@@ -303,12 +234,12 @@ def init_handlers():
     event.register(events.LOGIN_COMPLETED, lambda _: save_login_info())
     event.register(events.SEARCH, search)
 
+
 if __name__ == '__main__':
-    app.events = events
-    app.event = event
     app.unlock = __unlock
     wallet.app = app
     app.enterPDash = enterPDash
     init_handlers()
     login()
+    app.unlock()
     reactor.run()

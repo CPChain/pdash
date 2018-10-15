@@ -9,6 +9,8 @@ class Input(QLineEdit):
     signals = Signals()
 
     def __init__(self, model=None, width=228, height=30, *args, **kw):
+        if 'model' in kw:
+            del kw['model']
         super().__init__(*args, **kw)
         self.model = model
         if model:
@@ -30,6 +32,10 @@ class Input(QLineEdit):
         @operate
         def placeholder(self, text):
             self.widget.setPlaceholderText(text)
+        
+        @operate
+        def mode(self, mode):
+            self.widget.setEchoMode(mode)
     
     def modelChange(self, value):
         self.setText(value)

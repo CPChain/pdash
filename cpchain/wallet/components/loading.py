@@ -1,31 +1,41 @@
-from PyQt5.QtWidgets import (QLabel, QVBoxLayout, QDialog)
+from PyQt5.QtWidgets import (QLabel, QHBoxLayout, QWidget, QFrame)
 from PyQt5.QtGui import QPixmap, QMovie
 from PyQt5.QtCore import Qt, QSize
 from cpchain.wallet.pages import abs_path
 
 from cpchain.wallet.components.gif import LoadingGif
 
-class Loading(QDialog):
+class Loading(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.resize(250, 220)
+        self.setObjectName('Loading')
         self.initUI()
 
     def initUI(self):
-        layout = QVBoxLayout()
-        image = QLabel()
-        image.setObjectName('image')
-        path = abs_path('icons/loading.png')
-        pix = QPixmap(path)
-        width = 100
-        height = 100
-        image.resize(width, height)
-        pix.scaled(QSize(width, height), Qt.KeepAspectRatio)
-        image.setPixmap(pix)
-
-        # gif = QMovie(abs_path('icons/animat-network-color.gif'))
-        # image.setMovie(gif)
-        # gif.start()
-
-        layout.addWidget(image)
+        self.setObjectName('Loading')
+        layout = QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.setAlignment(Qt.AlignCenter)
+        loading = LoadingGif(self, path=abs_path('icons/new_loading.gif'))
+        loading.setObjectName('loading')
+        layout.addWidget(loading)
+        text = QLabel("processing...")
+        text.setObjectName('Text')
+        text.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(text)
+        self.setStyleSheet("""
+        QLabel#Text {
+            font-family:SFUIDisplay-Semibold;
+            font-size: 14px;
+            color: #9B9B9B;
+            padding-bottom: 3px;
+            padding-left: 3px;
+        }
+        QFrame#Loading {
+        }
+        QFrame#loading {
+        }
+        """)
         self.setLayout(layout)
+        self.setContentsMargins(0, 0, 0, 0)

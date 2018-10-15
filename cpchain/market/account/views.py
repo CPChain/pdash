@@ -12,6 +12,22 @@ from cpchain.market.market.utils import *
 logger = logging.getLogger(__name__)
 
 
+class IsRegistered(APIView):
+    queryset = WalletUser.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        data = request.data
+        public_key = data.get(PUBLIC_KEY)
+        username = data.get('username')
+
+        # if is existing public key, generate verify code and put it into cache
+        qs = WalletUser.objects.filter(public_key__exact=public_key)
+        if qs.count() > 0:
+            return Response({'status': qs[0].username})
+        return Response({'status': None})
+
 class UserLoginAPIView(APIView):
     """
     API endpoint that used to login and fetch verify code.

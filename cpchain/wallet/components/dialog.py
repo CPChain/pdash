@@ -1,5 +1,7 @@
-from PyQt5.QtWidgets import QApplication, QScrollArea, QLabel, QVBoxLayout, QDialog, QWidget, QDesktopWidget
+from PyQt5.QtWidgets import QApplication, QScrollArea, QLabel, QVBoxLayout, QDialog, QWidget, QDesktopWidget, QHBoxLayout, QFrame
 from PyQt5.QtCore import Qt, QEvent
+
+from cpchain.wallet.simpleqt.basic import Button, Builder
 
 class Dialog(QDialog):
 
@@ -16,7 +18,18 @@ class Dialog(QDialog):
         # Title
         title = QLabel(title)
         title.setObjectName('title')
-        layout.addWidget(title)
+        def trigger_close(_):
+            self.close()
+        close_btn = Builder().text('x').name('close_btn').click(trigger_close).build()
+        header = QHBoxLayout()
+        header.addWidget(title)
+        header.addStretch(1)
+        header.addWidget(close_btn)
+
+        dlgHeader = QFrame()
+        dlgHeader.setObjectName('header')
+        dlgHeader.setLayout(header)
+        layout.addWidget(dlgHeader)
         widget = QWidget(self)
         self.main = self.ui(widget)
         widget.setObjectName('main')
@@ -25,6 +38,20 @@ class Dialog(QDialog):
         layout.addWidget(widget)
         self.setLayout(layout)
         self.setStyleSheet(self.style())
+    
+    def gen_row(self, left_text, *widgets, **kw):
+        row = QHBoxLayout()
+
+        left_widget = Builder().text(left_text).name('left').build()
+        width = kw.get('left_width', 140)
+        left_widget.setMinimumWidth(width)
+        left_widget.setMaximumWidth(width)
+        row.addWidget(left_widget)
+        for widget in widgets:
+            if isinstance(widget, QWidget):
+                row.addWidget(widget)
+        row.addStretch(1)
+        return row
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -57,18 +84,26 @@ class Dialog(QDialog):
                 border:1px solid #cccccc;
                 border-radius:5px;
             }
-            QLabel#title {
+            QFrame#header {
                 background:#eeeeee;
                 border:1px solid #cccccc;
                 border-top-left-radius:5px;
                 border-top-right-radius:5px;
                 font-family:SFUIDisplay-Medium;
+                text-align:left;
+                padding-top: 5px;
+                padding-bottom:5px;
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+            QLabel#title {
                 font-size:16px;
                 color:#333333;
-                text-align:left;
-                padding-top: 15px;
-                padding-bottom:15px;
-                padding-left: 15px;
+                font-weight: 700;
+            }
+            QLabel#close_btn {
+                font-size: 16px;
+                color: #ee4040;
             }
             QWidget#main Qlabel{
                 font-family:SFUIDisplay-Regular;

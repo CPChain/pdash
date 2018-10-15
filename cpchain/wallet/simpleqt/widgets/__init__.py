@@ -2,6 +2,7 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QLabel, QLineEdit, QTextEdit, QCheckBox, QComboBox
 
 from cpchain.wallet.simpleqt.model import Model
+from .. import Signals
 
 def init(self, *args, **kwargs):
     new_args = []
@@ -15,12 +16,11 @@ def init(self, *args, **kwargs):
 
 class Input(QLineEdit):
 
-    change = QtCore.pyqtSignal(str, name="modelChanged")
-
     def __init__(self, *args, **kwargs):
         _args, _kwargs = init(self, *args, **kwargs)
         super().__init__(*_args, **_kwargs)
-        self.change.connect(self.modelChange)
+        self.signals = Signals()
+        self.signals.change.connect(self.modelChange)
         self.editingFinished.connect(self.viewChange)
         for i in args:
             if isinstance(i, Model):
@@ -34,12 +34,11 @@ class Input(QLineEdit):
 
 class TextEdit(QTextEdit):
 
-    change = QtCore.pyqtSignal(str, name="modelChanged")
-
     def __init__(self, *args, **kwargs):
         _args, _kwargs = init(self, *args, **kwargs)
         super().__init__(*_args, **_kwargs)
-        self.change.connect(self.modelChange)
+        self.signals = Signals()
+        self.signals.change.connect(self.modelChange)
         self.textChanged.connect(self.viewChange)
         for i in args:
             if isinstance(i, Model):
@@ -54,8 +53,6 @@ class TextEdit(QTextEdit):
 
 class CheckBox(QCheckBox):
 
-    change = QtCore.pyqtSignal(str, name="modelChanged")
-
     def __init__(self, *args, **kwargs):
         new_args = []
         for i in args:
@@ -64,7 +61,8 @@ class CheckBox(QCheckBox):
             else:
                 new_args.append(i)
         super().__init__(*new_args, **kwargs)
-        self.change.connect(self.modelChange)
+        self.signals = Signals()
+        self.signals.change.connect(self.modelChange)
         self.toggled.connect(self.viewChange)
         for i in args:
             if isinstance(i, Model):
@@ -79,8 +77,6 @@ class CheckBox(QCheckBox):
 
 class ComboBox(QComboBox):
 
-    change = QtCore.pyqtSignal(list, name="modelChanged")
-
     def __init__(self, *args, **kwargs):
         new_args = []
         for i in args:
@@ -90,7 +86,8 @@ class ComboBox(QComboBox):
             else:
                 new_args.append(i)
         super().__init__(*new_args, **kwargs)
-        self.change.connect(self.modelChange)
+        self.signals = Signals()
+        self.signals.change.connect(self.modelChange)
         self.currentIndexChanged.connect(self.viewChange)
         for i in args:
             if isinstance(i, Model):
@@ -100,8 +97,9 @@ class ComboBox(QComboBox):
             self.addItem(val)
 
     def modelChange(self, value):
-        for i in value:
-            self.addItem(i)
+        if value:
+            for i in value:
+                self.addItem(i)
 
     def viewChange(self, index):
         self.value = self.model.value[index]

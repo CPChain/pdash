@@ -23,6 +23,7 @@ class UploadFileInfoSerializer(serializers.ModelSerializer):
             path=validated_data['path'],
             size=validated_data['size'],
             remote_type=validated_data['remote_type'],
+            remote_uri=validated_data['remote_uri'],
             is_published=validated_data['is_published'],
             aes_key=validated_data['aes_key'],
             market_hash=validated_data['market_hash'],

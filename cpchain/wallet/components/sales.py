@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 from PyQt5.QtGui import QPixmap
 
@@ -6,7 +6,9 @@ from twisted.internet.threads import deferToThread
 from twisted.internet.defer import inlineCallbacks, Deferred
 
 from cpchain.wallet.pages import Binder, app, wallet
+from cpchain.wallet.simpleqt import Signals
 from cpchain.wallet.simpleqt.decorator import component
+from cpchain.wallet.components.gif import LoadingGif
 
 import traceback
 import asyncio
@@ -16,19 +18,54 @@ logger = logging.getLogger(__name__)
 
 class Status(QWidget):
 
-    def __init__(self, name, mode=None, timestamp=None, line=True, h1=100, h2=20, width=100):
+    def __init__(self, name, mode=None, timestamp=None, line=True, h1=100, 
+                 h2=20, width=100, status=False):
         """
         @param mode: finish, active, todo
         """
+        self.signals = Signals()
         self.name = name
         self.mode = mode
         self.timestamp = timestamp
         self.line = line
         self.h1 = h1
         self.h2 = h2
+        self.status = status
         self.width = width
+        self.status_elem = None
         super().__init__()
+        self.init()
         self.ui()
+
+
+    def init(self):
+        @app.event.register(app.events.UPDATE_ORDER_STATUS)
+        def callback(event):
+            status = event.data['status']
+            tmp_map = {
+                'Deliver': ('delivering', 'delivery'),
+                'Receive': ('receiving', 'receive'),
+                'Confirm': ('confirming', 'confirm')
+            }
+            for k, v in tmp_map.items():
+                if self.name == k:
+                    if status == v[0]:
+                        self.signals.loading.emit()
+                    elif status == v[1]:
+                        self.signals.loading_over.emit()
+        self.signals.loading.connect(self.setLoading)
+        self.signals.loading_over.connect(self.hideLoading)
+
+    
+    @pyqtSlot()
+    def setLoading(self):
+        self.loading.show()
+        self.status_elem.hide()
+    
+    @pyqtSlot()
+    def hideLoading(self):
+        self.loading.hide()
+        self.status_elem.show()
 
     def getColor(self):
         color = {
@@ -44,13 +81,14 @@ class Status(QWidget):
         miniWidth = self.width
         self.setMinimumWidth(miniWidth)
         layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignCenter)
+        layout.setAlignment(Qt.AlignTop)
         status = QLabel(self.name)
         status.setObjectName('status')
         status.setAlignment(Qt.AlignCenter)
         status.setMinimumWidth(miniWidth)
         status.setMinimumHeight(self.h1)
         layout.addWidget(status)
+        self.status_elem = status
         if self.timestamp:
             timestamp = QLabel(self.timestamp)
             timestamp.setObjectName('timestamp')
@@ -58,6 +96,12 @@ class Status(QWidget):
             timestamp.setMinimumWidth(miniWidth)
             timestamp.setMinimumHeight(self.h2)
             layout.addWidget(timestamp)
+        self.loading = LoadingGif()
+        self.loading.setObjectName('loading')
+        layout.addWidget(self.loading)
+        self.loading.hide()
+        self.loading.setMinimumWidth(miniWidth)
+        self.loading.setMinimumHeight(self.h1)
         layout.addStretch(1)
         self.setLayout(layout)
         self.setStyleSheet("""
@@ -69,6 +113,10 @@ class Status(QWidget):
                     border: 1px solid #d0d0d0;
                     border-radius: 15px;
                     text-align: center;
+                }}
+                QWidget#loading {{
+                    margin: 6px 2px;
+                    margin-top: 20px;
                 }}
                 #timestamp {{
                     font-size: 10px;
@@ -99,19 +147,25 @@ class StatusLine(QWidget):
         """)
 
 class Operator:
-
+    
+    order_id = False
+    
     def buyer_confirm(self, order_id):
-        from cpchain.wallet.pages import app
-        app.unlock()
-        logger.debug('Buyer Confirm Order: %s', str(order_id))
-        def func2(_):
-            logger.debug('Buyer Confirmed')
-            app.update()
-        deferToThread(wallet.chain_broker.buyer.confirm_order, order_id).addCallbacks(func2)
+        self.order_id = order_id
+        app.event.emit(app.events.UPDATE_ORDER_STATUS, {'order_id': order_id, 'status': 'confirming'})
+        def exec_():
+            app.unlock()
+            logger.debug('Buyer Confirm Order: %s', str(order_id))
+            def func2(_):
+                logger.debug('Buyer Confirmed')
+                app.event.emit(app.events.BUYER_CONFIRM, order_id)
+            deferToThread(wallet.chain_broker.buyer.confirm_order, order_id).addCallbacks(func2)
+        deferToThread(exec_)
 
 class Sale(QWidget):
 
-    def __init__(self, image, name, current, timestamps, order_id=None):
+    def __init__(self, image, name, current, timestamps, order_id=None, mhash=None,
+                 is_buyer=False, is_seller=False, order_type='file'):
         self.image = image
         self.name = name
         # currrent status index
@@ -119,32 +173,59 @@ class Sale(QWidget):
         # action's timestamp, a list
         self.timestamps = timestamps
         self.order_id = order_id
+        self.mhash = mhash
+        self.is_buyer = is_buyer
+        self.is_seller = is_seller
+        self.order_type = order_type
         self.operator = Operator()
-        print(app.products_order)
         super().__init__()
+        self.init()
         self.ui()
+    
+    def init(self):
+        @app.event.register(app.events.SELLER_DELIVERY)
+        def listenDeliver(event):
+            if event.data == self.order_id:
+                app.event.emit(app.events.UPDATE_ORDER_STATUS, {'order_id': self.order_id, 'status': 'delivery'})
+        @app.event.register(app.events.BUYER_RECEIVE)
+        def listenDeliver(event):
+            if event.data == self.order_id:
+                app.event.emit(app.events.UPDATE_ORDER_STATUS, {'order_id': self.order_id, 'status': 'receive'})
+        @app.event.register(app.events.BUYER_CONFIRM)
+        def listenDeliver(event):
+            if event.data == self.order_id:
+                app.event.emit(app.events.UPDATE_ORDER_STATUS, {'order_id': self.order_id, 'status': 'confirm'})
+
 
     def _deliver(self):
+        app.unlock()
         wallet.chain_broker.seller.confirm_order(self.order_id)
+        
 
     def deliver(self, _):
         def func(_):
             order_info = dict()
             order_info[self.order_id] = wallet.chain_broker.buyer.query_order(self.order_id)
-            from cpchain.wallet.pages import app
             app.unlock()
-            wallet.chain_broker.seller_send_request(order_info)
+            if self.order_type == 'file':
+                wallet.chain_broker.seller_send_request(order_info)
+            else:
+                wallet.chain_broker.seller_send_request_stream(order_info)
         deferToThread(self._deliver).addCallbacks(func)
+        app.event.emit(app.events.UPDATE_ORDER_STATUS, {'order_id': self.order_id, 'status': 'delivering'})
 
     @inlineCallbacks
     def _receive(self):
-        from cpchain.wallet.pages import app
         app.unlock()
         order_info = dict()
-        order_info[self.order_id] = yield wallet.chain_broker.buyer.query_order(self.order_id)
-        yield wallet.chain_broker.buyer_send_request(order_info)
+        order_info[self.order_id] = wallet.chain_broker.buyer.query_order(self.order_id)
+        if self.order_type == 'file':
+            yield wallet.chain_broker.buyer_send_request(order_info)
+        else:
+            yield wallet.chain_broker.buyer_send_request_stream(order_info)
 
     def receive(self, _):
+        app.event.emit(app.events.UPDATE_ORDER_STATUS, {'order_id': self.order_id, 'status': 'receiving'})
         self._receive()
 
     def confirm(self, _):
@@ -188,6 +269,12 @@ class Sale(QWidget):
         width = 78
         for item in status:
             mode = 'active' if i == self.current else ('todo' if i > self.current else 'finish')
+            if item == 'Deliver' and self.current == 1 and self.is_buyer:
+                mode = 'todo'
+            if item == 'Receive' and self.current == 2 and self.is_seller:
+                mode = 'todo'
+            if item == 'Confirm' and self.current == 3 and self.is_seller:
+                mode = 'todo'
             timestamp = self.timestamps[i] if i < self.current else None
             tmp = Status(name=item,
                          mode=mode,

@@ -13,7 +13,7 @@ from cpchain.wallet.simpleqt.decorator import page
 logger = logging.getLogger(__name__)
 
 class PurchasedPage(Page):
-
+    
     def __init__(self, parent=None):
         self.parent = parent
         super().__init__(parent)

@@ -65,9 +65,6 @@ class BuyerFileInfo(Base):
     size = Column(Integer)
     is_downloaded = Column(Boolean)
 
-    def __repr__(self):
-        return "<BuyerFileInfo(path='%s', remote_uri='%s')>" % (self.path, self.remote_uri)
-
 class CollectInfo(Base):
     __tablename__ = 'collectinfo'
     id = Column(Integer, primary_key=True)

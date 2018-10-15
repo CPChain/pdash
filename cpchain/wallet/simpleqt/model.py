@@ -14,6 +14,10 @@ class Model:
         self.value_ = val
         if self.view is not None:
             try:
+                if getattr(self.view, 'signals'):
+                    if getattr(self.view.signals, 'change'):
+                        self.view.signals.change.emit(val)
+                        return
                 self.view.change.emit(val)
             except Exception as e:
                 self.view.signals.change.emit(val)
@@ -42,5 +46,9 @@ class ListModel(Model):
     def append(self, val):
         self.value_.append(val)
         if self.view:
+            if getattr(self.view, 'signals'):
+                if getattr(self.view.signals, 'change'):
+                    self.view.signals.change.emit(val)
+                    return
             if self.view.change:
                 self.view.change.emit(val)

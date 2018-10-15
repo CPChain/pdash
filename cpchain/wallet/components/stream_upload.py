@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt, QPoint, QObjectCleanupHandler
+from PyQt5.QtCore import Qt, QPoint, QObjectCleanupHandler, QThread
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import (QApplication, QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLineEdit, QGridLayout, QPushButton,
                              QMenu, QAction, QCheckBox, QVBoxLayout, QWidget, QDialog, QFrame, QTableWidgetItem,
@@ -8,11 +8,12 @@ from PyQt5.QtGui import QCursor, QFont, QFontDatabase
 
 from cpchain.crypto import ECCipher, RSACipher, Encoder
 
-from cpchain.wallet.pages import load_stylesheet, HorizontalLine, wallet, main_wnd, get_pixm
+from cpchain.wallet.pages import load_stylesheet, HorizontalLine, wallet, main_wnd, app
 
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import deferToThread
 from cpchain.wallet import fs
+from cpchain.crypto import AESCipher
 from cpchain.utils import open_file, sizeof_fmt
 from cpchain.proxy.client import pick_proxy
 
@@ -24,14 +25,18 @@ import logging
 import re
 import traceback
 import json
+import sys
 from sqlalchemy import func
 
+from autobahn.twisted.websocket import WebSocketClientProtocol, \
+    WebSocketClientFactory, connectWS
 from twisted.internet.threads import deferToThread
+from twisted.python import log
 
 from cpchain import root_dir
 
 from cpchain.wallet.db import FileInfo
-from cpchain.wallet.pages import main_wnd, HorizontalLine, abs_path, get_icon, Binder, warning
+from cpchain.wallet.pages import main_wnd, HorizontalLine, abs_path, get_icon, Binder, warning, wallet
 from cpchain.wallet.components.dialog import Dialog
 from cpchain.wallet.simpleqt.decorator import component
 from cpchain.wallet.simpleqt.widgets import ComboBox
@@ -39,6 +44,7 @@ from cpchain.wallet.simpleqt.widgets.label import Label
 from cpchain.wallet.components.gif import LoadingGif
 
 from cpchain.wallet.simpleqt.basic import Builder, Input, Button
+from cpchain.wallet.simpleqt import Signals
 
 from datetime import datetime as dt
 
@@ -95,7 +101,18 @@ class StreamUploadDialog(Dialog):
         # Upload to proxy, get streaming id
         def callback(path):
             try:
-                wallet.market_client.upload_file_info(None, None, 0, self._id, 'proxy', path, self.data_name.value, None)
+                # Save
+                proxy = self.proxy.current
+                self.aes_key = AESCipher.generate_key()
+                remote_uri = str(path)
+                new_file_info = FileInfo(name=self.data_name.value, data_type='stream', proxy=proxy,
+                                        remote_type='stream', remote_uri=remote_uri, public_key=wallet.market_client.public_key,
+                                        is_published=False, created=func.current_timestamp(), aes_key=self.aes_key)
+                fs.add_file(new_file_info)
+                self._id = new_file_info.id
+                encrypted_key = RSACipher.encrypt(self.aes_key)
+                encrypted_key = Encoder.bytes_to_base64_str(encrypted_key)
+                wallet.market_client.upload_file_info(None, None, 0, self._id, 'stream', json.dumps(remote_uri), self.data_name.value, encrypted_key)
                 path = json.loads(path)
                 result = StreamUploadedDialog(oklistener=self.oklistener, data_name=self.data_name.value, stream_id=path['ws_url'])
                 result.show()
@@ -114,12 +131,6 @@ class StreamUploadDialog(Dialog):
         param = dict()
         param['proxy_id'] = proxy # should be selected by UI from proxy list
         path = s.upload_data(None, param)
-        # Save
-        new_file_info = FileInfo(name=self.data_name.value, data_type='stream', proxy=proxy,
-                                 remote_type='proxy', remote_uri=str(path), public_key=wallet.market_client.public_key,
-                                 is_published=False, created=func.current_timestamp())
-        fs.add_file(new_file_info)
-        self._id = new_file_info.id
         return path
 
     def style(self):
@@ -194,23 +205,43 @@ class StreamUploadedDialog(Dialog):
         }
         """
 
-class PreviewDialog(Dialog):
+class MyClientProtocol(WebSocketClientProtocol):
     
-    change = QtCore.pyqtSignal(str, name="modelChanged")
+    def onMessage(self, payload, isBinary):
+        if isBinary:
+            pass
+        else:
+            self.factory.handler(payload.decode('utf8'))
 
-    def __init__(self, parent=None, oklistener=None):
-        width = 400
-        height = 340
+
+class PreviewDialog(Dialog):
+
+    def __init__(self, parent=None, oklistener=None, ws_url=None):
+        width = 460
+        height = 350
         title = "Upload Streaming Data"
+        self.ws_url = ws_url
         self.now_wid = None
         self.oklistener = oklistener
         self.data()
+        self.signals = Signals()
         super().__init__(wallet.main_wnd, title=title, width=width, height=height)
-        self.change.connect(self.modelChange)
+        self.signals.change.connect(self.modelChange)
         self.stream.setView(self)
-        self.index = 4
-        deferToThread(self.test)
+        self.index = 1
+        
+        self.run_client(self.ws_url)
 
+    def run_client(self, ws_url):
+        self.factory = WebSocketClientFactory(ws_url + '?action=subscribe')
+        self.factory.protocol = MyClientProtocol
+        def handler(record):
+            self.stream.append(record)
+        self.factory.handler = handler
+        connectWS(self.factory)
+    
+    def close(self):
+        super().close()
 
     def test(self):
         import time
@@ -220,23 +251,19 @@ class PreviewDialog(Dialog):
             self.index += 1
         
     def modelChange(self, val):
-        ts = Builder().name('ts').text(str(dt.now().strftime('%Y-%m-%d %H:%M:%S'))).build()
         data = Builder().name('ts').text(str(val)).build()
-        self._layout.insertLayout(1, self.row(ts, data))
+        self._layout.insertLayout(0, self.row(data))
 
     @component.data
     def data(self):
         return {
             "stream": [
-                "hello1",
-                "hello2",
-                "hello3"
+                
             ]
         }
 
-    def row(self, ts, data):
+    def row(self, data):
         layout = QHBoxLayout()
-        layout.addWidget(ts)
         layout.addWidget(data)
         return layout
 
@@ -246,20 +273,19 @@ class PreviewDialog(Dialog):
         layout.setAlignment(Qt.AlignTop)
         datas = self.stream.value
 
-        layout.addLayout(self.row(Builder().name('header').text('Timestamp').build(),
-                                  Builder().name('header').text('Data').build()))
-
         for i in datas:
-            ts = Builder().name('ts').text(str(dt.now().strftime('%Y-%m-%d %H:%M:%S'))).build()
             data = Builder().name('ts').text(str(i)).build()
-            layout.insertLayout(1, self.row(ts, data))
+            layout.insertLayout(0, self.row(data))
         self._layout = layout
-        wid = QWidget()
+        wid = QFrame()
         wid.setLayout(layout)
         wid.setContentsMargins(0, 0, 0, 0)
         wid.setStyleSheet("""
-            QWidget {
+            QFrame {
                 background: #fff;
+            }
+            QWidget#ts {
+                border: none;
             }
             QLabel#header {
                 border: 1px solid black;
@@ -274,6 +300,10 @@ class PreviewDialog(Dialog):
         scroll.setWidget(wid)
 
         _main = QVBoxLayout()
+
+        _main.addWidget(Builder().text('Stream ID:').build())
+        _main.addWidget(Builder().text(self.ws_url).build())
+
         _main.addWidget(scroll)
         hbox = QHBoxLayout()
         hbox.setAlignment(Qt.AlignRight)
@@ -285,5 +315,9 @@ class PreviewDialog(Dialog):
         return super().style() + """
         QLabel#header {
             border: 1px solid black;
+        }
+        QScrollArea {
+            background: #fff;
+            border: 1px solid #666;
         }
         """

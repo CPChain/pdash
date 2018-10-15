@@ -192,3 +192,7 @@ def scan_transaction(start_block_id=None, end_block_id=None):
                 })
 
     return transaction_records
+
+def to_ether(value):
+    return web3.fromWei(value, 'ether')
+

@@ -3,7 +3,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QHBoxLayout, QLabel, QPushButton, QComboBox,
                              QVBoxLayout, QWidget, QDialog, QFileDialog)
 
-from cpchain.wallet.pages import wallet
+from cpchain.wallet.pages import wallet, app
 from cpchain.proxy.client import pick_proxy
 
 from cpchain.wallet.simpleqt.decorator import page
@@ -99,11 +99,14 @@ class PurchaseDialog(QDialog):
             file_title = self.name
             proxy = proxy_addr
             seller = self.owner_address
+            app.unlock()
             wallet.chain_broker.handler.buy_product(msg_hash, file_title, proxy, seller)
         get_proxy_address(self.proxy.current)
+        app.event.emit(app.events.CLICK_PAY)
         self.close()
 
     def handle_cancel(self):
+        app.event.emit(app.events.CANCEL_PURCHASE)
         self.close()
 
     @page.style
