@@ -94,7 +94,7 @@ class ReceiveDialog(Dialog):
         self.copyed.hide()
         row2.addStretch(1)
         layout.addLayout(row2)
-        layout.addWidget(Builder().text('Get CPC for free').name('get_cpc').click(lambda _: self.openUrl(config.wallet.free_cpc_url)).build())
+        layout.addWidget(Builder().text('Get CPC for free').name('get_cpc').click(lambda _: self.openUrl(config.account.charge_server)).build())
         return layout
 
     def style(self):

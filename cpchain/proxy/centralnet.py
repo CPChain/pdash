@@ -66,7 +66,7 @@ class PeerProtocol(protocol.DatagramProtocol):
 
         d = defer.Deferred()
         timeout = reactor.callLater(
-            30,
+            5,
             tranaction_timeout,
             tid)
 
