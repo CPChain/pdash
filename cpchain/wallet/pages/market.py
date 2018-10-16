@@ -74,7 +74,9 @@ class MarketPage(Page):
     @page.ui
     def ui(self):
         layout = QVBoxLayout(self)
-        layout.setAlignment(Qt.AlignTop)
+        layout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
+
+        width = 750
 
         path = abs_path('icons/banner 2.png')
         banner = Banner(path,
@@ -82,9 +84,34 @@ class MarketPage(Page):
                         height=155,
                         title="PDASH",
                         subtitle="Parallel Distributed Architecture for Data Storage and Sharing")
-        layout.addWidget(banner)
+        banner.setObjectName('banner')
+        wrapper_banner = QWidget()
+        wrapper_banner.setContentsMargins(0, 0, 0, 0)
+        wrapper_layout = QHBoxLayout()
+        wrapper_layout.addWidget(banner)
+        wrapper_layout.setContentsMargins(0, 0, 0, 0)
+        wrapper_banner.setLayout(wrapper_layout)
+
+        wrapper_banner.setMinimumWidth(width)
+        wrapper_banner.setMaximumWidth(width)
+
+        layout.addWidget(wrapper_banner)
+
 
         # Product List
         pdsWidget = ProductList(self.products)
+        pdsWidget.setObjectName('products_list')
+        pdsWidget.setMinimumWidth(width)
+        pdsWidget.setMaximumWidth(width)
         layout.addWidget(pdsWidget)
+        self.setStyleSheet("""
+            QWidget#banner {
+                
+            }
+            QScrollArea#market_page {
+            }
+            QWidget#products_list {
+                width: 720;
+            }
+        """)
         return layout

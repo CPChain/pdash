@@ -11,6 +11,7 @@ class Page(QtWidgets.QScrollArea):
         # Execute Data
         self.data()
         # UI Compose
+        ## if use qml
         self.ui()
         # Render
         self.style()
@@ -19,6 +20,18 @@ class Page(QtWidgets.QScrollArea):
         self.signals = Signals()
         self.signals.refresh.connect(self.ui)
     
+    def data(self):
+        pass
+    
+    def ui(self):
+        pass
+    
+    def style(self):
+        pass
+    
+    def create(self):
+        pass
+
     def refresh(self):
         self.signals.refresh.emit()
         

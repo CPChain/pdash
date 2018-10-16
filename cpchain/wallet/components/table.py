@@ -32,8 +32,6 @@ class TableWidget(QTableWidget):
         self.init_ui()
 
     def init_ui(self):
-
-        self.setMinimumWidth(self.parent.width())
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -49,8 +47,6 @@ class TableWidget(QTableWidget):
 
 class Table(TableWidget):
 
-    change = QtCore.pyqtSignal(list, name="modelChanged")
-
     def __init__(self, parent, header=None, data=None, itemHandler=None, sort=None, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.horizontalHeader().setStretchLastSection(True)
@@ -60,6 +56,7 @@ class Table(TableWidget):
         self.resizeColumnsToContents()
         self.resizeRowsToContents()
         self.setFocusPolicy(Qt.NoFocus)
+        self.change = QtCore.pyqtSignal(list, name="modelChanged")
 
         # Set Header
         self.setHeader(header)

@@ -46,6 +46,11 @@ sidebarMenu = [
         'link': 'wallet'
     },
     {
+        'name': 'Home',
+        'icon': 'home@2x.png',
+        'link': 'home'
+    },
+    {
         'name': 'Market',
         'icon': 'market@2x.png',
         'link': 'market_page'
@@ -92,11 +97,14 @@ class MainWindow(QMainWindow):
         set_geometry()
 
         header = Header(self)
+        header.setObjectName('header')
+        header.setMinimumHeight(90)
         sidebar = SideBar(sidebarMenu)
 
         def set_layout():
             main_layout = QVBoxLayout()
-            main_layout.setAlignment(Qt.AlignHCenter)
+            main_layout.setSpacing(0)
+            main_layout.setAlignment(Qt.AlignTop | Qt.AlignHCenter)
             main_layout.setContentsMargins(0, 0, 0, 0)
             main_layout.addWidget(header)
 
@@ -105,11 +113,19 @@ class MainWindow(QMainWindow):
             content_layout.setContentsMargins(0, 0, 0, 0)
             content_layout.addWidget(sidebar)
             self.body = QWidget()
+            self.body.setContentsMargins(0, 0, 0, 0)
             layout = QVBoxLayout()
+            layout.setAlignment(Qt.AlignCenter)
             layout.setContentsMargins(0, 0, 0, 0)
             layout.addWidget(Router.index(self.body))
             self.body.setLayout(layout)
+            self.body.setMinimumWidth(803)
+            # self.body.setMaximumWidth(803)
+            self.body.setMinimumHeight(633)
+            # self.body.setMaximumHeight(633)
+            content_layout.addStretch(1)
             content_layout.addWidget(self.body)
+            content_layout.addStretch(1)
             main_layout.addLayout(content_layout)
             wid = QWidget(self)
             wid.setLayout(main_layout)
@@ -167,7 +183,10 @@ def __login(account=None):
     logger.info(addr)
     logger.info(get_balance(addr))
     app.addr = addr
-    app.pwd = account.key_passphrase.decode()
+    if isinstance(account.key_passphrase, str):
+        app.pwd = account.key_passphrase
+    else:
+        app.pwd = account.key_passphrase.decode()
     wallet.market_client.account = account
     wallet.market_client.public_key = ECCipher.serialize_public_key(wallet.market_client.account.public_key)
     wallet.market_client.login(app.username).addCallbacks(lambda _: event.emit(events.LOGIN_COMPLETED))
@@ -205,7 +224,10 @@ def login():
                 logger.info(addr)
                 logger.info(get_balance(addr))
                 app.addr = addr
-                app.pwd = key_passphrase.decode()
+                if isinstance(key_passphrase, str):
+                    app.pwd = key_passphrase
+                else:  
+                    app.pwd = key_passphrase.decode()
                 __unlock()
                 enterPDash(account)
                 return

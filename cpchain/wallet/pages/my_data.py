@@ -104,7 +104,7 @@ class MyDataTab(Page):
                 items.append(wid)
                 return items
 
-            table = Table(self, header, self.table_data, itemHandler, sort=None)
+            table = Table(None, header, self.table_data, itemHandler, sort=None)
             table.setObjectName('my_table')
             table.setFixedWidth(800)
             if len(self.table_data.value) > 0:
@@ -163,10 +163,10 @@ class MyDataTab(Page):
                 items.append(wid)
                 return items
 
-            table = Table(self, header, self.stream_data, itemHandler, sort=None)
+            table = Table(None, header, self.stream_data, itemHandler, sort=None)
             table.setObjectName('my_table')
             table.setFixedWidth(800)
-            if len(self.table_data.value) > 0:
+            if len(self.stream_data.value) > 0:
                 table.setMinimumHeight(180)
             else:
                 table.setMaximumHeight(40)

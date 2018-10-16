@@ -226,6 +226,7 @@ class ProductDetail(Page):
                 order_header = DetailHeader('Order Detail')
                 layout.insertWidget(start, order_header)
                 start += 1
+                height += 100
                 if self.ptype == 'file':
                     self.data_type = 'batch'
                     self.order_detail = OrderDetail(order_time=Model("2018/6/15  08:40:39"),
@@ -235,7 +236,7 @@ class ProductDetail(Page):
                                                     data_type=self.data_type)
                     layout.insertWidget(start, self.order_detail)
                     start += 1
-                height += 100
+                    height += 100
                 if self.ptype == 'stream':
                     self.data_type = 'stream'
                     order_detail = OrderDetail(order_time=Model("2018/6/15  08:40:39"),

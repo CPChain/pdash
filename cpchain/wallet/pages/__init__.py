@@ -22,12 +22,13 @@ def abs_path(path):
 
 def load_stylesheet(wid, name):
     path = osp.join(root_dir, "cpchain/assets/wallet/qss", name)
-
     subs = dict(asset_dir=osp.join(root_dir, "cpchain/assets/wallet"))
-
     with open(path) as f:
         s = string.Template(f.read())
         wid.setStyleSheet(s.substitute(subs))
+
+def qml_path(path):
+    return osp.join(root_dir, "cpchain/assets/wallet/qml", path)
 
 class HorizontalLine(QFrame):
     def __init__(self, parent=None, wid=2, color="#ccc"):

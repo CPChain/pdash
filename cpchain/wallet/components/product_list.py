@@ -93,7 +93,7 @@ class ProductList(QWidget):
             widget = QWidget()
             widget.setObjectName('parent_widget')
             widget.setLayout(layout)
-            widget.setFixedWidth(720)
+            # widget.setFixedWidth(720)
             widget.setFixedHeight(250 * row)
             widget.setStyleSheet("QWidget#parent_widget{background: transparent;}")
 
@@ -113,7 +113,7 @@ class ProductList(QWidget):
             self.setLayout(main)
             # self.setWidgetResizable(True)
 
-        layout.setAlignment(Qt.AlignTop)
+        layout.setAlignment(Qt.AlignTop | Qt.AlignHCenter)
         for i in range(row):
             for j in range(self.col):
                 index = i * self.col + j
@@ -124,9 +124,6 @@ class ProductList(QWidget):
                     layout.addWidget(tmp, i, j)
         self.setObjectName('main')
         self.setStyleSheet("""
-            #main_layout {
-                height: 800px;
-            }
             QWidget#product {
                 border: 1px solid red;
             }

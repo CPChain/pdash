@@ -4,7 +4,7 @@ import logging
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, QVBoxLayout, QGridLayout, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel, QWidget, QLineEdit, QTableWidget, QTextEdit, QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
 from PyQt5.QtCore import Qt, QPoint, QBasicTimer
-from PyQt5.QtGui import QIcon, QCursor, QPixmap, QFont, QFontDatabase
+from PyQt5.QtGui import QIcon, QCursor, QPixmap, QFont, QFontDatabase, QMouseEvent
 
 from twisted.internet.threads import deferToThread
 
@@ -67,6 +67,21 @@ class MyWindow(QMainWindow):
         self.setObjectName("main_window")
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setAcceptDrops(True)
+    
+    def mouseMoveEvent(self, e: QMouseEvent):
+        self._endPos = e.pos() - self._startPos
+        self.move(self.pos() + self._endPos)
+
+    def mousePressEvent(self, e: QMouseEvent):
+        if e.button() == Qt.LeftButton:
+            self._isTracking = True
+            self._startPos = QPoint(e.x(), e.y())
+
+    def mouseReleaseEvent(self, e: QMouseEvent):
+        if e.button() == Qt.LeftButton:
+            self._isTracking = False
+            self._startPos = None
+            self._endPos = None
     
     def __ui(self):
         main_layout = QVBoxLayout()

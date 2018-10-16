@@ -96,7 +96,9 @@ def create_account(passwd, filepath=_keystore_dir, name=None):
     with open(key_file, 'w') as f:
         f.write(json.dumps(encrypted_key))
 
-    return Account(key_passphrase=passwd, private_key=acct.privateKey)
+    account = Account(key_passphrase=passwd, private_key=acct.privateKey)
+    account.key_path = key_file
+    return account
 
 
 def import_account(key_file, passwd):
@@ -112,7 +114,9 @@ def import_account(key_file, passwd):
     except:
         logger.info("account already in node's keychain")
 
-    return Account(key_passphrase=passwd, private_key=acct.privateKey)
+    account = Account(key_passphrase=passwd, private_key=acct.privateKey)
+    account.key_path = key_file
+    return account
 
 def get_keystore_list():
     ptn = osp.join(_keystore_dir, 'UTC-*')
@@ -149,6 +153,8 @@ def set_default_account():
     return account
 
 def get_balance(account):
+    if not web3:
+        return 0
     return web3.eth.getBalance(account)
 
 def send_tranaction(from_account, to_account, value):

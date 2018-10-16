@@ -216,7 +216,6 @@ class Sale(QWidget):
 
     @inlineCallbacks
     def _receive(self):
-        app.unlock()
         order_info = dict()
         order_info[self.order_id] = wallet.chain_broker.buyer.query_order(self.order_id)
         if self.order_type == 'file':
@@ -226,7 +225,9 @@ class Sale(QWidget):
 
     def receive(self, _):
         app.event.emit(app.events.UPDATE_ORDER_STATUS, {'order_id': self.order_id, 'status': 'receiving'})
-        self._receive()
+        def unlock():
+            app.unlock()
+        deferToThread(unlock).addCallback(lambda _: self._receive())
 
     def confirm(self, _):
         self.operator.buyer_confirm(self.order_id)

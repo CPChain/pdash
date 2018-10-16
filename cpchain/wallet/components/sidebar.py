@@ -57,12 +57,6 @@ class SideBar(Component):
     @component.style
     def style(self):
         return """
-        QVBoxLayout {
-            background: red;
-        }
-        #sidebar {
-            background: red;    
-        }
         QFrame {
             background: #eee;
         }

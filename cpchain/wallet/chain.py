@@ -221,7 +221,6 @@ class Broker:
             self.wallet.market_client.account.private_key,
             sign_message.data
         )
-
         error, AES_key, urls = yield start_proxy_request(sign_message, proxy_id)
 
         def update_buyer_db(file_uri, file_path):
