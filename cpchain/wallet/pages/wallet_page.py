@@ -346,7 +346,7 @@ class WalletPage(Page):
                 items.append(data.category)
                 items.append(data.payer)
                 wid = QLabel(('+' if data.amount >= 0 else '') + str(data.amount))
-                wid.setStyleSheet("QLabel{{color: {};}}".format('#00a20e' if data.amount > 0 else '#d0021b'))
+                wid.setStyleSheet("QLabel{{color: {};}}".format('#00a20e' if data.amount >= 0 else '#d0021b'))
                 items.append(wid)
                 items.append(data.time)
                 return items

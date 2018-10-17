@@ -72,7 +72,7 @@ class OrderDetail(QWidget):
     @component.create
     def create(self):
         def cb(path):
-            if path:
+            if path and self.data_type == 'stream':
                 stream_id = json.loads(path)
                 self.ws_url = stream_id[0]
         deferToThread(lambda: fs.buyer_file_by_order_id(self.order_id).path).addCallback(cb)
@@ -125,9 +125,9 @@ class OrderDetail(QWidget):
             ok.setObjectName('pinfo_publish_btn')
             btm.addWidget(ok)
             ok.clicked.connect(self.download)
-            cancel = QPushButton('Confirm')
-            cancel.setObjectName('pinfo_cancel_btn')
-            cancel.clicked.connect(self.confirm)
+            confirm = QPushButton('Confirm')
+            confirm.setObjectName('pinfo_cancel_btn')
+            confirm.clicked.connect(self.confirm)
             btm.addWidget(cancel)
             btm.addStretch(1)
             layout.addLayout(btm)
@@ -165,6 +165,7 @@ class OrderDetail(QWidget):
             btm.addWidget(confirm)
             btm.addStretch(1)
             layout.addLayout(btm)
+        self.confirmBtn = confirm
 
         self.setLayout(layout)
         self.setStyleSheet("""

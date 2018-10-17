@@ -5,6 +5,7 @@ import importlib
 import hashlib
 import json
 from sqlalchemy import func
+from twisted.internet.defer import inlineCallbacks
 from cpchain.wallet.db import get_session, FileInfo, create_engine, sessionmaker, BuyerFileInfo, CollectInfo, FileInfoVersion
 from cpchain.crypto import AESCipher, RSACipher
 from cpchain.utils import join_with_rc
@@ -133,6 +134,7 @@ def decrypt_file(file_in_path, file_out_path):
     decrypter = AESCipher(aes_key)
     decrypter.decrypt(file_in_path, file_out_path)
 
+@inlineCallbacks
 def upload_file(file_path, storage_type, dest, data_name=None):
     # fixed previous bugs of temporary file being deleted after function return
     tmp = tempfile.NamedTemporaryFile(delete=True)
@@ -142,24 +144,33 @@ def upload_file(file_path, storage_type, dest, data_name=None):
         "cpchain.storage-plugin." + storage_type
     )
     storage = storage_module.Storage()
-    file_uri = storage.upload_data(encrypted_path, dest)  # d_upload file_uri: string save directly
-    file_name = list(os.path.split(file_path))[-1]
-    file_size = os.path.getsize(file_path)
-    logger.debug('start to write data into database')
-    if data_name:
-        file_name = data_name
-    with open(encrypted_path, "rb") as file:
-        file_md5 = hashlib.md5(file.read()).hexdigest()
-    hashcode = json.loads(file_uri)
-    hashcode['file_hash'] = file_md5
-    from cpchain.wallet.pages import wallet
-    new_file_info = FileInfo(hashcode=json.dumps(hashcode), name=file_name, path=file_path, size=file_size,
-                             remote_type=str(storage_type), remote_uri=str(file_uri), public_key= wallet.market_client.public_key,
-                             is_published=False, aes_key=this_key, created=func.current_timestamp())
-    add_file(new_file_info)
-    logger.debug('file id: %s', new_file_info.id)
-    tmp.close()
-    file_id = new_file_info.id
+    def cb(file_uri):
+        file_name = list(os.path.split(file_path))[-1]
+        file_size = os.path.getsize(file_path)
+        logger.debug('start to write data into database')
+        if data_name:
+            file_name = data_name
+        with open(encrypted_path, "rb") as file:
+            file_md5 = hashlib.md5(file.read()).hexdigest()
+        if storage_type == 'proxy':
+            hashcode = dict(proxy=file_uri)
+        else:
+            hashcode = json.loads(file_uri)
+        hashcode['file_hash'] = file_md5
+        from cpchain.wallet.pages import wallet
+        new_file_info = FileInfo(hashcode=json.dumps(hashcode), name=file_name, path=file_path, size=file_size,
+                                remote_type=str(storage_type), remote_uri=str(file_uri), public_key= wallet.market_client.public_key,
+                                is_published=False, aes_key=this_key, created=func.current_timestamp())
+        add_file(new_file_info)
+        logger.debug('file id: %s', new_file_info.id)
+        tmp.close()
+        file_id = new_file_info.id
+        return file_id
+    if storage_type == 'proxy':
+        file_uri = yield storage.upload_data(encrypted_path, dest)
+    else:
+        file_uri = storage.upload_data(encrypted_path, dest)  # d_upload file_uri: string save directly
+    file_id = cb(file_uri)
     return file_id
 
 

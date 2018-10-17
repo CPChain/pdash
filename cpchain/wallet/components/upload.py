@@ -27,6 +27,7 @@ from cpchain import root_dir
 
 from cpchain.wallet.pages import main_wnd, HorizontalLine, abs_path, get_icon, Binder, warning
 from cpchain.wallet.components.dialog import Dialog
+from cpchain.wallet.simpleqt.model import ListModel
 from cpchain.wallet.simpleqt.decorator import component
 from cpchain.wallet.simpleqt.widgets import Input, ComboBox
 from cpchain.wallet.simpleqt.widgets.label import Label
@@ -150,15 +151,18 @@ class UploadDialog(Dialog):
                 ],
                 'listener': None
             }, {
-                # 'name': 'Proxy',
-                # 'options': [
-                #     {
-                #         'type': 'combo',
-                #         'items': ['1', '2', '3']
-                #     }
-                # ]
+                'name': 'Proxy',
+                'type': 'proxy',
+                'options': [
+                    {
+                        'type': 'combo',
+                        'items': []
+                    }
+                ]
             }
         ]
+        self.proxy = ListModel([])
+        self.create()
         self.max_row = 0
         for i in self.storage:
             if i:
@@ -192,6 +196,10 @@ class UploadDialog(Dialog):
                 wid.setObjectName('{}-{}'.format(storage["type"], option["id"]))
                 wid.setText(self.dst[option['id']])
                 layout.addWidget(self.gen_row(option['name'] + ":", wid))
+            if option['type'] == 'combo':
+                wid = ComboBox(self.proxy)
+                layout.addWidget(self.gen_row("Proxy:", wid))
+
             row += 1
         wid = QWidget()
         wid.setLayout(layout)
@@ -231,6 +239,12 @@ class UploadDialog(Dialog):
         return {
             "data_name": ""
         }
+    
+    @component.create
+    def create(self):
+        def set_proxy(proxy):
+            self.proxy.value = proxy
+        pick_proxy().addCallbacks(set_proxy)
 
     def ui(self, widget):
         layout = QVBoxLayout(widget)
@@ -287,13 +301,16 @@ class UploadDialog(Dialog):
         # Find All needed values
         storage = self.storage[self.storage_index]
         dst = dict()
+        if storage['type'] == 'proxy':
+            dst['proxy_id'] = self.proxy.current
         for option in storage['options']:
-            objName = storage['type'] + '-' + option['id']
-            child = self.findChild((QLineEdit,), objName)
-            dst[option['id']] = child.text()
-            if not dst[option['id']]:
-                warning(self)
-                return
+            if option['type'] == 'edit':
+                objName = storage['type'] + '-' + option['id']
+                child = self.findChild((QLineEdit,), objName)
+                dst[option['id']] = child.text()
+                if not dst[option['id']]:
+                    warning(self)
+                    return
         # Data Name
         dataname = self.data_name.value
         if not dataname:
@@ -306,7 +323,7 @@ class UploadDialog(Dialog):
             return
         self.loading.show()
         self.ok.hide()
-        deferToThread(fs.upload_file, file, storage['type'], dst, dataname).addCallbacks(self.handle_ok_callback)
+        fs.upload_file(file, storage['type'], dst, dataname).addCallbacks(self.handle_ok_callback)
 
 
     def handle_ok_callback(self, file_id):
