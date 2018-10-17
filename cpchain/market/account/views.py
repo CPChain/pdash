@@ -28,6 +28,28 @@ class IsRegistered(APIView):
             return Response({'status': qs[0].username})
         return Response({'status': None})
 
+
+class UsernameAPIView(APIView):
+    """
+    API endpoint that used to login and fetch verify code.
+    """
+    queryset = WalletUser.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        data = request.data
+        public_key = data.get(PUBLIC_KEY)
+
+        # if is existing public key, generate verify code and put it into cache
+        print(public_key)
+        qs = WalletUser.objects.filter(public_key=public_key)
+        username = None
+        if qs.count() > 0:
+            username = qs[0].username
+        return Response(data=dict(username=username))
+
+
 class UserLoginAPIView(APIView):
     """
     API endpoint that used to login and fetch verify code.

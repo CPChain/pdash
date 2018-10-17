@@ -24,6 +24,8 @@ import logging
 
 from cpchain import config, root_dir
 from cpchain.wallet.pages import main_wnd
+from cpchain.wallet.simpleqt import Signals
+from cpchain.wallet.simpleqt.model import Model
 
 class TableWidget(QTableWidget):
     def __init__(self, parent=None):
@@ -56,11 +58,13 @@ class Table(TableWidget):
         self.resizeColumnsToContents()
         self.resizeRowsToContents()
         self.setFocusPolicy(Qt.NoFocus)
-        self.change = QtCore.pyqtSignal(list, name="modelChanged")
+        self.signals = Signals()
+        self.signals.change.connect(self.change)
 
         # Set Header
         self.setHeader(header)
         # Set Data
+        self.itemHandler = itemHandler
         self.setData(data, itemHandler)
         if header and data and sort:
             self.sortItems(sort)
@@ -119,6 +123,20 @@ class Table(TableWidget):
             self.setHorizontalHeaderItem(i, item)
             self.setColumnWidth(i, header['width'][i])
             i += 1
+
+    def change(self, value):
+        row_number = len(value)
+        self.setRowCount(row_number)
+        for cur_row in range(row_number):
+            items = self.itemHandler(value[cur_row])
+            i = 0
+            for item in items:
+                if isinstance(item, str):
+                    widget = QTableWidgetItem(item)
+                    self.setItem(cur_row, i, widget)
+                else:
+                    self.setCellWidget(cur_row, i, item)
+                i += 1
 
     def setData(self, data, itemHandler):
         if not data:

@@ -1,8 +1,11 @@
 from django.conf.urls import url, include
 from rest_framework import routers
 
-from cpchain.market.proxy.views import ProxyViewSet
+from cpchain.market.records.views import RecordViewSet
 
 router = routers.DefaultRouter()
+router.register(r'record', RecordViewSet)
 
-urlpatterns = []
+urlpatterns = [
+    url(r'^', include(router.urls)),
+]

@@ -12,6 +12,7 @@ from PyQt5 import QtCore, QtWidgets
 
 from cpchain.proxy.client import pick_proxy
 
+from twisted.web import client
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from twisted.logger import globalLogBeginner, textFileLogObserver
@@ -34,6 +35,8 @@ from cpchain.wallet import utils
 from cpchain.chain.utils import default_w3 as web3
 
 from cpchain.wallet.router import Router
+
+client._HTTP11ClientFactory.noisy = False
 
 globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
 logger = logging.getLogger(__name__)
@@ -217,8 +220,14 @@ def login():
         key_passphrase = file.get('key_passphrase')
         try:
             if key_path and key_passphrase:
-                account = Account(key_path, key_passphrase)
+                if isinstance(key_passphrase, str):
+                    account = Account(key_path, key_passphrase.encode())
+                else:
+                    account = Account(key_path, key_passphrase)
                 public_key = ECCipher.serialize_public_key(account.public_key)
+                # Init market client account
+                wallet.market_client.account = account
+                wallet.market_client.public_key = public_key
                 addr = utils.get_address_from_public_key_object(public_key)
                 addr = web3.toChecksumAddress(addr)
                 logger.info(addr)
@@ -228,10 +237,13 @@ def login():
                     app.pwd = key_passphrase
                 else:  
                     app.pwd = key_passphrase.decode()
+                wallet.market_client.query_username(app)
                 __unlock()
                 enterPDash(account)
                 return
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             logger.error(e)
     logger.debug('Init')
     wnd = LoginWindow(reactor)

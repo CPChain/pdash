@@ -1,7 +1,9 @@
 
+from datetime import datetime as dt
 import logging
 import time
 import webbrowser
+
 
 
 from PyQt5.QtCore import Qt
@@ -31,10 +33,10 @@ UPDATE = app.event.Event()
 
 
 class Record:
-    category = "category"
-    payer = "Ptest"
-    amount = 100
-    time = '2018/2/4  08:30'
+    category = ""
+    payer = ""
+    amount = 0
+    time = ""
 
     def __init__(self, *args, **kw):
         for k, v in kw.items():
@@ -280,9 +282,22 @@ class WalletPage(Page):
             self.balance.value = account.get_balance(app.addr)
         app.event.register(UPDATE, update)
 
+    def load_data(self, data):
+        records = []
+        for item in data:
+            is_frm = app.addr == item['frm']
+            amount = float(item['value'])
+            records.append(Record(category='Transfer Out' if is_frm else 'Transfer',
+                                  payer=app.username if is_frm or amount == 0 else item['frm'],
+                                  amount= - amount if is_frm and amount != 0 else amount,
+                                  time=dt.strptime(item['date'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y/%m/%d %H:%M')))
+        self.table_data.value = records
+
     @page.create
     def create(self):
         self.balance.value = account.get_balance(app.addr)
+        # Load records
+        wallet.market_client.query_records(address=app.addr).addCallbacks(self.load_data)
 
     @page.data
     def data(self):
@@ -318,9 +333,9 @@ class WalletPage(Page):
         def buildTable():
             header = {
                 'headers': ['Category', 'Payer', 'Amount(CPC)', 'Time'],
-                'width': [252, 140, 170, 108]
+                'width': [202, 190, 170, 108]
             }
-            data = [Record(), Record(amount=-100)]
+            data = [Record()]
             self.table_data.value = data
             def buildProductClickListener(product_id):
                 def listener(event):
@@ -330,7 +345,7 @@ class WalletPage(Page):
                 items = []
                 items.append(data.category)
                 items.append(data.payer)
-                wid = QLabel(('+' if data.amount > 0 else '') + str(data.amount))
+                wid = QLabel(('+' if data.amount >= 0 else '') + str(data.amount))
                 wid.setStyleSheet("QLabel{{color: {};}}".format('#00a20e' if data.amount > 0 else '#d0021b'))
                 items.append(wid)
                 items.append(data.time)
