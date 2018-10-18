@@ -42,6 +42,7 @@ from cpchain.wallet.simpleqt.page import Page
 from cpchain.wallet.simpleqt.decorator import page, component
 from cpchain.wallet.simpleqt.widgets.label import Label
 from cpchain.wallet.simpleqt.widgets import Input
+from cpchain.wallet.simpleqt.basic import Button
 from cpchain.wallet.simpleqt.model import Model
 
 from cpchain.wallet.components.sales import Operator
@@ -55,7 +56,7 @@ logger = logging.getLogger(__name__)
 class OrderDetail(QWidget):
 
     def __init__(self, order_time, status, order_id, name=None, storage_path=None, data_type='batch',
-                 stream_id=None, market_hash=None):
+                 stream_id=None, market_hash=None, has_comfirmed=False):
         self.order_time = order_time
         self.status = status
         self.order_id = order_id
@@ -65,6 +66,7 @@ class OrderDetail(QWidget):
         self.market_hash = market_hash
         self.name = name
         self.stream_id = stream_id
+        self.has_comfirmed = has_comfirmed
         self.create()
         super().__init__()
         self.ui()
@@ -111,7 +113,7 @@ class OrderDetail(QWidget):
     def ui(self):
         layout = QVBoxLayout()
         layout.addWidget(self.gen_row('Order Time:', Label(self.order_time)))
-        layout.addWidget(self.gen_row('Staus:', Label(self.status)))
+        layout.addWidget(self.gen_row('Stauts:', Label(self.status)))
 
         # Bottom
         btm = QHBoxLayout()
@@ -128,7 +130,7 @@ class OrderDetail(QWidget):
             confirm = QPushButton('Confirm')
             confirm.setObjectName('pinfo_cancel_btn')
             confirm.clicked.connect(self.confirm)
-            btm.addWidget(cancel)
+            btm.addWidget(confirm)
             btm.addStretch(1)
             layout.addLayout(btm)
 
@@ -166,6 +168,8 @@ class OrderDetail(QWidget):
             btm.addStretch(1)
             layout.addLayout(btm)
         self.confirmBtn = confirm
+        if self.has_comfirmed:
+            self.confirmBtn.hide()
 
         self.setLayout(layout)
         self.setStyleSheet("""

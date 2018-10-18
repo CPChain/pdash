@@ -39,6 +39,8 @@ from cpchain.wallet.simpleqt.decorator import page
 from cpchain.wallet.simpleqt.widgets.label import Label
 from cpchain.wallet.simpleqt.basic import Builder, Button, Line
 
+from cpchain.wallet.adapters import ProductAdapter
+
 logger = logging.getLogger(__name__)
 
 class MyDataTab(Page):
@@ -56,18 +58,7 @@ class MyDataTab(Page):
 
     @page.method
     def renderProducts(self, products):
-        _products = []
-        for i in products:
-            test_dict = dict(image=i['cover_image'] or abs_path('icons/test.png'),
-                             icon=abs_path('icons/icon_batch@2x.png'),
-                             name=i['title'],
-                             cpc=i['price'],
-                             ptype=i['ptype'],
-                             description=i['description'],
-                             market_hash=i["msg_hash"],
-                             owner_address=i['owner_address'])
-            _products.append(test_dict)
-        self.products.value = _products
+        self.products.value = ProductAdapter(products).data
 
     @page.data
     def data(self):
@@ -107,10 +98,6 @@ class MyDataTab(Page):
             table = Table(None, header, self.table_data, itemHandler, sort=None)
             table.setObjectName('my_table')
             table.setFixedWidth(800)
-            if len(self.table_data.value) > 0:
-                table.setMinimumHeight(180)
-            else:
-                table.setMaximumHeight(40)
             return table
         table = buildTable()
         self.table = table
@@ -166,10 +153,6 @@ class MyDataTab(Page):
             table = Table(None, header, self.stream_data, itemHandler, sort=None)
             table.setObjectName('my_table')
             table.setFixedWidth(800)
-            if len(self.stream_data.value) > 0:
-                table.setMinimumHeight(180)
-            else:
-                table.setMaximumHeight(40)
             def record_check(item):
                 right_menu(item.row())
             table.itemClicked.connect(record_check)

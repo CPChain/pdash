@@ -36,6 +36,8 @@ from cpchain.wallet.simpleqt.page import Page
 from cpchain.wallet.simpleqt.decorator import page
 from cpchain.wallet.simpleqt.widgets.label import Label
 
+from cpchain.wallet.adapters import ProductAdapter
+
 logger = logging.getLogger(__name__)
 
 class MarketPage(Page):
@@ -52,18 +54,7 @@ class MarketPage(Page):
 
     @page.method
     def renderProducts(self, products):
-        _products = []
-        for i in products:
-            test_dict = dict(image=i['cover_image'] or abs_path('icons/test.png'),
-                             icon=abs_path('icons/icon_batch@2x.png'),
-                             name=i['title'],
-                             cpc=i['price'],
-                             ptype=i['ptype'],
-                             description=i['description'],
-                             market_hash=i["msg_hash"],
-                             owner_address=i['owner_address'])
-            _products.append(test_dict)
-        self.products.value = _products
+        self.products.value = ProductAdapter(products).data
 
     @page.data
     def data(self):

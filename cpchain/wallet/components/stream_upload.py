@@ -145,7 +145,7 @@ class StreamUploadedDialog(Dialog):
     def __init__(self, parent=None, oklistener=None, data_name=None, stream_id=None):
         width = 400
         height = 340
-        title = "Upload Streaming Data"
+        title = "Streaming ID"
         self.now_wid = None
         self.oklistener = oklistener
         self.data_name_ = data_name
@@ -219,7 +219,7 @@ class PreviewDialog(Dialog):
     def __init__(self, parent=None, oklistener=None, ws_url=None):
         width = 460
         height = 350
-        title = "Upload Streaming Data"
+        title = "Preview"
         self.ws_url = ws_url
         self.now_wid = None
         self.oklistener = oklistener

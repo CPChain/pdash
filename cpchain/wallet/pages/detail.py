@@ -148,7 +148,8 @@ class ProductDetail(Page):
             "gas": 1,
             "account": 15,
             "password": "",
-            "storagePath": ""
+            "storagePath": "",
+            "status_text": "Delivered on May 2, 08:09:08"
         }
 
     def setProduct(self, product):
@@ -221,30 +222,41 @@ class ProductDetail(Page):
                 self.sales_header.hide()
 
         # Order Detail
+        if status <= 1:
+            self.status_text.value = "Created on May 2, 08:09:08"
+        elif status == 2:
+            self.status_text.value = "Delivered on May 2, 08:09:08"
+        elif status == 3:
+            self.status_text.value = "Received on May 2, 08:09:08"
+        elif status > 3:
+            self.status_text.value = "Confirmed on May 2, 08:09:08"
         if order and self.owner_address != wallet.market_client.public_key:
             if status > 2:
                 order_header = DetailHeader('Order Detail')
                 layout.insertWidget(start, order_header)
                 start += 1
                 height += 100
+                has_comfirmed = status > 3
                 if self.ptype == 'file':
                     self.data_type = 'batch'
                     self.order_detail = OrderDetail(order_time=Model("2018/6/15  08:40:39"),
-                                                    status=Model("Delivered on May 2, 08:09:08"),
+                                                    status=self.status_text,
                                                     order_id=order["order_id"],
                                                     name=self.name.value,
-                                                    data_type=self.data_type)
+                                                    data_type=self.data_type,
+                                                    has_comfirmed=has_comfirmed)
                     layout.insertWidget(start, self.order_detail)
                     start += 1
                     height += 100
                 if self.ptype == 'stream':
                     self.data_type = 'stream'
                     order_detail = OrderDetail(order_time=Model("2018/6/15  08:40:39"),
-                                            status=Model("Delivered on May 2, 08:09:08"),
-                                            order_id=order["order_id"],
-                                            market_hash=self.market_hash,
-                                            name=self.name.value,
-                                            data_type=self.data_type)
+                                               status=self.status_text,
+                                               order_id=order["order_id"],
+                                               market_hash=self.market_hash,
+                                               name=self.name.value,
+                                               data_type=self.data_type,
+                                               has_comfirmed=has_comfirmed)
                     layout.insertWidget(start, order_detail)
                     start += 1
                     height += 100

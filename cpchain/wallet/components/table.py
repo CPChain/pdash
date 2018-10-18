@@ -140,6 +140,7 @@ class Table(TableWidget):
 
     def setData(self, data, itemHandler):
         if not data:
+            self.setMaximumHeight(40)
             return
         data.setView(self)
         self.data = data.value
@@ -155,3 +156,7 @@ class Table(TableWidget):
                 else:
                     self.setCellWidget(cur_row, i, item)
                 i += 1
+        if row_number > 0:
+            self.setMinimumHeight(180 if row_number > 5 else row_number * 30)
+        else:
+            self.setMaximumHeight(32)

@@ -354,10 +354,6 @@ class WalletPage(Page):
             table = Table(self, header, self.table_data, itemHandler, sort=None)
             table.setObjectName('my_table')
             table.setFixedWidth(802)
-            if len(self.table_data.value) > 0:
-                table.setMinimumHeight(180)
-            else:
-                table.setMaximumHeight(40)
             return table
         table = buildTable()
         self.table = table

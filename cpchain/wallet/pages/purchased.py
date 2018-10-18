@@ -10,6 +10,8 @@ from cpchain.wallet.components.product_list import ProductList
 from cpchain.wallet.simpleqt.page import Page
 from cpchain.wallet.simpleqt.decorator import page
 
+from cpchain.wallet.adapters import ProductAdapter
+
 logger = logging.getLogger(__name__)
 
 class PurchasedPage(Page):
@@ -25,15 +27,7 @@ class PurchasedPage(Page):
     @page.method
     def renderProducts(self, products):
         records = fs.get_buyer_file_list()
-        _products = []
-        for i in products:
-            test_dict = dict(image=abs_path('icons/test.png'),
-                             icon=abs_path('icons/icon_batch@2x.png'),
-                             name=i['title'],
-                             cpc=i['price'],
-                             description=i['description'])
-            _products.append(test_dict)
-        self.products.value = _products
+        self.products.value = ProductAdapter(products).data
 
     @page.data
     def data(self):
