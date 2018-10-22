@@ -93,8 +93,10 @@ class Product(QWidget):
                                   image=self.image,
                                   product_id=self.id,
                                   name=self.name,
+                                  icon=self.icon,
                                   cpc=self.cpc,
                                   ptype=self.ptype,
+                                  category=self.category,
                                   description=self.description,
                                   market_hash=self.market_hash,
                                   owner_address=self.owner_address)
@@ -125,7 +127,7 @@ class Product(QWidget):
         category = QLabel(self.category)
         category.setObjectName('category')
         category.setAlignment(Qt.AlignCenter)
-        category.setMaximumWidth(52)
+        category.setMaximumWidth(72)
         catbox.addWidget(category)
         catbox.addStretch(1)
         vbox.addLayout(catbox)
