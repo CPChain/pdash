@@ -22,3 +22,7 @@ class ProductAdapter:
                     description=data['description'],
                     market_hash=data["msg_hash"],
                     owner_address=data['owner_address'])
+    
+    def filter_in(self, key, values):
+        results = [i for i in self.data_ if i[key] in values]
+        return results

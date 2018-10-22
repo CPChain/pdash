@@ -2,7 +2,8 @@ import sys
 import os
 import logging
 
-from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, QVBoxLayout, QGridLayout, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel, QWidget, QLineEdit, QTableWidget, QTextEdit, QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
+from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, QVBoxLayout, QGridLayout, QScrollArea, QListWidget, QListWidgetItem,
+                             QTabWidget, QLabel, QWidget, QLineEdit, QTableWidget, QTextEdit, QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
 from PyQt5.QtCore import Qt, QPoint, QBasicTimer
 from PyQt5.QtGui import QIcon, QCursor, QPixmap, QFont, QFontDatabase, QMouseEvent
 
@@ -24,8 +25,9 @@ import shutil
 
 logger = logging.getLogger(__name__)
 
+
 class MyWindow(QMainWindow):
-    
+
     def __init__(self, reactor=None, parent=None):
         super().__init__()
         self.reactor = reactor
@@ -40,17 +42,28 @@ class MyWindow(QMainWindow):
         style = self.style()
         self.setStyleSheet(__style + style)
 
+    def hide(self):
+        print('>>>>>>>>>>3')
+        super().hide()
+
     def close(self):
         if self.parent:
             self.parent.show()
             self.hide()
+            print('>>>>>>>>>>>>>1')
         else:
             super().close()
-    
+            print('>>>>>>>>>>>>>2')
+
+    def closeEvent(self, event):
+        # self.reactor.stop()
+        # os._exit(0)
+        print('>>>>>>>>>>>>>close')
+
     def to(self, wnd):
         self.hide()
         wnd.show()
-    
+
     def init(self):
         self.setWindowTitle('CPChain Wallet')
         self.setObjectName("main_window")
@@ -67,7 +80,7 @@ class MyWindow(QMainWindow):
         self.setObjectName("main_window")
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setAcceptDrops(True)
-    
+
     def mouseMoveEvent(self, e: QMouseEvent):
         self._endPos = e.pos() - self._startPos
         self.move(self.pos() + self._endPos)
@@ -82,12 +95,13 @@ class MyWindow(QMainWindow):
             self._isTracking = False
             self._startPos = None
             self._endPos = None
-    
+
     def __ui(self):
         main_layout = QVBoxLayout()
         main_layout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
         main_layout.setContentsMargins(0, 0, 0, 0)
-        close_btn = Builder(widget=QPushButton).text('x').name('close_btn').click(self.close).build()
+        close_btn = Builder(widget=QPushButton).text(
+            'x').name('close_btn').click(self.close).build()
 
         header = QHBoxLayout()
         header.addStretch(1)
@@ -99,7 +113,7 @@ class MyWindow(QMainWindow):
         wid.setLayout(main_layout)
         self.setCentralWidget(wid)
         return main_layout
-    
+
     def __style(self):
         return """
             QMainWindow, QWidget#main {
@@ -146,13 +160,13 @@ class MyWindow(QMainWindow):
         if self.reactor:
             self.reactor.stop()
             os._exit(0)
-    
+
     def style(self):
         return ""
-    
+
     def ui(self, layout):
         pass
-    
+
     def add(self, elem, space=None):
         if isinstance(elem, QWidget):
             self.layout.addWidget(elem)
@@ -160,17 +174,18 @@ class MyWindow(QMainWindow):
             self.layout.addLayout(elem)
         if space:
             self.spacing(space)
-    
+
     def spacing(self, space):
         self.layout.addSpacing(space)
 
+
 class GeneratingWindow(MyWindow):
-    
+
     def __init__(self, reactor, parent=None):
         super().__init__(reactor, parent)
-    
+
     def ok(self):
-        self.close()        
+        self.close()
 
     def ui(self, layout):
         self.spacing(40)
@@ -183,7 +198,8 @@ class GeneratingWindow(MyWindow):
         # loading  = QPixmap(abs_path('icons/loading.png'))
         # loading = loading.scaled(228, 200)
         # self.add(Builder().name('loading').pixmap(loading).click(lambda _: self.ok()).build())
-        loading = LoadingGif(path=abs_path('icons/GIF_3dot.gif'), width=228, height=228)
+        loading = LoadingGif(path=abs_path(
+            'icons/GIF_3dot.gif'), width=228, height=228)
         self.add(loading)
 
 
@@ -198,7 +214,7 @@ class UserNameWindow(MyWindow):
 
     def enter(self):
         if not validate(self, lambda x: x, 'Please input username', self.username.value) or \
-            not validate(self, lambda x: x, 'No Account!', self.account):
+                not validate(self, lambda x: x, 'No Account!', self.account):
             return
         self.hide()
         app.username = self.username.value
@@ -207,7 +223,7 @@ class UserNameWindow(MyWindow):
     @property
     def is_registered(self):
         return self.is_registered_
-    
+
     @is_registered.setter
     def is_registered(self, val):
         self.is_registered_ = val
@@ -232,27 +248,28 @@ class UserNameWindow(MyWindow):
                                   .build()
         self.username_elem = username
         self.add(username, 10)
-        self.add(Button.Builder().text('Enter PDash')\
-                                 .style('primary')\
-                                 .click(lambda _: self.enter())\
+        self.add(Button.Builder().text('Enter PDash')
+                                 .style('primary')
+                                 .click(lambda _: self.enter())
                                  .build())
 
     def style(self):
         return ""
 
+
 class BackupWindow(MyWindow):
-    
+
     def __init__(self, reactor, parent, path, next_):
         self.path = path
         self.next_ = next_
         super().__init__(reactor, parent)
-    
+
     def backup(self):
         select_path = QFileDialog.getExistingDirectory()
         name = self.path.split('/')[-1]
         shutil.copyfile(self.path, select_path + '/' + name)
         QMessageBox.information(self, "Success", "Successful!")
-    
+
     def ui(self, layout):
         title = Builder().text('Backup your wallet now')\
                          .name('title')\
@@ -265,14 +282,14 @@ class BackupWindow(MyWindow):
                         .build()
         self.add(title, 10)
         self.add(desc, 70)
-        self.add(Button.Builder().text('Check and Backup')\
-                                 .style('primary')\
-                                 .click(lambda _: self.backup())\
+        self.add(Button.Builder().text('Check and Backup')
+                                 .style('primary')
+                                 .click(lambda _: self.backup())
                                  .build(), 10)
-        self.add(Builder().name('next')\
-                          .text('Next >')\
-                          .align(Qt.AlignRight)\
-                          .click(lambda _: self.to(self.next_))\
+        self.add(Builder().name('next')
+                          .text('Next >')
+                          .align(Qt.AlignRight)
+                          .click(lambda _: self.to(self.next_))
                           .build(), 10)
 
 
@@ -287,7 +304,8 @@ class CreateWindow(MyWindow):
         super().__init__(reactor, parent)
         self.loading = GeneratingWindow(reactor, self)
         self.username = UserNameWindow(reactor, self)
-        self.backup = BackupWindow(reactor, self, self.PATH + '/' + self.NAME, self.username)
+        self.backup = BackupWindow(
+            reactor, self, self.PATH + '/' + self.NAME, self.username)
 
     def create(self):
         # Create Keystore
@@ -299,8 +317,11 @@ class CreateWindow(MyWindow):
             return
         if not validate(self, lambda x: x == True, "You haven't agreed to the agreement", self.check.value):
             return
+
         def _create():
-            self.username.account = create_account(self.password.value, self.PATH, self.NAME)
+            self.username.account = create_account(
+                self.password.value, self.PATH, self.NAME)
+
         def _after(_):
             self.loading.hide()
             self.backup.show()
@@ -331,9 +352,9 @@ class CreateWindow(MyWindow):
                                 .build()
         self.add(repeat, 10)
         self.add(Agreement(self.check, width=228, height=30), 40)
-        self.add(Button.Builder().text('Create')\
-                                 .style('primary')\
-                                 .click(lambda _: self.create())\
+        self.add(Button.Builder().text('Create')
+                                 .style('primary')
+                                 .click(lambda _: self.create())
                                  .build())
 
     def style(self):
@@ -341,13 +362,13 @@ class CreateWindow(MyWindow):
 
 
 class ImportWindow(MyWindow):
-    
+
     def __init__(self, reactor=None, parent=None):
         self.password = Model("")
         self.file = None
         super().__init__(reactor, parent)
         self.username = UserNameWindow(reactor, self)
-    
+
     def _import(self):
         self.loading_start()
         if not validate(self, lambda x: x, "Please input the password", self.password.value):
@@ -360,6 +381,7 @@ class ImportWindow(MyWindow):
             def exec_():
                 account = import_account(self.file.file, self.password.value)
                 self.username.account = account
+
                 def cb(status):
                     self.username.username_ = status
                     self.username.is_registered = True
@@ -372,11 +394,11 @@ class ImportWindow(MyWindow):
             logger.error(e)
             QMessageBox.information(self, "error", "Failed!")
             self.loading_over()
-    
+
     def loading_start(self):
         self.import_.setEnabled(False)
         self.loading.show()
-    
+
     def loading_over(self):
         self.import_.setEnabled(True)
         self.loading.hide()
@@ -406,9 +428,9 @@ class ImportWindow(MyWindow):
                                browse_text="browse…")
         self.add(self.file, 20)
         self.import_ = Button.Builder().text('Import')\
-                                 .style('primary')\
-                                 .click(lambda _: self._import())\
-                                 .build()
+            .style('primary')\
+            .click(lambda _: self._import())\
+            .build()
         self.add(self.import_, 5)
         self.loading = Loading()
         self.loading.hide()
@@ -416,6 +438,7 @@ class ImportWindow(MyWindow):
 
     def style(self):
         return """ """
+
 
 class LoginWindow(MyWindow):
 
@@ -451,4 +474,3 @@ class LoginWindow(MyWindow):
                 margin-top: 60px;
             }
         """
-

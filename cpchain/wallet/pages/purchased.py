@@ -3,8 +3,7 @@ import logging
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QVBoxLayout
 
-from cpchain.wallet.pages import wallet
-from cpchain.wallet.pages import abs_path
+from cpchain.wallet.pages import wallet, app
 from cpchain.wallet import fs
 from cpchain.wallet.components.product_list import ProductList
 from cpchain.wallet.simpleqt.page import Page
@@ -27,7 +26,15 @@ class PurchasedPage(Page):
     @page.method
     def renderProducts(self, products):
         records = fs.get_buyer_file_list()
-        self.products.value = ProductAdapter(products).data
+        # all products
+        adapter = ProductAdapter(products)
+        # all orders
+        orders = app.products_order_list
+        # Find my bought orders
+        bought_orders = [i for i in orders if i['buyer_addr'] == app.addr]
+        # Find all my bought products's hash
+        products = [i['product_hash'] for i in bought_orders]
+        self.products.value = adapter.filter_in('market_hash', products)
 
     @page.data
     def data(self):

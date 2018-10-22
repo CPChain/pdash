@@ -1,57 +1,53 @@
-from PyQt5.QtCore import Qt, QPoint
-from PyQt5.QtWidgets import (QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLineEdit, QGridLayout, QPushButton,
-                             QMenu, QAction, QCheckBox, QVBoxLayout, QWidget, QDialog, QFrame, QTableWidgetItem,
-                             QAbstractItemView, QMessageBox, QTextEdit, QHeaderView, QTableWidget, QRadioButton,
-                             QFileDialog, QListWidget, QListWidgetItem, QComboBox)
-from PyQt5.QtGui import QCursor, QFont, QFontDatabase, QPixmap
-from PyQt5 import QtGui
-
-from cpchain.crypto import ECCipher, RSACipher, Encoder
-
-from cpchain.wallet.pages import load_stylesheet, HorizontalLine, wallet, main_wnd, get_pixm
-
-from twisted.internet.defer import inlineCallbacks
-from twisted.internet.threads import deferToThread
-from cpchain.wallet import fs
-from cpchain.utils import open_file, sizeof_fmt
-from cpchain.proxy.client import pick_proxy
-
 import importlib
+import json
+import logging
 import os
 import os.path as osp
-import string
-import logging
-import json
 import shutil
-
-from cpchain import root_dir
-
-from cpchain.wallet.utils import formatTimestamp
-from cpchain.wallet.pages import HorizontalLine, abs_path, get_icon, app, Binder, wallet
-
-from cpchain.wallet.components.table import Table
-from cpchain.wallet.components.product import Product
-from cpchain.wallet.components.product_list import ProductList
-from cpchain.wallet.components.upload import UploadDialog
-from cpchain.wallet.components.loading import Loading
-from cpchain.wallet.components.sales import Sale
-from cpchain.wallet.components.purchase import PurchaseDialog
-from cpchain.wallet.components.picture import Picture
-
-from cpchain.wallet.simpleqt.page import Page
-from cpchain.wallet.simpleqt.decorator import page, component
-from cpchain.wallet.simpleqt.widgets.label import Label
-from cpchain.wallet.simpleqt.widgets import Input
-from cpchain.wallet.simpleqt.basic import Button
-from cpchain.wallet.simpleqt.model import Model
-
-from cpchain.wallet.components.sales import Operator
-
-from cpchain.wallet.components.stream_upload import StreamUploadedDialog, PreviewDialog
-
+import string
 from datetime import datetime as dt
 
+from PyQt5 import QtGui
+from PyQt5.QtCore import QPoint, Qt
+from PyQt5.QtGui import QCursor, QFont, QFontDatabase, QPixmap
+from PyQt5.QtWidgets import (QAbstractItemView, QAction, QCheckBox, QComboBox,
+                             QDialog, QFileDialog, QFrame, QGridLayout,
+                             QHBoxLayout, QHeaderView, QLabel, QLineEdit,
+                             QListWidget, QListWidgetItem, QMenu, QMessageBox,
+                             QPushButton, QRadioButton, QScrollArea,
+                             QTableWidget, QTableWidgetItem, QTabWidget,
+                             QTextEdit, QVBoxLayout, QWidget)
+from twisted.internet.defer import inlineCallbacks
+from twisted.internet.threads import deferToThread
+
+from cpchain import root_dir
+from cpchain.crypto import ECCipher, Encoder, RSACipher
+from cpchain.proxy.client import pick_proxy
+from cpchain.utils import open_file, sizeof_fmt
+from cpchain.wallet import fs
+from cpchain.wallet.components.loading import Loading
+from cpchain.wallet.components.picture import Picture
+from cpchain.wallet.components.preview import PreviewDialog
+from cpchain.wallet.components.product import Product
+from cpchain.wallet.components.product_list import ProductList
+from cpchain.wallet.components.purchase import PurchaseDialog
+from cpchain.wallet.components.sales import Operator, Sale
+from cpchain.wallet.components.stream_upload import StreamUploadedDialog
+from cpchain.wallet.components.table import Table
+from cpchain.wallet.components.upload import UploadDialog
+from cpchain.wallet.pages import (Binder, HorizontalLine, abs_path, app,
+                                  get_icon, get_pixm, load_stylesheet,
+                                  main_wnd, wallet)
+from cpchain.wallet.simpleqt.basic import Button
+from cpchain.wallet.simpleqt.decorator import component, page
+from cpchain.wallet.simpleqt.model import Model
+from cpchain.wallet.simpleqt.page import Page
+from cpchain.wallet.simpleqt.widgets import Input
+from cpchain.wallet.simpleqt.widgets.label import Label
+from cpchain.wallet.utils import formatTimestamp
+
 logger = logging.getLogger(__name__)
+
 
 class OrderDetail(QWidget):
 
@@ -70,14 +66,15 @@ class OrderDetail(QWidget):
         self.create()
         super().__init__()
         self.ui()
-    
+
     @component.create
     def create(self):
         def cb(path):
             if path and self.data_type == 'stream':
                 stream_id = json.loads(path)
                 self.ws_url = stream_id[0]
-        deferToThread(lambda: fs.buyer_file_by_order_id(self.order_id).path).addCallback(cb)
+        deferToThread(lambda: fs.buyer_file_by_order_id(
+            self.order_id).path).addCallback(cb)
 
     def gen_row(self, name, widget):
         layout = QHBoxLayout()
@@ -121,7 +118,6 @@ class OrderDetail(QWidget):
         btm.setContentsMargins(0, 0, 0, 0)
         btm.setSpacing(15)
 
-
         if self.data_type == 'batch':
             ok = QPushButton('Download')
             ok.setObjectName('pinfo_publish_btn')
@@ -146,17 +142,21 @@ class OrderDetail(QWidget):
         else:
             ok = QPushButton('Get Streaming ID')
             ok.setObjectName('pinfo_stream_btn')
+
             def openStreamID(_):
                 def cb(path):
                     if path:
                         stream_id = json.loads(path)
-                        dlg = StreamUploadedDialog(data_name=self.name, stream_id=stream_id[0])
+                        dlg = StreamUploadedDialog(
+                            data_name=self.name, stream_id=stream_id[0])
                         dlg.show()
-                deferToThread(lambda: fs.buyer_file_by_order_id(self.order_id).path).addCallback(cb)
+                deferToThread(lambda: fs.buyer_file_by_order_id(
+                    self.order_id).path).addCallback(cb)
             ok.clicked.connect(openStreamID)
             btm.addWidget(ok)
             preview = QPushButton('Preview')
             preview.setObjectName('pinfo_cancel_btn')
+
             def openPreview(_):
                 dlg = PreviewDialog(ws_url=self.ws_url)
                 dlg.show()

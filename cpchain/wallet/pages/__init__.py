@@ -1,3 +1,4 @@
+from enum import Enum
 import os.path as osp
 import string
 import copy
@@ -57,6 +58,22 @@ class Binder:
 def warning(parent, msg="Please input all the required fields first"):
     QMessageBox.warning(parent, "Warning", msg)
 
+class OrderStatus(Enum):
+    
+    created = 1
+
+    delivering = 2
+
+    delivered = 3
+
+    receiving = 4
+
+    received = 5
+
+    confirming = 6
+
+    confirmed = 7
+
 class App:
 
     def __init__(self):
@@ -110,5 +127,36 @@ class App:
                 return
         d = wallet.chain_broker.query_seller_products_order(None)
         d.addCallbacks(callback)
+    
+    def get_status_enum(self, status):
+        status_enum = None
+        if status == 0:
+            status_enum = OrderStatus.created    
+        if status == 1:
+            status_enum = OrderStatus.delivered
+        elif status == 2:
+            status_enum = OrderStatus.receiving
+        elif status == 3:
+            status_enum = OrderStatus.received
+        elif status >= 4:
+            status_enum = OrderStatus.confirmed
+        return status_enum
+    
+    def get_status(self, market_hash, buyer_addr):
+        for order in self.products_order.get(market_hash, []):
+            if order['buyer_addr'] == buyer_addr:
+                return order['status']
+        return None
+
+    @property
+    def products_order_list(self):
+        orders = []
+        for product, order_list in self.products_order.items():
+            for i in order_list:
+                i['product_hash'] = product
+                status = i['status']
+                i['status_enum'] = self.get_status_enum(status)
+            orders += order_list
+        return orders
 
 app = App()

@@ -247,7 +247,7 @@ def login():
             logger.error(e)
     logger.debug('Init')
     wnd = LoginWindow(reactor)
-    wnd.show()
+    wnd.exec_()
     wallet.set_main_wnd(wnd)
 
 def save_login_info():
@@ -262,7 +262,7 @@ def save_login_info():
 def search(event):
     search = event.data
     wallet.main_wnd.search_signal.emit(search)
-    
+
 
 def init_handlers():
     event.register(events.LOGIN_COMPLETED, lambda _: save_login_info())

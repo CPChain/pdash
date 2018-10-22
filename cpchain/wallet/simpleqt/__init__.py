@@ -8,6 +8,8 @@ class Signals(QtCore.QObject):
 
     change = QtCore.pyqtSignal(object, name="modelChanged")
 
+    click = QtCore.pyqtSignal(name="Click")
+
     disabled = QtCore.pyqtSignal(name='Diabled')
 
     refresh = QtCore.pyqtSignal(name='Refresh')

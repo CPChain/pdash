@@ -222,11 +222,11 @@ class ProductDetail(Page):
                 self.sales_header.hide()
 
         # Order Detail
-        if status <= 1:
+        if status < 1:
             self.status_text.value = "Created on May 2, 08:09:08"
-        elif status == 2:
+        elif status == 1:
             self.status_text.value = "Delivered on May 2, 08:09:08"
-        elif status == 3:
+        elif status <= 3:
             self.status_text.value = "Received on May 2, 08:09:08"
         elif status > 3:
             self.status_text.value = "Confirmed on May 2, 08:09:08"

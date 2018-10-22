@@ -61,8 +61,9 @@ class Dialog(QDialog):
 
     def mouseMoveEvent(self, event):
         if event.buttons() == Qt.LeftButton:
-            self.move(event.globalPos() - self.dragPosition)
-            event.accept()
+            if hasattr(self, 'dragPosition'):
+                self.move(event.globalPos() - self.dragPosition)
+                event.accept()
 
     def center(self, width, height):
         geometry = self.parent.geometry()

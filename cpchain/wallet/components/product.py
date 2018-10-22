@@ -1,13 +1,14 @@
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtCore import Qt, QPoint, QObject, pyqtSlot, pyqtSignal, pyqtProperty, QUrl
 from PyQt5.QtWidgets import (QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLineEdit, QGridLayout, QPushButton,
                              QMenu, QAction, QCheckBox, QVBoxLayout, QWidget, QDialog, QFrame, QTableWidgetItem,
                              QAbstractItemView, QMessageBox, QTextEdit, QHeaderView, QTableWidget, QRadioButton,
                              QFileDialog, QListWidget, QListWidgetItem)
 from PyQt5.QtGui import QCursor, QFont, QFontDatabase, QPainter, QColor, QPen, QPixmap
+from PyQt5.QtQuickWidgets import QQuickWidget
 
 from cpchain.crypto import ECCipher, RSACipher, Encoder
 
-from cpchain.wallet.pages import load_stylesheet, HorizontalLine, wallet, main_wnd, get_pixm
+from cpchain.wallet.pages import load_stylesheet, HorizontalLine, wallet, main_wnd, get_pixm, qml_path
 
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import deferToThread
@@ -23,8 +24,38 @@ import logging
 from cpchain import config, root_dir
 from cpchain.wallet.pages import app, Binder
 from cpchain.wallet.components.picture import Picture
+from cpchain.wallet.simpleqt.component import Component
+from cpchain.wallet.simpleqt.decorator import component
 
 from datetime import datetime as dt
+
+from . import ProductObject, ImageObject
+
+
+class ProductQML(Component):
+
+    qml = qml_path('components/Product.qml')
+
+    def __init__(self, parent, image=None, img_width=None, img_height=None, market_hash=None):
+        self.obj = ImageObject(None, image, img_width,
+                               img_height, market_hash=market_hash)
+        super().__init__(parent)
+
+    @component.create
+    def create(self):
+        pass
+
+    @component.ui
+    def ui(self):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        widget = QQuickWidget(self)
+        widget.setContentsMargins(0, 0, 0, 0)
+        widget.rootContext().setContextProperty('self', self.obj)
+        widget.setSource(QUrl(self.qml))
+        layout.addWidget(widget)
+        return layout
+
 
 class Product(QWidget):
 
@@ -56,10 +87,7 @@ class Product(QWidget):
         vbox = QVBoxLayout()
         # vbox.addStretch(1)
 
-        image = Picture(self.image, 220, int(self.h))
-        image.setObjectName('image')
-
-        def listener(event):
+        def listener():
             app.router.redirectTo('product_detail',
                                   image=self.image,
                                   product_id=self.id,
@@ -70,8 +98,12 @@ class Product(QWidget):
                                   market_hash=self.market_hash,
                                   owner_address=self.owner_address)
 
-        Binder.click(image, listener)
+        image_url = wallet.market_client.url + \
+            'product/v1/allproducts/images/?path=' + self.image
 
+        image = ProductQML(None, image_url, 220, int(
+            self.h), market_hash=self.market_hash)
+        image.obj.signals.click.connect(listener)
         vbox.addWidget(image)
 
         # Name
