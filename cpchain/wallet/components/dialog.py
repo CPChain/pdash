@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QApplication, QScrollArea, QLabel, QVBoxLayout, QDialog, QWidget, QDesktopWidget, QHBoxLayout, QFrame
+from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QDialog, QWidget, QHBoxLayout, QFrame, QGraphicsDropShadowEffect
 from PyQt5.QtCore import Qt, QEvent
 
-from cpchain.wallet.simpleqt.basic import Button, Builder
+from cpchain.wallet.simpleqt.basic import Builder
 
 class Dialog(QDialog):
 
@@ -9,10 +9,19 @@ class Dialog(QDialog):
         self.parent = parent
         super().__init__(parent)
         self.setWindowFlags(Qt.FramelessWindowHint)
+        # Dialog Shadow
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        effect = QGraphicsDropShadowEffect()
+        effect.setBlurRadius(15)
+        effect.setXOffset(0)
+        effect.setYOffset(0)
+        self.setGraphicsEffect(effect)
+
         self.center(width, height)
         self.setContentsMargins(0, 0, 0, 0)
         self.setAcceptDrops(True)
         layout = QVBoxLayout()
+        layout.setSpacing(0)
         layout.setAlignment(Qt.AlignTop)
         layout.setContentsMargins(0, 0, 0, 0)
         # Title
@@ -38,7 +47,7 @@ class Dialog(QDialog):
         layout.addWidget(widget)
         self.setLayout(layout)
         self.setStyleSheet(self.style())
-    
+
     def gen_row(self, left_text, *widgets, **kw):
         row = QHBoxLayout()
 
@@ -84,6 +93,13 @@ class Dialog(QDialog):
                 background: #fafafa;
                 border:1px solid #cccccc;
                 border-radius:5px;
+            }
+            QWidget#main {
+                background:#fafafa;
+                border:1px solid #cccccc;
+                border-bottom-left-radius:5px;
+                border-bottom-right-radius:5px;
+
             }
             QFrame#header {
                 background:#eeeeee;
