@@ -19,19 +19,18 @@ class Page(QtWidgets.QScrollArea):
         self.create()
         self.signals = Signals()
         self.signals.refresh.connect(self.ui)
-    
+
     def data(self):
         pass
-    
+
     def ui(self):
         pass
-    
+
     def style(self):
         pass
-    
+
     def create(self):
         pass
 
     def refresh(self):
         self.signals.refresh.emit()
-        

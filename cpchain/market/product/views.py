@@ -327,7 +327,7 @@ class ProductListViewSet(mixins.ListModelMixin,
                 serializer.save(owner=user)
                 return create_success_data_response({'market_hash': product.msg_hash})
         except Exception as e:
-            logger.exception()
+            logger.exception(e)
             raise e
 
     @list_route(methods=['GET'])

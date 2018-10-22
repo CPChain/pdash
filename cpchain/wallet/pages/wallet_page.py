@@ -4,20 +4,19 @@ import time
 import webbrowser
 from datetime import datetime as dt
 
-from PyQt5 import QtCore, QtGui
+from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QLabel, QMessageBox,
-                             QVBoxLayout, QWidget)
+                             QVBoxLayout)
 from twisted.internet.threads import deferToThread
 
 from cpchain import account
 from cpchain.chain.utils import default_w3 as web3
-from cpchain.utils import config, sizeof_fmt
-from cpchain.wallet import fs
+from cpchain.utils import config
 from cpchain.wallet.components.dialog import Dialog
 from cpchain.wallet.components.loading import Loading
 from cpchain.wallet.components.table import Table
-from cpchain.wallet.pages import Binder, abs_path, app, wallet
+from cpchain.wallet.pages import app, wallet
 from cpchain.wallet.simpleqt import Page
 from cpchain.wallet.simpleqt.basic import Builder, Button, Input, Label, Line
 from cpchain.wallet.simpleqt.decorator import component, page
@@ -33,7 +32,7 @@ class Record:
     amount = 0
     time = ""
 
-    def __init__(self, *args, **kw):
+    def __init__(self, **kw):
         for k, v in kw.items():
             self.__dict__[k] = v
 
@@ -75,7 +74,7 @@ class ReceiveDialog(Dialog):
     def openUrl(self, url):
         try:
             webbrowser.get('chrome').open_new_tab(url)
-        except Exception as e:
+        except:
             webbrowser.open_new_tab(url)
 
     def ui(self, widget):
@@ -353,12 +352,6 @@ class WalletPage(Page):
             }
             data = [Record()]
             self.table_data.value = data
-
-            def buildProductClickListener(product_id):
-                def listener(event):
-                    app.router.redirectTo(
-                        'publish_product', product_id=product_id)
-                return listener
 
             def itemHandler(data):
                 items = []

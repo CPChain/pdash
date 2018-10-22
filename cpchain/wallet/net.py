@@ -109,7 +109,7 @@ class MarketClient:
             logger.debug('market_hash: %s', confirm_info['data']['market_hash'])
             market_hash = confirm_info['data']['market_hash']
         except Exception as e:
-            logger.exception()
+            logger.exception(e)
         if ptype == 'file' or ptype == 'stream':
             publish_file_update(market_hash, selected_id)
         return market_hash

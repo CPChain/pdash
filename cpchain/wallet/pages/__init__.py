@@ -8,8 +8,8 @@ from PyQt5.QtWidgets import QFrame, QMessageBox
 from PyQt5.QtGui import QIcon, QCursor, QPixmap, QFont, QFontDatabase
 
 from twisted.internet import reactor
-from cpchain.wallet.wallet import Wallet
 from cpchain.wallet import events
+from cpchain.wallet.wallet import Wallet
 from cpchain.wallet.simpleqt import event
 
 wallet = Wallet(reactor)
@@ -18,8 +18,10 @@ global main_wnd
 
 main_wnd = None
 
+
 def abs_path(path):
     return osp.join(root_dir, "cpchain/assets/wallet", path)
+
 
 def load_stylesheet(wid, name):
     path = osp.join(root_dir, "cpchain/assets/wallet/qss", name)
@@ -28,8 +30,10 @@ def load_stylesheet(wid, name):
         s = string.Template(f.read())
         wid.setStyleSheet(s.substitute(subs))
 
+
 def qml_path(path):
     return osp.join(root_dir, "cpchain/assets/wallet/qml", path)
+
 
 class HorizontalLine(QFrame):
     def __init__(self, parent=None, wid=2, color="#ccc"):
@@ -39,15 +43,19 @@ class HorizontalLine(QFrame):
         self.setFrameShape(QFrame.HLine)
         self.setFrameShadow(QFrame.Plain)
         self.setLineWidth(self.wid)
-        self.setStyleSheet("QFrame{{ border-top: {}px solid {};}}".format(wid, color))
+        self.setStyleSheet(
+            "QFrame{{ border-top: {}px solid {};}}".format(wid, color))
+
 
 def get_icon(name):
     path = osp.join(root_dir, "cpchain/assets/wallet/icons", name)
     return QIcon(path)
 
+
 def get_pixm(name):
     path = osp.join(root_dir, "cpchain/assets/wallet/icons", name)
     return QPixmap(path)
+
 
 class Binder:
 
@@ -55,8 +63,10 @@ class Binder:
     def click(obj, listener):
         setattr(obj, 'mousePressEvent', listener)
 
+
 def warning(parent, msg="Please input all the required fields first"):
     QMessageBox.warning(parent, "Warning", msg)
+
 
 class OrderStatus(Enum):
 
@@ -73,6 +83,7 @@ class OrderStatus(Enum):
     confirming = 6
 
     confirmed = 7
+
 
 class App:
 
@@ -91,9 +102,11 @@ class App:
         @event.register(events.SELLER_DELIVERY)
         def seller_delivery(event):
             self.update(events.DETAIL_UPDATE, event.data)
+
         @event.register(events.BUYER_RECEIVE)
         def buyer_receive(event):
             self.update(events.DETAIL_UPDATE, event.data)
+
         @event.register(events.BUYER_CONFIRM)
         def buyer_confirm(event):
             self.update(events.DETAIL_UPDATE, event.data)
@@ -106,10 +119,10 @@ class App:
         @event.register(events.LOGIN_OPEN)
         def set_login_true(_):
             self.login_open = True
+
         @event.register(events.LOGIN_CLOSE)
         def set_login_false(_):
             self.login_open = False
-
 
     def find(self, new_, order_id):
         for item in new_:
@@ -117,17 +130,16 @@ class App:
                 return item
         return None
 
-
     def list2dict(self, orders):
         result = dict()
         for item in orders:
             result[item['order_id']] = item
         return result
 
-
     def update(self, pre_event=None, data=None):
         if self.login_open:
             return
+
         def callback(orders):
             # Trigger Events
             self.products_order = copy.deepcopy(orders)
@@ -168,5 +180,6 @@ class App:
                 i['status_enum'] = self.get_status_enum(status)
             orders += order_list
         return orders
+
 
 app = App()

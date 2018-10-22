@@ -4,7 +4,6 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QVBoxLayout
 
 from cpchain.wallet.pages import wallet, app
-from cpchain.wallet import fs
 from cpchain.wallet.components.product_list import ProductList
 from cpchain.wallet.simpleqt.page import Page
 from cpchain.wallet.simpleqt.decorator import page
@@ -25,7 +24,6 @@ class PurchasedPage(Page):
 
     @page.method
     def renderProducts(self, products):
-        records = fs.get_buyer_file_list()
         # all products
         adapter = ProductAdapter(products)
         # all orders

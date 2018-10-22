@@ -86,6 +86,7 @@ class Builder:
 from .button import Button
 from .input import Input
 from .checkbox import CheckBox
+from .text import Text
 
 def init(self, *args, **kwargs):
     new_args = []
@@ -98,7 +99,7 @@ def init(self, *args, **kwargs):
     return new_args, kwargs
 
 class Label(QLabel):
-    
+
     def __init__(self, *args, **kwargs):
         args, kwargs = init(self, *args, **kwargs)
         new_args = []
@@ -111,4 +112,4 @@ class Label(QLabel):
     def modelChange(self, value):
         self.setText(str(value))
 
-__all__ = [Builder, Button, Input, CheckBox, Label]
+__all__ = [Builder, Button, Input, CheckBox, Label, Text]

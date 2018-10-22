@@ -52,8 +52,8 @@ Rectangle {
                 visible: self.is_downloading
                 width: w / scale
                 height: h / scale
-                x: (self.width - w / scale) / 2 - 11
-                y: (self.height - h / scale) / 2
+                x: 24
+                y: 27
                 fillMode: Image.Stretch
                 opacity: 1
                 z: 2
@@ -63,6 +63,7 @@ Rectangle {
                 text: self.show_text
                 visible: self.show_text != ""
                 rightPadding: 15
+                bottomPadding: 35
                 anchors.centerIn: parent
                 color: "#ffffff"
                 z: 2

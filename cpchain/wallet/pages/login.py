@@ -147,7 +147,7 @@ class MyWindow(QMainWindow):
             }
         """
 
-    def closeEvent(self, event):
+    def closeEvent(self, _):
         if self.reactor:
             self.reactor.stop()
             os._exit(0)
@@ -273,15 +273,16 @@ class BackupWindow(MyWindow):
                         .build()
         self.add(title, 10)
         self.add(desc, 70)
-        self.add(Button.Builder().text('Check and Backup')
-                                 .style('primary')
-                                 .click(lambda _: self.backup())
-                                 .build(), 10)
+        self.add(Button.Builder()
+                 .text('Check and Backup')
+                 .style('primary')
+                 .click(lambda _: self.backup())
+                 .build(), 10)
         self.add(Builder().name('next')
-                          .text('Next >')
-                          .align(Qt.AlignRight)
-                          .click(lambda _: self.to(self.next_))
-                          .build(), 10)
+                 .text('Next >')
+                 .align(Qt.AlignRight)
+                 .click(lambda _: self.to(self.next_))
+                 .build(), 10)
 
 
 class CreateWindow(MyWindow):

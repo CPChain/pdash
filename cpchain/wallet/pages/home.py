@@ -12,7 +12,6 @@ from cpchain.wallet.simpleqt.page import Page
 from cpchain.wallet.adapters import ProductAdapter
 
 
-
 class HomeObject(QObject):
     iconChanged = pyqtSignal()
     usernameChanged = pyqtSignal()
