@@ -20,7 +20,7 @@ class ImageObject(QObject):
 
     showTextChanged = pyqtSignal()
     
-    def __init__(self, parent=None, src=None, width=None, height=None, market_hash=None):
+    def __init__(self, parent=None, src=None, width=None, height=None, market_hash=None, show_status=False):
         super().__init__(parent)
         self.src_ = src
         self.width_ = width
@@ -28,8 +28,9 @@ class ImageObject(QObject):
         self.signals = Signals()
         self.status = None
         self.need_mask_ = True
+        self.show_status = show_status
         status = app.get_status(market_hash, app.addr)
-        if status is not None:
+        if status is not None and self.show_status:
             self.status = app.get_status_enum(status)
         else:
             self.need_mask_ = False
@@ -37,7 +38,7 @@ class ImageObject(QObject):
         self.is_downloading_ = False
         self.show_text_ = ""
         self.init()
-    
+
     def init(self):
         if not self.status:
             return
@@ -49,7 +50,7 @@ class ImageObject(QObject):
             self.is_downloading_ = True
         elif self.status == OrderStatus.confirmed:
             self.need_mask_ = False
-            
+
 
     @pyqtProperty(str, notify=downloadingGifChanged)
     def downloading_gif(self):

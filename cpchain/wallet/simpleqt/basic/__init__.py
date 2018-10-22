@@ -8,7 +8,7 @@ import sys
 sys.path.append('.')
 
 class Binder:
-    
+
     @staticmethod
     def click(obj, listener):
         setattr(obj, 'mousePressEvent', listener)

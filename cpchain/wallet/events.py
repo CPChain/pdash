@@ -47,3 +47,9 @@ CANCEL_PURCHASE = Event()
 
 # New Record
 PREVIEW_NEW_RECORD = Event()
+
+# Login Dialog Open
+LOGIN_OPEN = Event()
+
+# Login Dialog Close
+LOGIN_CLOSE = Event()

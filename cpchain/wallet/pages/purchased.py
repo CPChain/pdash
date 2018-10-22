@@ -14,7 +14,7 @@ from cpchain.wallet.adapters import ProductAdapter
 logger = logging.getLogger(__name__)
 
 class PurchasedPage(Page):
-    
+
     def __init__(self, parent=None):
         self.parent = parent
         super().__init__(parent)
@@ -47,6 +47,6 @@ class PurchasedPage(Page):
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignTop)
         # Product List
-        pdsWidget = ProductList(self.products)
+        pdsWidget = ProductList(self.products, show_status=True)
         layout.addWidget(pdsWidget)
         return layout

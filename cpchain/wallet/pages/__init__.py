@@ -59,7 +59,7 @@ def warning(parent, msg="Please input all the required fields first"):
     QMessageBox.warning(parent, "Warning", msg)
 
 class OrderStatus(Enum):
-    
+
     created = 1
 
     delivering = 2
@@ -83,9 +83,10 @@ class App:
         self.event = event
         self.events = events
         self.addr = None
+        self.login_open = False
         self.status_ = {}
         self.init()
-    
+
     def init(self):
         @event.register(events.SELLER_DELIVERY)
         def seller_delivery(event):
@@ -94,13 +95,21 @@ class App:
         def buyer_receive(event):
             self.update(events.DETAIL_UPDATE, event.data)
         @event.register(events.BUYER_CONFIRM)
-        def buyer_receive(event):
+        def buyer_confirm(event):
             self.update(events.DETAIL_UPDATE, event.data)
-        
+
         @event.register(events.PAY)
         def pay(event):
             self.update()
             self.event.emit(events.NEW_ORDER, event.data)
+
+        @event.register(events.LOGIN_OPEN)
+        def set_login_true(_):
+            self.login_open = True
+        @event.register(events.LOGIN_CLOSE)
+        def set_login_false(_):
+            self.login_open = False
+
 
     def find(self, new_, order_id):
         for item in new_:
@@ -114,12 +123,13 @@ class App:
         for item in orders:
             result[item['order_id']] = item
         return result
-                
+
 
     def update(self, pre_event=None, data=None):
+        if self.login_open:
+            return
         def callback(orders):
             # Trigger Events
-            old_orders = copy.deepcopy(self.products_order)
             self.products_order = copy.deepcopy(orders)
             if pre_event:
                 self.event.emit(pre_event, data)
@@ -127,11 +137,11 @@ class App:
                 return
         d = wallet.chain_broker.query_seller_products_order(None)
         d.addCallbacks(callback)
-    
+
     def get_status_enum(self, status):
         status_enum = None
         if status == 0:
-            status_enum = OrderStatus.created    
+            status_enum = OrderStatus.created
         if status == 1:
             status_enum = OrderStatus.delivered
         elif status == 2:
@@ -141,7 +151,7 @@ class App:
         elif status >= 4:
             status_enum = OrderStatus.confirmed
         return status_enum
-    
+
     def get_status(self, market_hash, buyer_addr):
         for order in self.products_order.get(market_hash, []):
             if order['buyer_addr'] == buyer_addr:

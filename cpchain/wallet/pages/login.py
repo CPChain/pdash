@@ -1,27 +1,24 @@
-import sys
-import os
 import logging
+import os
+import shutil
+from datetime import datetime as dt
 
-from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, QVBoxLayout, QGridLayout, QScrollArea, QListWidget, QListWidgetItem,
-                             QTabWidget, QLabel, QWidget, QLineEdit, QTableWidget, QTextEdit, QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
-from PyQt5.QtCore import Qt, QPoint, QBasicTimer
-from PyQt5.QtGui import QIcon, QCursor, QPixmap, QFont, QFontDatabase, QMouseEvent
-
+from PyQt5.QtCore import QPoint, Qt
+from PyQt5.QtGui import QMouseEvent, QPixmap
+from PyQt5.QtWidgets import (QDesktopWidget, QFileDialog, QHBoxLayout,
+                             QMainWindow, QMessageBox, QPushButton,
+                             QVBoxLayout, QWidget)
 from twisted.internet.threads import deferToThread
 
-from cpchain.crypto import ECCipher
-
-from cpchain.wallet.pages import load_stylesheet, wallet, main_wnd, app, get_icon, get_pixm, abs_path
-from cpchain.wallet.simpleqt.basic import Builder, Button, Input
-from cpchain.wallet.simpleqt import Model, validate
-from cpchain.wallet.components.agreement import Agreement
-from cpchain.wallet.components.upload import FileUpload
-from cpchain.wallet.components.loading import Loading
-from cpchain.wallet.components.gif import LoadingGif
 from cpchain.account import create_account, import_account
-
-from datetime import datetime as dt
-import shutil
+from cpchain.crypto import ECCipher
+from cpchain.wallet.components.agreement import Agreement
+from cpchain.wallet.components.gif import LoadingGif
+from cpchain.wallet.components.loading import Loading
+from cpchain.wallet.components.upload import FileUpload
+from cpchain.wallet.pages import abs_path, app, wallet
+from cpchain.wallet.simpleqt import Model, validate
+from cpchain.wallet.simpleqt.basic import Builder, Button, Input
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +27,7 @@ class MyWindow(QMainWindow):
 
     def __init__(self, reactor=None, parent=None):
         super().__init__()
+        app.event.emit(app.events.LOGIN_OPEN)
         self.reactor = reactor
         self.parent = parent
         self.init()
@@ -43,22 +41,15 @@ class MyWindow(QMainWindow):
         self.setStyleSheet(__style + style)
 
     def hide(self):
-        print('>>>>>>>>>>3')
         super().hide()
 
     def close(self):
         if self.parent:
             self.parent.show()
             self.hide()
-            print('>>>>>>>>>>>>>1')
         else:
             super().close()
-            print('>>>>>>>>>>>>>2')
-
-    def closeEvent(self, event):
-        # self.reactor.stop()
-        # os._exit(0)
-        print('>>>>>>>>>>>>>close')
+            app.event.emit(app.events.LOGIN_CLOSE)
 
     def to(self, wnd):
         self.hide()

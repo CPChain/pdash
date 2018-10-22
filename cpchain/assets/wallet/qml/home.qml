@@ -1,4 +1,4 @@
-import QtQuick 2.3
+import QtQuick 2.6
 import QtQuick.Layouts 1.1
 import QtQuick.Controls 2.0
 import "./cpchain" as CPC
@@ -6,11 +6,15 @@ import "./cpchain" as CPC
 
 Rectangle {
     id: main;
+    color: "#fafafa"
+    width: 803
+    height: 248
     
     RowLayout {
         x: 41;
         y: 33;
         spacing: 14
+
         CPC.Image {
             source: self.icon;
             width: 102;
@@ -61,6 +65,14 @@ Rectangle {
         height: 1
         color: '#cccccc'
         opacity: 0.41
+    }
+
+    CPC.Text {
+        x: 41
+        y: 199
+        text: "My Products"
+        font.pixelSize: 24;
+        color: "#000000";
     }
 
     Component.onCompleted: {

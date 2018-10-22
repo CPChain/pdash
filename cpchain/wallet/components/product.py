@@ -36,9 +36,9 @@ class ProductQML(Component):
 
     qml = qml_path('components/Product.qml')
 
-    def __init__(self, parent, image=None, img_width=None, img_height=None, market_hash=None):
+    def __init__(self, parent, image=None, img_width=None, img_height=None, market_hash=None, show_status=False):
         self.obj = ImageObject(None, image, img_width,
-                               img_height, market_hash=market_hash)
+                               img_height, market_hash=market_hash, show_status=show_status)
         super().__init__(parent)
 
     @component.create
@@ -61,7 +61,7 @@ class Product(QWidget):
 
     def __init__(self, image=None, _id=None, name=None, icon=None, category='category',
                  cpc=0, sales=0, timestamp=None, remain=0, description="", market_hash=None, h=135,
-                 owner_address=None, ptype=None):
+                 owner_address=None, ptype=None, show_status=False):
         self.image = image
         self.id = _id
         self.name = name
@@ -74,6 +74,7 @@ class Product(QWidget):
         self.description = description
         self.h = h
         self.market_hash = market_hash
+        self.show_status = show_status
         self.ptype = ptype
         self.owner_address = owner_address
 
@@ -102,7 +103,7 @@ class Product(QWidget):
             'product/v1/allproducts/images/?path=' + self.image
 
         image = ProductQML(None, image_url, 220, int(
-            self.h), market_hash=self.market_hash)
+            self.h), market_hash=self.market_hash, show_status=self.show_status)
         image.obj.signals.click.connect(listener)
         vbox.addWidget(image)
 

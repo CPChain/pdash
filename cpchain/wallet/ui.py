@@ -235,7 +235,7 @@ def login():
                 app.addr = addr
                 if isinstance(key_passphrase, str):
                     app.pwd = key_passphrase
-                else:  
+                else:
                     app.pwd = key_passphrase.decode()
                 wallet.market_client.query_username(app)
                 __unlock()

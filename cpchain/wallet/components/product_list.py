@@ -31,10 +31,11 @@ from datetime import datetime as dt
 
 class ProductList(QWidget):
 
-    def __init__(self, products, col=3, scroll=True):
+    def __init__(self, products, col=3, scroll=True, show_status=False):
         self.col = col
         self.scroll = scroll
         self.signals = Signals()
+        self.show_status = show_status
         super().__init__()
         self.signals.change.connect(self.modelChanged)
         self.setProducts(products)
@@ -46,6 +47,7 @@ class ProductList(QWidget):
     def _setProducts(self, products):
         arr = []
         for p in products:
+            p['show_status'] = self.show_status
             item = Product(**p)
             arr.append(item)
         self.products = arr
@@ -57,6 +59,7 @@ class ProductList(QWidget):
             QWidget().setLayout(self.layout())
         arr = []
         for p in value:
+            p['show_status'] = self.show_status
             item = Product(**p)
             arr.append(item)
         self.products = arr
