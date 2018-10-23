@@ -27,7 +27,6 @@ class MyWindow(QMainWindow):
 
     def __init__(self, reactor=None, parent=None):
         super().__init__()
-        app.event.emit(app.events.LOGIN_OPEN)
         self.reactor = reactor
         self.parent = parent
         self.init()
@@ -42,6 +41,10 @@ class MyWindow(QMainWindow):
 
     def hide(self):
         super().hide()
+    
+    def show(self):
+        app.event.emit(app.events.LOGIN_OPEN)
+        super().show()
 
     def close(self):
         if self.parent:

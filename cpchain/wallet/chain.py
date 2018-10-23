@@ -194,7 +194,7 @@ class Broker:
                 logger.debug(urls)
                 event.emit(events.SELLER_DELIVERY, order_id)
         except Exception as e:
-            logger.error(e)
+            logger.exception(e)
 
 
     @defer.inlineCallbacks
@@ -249,7 +249,7 @@ class Broker:
             logger.debug("file has been downloaded")
             logger.debug("put order into confirmed queue, order id: %s", order_id)
         event.emit(events.BUYER_RECEIVE, order_id)
-    
+
     @defer.inlineCallbacks
     def buyer_send_request_stream(self, order_info):
         logger.debug("buyer send request to proxy ...")

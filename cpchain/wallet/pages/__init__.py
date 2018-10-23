@@ -139,7 +139,6 @@ class App:
     def update(self, pre_event=None, data=None):
         if self.login_open:
             return
-
         def callback(orders):
             # Trigger Events
             self.products_order = copy.deepcopy(orders)
