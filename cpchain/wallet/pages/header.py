@@ -70,7 +70,11 @@ class Header(QFrame):
         # self.content_tabs = parent.content_tabs
         self.init_ui()
         self.brush()
-    
+        @app.event.register(app.events.ROUTER_CHANGE)
+        def change_router(_):
+            self.prev_btn.setEnabled(app.router.hasback())
+            self.nex_btn.setEnabled(app.router.hasprev())
+
     def brush(self):
         palette1 = QPalette()
         path = abs_path('icons/header@x2.png')

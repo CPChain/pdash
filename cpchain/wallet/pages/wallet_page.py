@@ -302,6 +302,10 @@ class WalletPage(Page):
                                   amount=- amount if is_frm and amount != 0 else amount,
                                   time=dt.strptime(item['date'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y/%m/%d %H:%M')))
         self.table_data.value = records
+        if len(records) == 0:
+            self.nodata.show()
+        else:
+            self.nodata.hide()
 
     @page.create
     def create(self):
@@ -350,7 +354,7 @@ class WalletPage(Page):
                 'headers': ['Category', 'Payer', 'Amount(CPC)', 'Time'],
                 'width': [202, 190, 170, 108]
             }
-            data = [Record()]
+            data = []
             self.table_data.value = data
 
             def itemHandler(data):
@@ -380,6 +384,7 @@ class WalletPage(Page):
             # No Data
             nodata = QLabel('No Data!')
             nodata.setObjectName('no_data')
+            self.nodata = nodata
             self.add(nodata)
         layout.addStretch(1)
         return layout

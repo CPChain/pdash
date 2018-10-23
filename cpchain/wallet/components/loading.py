@@ -6,7 +6,8 @@ from cpchain.wallet.pages import abs_path
 from cpchain.wallet.components.gif import LoadingGif
 
 class Loading(QFrame):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, text="processing..."):
+        self.text_ = text
         super().__init__(parent)
         self.setObjectName('Loading')
         self.initUI()
@@ -20,7 +21,7 @@ class Loading(QFrame):
         loading = LoadingGif(self, path=abs_path('icons/new_loading.gif'))
         loading.setObjectName('loading')
         layout.addWidget(loading)
-        text = QLabel("processing...")
+        text = QLabel(self.text_)
         text.setObjectName('Text')
         text.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(text)

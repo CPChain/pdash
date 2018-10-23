@@ -53,3 +53,6 @@ LOGIN_OPEN = Event()
 
 # Login Dialog Close
 LOGIN_CLOSE = Event()
+
+# Router Change
+ROUTER_CHANGE = Event()

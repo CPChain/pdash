@@ -55,6 +55,7 @@ class MarketPage(Page):
     @page.method
     def renderProducts(self, products):
         self.products.value = ProductAdapter(products).data
+        self.loading.hide()
 
     @page.data
     def data(self):
@@ -87,7 +88,9 @@ class MarketPage(Page):
         wrapper_banner.setMaximumWidth(width)
 
         layout.addWidget(wrapper_banner)
-
+        layout.addSpacing(15)
+        self.loading = Loading(text='Loading')
+        layout.addWidget(self.loading)
 
         # Product List
         pdsWidget = ProductList(self.products)

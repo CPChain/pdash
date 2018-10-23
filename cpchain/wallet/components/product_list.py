@@ -25,6 +25,7 @@ import sip
 from cpchain import config, root_dir
 from cpchain.wallet.pages import main_wnd
 from cpchain.wallet.components.product import Product
+from cpchain.wallet.components.loading import Loading
 from cpchain.wallet.simpleqt import Signals
 
 from datetime import datetime as dt

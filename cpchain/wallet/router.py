@@ -26,10 +26,10 @@ class Signals(QObject):
 
     def _route_to(self, path):
         Router.redirectTo(path)
-    
+
 
 class Router:
-    
+
     index = MarketPage
 
     back_stack = [('market_page', [], {})]
@@ -81,10 +81,16 @@ class Router:
         for l in Router.listener:
             l(page)
         Router._redirectTo(page, *args, **kwargs)
+        app.event.emit(app.events.ROUTER_CHANGE)
+
 
     @staticmethod
-    def hasBack():
-        return len(Router.back_stack) > 1
+    def hasback():
+        return len(Router.back_stack) > 2
+
+    @staticmethod
+    def hasprev():
+        return len(Router.forward_stack) > 0
 
     @staticmethod
     def back():
@@ -93,6 +99,7 @@ class Router:
             Router.back_stack = Router.back_stack[:-1]
             page, args, kwargs = Router.back_stack[-1]
             Router._redirectTo(page, *args, **kwargs)
+        app.event.emit(app.events.ROUTER_CHANGE)
 
     @staticmethod
     def forward():
@@ -101,3 +108,4 @@ class Router:
             Router.back_stack.append((page, args, kwargs))
             Router.forward_stack = Router.forward_stack[:-1]
             Router._redirectTo(page, *args, **kwargs)
+        app.event.emit(app.events.ROUTER_CHANGE)

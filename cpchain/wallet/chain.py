@@ -304,7 +304,7 @@ class Handler:
         self.broker = broker
 
 
-    def buy_product(self, msg_hash, file_title, proxy, seller):
+    def buy_product(self, msg_hash, file_title, proxy, seller, value):
         logger.debug("start to buy product")
         seller_addr = get_address_from_public_key_object(seller)
         desc_hash = Encoder.str_to_base64_byte(msg_hash)

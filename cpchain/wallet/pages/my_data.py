@@ -95,7 +95,7 @@ class MyDataTab(Page):
                 items.append(wid)
                 return items
 
-            table = Table(None, header, self.table_data, itemHandler, sort=None)
+            table = Table(self, header, self.table_data, itemHandler, sort=None)
             table.setObjectName('my_table')
             table.setFixedWidth(800)
             return table
@@ -150,7 +150,7 @@ class MyDataTab(Page):
                 items.append(wid)
                 return items
 
-            table = Table(None, header, self.stream_data, itemHandler, sort=None)
+            table = Table(self, header, self.stream_data, itemHandler, sort=None)
             table.setObjectName('my_table')
             table.setFixedWidth(800)
             def record_check(item):
@@ -160,7 +160,7 @@ class MyDataTab(Page):
         stream_table = buildStreamTable()
         self.stream_table = stream_table
         self.buildStreamTable = buildStreamTable
-        
+
         self.addH(Button.Builder(width=150, height=30)
                         .style('primary').name('btn')
                         .text('Upload Batch Data')

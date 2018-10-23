@@ -69,7 +69,7 @@ sidebarMenu = [
 ]
 
 class MainWindow(QMainWindow):
-    
+
     def search_handler(self, val):
         app.router.redirectTo('market_page', search=val)
 
@@ -88,6 +88,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('CPChain Wallet')
         self.setObjectName("main_window")
         self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setWindowOpacity(0.98)
         self.main_tab_index = {}
 
         def set_geometry():
@@ -247,7 +248,7 @@ def login():
             logger.error(e)
     logger.debug('Init')
     wnd = LoginWindow(reactor)
-    wnd.exec_()
+    wnd.show()
     wallet.set_main_wnd(wnd)
 
 def save_login_info():

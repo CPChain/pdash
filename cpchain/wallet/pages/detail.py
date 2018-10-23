@@ -217,7 +217,7 @@ class ProductDetail(Page):
                 self.salesElem.append(sale1)
                 start += 1
                 height += 200
-            
+
             if not need_show:
                 self.sales_header.hide()
 
@@ -261,7 +261,7 @@ class ProductDetail(Page):
                     start += 1
                     height += 100
         widget.setFixedHeight(height)
-        
+
 
     def render_widget(self):
         height = 200
