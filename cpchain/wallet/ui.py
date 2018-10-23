@@ -4,6 +4,7 @@ import sys
 import os
 import logging
 import shelve
+import json
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, QVBoxLayout, QGridLayout, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel, QWidget, QLineEdit, QTableWidget, QTextEdit, QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
 from PyQt5.QtCore import Qt, QPoint, QBasicTimer
@@ -29,7 +30,7 @@ from cpchain.wallet.pages.login import LoginWindow
 from cpchain.wallet.components.sidebar import SideBar
 
 from cpchain.wallet import events
-from cpchain.wallet.simpleqt import event
+from cpchain.wallet.simpleqt import event, MessageBox
 from cpchain.account import Account, get_balance
 from cpchain.wallet import utils
 from cpchain.chain.utils import default_w3 as web3
@@ -162,7 +163,21 @@ def __unlock():
     try:
         web3.personal.unlockAccount(app.addr, app.pwd)
     except Exception as e:
-        logger.error(e)
+        logger.exception(e)
+
+def valid_password(password):
+    path = os.path.expanduser('~/.cpchain')
+    with shelve.open(os.path.join(path, 'account')) as file:
+        key_path = file.get('key_path')
+        with open(key_path) as f:
+            encrypted_key = json.load(f)
+        try:
+            web3.eth.account.decrypt(encrypted_key, password)
+            return True
+        except ValueError as e:
+            logger.exception(e)
+            event.emit(events.PASSWORD_ERROR)
+            return False
 
 
 def initialize_system():
@@ -272,9 +287,12 @@ def init_handlers():
 
 if __name__ == '__main__':
     app.unlock = __unlock
+    app.valid_password = valid_password
     wallet.app = app
     app.enterPDash = enterPDash
     init_handlers()
     login()
     app.unlock()
+    app.msgbox = MessageBox
+    app.msgbox.parent = app.main_wnd
     reactor.run()

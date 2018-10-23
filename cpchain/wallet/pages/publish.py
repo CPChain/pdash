@@ -131,7 +131,7 @@ class Pictures(QFrame):
 
 class PublishProduct(Page):
 
-    def __init__(self, parent=None, product_id=None, type_='batch'):
+    def __init__(self, parent=None, product_id=None, type_='Batch'):
         self.parent = parent
         self.product_id = product_id
         self.type_ = type_

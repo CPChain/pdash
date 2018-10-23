@@ -98,9 +98,16 @@ class PurchaseDialog(Dialog):
             seller = self.owner_address
             app.unlock()
             wallet.chain_broker.handler.buy_product(msg_hash, file_title, proxy, seller, int(self.price.value))
-        get_proxy_address(self.proxy.current)
-        app.event.emit(app.events.CLICK_PAY)
-        self.close()
+        if not self.password.value:
+            app.msgbox.warning("Please input password")
+            return
+        if app.valid_password(self.password.value):
+            app.unlock()
+            get_proxy_address(self.proxy.current)
+            app.event.emit(app.events.CLICK_PAY)
+            self.close()
+        else:
+            app.msgbox.error("Password mismatch")
 
     def handle_cancel(self):
         app.event.emit(app.events.CANCEL_PURCHASE)

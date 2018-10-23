@@ -10,6 +10,8 @@ from getpass import getpass
 from cpchain import config, crypto
 from cpchain.utils import join_with_rc
 from cpchain.chain.utils import default_w3 as web3
+from cpchain.wallet.simpleqt import event
+from cpchain.wallet import events
 
 logger = logging.getLogger(__name__)
 
@@ -106,8 +108,13 @@ def import_account(key_file, passwd):
     with open(key_file) as f:
         encrypted_key = json.load(f)
 
-    private_key = web3.eth.account.decrypt(encrypted_key, passwd)
-    acct = web3.eth.account.privateKeyToAccount(private_key)
+    try:
+        private_key = web3.eth.account.decrypt(encrypted_key, passwd)
+        acct = web3.eth.account.privateKeyToAccount(private_key)
+    except ValueError as e:
+        logger.exception(e)
+        event.emit(events.PASSWORD_ERROR)
+        return None
 
     try:
         web3.personal.importRawKey(acct.privateKey, passwd)

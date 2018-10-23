@@ -56,3 +56,6 @@ LOGIN_CLOSE = Event()
 
 # Router Change
 ROUTER_CHANGE = Event()
+
+# Password Error
+PASSWORD_ERROR = Event()

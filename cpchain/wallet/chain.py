@@ -317,7 +317,7 @@ class Handler:
             proxy=self.broker.buyer.web3.toChecksumAddress(proxy),
             secondary_proxy=self.broker.buyer.web3.toChecksumAddress(proxy),
             proxy_value=10,
-            value=20,
+            value=value,
             time_allowed=3600 * 24
         )
         logger.debug("product info has been created")

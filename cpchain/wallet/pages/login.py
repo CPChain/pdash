@@ -3,7 +3,7 @@ import os
 import shutil
 from datetime import datetime as dt
 
-from PyQt5.QtCore import QPoint, Qt
+from PyQt5.QtCore import QPoint, Qt, pyqtSignal
 from PyQt5.QtGui import QMouseEvent, QPixmap
 from PyQt5.QtWidgets import (QDesktopWidget, QFileDialog, QHBoxLayout,
                              QMainWindow, QMessageBox, QPushButton,
@@ -29,6 +29,7 @@ class MyWindow(QMainWindow):
         super().__init__()
         self.reactor = reactor
         self.parent = parent
+        app.main_wnd.mouseReleaseEvent = lambda _: app.event.emit(app.events.LOGIN_CLOSE)
         self.init()
         main = self.__ui()
         self.layout = QVBoxLayout()
@@ -39,9 +40,6 @@ class MyWindow(QMainWindow):
         style = self.style()
         self.setStyleSheet(__style + style)
 
-    def hide(self):
-        super().hide()
-    
     def show(self):
         app.event.emit(app.events.LOGIN_OPEN)
         super().show()
@@ -51,8 +49,9 @@ class MyWindow(QMainWindow):
             self.parent.show()
             self.hide()
         else:
-            super().close()
             app.event.emit(app.events.LOGIN_CLOSE)
+            app.main_wnd.mouseReleaseEvent = None
+            super().close()
 
     def to(self, wnd):
         self.hide()
@@ -358,11 +357,18 @@ class CreateWindow(MyWindow):
 
 class ImportWindow(MyWindow):
 
+    error_signal = pyqtSignal()
+
     def __init__(self, reactor=None, parent=None):
         self.password = Model("")
         self.file = None
         super().__init__(reactor, parent)
         self.username = UserNameWindow(reactor, self)
+        self.error_signal.connect(lambda: app.msgbox.error("Password mismatch"))
+        @app.event.register(app.events.PASSWORD_ERROR)
+        def password_error(_):
+            self.loading_over()
+            self.error_signal.emit()
 
     def _import(self):
         self.loading_start()

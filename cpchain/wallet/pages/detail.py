@@ -296,7 +296,7 @@ class ProductDetail(Page):
         category = Label(self.category)
         category.setObjectName('category')
         category.setAlignment(Qt.AlignCenter)
-        category.setMaximumWidth(52)
+        category.setMaximumWidth(80)
         catbox.addWidget(category)
         catbox.addStretch(1)
 
@@ -371,7 +371,7 @@ class ProductDetail(Page):
         desc.setWordWrap(True)
         layout.addWidget(desc)
 
-        height += 200
+        height += 300
         layout.addStretch(1)
 
         widget_ = QWidget()
