@@ -125,7 +125,7 @@ class StreamUploadDialog(Dialog):
     def upload(self):
         proxy = self.proxy.current
         storage_type = 'stream'
-        storage_plugin = "cpchain.storage-plugin."
+        storage_plugin = "cpchain.storage_plugin."
         module = importlib.import_module(storage_plugin + storage_type)
         s = module.Storage()
         param = dict()

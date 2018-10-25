@@ -28,6 +28,8 @@ from cpchain.wallet.pages.login import LoginWindow
 # widgets
 from cpchain.wallet.components.sidebar import SideBar
 
+from cpchain.storage_plugin import s3, ipfs, stream, template
+
 from cpchain.wallet import events
 from cpchain.wallet.simpleqt import event, MessageBox
 from cpchain.account import Account, get_balance

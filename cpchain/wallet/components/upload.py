@@ -182,7 +182,7 @@ class UploadDialog(Dialog):
         if not storage:
             return
         storage_module = importlib.import_module(
-            "cpchain.storage-plugin." + storage['type']
+            "cpchain.storage_plugin." + storage['type']
         )
         self.dst = storage_module.Storage().user_input_param()
 
