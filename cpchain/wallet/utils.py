@@ -1,5 +1,6 @@
 import urllib.parse
 import time
+from datetime import datetime as dt
 from cpchain.crypto import ECCipher, Encoder
 
 
@@ -41,4 +42,7 @@ def formatTimestamp(timestamp):
         ["Nov.", "November"],
         ["Dec.", "December"],
     ]
-    return months[timestamp.month][0] + ' ' + timestamp.strftime('%d, %Y')
+    return months[timestamp.month - 1][0] + ' ' + timestamp.strftime('%d, %Y')
+
+def to_datetime(created):
+    return dt.strptime(created, '%Y-%m-%dT%H:%M:%SZ')

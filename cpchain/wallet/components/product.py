@@ -60,15 +60,14 @@ class ProductQML(Component):
 class Product(QWidget):
 
     def __init__(self, image=None, _id=None, name=None, icon=None, category='category',
-                 cpc=0, sales=0, timestamp=None, remain=0, description="", market_hash=None, h=135,
-                 owner_address=None, ptype=None, show_status=False):
+                 cpc=0, sales=0, remain=0, description="", market_hash=None, h=135,
+                 owner_address=None, ptype=None, show_status=False, created=None):
         self.image = image
         self.id = _id
         self.name = name
         self.category = category
         self.cpc = cpc
         self.sales = sales
-        self.timestamp = timestamp
         self.remain = remain
         self.icon = icon
         self.description = description
@@ -76,6 +75,7 @@ class Product(QWidget):
         self.market_hash = market_hash
         self.show_status = show_status
         self.ptype = ptype
+        self.created = created
         self.owner_address = owner_address
 
         super().__init__()
@@ -96,6 +96,7 @@ class Product(QWidget):
                                   icon=self.icon,
                                   cpc=self.cpc,
                                   ptype=self.ptype,
+                                  created=self.created,
                                   category=self.category,
                                   description=self.description,
                                   market_hash=self.market_hash,
@@ -152,25 +153,7 @@ class Product(QWidget):
 
         # Timestamp and Remain Days
         tbox = QHBoxLayout()
-        tmp = self.timestamp
-        if not tmp:
-            tmp = dt.now()
-        months = [
-            ["Jan.", "January"],
-            ["Feb.", "February"],
-            ["Mar.", "March"],
-            ["Apr.", "April"],
-            ["May", "May"],
-            ["Jun.", "June"],
-            ["Jul.", "July"],
-            ["Aug.", "August"],
-            ["Sept.", "September"],
-            ["Oct.", "October"],
-            ["Nov.", "November"],
-            ["Dec.", "December"],
-        ]
-        tmp_str = months[tmp.month][1] + ' ' + tmp.strftime('%d, %Y')
-        timestamp = QLabel(str(tmp_str))
+        timestamp = QLabel(str(self.created))
         timestamp.setObjectName('timestamp')
         tbox.addWidget(timestamp)
 

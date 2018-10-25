@@ -8,7 +8,7 @@ import toml
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 
-root_dir = osp.abspath(osp.join(osp.dirname(osp.abspath(__file__)), '../'))
+root_dir = osp.abspath('./')
 
 class Config:
     def __init__(self, conf):

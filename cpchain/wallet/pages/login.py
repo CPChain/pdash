@@ -29,7 +29,8 @@ class MyWindow(QMainWindow):
         super().__init__()
         self.reactor = reactor
         self.parent = parent
-        app.main_wnd.mouseReleaseEvent = lambda _: app.event.emit(app.events.LOGIN_CLOSE)
+        if app.main_wnd:
+            app.main_wnd.mouseReleaseEvent = lambda _: app.event.emit(app.events.LOGIN_CLOSE)
         self.init()
         main = self.__ui()
         self.layout = QVBoxLayout()
@@ -50,7 +51,8 @@ class MyWindow(QMainWindow):
             self.hide()
         else:
             app.event.emit(app.events.LOGIN_CLOSE)
-            app.main_wnd.mouseReleaseEvent = None
+            if app.main_wnd:
+                app.main_wnd.mouseReleaseEvent = None
             super().close()
 
     def to(self, wnd):
@@ -187,10 +189,6 @@ class GeneratingWindow(MyWindow):
                          .build()
         self.add(title)
         self.spacing(60)
-        # Loading
-        # loading  = QPixmap(abs_path('icons/loading.png'))
-        # loading = loading.scaled(228, 200)
-        # self.add(Builder().name('loading').pixmap(loading).click(lambda _: self.ok()).build())
         loading = LoadingGif(path=abs_path(
             'icons/GIF_3dot.gif'), width=228, height=228)
         self.add(loading)
@@ -211,6 +209,7 @@ class UserNameWindow(MyWindow):
             return
         self.hide()
         app.username = self.username.value
+        app.event.emit(app.events.LOGIN_CLOSE)
         app.enterPDash(self.account)
 
     @property

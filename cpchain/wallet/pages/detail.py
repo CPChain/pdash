@@ -85,7 +85,7 @@ class ProductDetail(Page):
 
     def __init__(self, parent=None, product_id=None, name="", image=abs_path('icons/test.png'),
                  icon=abs_path('icons/icon_batch@2x.png'),
-                 category="Category", timestamp=dt.now(),
+                 category="Category", created=None,
                  sales=0, cpc=0, description="", remain=0,
                  market_hash=None, owner_address=None, ptype=None):
         self.parent = parent
@@ -95,7 +95,7 @@ class ProductDetail(Page):
         self.image_ = image
         self.icon = icon
         self.category = category
-        self.timestamp = timestamp
+        self.created = created
         self.sales = sales
         self.cpc_ = cpc
         self.description_ = description
@@ -123,7 +123,7 @@ class ProductDetail(Page):
             self.buying(False)
             self.refresh()
         self.signals.refresh.connect(render)
-    
+
     def buying(self, is_buying):
         if is_buying:
             self.buy.setEnabled(False)
@@ -140,7 +140,7 @@ class ProductDetail(Page):
             "icon": self.icon,
             "name": self.name_,
             "category": self.category,
-            "timestamp": dt.now(),
+            "created": self.created,
             "sales": self.sales,
             "cpc": self.cpc_,
             "remain": self.remain,
@@ -154,7 +154,7 @@ class ProductDetail(Page):
 
     def setProduct(self, product):
         self.product = product
-    
+
     def add_orders_ui(self, widget):
         height = widget.height()
         layout = widget.layout()
@@ -304,11 +304,7 @@ class ProductDetail(Page):
 
         # Timestamp and Remain Days
         tbox = QHBoxLayout()
-        tmp = self.timestamp.value
-        if not tmp:
-            tmp = dt.now()
-        tmp_str = formatTimestamp(tmp)
-        timestamp = QLabel(str(tmp_str))
+        timestamp = QLabel(self.created.value)
         timestamp.setObjectName('timestamp')
         tbox.addWidget(timestamp)
         sales = QLabel(str(self.sales.value) + ' sales')

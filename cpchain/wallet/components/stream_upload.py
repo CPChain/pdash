@@ -96,7 +96,7 @@ class StreamUploadDialog(Dialog):
         layout.addStretch(1)
         layout.addLayout(hbox)
         return layout
-    
+
     def toNext(self, _):
         # Upload to proxy, get streaming id
         def callback(path):
@@ -106,8 +106,8 @@ class StreamUploadDialog(Dialog):
                 self.aes_key = AESCipher.generate_key()
                 remote_uri = str(path)
                 new_file_info = FileInfo(name=self.data_name.value, data_type='stream', proxy=proxy,
-                                        remote_type='stream', remote_uri=remote_uri, public_key=wallet.market_client.public_key,
-                                        is_published=False, created=func.current_timestamp(), aes_key=self.aes_key)
+                                         remote_type='stream', remote_uri=remote_uri, public_key=wallet.market_client.public_key,
+                                         is_published=False, created=func.current_timestamp(), aes_key=self.aes_key)
                 fs.add_file(new_file_info)
                 self._id = new_file_info.id
                 encrypted_key = RSACipher.encrypt(self.aes_key)
@@ -120,7 +120,7 @@ class StreamUploadDialog(Dialog):
             except Exception as err:
                 logger.error(err)
         self.upload().addCallbacks(callback)
-    
+
     @component.method
     def upload(self):
         proxy = self.proxy.current

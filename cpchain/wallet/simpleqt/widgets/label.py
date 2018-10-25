@@ -1,7 +1,7 @@
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QLabel
-from simpleqt.model import Model
-from simpleqt.widgets import init
+from ..model import Model
+from . import init
 
 from .. import Signals
 

@@ -365,7 +365,7 @@ class MarketClient:
         resp = yield treq.get(url, headers=header)
         product_info = yield treq.json_content(resp)
         return product_info
-    
+
     @inlineCallbacks
     def myproducts(self):
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
@@ -375,7 +375,7 @@ class MarketClient:
         resp = yield treq.get(url, headers=header)
         products_info = yield treq.json_content(resp)
         return products_info
-    
+
     @inlineCallbacks
     def query_data(self, market_hash):
         url = self.url + 'user_data/v1/uploaded_file/item/'
@@ -384,7 +384,7 @@ class MarketClient:
         resp = yield treq.get(url, headers=header, persistent=False)
         data_info = yield treq.json_content(resp)
         return data_info
-    
+
     @inlineCallbacks
     def query_records(self, address):
         url = self.url + 'records/v1/record/'
@@ -393,7 +393,7 @@ class MarketClient:
         resp = yield treq.get(url, headers=header, persistent=False)
         data_info = yield treq.json_content(resp)
         return data_info
-    
+
     @inlineCallbacks
     def query_username(self, app):
         header = {'Content-Type': 'application/json'}

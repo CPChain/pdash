@@ -5,11 +5,11 @@ import os
 import logging
 import shelve
 import json
+import sha3
 
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, QVBoxLayout, QGridLayout, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel, QWidget, QLineEdit, QTableWidget, QTextEdit, QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
 from PyQt5.QtCore import Qt, QPoint, QBasicTimer
 from PyQt5 import QtCore, QtWidgets
-
 
 from cpchain.proxy.client import pick_proxy
 
@@ -17,7 +17,6 @@ from twisted.web import client
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from twisted.logger import globalLogBeginner, textFileLogObserver
-
 
 from cpchain.crypto import ECCipher
 
@@ -70,7 +69,7 @@ sidebarMenu = [
 ]
 
 class MainWindow(QMainWindow):
-
+    
     def search_handler(self, val):
         app.router.redirectTo('market_page', search=val)
 
@@ -147,7 +146,7 @@ class MainWindow(QMainWindow):
 
 def _handle_keyboard_interrupt():
     def sigint_handler(*args):
-        QApplication.quit()
+        application.quit()
 
     import signal
     signal.signal(signal.SIGINT, sigint_handler)
@@ -284,15 +283,23 @@ def init_handlers():
     event.register(events.LOGIN_COMPLETED, lambda _: save_login_info())
     event.register(events.SEARCH, search)
 
-
 if __name__ == '__main__':
+    application = QApplication([])
+
     app.unlock = __unlock
     app.valid_password = valid_password
     wallet.app = app
     app.enterPDash = enterPDash
     init_handlers()
+
     login()
-    app.unlock()
+
     app.msgbox = MessageBox
     app.msgbox.parent = app.main_wnd
-    reactor.run()
+
+    from twisted.internet import reactor
+    from threading import Thread
+
+    Thread(target=reactor.run, args=(False,)).start()
+
+    sys.exit(application.exec_())

@@ -1,5 +1,6 @@
 
 from cpchain.wallet.pages import abs_path
+from cpchain.wallet.utils import to_datetime, formatTimestamp
 
 class ProductAdapter:
 
@@ -18,9 +19,13 @@ class ProductAdapter:
             'file': 'icons/icon_batch@2x.png',
             'stream': 'icons/icon_stream@2x.png',
         }
+        created = data['created']
+        created_dt = to_datetime(created.split('.')[0] + 'Z')
+        created_str = formatTimestamp(created_dt)
         return dict(image=data['cover_image'] or abs_path('icons/test.png'),
                     icon=abs_path(icon_dict[data['ptype']]),
                     name=data['title'],
+                    created=created_str,
                     cpc=data['price'],
                     ptype=data['ptype'],
                     category=data.get('category'),
