@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt, QPoint, QObjectCleanupHandler
+from PyQt5.QtCore import Qt, QPoint, QObjectCleanupHandler, pyqtSignal
 from PyQt5.QtWidgets import (QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLineEdit, QGridLayout, QPushButton,
                              QMenu, QAction, QCheckBox, QVBoxLayout, QWidget, QDialog, QFrame, QTableWidgetItem,
                              QAbstractItemView, QMessageBox, QTextEdit, QHeaderView, QTableWidget, QRadioButton,
@@ -9,8 +9,9 @@ from cpchain.crypto import ECCipher, RSACipher, Encoder
 
 from cpchain.wallet.pages import load_stylesheet, HorizontalLine, wallet, main_wnd, get_pixm
 
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import inlineCallbacks, Deferred
 from twisted.internet.threads import deferToThread
+from twisted.internet import reactor
 from cpchain.wallet import fs
 from cpchain.utils import open_file, sizeof_fmt
 from cpchain.proxy.client import pick_proxy
@@ -22,16 +23,19 @@ import string
 import logging
 import re
 import traceback
+import time
 
 from cpchain import root_dir
 
-from cpchain.wallet.pages import main_wnd, HorizontalLine, abs_path, get_icon, Binder, warning
+from cpchain.wallet.pages import main_wnd, HorizontalLine, abs_path, get_icon, Binder, warning, app
 from cpchain.wallet.components.dialog import Dialog
 from cpchain.wallet.simpleqt.model import ListModel
 from cpchain.wallet.simpleqt.decorator import component
 from cpchain.wallet.simpleqt.widgets import Input, ComboBox
 from cpchain.wallet.simpleqt.widgets.label import Label
 from cpchain.wallet.components.gif import LoadingGif
+
+logger = logging.getLogger(__name__)
 
 class FileUpload(QFrame):
 
@@ -100,6 +104,9 @@ class FileUpload(QFrame):
         self.target.setText(st)
 
 class UploadDialog(Dialog):
+
+    okSignal = pyqtSignal(int)
+
     def __init__(self, parent=None, oklistener=None):
         width = 550
         height = 630
@@ -169,6 +176,7 @@ class UploadDialog(Dialog):
                 self.max_row = max(self.max_row, len(i['options']))
         self.data()
         super().__init__(wallet.main_wnd, title=title, width=width, height=height)
+        self.okSignal.connect(self.handle_upload_resp)
 
     def onChangeStorage(self, index):
         self.storage_index = index
@@ -239,7 +247,7 @@ class UploadDialog(Dialog):
         return {
             "data_name": ""
         }
-    
+
     @component.create
     def create(self):
         def set_proxy(proxy):
@@ -326,6 +334,23 @@ class UploadDialog(Dialog):
         fs.upload_file(file, storage['type'], dst, dataname).addCallbacks(self.handle_ok_callback)
 
 
+    def handle_upload_resp(self, status):
+        self.loading.hide()
+        self.ok.show()
+        try:
+            if status == 1:
+                app.msgbox.info("Uploaded successfuly")
+                if self.oklistener:
+                    self.oklistener()
+                self.close()
+            else:
+                app.msgbox.error("Uploaded fail")
+                self.close()
+        except Exception as e:
+            logger.error(e)
+            app.msgbox.error("Uploaded fail")
+            self.close()
+
     def handle_ok_callback(self, file_id):
         file_info = fs.get_file_by_id(file_id)
         hashcode = file_info.hashcode
@@ -338,23 +363,9 @@ class UploadDialog(Dialog):
         encrypted_key = RSACipher.encrypt(file_info.aes_key)
         encrypted_key = Encoder.bytes_to_base64_str(encrypted_key)
         d = wallet.market_client.upload_file_info(hashcode, path, size, product_id, remote_type, remote_uri, name, encrypted_key)
-        def handle_upload_resp(status):
-            self.loading.hide()
-            self.ok.show()
-            try:
-                if status == 1:
-                    QMessageBox.information(self, "Tips", "Uploaded successfuly")
-                    if self.oklistener:
-                        self.oklistener()
-                    self.close()
-                else:
-                    QMessageBox.information(self, "Tips", "Uploaded fail")
-                    self.close()
-            except Exception as e:
-                logger.error(e)
-                QMessageBox.information(self, "Tips", "Uploaded fail")
-                self.close()
-        d.addCallback(handle_upload_resp)
+        def cb(status):
+            self.okSignal.emit(status)
+        d.addCallbacks(cb)
 
     def style(self):
         return super().style() + """

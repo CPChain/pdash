@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt, QPoint, QObjectCleanupHandler, QThread
+from PyQt5.QtCore import Qt, QPoint, QObjectCleanupHandler, QThread, pyqtSignal
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import (QApplication, QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLineEdit, QGridLayout, QPushButton,
                              QMenu, QAction, QCheckBox, QVBoxLayout, QWidget, QDialog, QFrame, QTableWidgetItem,
@@ -51,6 +51,9 @@ from datetime import datetime as dt
 logger = logging.getLogger(__name__)
 
 class StreamUploadDialog(Dialog):
+
+    uploaded = pyqtSignal(object)
+
     def __init__(self, parent=None, oklistener=None):
         width = 400
         height = 280
@@ -60,6 +63,7 @@ class StreamUploadDialog(Dialog):
         self.data()
         self.init_proxy()
         super().__init__(wallet.main_wnd, title=title, width=width, height=height)
+        self.uploaded.connect(self.uploadedSlot)
 
     @component.method
     def init_proxy(self):
@@ -97,6 +101,11 @@ class StreamUploadDialog(Dialog):
         layout.addLayout(hbox)
         return layout
 
+    def uploadedSlot(self, path):
+        result = StreamUploadedDialog(oklistener=self.oklistener, data_name=self.data_name.value, stream_id=path['ws_url'])
+        result.show()
+        self.close()
+
     def toNext(self, _):
         # Upload to proxy, get streaming id
         def callback(path):
@@ -114,9 +123,7 @@ class StreamUploadDialog(Dialog):
                 encrypted_key = Encoder.bytes_to_base64_str(encrypted_key)
                 wallet.market_client.upload_file_info(None, None, 0, self._id, 'stream', json.dumps(remote_uri), self.data_name.value, encrypted_key)
                 path = json.loads(path)
-                result = StreamUploadedDialog(oklistener=self.oklistener, data_name=self.data_name.value, stream_id=path['ws_url'])
-                result.show()
-                self.close()
+                self.uploaded.emit(path)
             except Exception as err:
                 logger.error(err)
         self.upload().addCallbacks(callback)

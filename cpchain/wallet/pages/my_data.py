@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtCore import Qt, QPoint, pyqtSignal
 from PyQt5.QtWidgets import (QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLineEdit, QGridLayout, QPushButton,
                              QMenu, QAction, QCheckBox, QVBoxLayout, QWidget, QDialog, QFrame, QTableWidgetItem,
                              QAbstractItemView, QMessageBox, QTextEdit, QHeaderView, QTableWidget, QRadioButton,
@@ -45,18 +45,21 @@ logger = logging.getLogger(__name__)
 
 class MyDataTab(Page):
 
+    loaded = pyqtSignal(object)
+
     def __init__(self, parent=None, main_wnd=None):
         self.parent = parent
         self.main_wnd = main_wnd
         super().__init__(parent)
         self.setObjectName("my_data_tab")
+        self.loaded.connect(self.renderProducts)
+        self.loadProjects()
 
     @page.create
-    def create(self):
+    def loadProjects(self):
         # My Products
         wallet.market_client.myproducts().addCallbacks(self.renderProducts)
 
-    @page.method
     def renderProducts(self, products):
         self.products.value = ProductAdapter(products).data
 
@@ -192,7 +195,7 @@ class MyDataTab(Page):
         if len(self.table_data.value) == 0:
             # No Data
             self.add(Builder().text('0 Batch Data!').name('no_data').build())
-        
+
         # Stream Data
         self.add(Builder().text('Streaming Data').name('label_hint').build())
         self.add(stream_table)
@@ -203,7 +206,7 @@ class MyDataTab(Page):
 
         vLayout.addStretch(1)
         return vLayout
-    
+
     def style(self):
         margin_left = '20'
         return """
@@ -244,7 +247,7 @@ class MyDataTab(Page):
             self.upload.close()
         self.upload = UploadDialog(self, oklistener)
         self.upload.show()
-    
+
     def onClickStreamUpload(self):
         if wallet.market_client.token == '':
             QMessageBox.information(self, "Tips", "Please login first !")

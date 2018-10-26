@@ -91,7 +91,7 @@ class ProductList(QWidget):
             tmpLayout.addWidget(widget)
             self.setLayout(tmpLayout)
             return
-        row = int((len(pds) + self.col / 2) / self.col + 0.5)
+        row = int(len(pds) / self.col + 0.5) + 1
         if not layout:
             layout = QGridLayout()
             widget = QWidget()

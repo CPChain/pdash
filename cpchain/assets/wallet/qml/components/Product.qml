@@ -8,7 +8,6 @@ Rectangle {
     id: product;
     width: self.width
     height: self.height
-    color: "red"
     
     Item {
         anchors.centerIn: parent

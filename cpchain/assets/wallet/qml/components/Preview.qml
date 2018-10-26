@@ -42,6 +42,14 @@ Rectangle {
     ColumnLayout {
         spacing: 10
         id: content
+        Button {
+            id: testBtn
+            text: "Hello"
+            onClicked: {
+                console.log('Hello World')
+                testBtn.text = "Hello1"
+            }
+        }
         TabBar {
             id: bar
             spacing: 0
@@ -74,78 +82,79 @@ Rectangle {
                 }
             }
         }
-
-        StackLayout {
-            width: parent.width
-            currentIndex: bar.currentIndex
-            Item {
-                id: vtab
-                width: preview.width
-                height: preview.height - bar.height
-                Flickable {
-                    anchors.fill: parent
-                    contentWidth: 600
-                    contentHeight: 900
-
-                    ScrollBar.vertical: ScrollBar { }
-                    ColumnLayout {
-                        id: test
-                        CPC.AreaChart {
-                            id: chart
-                            width: 600
-                            height: 380
-                            chart_color: "#00ffff"
-                            chart_opacity: 0.6
-                            title: "Temperature Data"
-                            series_name: "Temperature"
-                        }
-                        CPC.AreaChart {
-                            id: chart2
-                            width: 600
-                            height: 380
-                            chart_color: "#8a2be2"
-                            chart_opacity: 0.6
-                            title: "Huminity Data "
-                            series_name: "Huminity"
-                            x_format: "%.0f%"
-                        }
-
-                        property int year: 0
-                        function testAdd() {
-                            var val = Math.round(Math.random() * 20)
-                            chart.append(year, val)
-                            chart2.append(year, val)
-                            year += 1
-                        }
-
-                        Timer {
-                            interval: 1000; running: true; repeat: true
-                            // onTriggered: test.testAdd()
-                        }
-                    }
-                }
-            }
-            Item {
-                id: rawTab
-                CPC.Raw {
-                    id: raw
-                    width: preview.width
-                    height: preview.height - bar.height
-                }
-                property int num: 0
-                function testAdd() {
-                    var val = Math.round(Math.random() * 20)
-                    raw.tick("data item - " + num)
-                    num += 1
-                }
-
-                Timer {
-                    interval: 1000;
-                    running: true;
-                    repeat: true
-                    // onTriggered: rawTab.testAdd()
-                }
-            }
-        }
     }
+
+    //     StackLayout {
+    //         width: parent.width
+    //         currentIndex: bar.currentIndex
+    //         Item {
+    //             id: vtab
+    //             width: preview.width
+    //             height: preview.height - bar.height
+    //             Flickable {
+    //                 anchors.fill: parent
+    //                 contentWidth: 600
+    //                 contentHeight: 900
+
+    //                 ScrollBar.vertical: ScrollBar { }
+    //                 ColumnLayout {
+    //                     id: test
+    //                     CPC.AreaChart {
+    //                         id: chart
+    //                         width: 600
+    //                         height: 380
+    //                         chart_color: "#00ffff"
+    //                         chart_opacity: 0.6
+    //                         title: "Temperature Data"
+    //                         series_name: "Temperature"
+    //                     }
+    //                     CPC.AreaChart {
+    //                         id: chart2
+    //                         width: 600
+    //                         height: 380
+    //                         chart_color: "#8a2be2"
+    //                         chart_opacity: 0.6
+    //                         title: "Huminity Data "
+    //                         series_name: "Huminity"
+    //                         x_format: "%.0f%"
+    //                     }
+
+    //                     property int year: 0
+    //                     function testAdd() {
+    //                         var val = Math.round(Math.random() * 20)
+    //                         chart.append(year, val)
+    //                         chart2.append(year, val)
+    //                         year += 1
+    //                     }
+
+    //                     // Timer {
+    //                     //     interval: 1000; running: true; repeat: true
+    //                     //     // onTriggered: test.testAdd()
+    //                     // }
+    //                 }
+    //             }
+    //         }
+    //         Item {
+    //             id: rawTab
+    //             CPC.Raw {
+    //                 id: raw
+    //                 width: preview.width
+    //                 height: preview.height - bar.height
+    //             }
+    //             property int num: 0
+    //             function testAdd() {
+    //                 var val = Math.round(Math.random() * 20)
+    //                 raw.tick("data item - " + num)
+    //                 num += 1
+    //             }
+
+    //             // Timer {
+    //             //     interval: 1000;
+    //             //     running: true;
+    //             //     repeat: true
+    //             //     // onTriggered: rawTab.testAdd()
+    //             // }
+    //         }
+    //     }
+    // }
 }

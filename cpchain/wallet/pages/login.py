@@ -41,10 +41,6 @@ class MyWindow(QMainWindow):
         style = self.style()
         self.setStyleSheet(__style + style)
 
-    def show(self):
-        app.event.emit(app.events.LOGIN_OPEN)
-        super().show()
-
     def close(self):
         if self.parent:
             self.parent.show()
@@ -288,6 +284,8 @@ class BackupWindow(MyWindow):
 
 class CreateWindow(MyWindow):
 
+    created = pyqtSignal()
+
     def __init__(self, reactor=None, parent=None):
         self.password = Model("")
         self.repeat = Model("")
@@ -299,6 +297,10 @@ class CreateWindow(MyWindow):
         self.username = UserNameWindow(reactor, self)
         self.backup = BackupWindow(
             reactor, self, self.PATH + '/' + self.NAME, self.username)
+        self.created.connect(self._after)
+
+    def _after(self):
+        self.loading.to(self.backup)
 
     def create(self):
         # Create Keystore
@@ -314,11 +316,7 @@ class CreateWindow(MyWindow):
         def _create():
             self.username.account = create_account(
                 self.password.value, self.PATH, self.NAME)
-
-        def _after(_):
-            self.loading.hide()
-            self.backup.show()
-        deferToThread(_create).addCallback(_after)
+        deferToThread(_create).addCallback(lambda _: self.created.emit())
         self.to(self.loading)
 
     def ui(self, layout):
@@ -358,16 +356,25 @@ class ImportWindow(MyWindow):
 
     error_signal = pyqtSignal()
 
+    imported = pyqtSignal(str)
+
     def __init__(self, reactor=None, parent=None):
         self.password = Model("")
         self.file = None
         super().__init__(reactor, parent)
         self.username = UserNameWindow(reactor, self)
         self.error_signal.connect(lambda: app.msgbox.error("Password mismatch"))
+        self.imported.connect(self.onImported)
         @app.event.register(app.events.PASSWORD_ERROR)
         def password_error(_):
             self.loading_over()
             self.error_signal.emit()
+
+    def onImported(self, status):
+        self.username.username_ = status
+        self.username.is_registered = True
+        self.loading_over()
+        self.to(self.username)
 
     def _import(self):
         self.loading_start()
@@ -381,12 +388,8 @@ class ImportWindow(MyWindow):
             def exec_():
                 account = import_account(self.file.file, self.password.value)
                 self.username.account = account
-
                 def cb(status):
-                    self.username.username_ = status
-                    self.username.is_registered = True
-                    self.loading_over()
-                    self.to(self.username)
+                    self.imported.emit(status)
                 public_key = ECCipher.serialize_public_key(account.public_key)
                 wallet.market_client.isRegistered(public_key).addCallbacks(cb)
             deferToThread(exec_)
@@ -446,6 +449,10 @@ class LoginWindow(MyWindow):
         super().__init__(reactor)
         self.createWnd = CreateWindow(reactor, self)
         self.importWnd = ImportWindow(reactor, self)
+    
+    def show(self):
+        app.event.emit(app.events.LOGIN_OPEN)
+        super().show()
 
     def ui(self, layout):
         # Logo

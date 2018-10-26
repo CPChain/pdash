@@ -82,7 +82,7 @@ class Home(Page):
     @page.create
     def create(self):
         # balance
-        amount = account.get_balance(app.addr)
+        amount = account.to_ether(account.get_balance(app.addr))
         self.obj.icon = abs_path('icons/person.png')
         self.obj.username = 'Hi, {}'.format(app.username)
         self.obj.amount = '{}'.format(amount)

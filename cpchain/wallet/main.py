@@ -14,7 +14,6 @@ from PyQt5 import QtCore, QtWidgets
 from cpchain.proxy.client import pick_proxy
 
 from twisted.web import client
-from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from twisted.logger import globalLogBeginner, textFileLogObserver
 
@@ -28,13 +27,14 @@ from cpchain.wallet.pages.login import LoginWindow
 # widgets
 from cpchain.wallet.components.sidebar import SideBar
 
-from cpchain.storage_plugin import s3, ipfs, stream, template
+from cpchain.storage_plugin import s3, ipfs, stream, template, proxy
 
 from cpchain.wallet import events
 from cpchain.wallet.simpleqt import event, MessageBox
 from cpchain.account import Account, get_balance
 from cpchain.wallet import utils
 from cpchain.chain.utils import default_w3 as web3
+from cpchain.utils import _Application, reactor
 
 from cpchain.wallet.router import Router
 
@@ -71,7 +71,7 @@ sidebarMenu = [
 ]
 
 class MainWindow(QMainWindow):
-    
+
     def search_handler(self, val):
         app.router.redirectTo('market_page', search=val)
 
@@ -148,7 +148,7 @@ class MainWindow(QMainWindow):
 
 def _handle_keyboard_interrupt():
     def sigint_handler(*args):
-        application.quit()
+        _Application.quit()
 
     import signal
     signal.signal(signal.SIGINT, sigint_handler)
@@ -285,8 +285,10 @@ def init_handlers():
     event.register(events.LOGIN_COMPLETED, lambda _: save_login_info())
     event.register(events.SEARCH, search)
 
+
 if __name__ == '__main__':
-    application = QApplication([])
+    import threading
+    print('>>>>>>>>>>>--', threading.currentThread().ident)
 
     app.unlock = __unlock
     app.valid_password = valid_password
@@ -296,12 +298,13 @@ if __name__ == '__main__':
 
     login()
 
-    app.msgbox = MessageBox
+    app.msgbox = MessageBox()
     app.msgbox.parent = app.main_wnd
+    app.msgbox1 = MessageBox
 
     from twisted.internet import reactor
     from threading import Thread
 
     Thread(target=reactor.run, args=(False,)).start()
 
-    sys.exit(application.exec_())
+    sys.exit(_Application.exec_())

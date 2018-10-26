@@ -9,22 +9,47 @@ from .model import Model
 
 sys.path.append('.')
 
+class MsgSignals(QtCore.QObject):
+
+    error = QtCore.pyqtSignal(str)
+
+    info = QtCore.pyqtSignal(str)
+
+    warning = QtCore.pyqtSignal(str)
 
 class MessageBox:
 
     parent = None
 
-    @staticmethod
-    def error(content, title="Error"):
-        QMessageBox.critical(MessageBox.parent, title, content)
+    signals = MsgSignals()
 
-    @staticmethod
-    def info(content, title="Info"):
-        QMessageBox.information(MessageBox.parent, title, content)
+    def __init__(self, parent=None):
+        if parent:
+            self.parent = parent
+        self.signals.error.connect(self.error_)
+        self.signals.info.connect(self.info_)
+        self.signals.warning.connect(self.warning_)
 
-    @staticmethod
-    def warning(content, title="Warning"):
-        QMessageBox.warning(MessageBox.parent, title, content)
+    def error(self, content, title="Error"):
+        self.signals.error.emit(content)
+
+    def info(self, content, title="Info"):
+        self.signals.info.emit(content)
+
+    def warning(self, content, title="Warning"):
+        self.signals.warning.emit(content)
+
+    def error_(self, content):
+        title = 'Error'
+        QMessageBox.critical(self.parent, title, content)
+
+    def info_(self, content):
+        title = 'PDash'
+        QMessageBox.information(self.parent, title, content)
+
+    def warning_(self, content):
+        title = "Warning"
+        QMessageBox.warning(self.parent, title, content)
 
 
 class Signals(QtCore.QObject):

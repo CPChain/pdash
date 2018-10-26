@@ -4,6 +4,7 @@ import os.path as osp
 import json
 import logging
 
+from decimal import Decimal
 from datetime import datetime
 from getpass import getpass
 
@@ -22,7 +23,7 @@ class Accounts(list):
     def __init__(self, *args):
         super().__init__(*args)
         self.default_account = None
-        self._populate_accounts()
+        # self._populate_accounts()
 
     def _populate_accounts(self):
         ptn = osp.join(_keystore_dir, 'UTC-*')
@@ -205,5 +206,7 @@ def scan_transaction(start_block_id=None, end_block_id=None):
                 }
 
 def to_ether(value):
-    return web3.fromWei(value, 'ether')
-
+    value = web3.fromWei(value, 'ether')
+    if value:
+        return value.quantize(Decimal('0.000'))
+    return value

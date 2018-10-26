@@ -16,11 +16,13 @@ class Wallet:
         self.reactor = reactor
         self.accounts = Accounts()
         self.market_client = MarketClient(self)
+        self.chain_broker = None
         self.main_wnd = None
         self.init()
 
     def init(self):
-        self.chain_broker = Broker(self)
+        if self.market_client.public_key:
+            self.chain_broker = Broker(self)
 
     def _initialize_system(self):
         pass

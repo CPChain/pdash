@@ -5,7 +5,7 @@ import importlib
 import hashlib
 import json
 from sqlalchemy import func
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import inlineCallbacks, Deferred
 from cpchain.wallet.db import get_session, FileInfo, create_engine, sessionmaker, BuyerFileInfo, CollectInfo, FileInfoVersion
 from cpchain.crypto import AESCipher, RSACipher
 from cpchain.utils import join_with_rc
@@ -18,7 +18,7 @@ def get_file_list():
     """This returns a list of files.
     """
     dbpath = join_with_rc(config.wallet.dbpath)
-    engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=True)
+    engine = create_engine('sqlite:///{dbpath}'.format(dbpath=dbpath), echo=False)
     Session = sessionmaker(bind=engine)
     session = Session()
     return session.query(FileInfo).order_by(FileInfo.id.desc()).all()
@@ -159,8 +159,8 @@ def upload_file(file_path, storage_type, dest, data_name=None):
         hashcode['file_hash'] = file_md5
         from cpchain.wallet.pages import wallet
         new_file_info = FileInfo(hashcode=json.dumps(hashcode), name=file_name, path=file_path, size=file_size,
-                                remote_type=str(storage_type), remote_uri=str(file_uri), public_key= wallet.market_client.public_key,
-                                is_published=False, aes_key=this_key, created=func.current_timestamp())
+                                 remote_type=str(storage_type), remote_uri=str(file_uri), public_key= wallet.market_client.public_key,
+                                 is_published=False, aes_key=this_key, created=func.current_timestamp())
         add_file(new_file_info)
         logger.debug('file id: %s', new_file_info.id)
         tmp.close()

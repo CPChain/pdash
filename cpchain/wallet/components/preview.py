@@ -16,6 +16,7 @@ from PyQt5.QtCore import (QObject, QObjectCleanupHandler, QPoint, Qt, QThread,
                           QUrl, pyqtProperty, pyqtSignal, pyqtSlot)
 from PyQt5.QtGui import QCursor, QFont, QFontDatabase
 from PyQt5.QtQuickWidgets import QQuickWidget
+from PyQt5.QtQuick import QQuickView
 from PyQt5.QtWidgets import (QAbstractItemView, QAction, QApplication,
                              QCheckBox, QComboBox, QDialog, QFileDialog,
                              QFrame, QGridLayout, QHBoxLayout, QHeaderView,
@@ -24,6 +25,7 @@ from PyQt5.QtWidgets import (QAbstractItemView, QAction, QApplication,
                              QScrollArea, QTableWidget, QTableWidgetItem,
                              QTabWidget, QTextEdit, QVBoxLayout, QWidget)
 from sqlalchemy import func
+from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import deferToThread
 from twisted.python import log
@@ -99,6 +101,7 @@ class PreviewWidget(Component):
         widget.rootContext().setContextProperty('self', self.obj)
         widget.setSource(QUrl(self.qml))
         layout.addWidget(widget)
+        self._qml = widget
         return layout
 
 
@@ -117,10 +120,10 @@ class PreviewDialog(Dialog):
         self.signals.change.connect(self.modelChange)
         self.stream.setView(self)
 
-        self.run_client(self.ws_url)
+        # deferToThread(self.run_client)
 
-    def run_client(self, ws_url):
-        self.factory = WebSocketClientFactory(ws_url + '?action=subscribe')
+    def run_client(self):
+        self.factory = WebSocketClientFactory(self.ws_url + '?action=subscribe')
         self.factory.protocol = MyClientProtocol
 
         def handler(record):

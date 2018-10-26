@@ -6,7 +6,7 @@ import os.path as osp
 import string
 
 from PyQt5 import QtGui
-from PyQt5.QtCore import QPoint, Qt
+from PyQt5.QtCore import QPoint, Qt, pyqtSignal
 from PyQt5.QtGui import *
 from PyQt5.QtGui import QCursor, QFont, QFontDatabase, QPixmap
 from PyQt5.QtWidgets import (QAbstractItemView, QAction, QCheckBox, QComboBox,
@@ -131,12 +131,15 @@ class Pictures(QFrame):
 
 class PublishProduct(Page):
 
+    published = pyqtSignal(int)
+
     def __init__(self, parent=None, product_id=None, type_='Batch'):
         self.parent = parent
         self.product_id = product_id
         self.type_ = type_
         super().__init__(parent)
         self.setObjectName("publish_product_page")
+        self.published.connect(self.handle_update_file)
 
     @page.data
     def data(self):
@@ -339,12 +342,24 @@ class PublishProduct(Page):
     def setProduct(self, product_id):
         self.product_id = product_id
 
+    def handle_update_file(self, status):
+        if status == 1:
+            def cb(products):
+                pass
+            wallet.market_client.products().addCallbacks(cb)
+            QMessageBox.information(
+                self, "Tips", "Update market side product successfully !")
+            self.handle_cancel()
+        else:
+            QMessageBox.information(
+                self, "Tips", "Update market side product Failed!")
+
     def handle_publish(self):
         if wallet.market_client.token == '':
             QMessageBox.information(self, "Tips", "Please login first !")
             return
         name = self.name.value
-        _type = 'file' if self.type_ == 'batch' else 'stream'
+        _type = 'file' if self.type_ == 'Batch' else 'stream'
         description = self.description.value
         tag = 'tag1'
         price = self.price.value
@@ -364,16 +379,7 @@ class PublishProduct(Page):
                     self.product_id, market_hash)
 
                 def handle_update_file(status):
-                    if status == 1:
-                        def cb(products):
-                            pass
-                        wallet.market_client.products().addCallbacks(cb)
-                        QMessageBox.information(
-                            self, "Tips", "Update market side product successfully !")
-                        self.handle_cancel()
-                    else:
-                        QMessageBox.information(
-                            self, "Tips", "Update market side product Failed!")
+                    self.published.emit(status)
                 d.addCallback(handle_update_file)
             d_publish.addCallback(update_table)
         else:

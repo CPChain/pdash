@@ -309,7 +309,7 @@ class WalletPage(Page):
 
     @page.create
     def create(self):
-        self.balance.value = account.get_balance(app.addr)
+        self.balance.value = account.to_ether(account.get_balance(app.addr))
         # Load records
         wallet.market_client.query_records(
             address=app.addr).addCallbacks(self.load_data)
@@ -380,12 +380,14 @@ class WalletPage(Page):
 
         self.add(table)
 
+        # No Data
+        nodata = QLabel('No Data!')
+        nodata.setObjectName('no_data')
+        self.nodata = nodata
+        self.add(nodata)
+        self.nodata.hide()
         if len(self.table_data.value) == 0:
-            # No Data
-            nodata = QLabel('No Data!')
-            nodata.setObjectName('no_data')
-            self.nodata = nodata
-            self.add(nodata)
+            self.nodata.show()
         layout.addStretch(1)
         return layout
 

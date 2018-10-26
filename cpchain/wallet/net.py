@@ -22,7 +22,7 @@ class MarketClient:
     def __init__(self, wallet, account=None):
         self.wallet = wallet
         self.account = account or self.wallet.accounts.default_account
-        self.public_key = ECCipher.serialize_public_key(self.account.public_key)
+        self.public_key = ECCipher.serialize_public_key(self.account.public_key) if self.account else None
         self.url = config.market.market_url + '/'
         self.token = ''
         self.nonce = ''
