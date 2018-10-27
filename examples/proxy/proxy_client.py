@@ -61,7 +61,7 @@ def seller_request():
     # proxy storage
     # storage.type = 'proxy'
 
-    # storage_plugin = "cpchain.storage_plugin."
+    # storage_plugin = "cpchain.storage-plugin."
     # module = importlib.import_module(storage_plugin + storage.type)
     # s = module.Storage()
     # param = yield s.user_input_param()
@@ -71,7 +71,7 @@ def seller_request():
     # ipfs storage
     # storage.type = 'ipfs'
 
-    # storage_plugin = "cpchain.storage_plugin."
+    # storage_plugin = "cpchain.storage-plugin."
     # module = importlib.import_module(storage_plugin + storage.type)
     # s = module.Storage()
     # param = yield s.user_input_param()
@@ -80,7 +80,7 @@ def seller_request():
     # # S3 storage
     # storage.type = 's3'
 
-    # storage_plugin = "cpchain.storage_plugin."
+    # storage_plugin = "cpchain.storage-plugin."
     # module = importlib.import_module(storage_plugin + storage.type)
     # s = module.Storage()
     # param = yield s.user_input_param()
