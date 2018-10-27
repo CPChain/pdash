@@ -289,7 +289,7 @@ class WalletPage(Page):
         super().__init__(parent)
 
         def update(_):
-            self.balance.value = account.get_balance(app.addr)
+            self.balance.value = account.to_ether(account.get_balance(app.addr))
         app.event.register(UPDATE, update)
 
     def load_data(self, data):

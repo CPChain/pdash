@@ -120,7 +120,7 @@ class PreviewDialog(Dialog):
         self.signals.change.connect(self.modelChange)
         self.stream.setView(self)
 
-        # deferToThread(self.run_client)
+        deferToThread(self.run_client)
 
     def run_client(self):
         self.factory = WebSocketClientFactory(self.ws_url + '?action=subscribe')

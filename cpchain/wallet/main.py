@@ -27,7 +27,7 @@ from cpchain.wallet.pages.login import LoginWindow
 # widgets
 from cpchain.wallet.components.sidebar import SideBar
 
-from cpchain.storage_plugin import s3, ipfs, stream, template, proxy
+# from cpchain.storage_plugin import s3, ipfs, stream, template, proxy
 
 from cpchain.wallet import events
 from cpchain.wallet.simpleqt import event, MessageBox
@@ -90,7 +90,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('CPChain Wallet')
         self.setObjectName("main_window")
         self.setWindowFlags(Qt.FramelessWindowHint)
-        self.setWindowOpacity(0.98)
+        # self.setWindowOpacity(1) 
         self.main_tab_index = {}
 
         def set_geometry():
@@ -287,9 +287,7 @@ def init_handlers():
 
 
 if __name__ == '__main__':
-    import threading
-    print('>>>>>>>>>>>--', threading.currentThread().ident)
-
+    
     app.unlock = __unlock
     app.valid_password = valid_password
     wallet.app = app

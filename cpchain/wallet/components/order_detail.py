@@ -8,7 +8,7 @@ import string
 from datetime import datetime as dt
 
 from PyQt5 import QtGui
-from PyQt5.QtCore import QPoint, Qt
+from PyQt5.QtCore import QPoint, Qt, pyqtSignal
 from PyQt5.QtGui import QCursor, QFont, QFontDatabase, QPixmap
 from PyQt5.QtWidgets import (QAbstractItemView, QAction, QCheckBox, QComboBox,
                              QDialog, QFileDialog, QFrame, QGridLayout,
@@ -51,6 +51,8 @@ logger = logging.getLogger(__name__)
 
 class OrderDetail(QWidget):
 
+    open1 = pyqtSignal(str)
+
     def __init__(self, order_time, status, order_id, name=None, storage_path=None, data_type='batch',
                  stream_id=None, market_hash=None, has_comfirmed=False):
         self.order_time = order_time
@@ -64,7 +66,9 @@ class OrderDetail(QWidget):
         self.stream_id = stream_id
         self.has_comfirmed = has_comfirmed
         self.create()
+        self.ws_url = None
         super().__init__()
+        self.open1.connect(self.open1Slot)
         self.ui()
 
     @component.create
@@ -107,6 +111,12 @@ class OrderDetail(QWidget):
     def confirm(self):
         self.operator.buyer_confirm(self.order_id)
 
+    
+    def open1Slot(self, ws_url):
+        dlg = StreamUploadedDialog(
+            data_name=self.name, stream_id=ws_url)
+        dlg.show()
+
     def ui(self):
         layout = QVBoxLayout()
         layout.addWidget(self.gen_row('Order Time:', Label(self.order_time)))
@@ -147,9 +157,7 @@ class OrderDetail(QWidget):
                 def cb(path):
                     if path:
                         stream_id = json.loads(path)
-                        dlg = StreamUploadedDialog(
-                            data_name=self.name, stream_id=stream_id[0])
-                        dlg.show()
+                        self.open1.emit(stream_id[0])
                 deferToThread(lambda: fs.buyer_file_by_order_id(
                     self.order_id).path).addCallback(cb)
             ok.clicked.connect(openStreamID)

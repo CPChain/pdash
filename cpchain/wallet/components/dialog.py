@@ -10,12 +10,12 @@ class Dialog(QDialog):
         super().__init__(parent)
         self.setWindowFlags(Qt.FramelessWindowHint)
         # Dialog Shadow
-        self.setAttribute(Qt.WA_TranslucentBackground)
-        effect = QGraphicsDropShadowEffect()
-        effect.setBlurRadius(15)
-        effect.setXOffset(0)
-        effect.setYOffset(0)
-        self.setGraphicsEffect(effect)
+        # self.setAttribute(Qt.WA_TranslucentBackground)
+        # effect = QGraphicsDropShadowEffect()
+        # effect.setBlurRadius(15)
+        # effect.setXOffset(0)
+        # effect.setYOffset(0)
+        # self.setGraphicsEffect(effect)
 
         self.center(width, height)
         self.setContentsMargins(0, 0, 0, 0)

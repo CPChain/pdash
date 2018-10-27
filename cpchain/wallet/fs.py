@@ -141,7 +141,7 @@ def upload_file(file_path, storage_type, dest, data_name=None):
     encrypted_path = tmp.name
     this_key = encrypt_file(file_path, encrypted_path)
     storage_module = importlib.import_module(
-        "cpchain.storage_plugin." + storage_type
+        "cpchain.storage-plugin." + storage_type
     )
     storage = storage_module.Storage()
     def cb(file_uri):
