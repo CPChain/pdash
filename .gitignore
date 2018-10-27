@@ -2,8 +2,23 @@
 
 # custom
 _local*
+
 # sqlite3
 *.db
+migrations/
+
+# editor
+.vscode
+
+
+# qml
+*.qmlc
+
+# pyinstaller
+*.spec
+
+# tmp
+pdash-account*
 
 # python
 .pytest_cache

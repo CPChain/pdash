@@ -96,7 +96,7 @@ class SSLServerProtocol(NetstringReceiver):
 
             try:
                 storage_module = importlib.import_module(
-                    "cpchain.storage-plugin." + storage_type
+                    "cpchain.storage_plugin." + storage_type
                     )
 
                 storage = storage_module.Storage()

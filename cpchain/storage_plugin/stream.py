@@ -45,7 +45,7 @@ class Storage:
         ws_url = stream_channel['ws_url']
         dest_stream_id = dst
 
-        cmd_path = join_with_root('cpchain/storage-plugin/bin/replicate-stream')
+        cmd_path = join_with_root('cpchain/storage_plugin/bin/replicate-stream')
         args = ['nohup', cmd_path, ws_url, dest_stream_id]
         log = open('/tmp/' + dest_stream_id, 'w')
         subprocess.Popen(args, stdout=log, stderr=log)
