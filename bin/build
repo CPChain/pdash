@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+cd "$(dirname "${BASH_SOURCE[0]}")"/..
+
+echo "Clean up..."
+rm -rf build/
+rm -rf dist/
+
+echo "Build..."
+python -O -m PyInstaller -F -w cpchain/wallet/main.py --hidden-import=eth_hash.backends.pycryptodome
+# python -O -m PyInstaller -F main.spec
+
+echo "Copy cpchain..."
+
+cpc_path="cpchain/assets/"
+dist_path="dist/main.app/Contents/MacOS"
+
+mkdir -p $dist_path/$cpc_path
+cp -r $cpc_path/* $dist_path/$cpc_path/
+cp lib/cpchain.toml $dist_path/cpchain/
+
+echo "done."
