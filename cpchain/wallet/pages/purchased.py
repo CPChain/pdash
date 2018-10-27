@@ -3,17 +3,17 @@ import logging
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QVBoxLayout
 
-from cpchain.wallet.pages import wallet
-from cpchain.wallet.pages import abs_path
-from cpchain.wallet import fs
+from cpchain.wallet.pages import wallet, app
 from cpchain.wallet.components.product_list import ProductList
 from cpchain.wallet.simpleqt.page import Page
 from cpchain.wallet.simpleqt.decorator import page
 
+from cpchain.wallet.adapters import ProductAdapter
+
 logger = logging.getLogger(__name__)
 
 class PurchasedPage(Page):
-    
+
     def __init__(self, parent=None):
         self.parent = parent
         super().__init__(parent)
@@ -24,16 +24,15 @@ class PurchasedPage(Page):
 
     @page.method
     def renderProducts(self, products):
-        records = fs.get_buyer_file_list()
-        _products = []
-        for i in products:
-            test_dict = dict(image=abs_path('icons/test.png'),
-                             icon=abs_path('icons/icon_batch@2x.png'),
-                             name=i['title'],
-                             cpc=i['price'],
-                             description=i['description'])
-            _products.append(test_dict)
-        self.products.value = _products
+        # all products
+        adapter = ProductAdapter(products)
+        # all orders
+        orders = app.products_order_list
+        # Find my bought orders
+        bought_orders = [i for i in orders if i['buyer_addr'] == app.addr]
+        # Find all my bought products's hash
+        products = [i['product_hash'] for i in bought_orders]
+        self.products.value = adapter.filter_in('market_hash', products)
 
     @page.data
     def data(self):
@@ -46,6 +45,6 @@ class PurchasedPage(Page):
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignTop)
         # Product List
-        pdsWidget = ProductList(self.products)
+        pdsWidget = ProductList(self.products, show_status=True)
         layout.addWidget(pdsWidget)
         return layout

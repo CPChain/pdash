@@ -85,7 +85,7 @@ class ProductDetail(Page):
 
     def __init__(self, parent=None, product_id=None, name="", image=abs_path('icons/test.png'),
                  icon=abs_path('icons/icon_batch@2x.png'),
-                 category="Category", timestamp=dt.now(),
+                 category="Category", created=None,
                  sales=0, cpc=0, description="", remain=0,
                  market_hash=None, owner_address=None, ptype=None):
         self.parent = parent
@@ -95,7 +95,7 @@ class ProductDetail(Page):
         self.image_ = image
         self.icon = icon
         self.category = category
-        self.timestamp = timestamp
+        self.created = created
         self.sales = sales
         self.cpc_ = cpc
         self.description_ = description
@@ -123,7 +123,7 @@ class ProductDetail(Page):
             self.buying(False)
             self.refresh()
         self.signals.refresh.connect(render)
-    
+
     def buying(self, is_buying):
         if is_buying:
             self.buy.setEnabled(False)
@@ -140,7 +140,7 @@ class ProductDetail(Page):
             "icon": self.icon,
             "name": self.name_,
             "category": self.category,
-            "timestamp": dt.now(),
+            "created": self.created,
             "sales": self.sales,
             "cpc": self.cpc_,
             "remain": self.remain,
@@ -148,12 +148,13 @@ class ProductDetail(Page):
             "gas": 1,
             "account": 15,
             "password": "",
-            "storagePath": ""
+            "storagePath": "",
+            "status_text": "Delivered on May 2, 08:09:08"
         }
 
     def setProduct(self, product):
         self.product = product
-    
+
     def add_orders_ui(self, widget):
         height = widget.height()
         layout = widget.layout()
@@ -216,39 +217,51 @@ class ProductDetail(Page):
                 self.salesElem.append(sale1)
                 start += 1
                 height += 200
-            
+
             if not need_show:
                 self.sales_header.hide()
 
         # Order Detail
+        if status < 1:
+            self.status_text.value = "Created on May 2, 08:09:08"
+        elif status == 1:
+            self.status_text.value = "Delivered on May 2, 08:09:08"
+        elif status <= 3:
+            self.status_text.value = "Received on May 2, 08:09:08"
+        elif status > 3:
+            self.status_text.value = "Confirmed on May 2, 08:09:08"
         if order and self.owner_address != wallet.market_client.public_key:
             if status > 2:
                 order_header = DetailHeader('Order Detail')
                 layout.insertWidget(start, order_header)
                 start += 1
+                height += 100
+                has_comfirmed = status > 3
                 if self.ptype == 'file':
                     self.data_type = 'batch'
                     self.order_detail = OrderDetail(order_time=Model("2018/6/15  08:40:39"),
-                                                    status=Model("Delivered on May 2, 08:09:08"),
+                                                    status=self.status_text,
                                                     order_id=order["order_id"],
                                                     name=self.name.value,
-                                                    data_type=self.data_type)
+                                                    data_type=self.data_type,
+                                                    has_comfirmed=has_comfirmed)
                     layout.insertWidget(start, self.order_detail)
                     start += 1
-                height += 100
+                    height += 100
                 if self.ptype == 'stream':
                     self.data_type = 'stream'
                     order_detail = OrderDetail(order_time=Model("2018/6/15  08:40:39"),
-                                            status=Model("Delivered on May 2, 08:09:08"),
-                                            order_id=order["order_id"],
-                                            market_hash=self.market_hash,
-                                            name=self.name.value,
-                                            data_type=self.data_type)
+                                               status=self.status_text,
+                                               order_id=order["order_id"],
+                                               market_hash=self.market_hash,
+                                               name=self.name.value,
+                                               data_type=self.data_type,
+                                               has_comfirmed=has_comfirmed)
                     layout.insertWidget(start, order_detail)
                     start += 1
                     height += 100
         widget.setFixedHeight(height)
-        
+
 
     def render_widget(self):
         height = 200
@@ -283,7 +296,7 @@ class ProductDetail(Page):
         category = Label(self.category)
         category.setObjectName('category')
         category.setAlignment(Qt.AlignCenter)
-        category.setMaximumWidth(52)
+        category.setMaximumWidth(80)
         catbox.addWidget(category)
         catbox.addStretch(1)
 
@@ -291,11 +304,7 @@ class ProductDetail(Page):
 
         # Timestamp and Remain Days
         tbox = QHBoxLayout()
-        tmp = self.timestamp.value
-        if not tmp:
-            tmp = dt.now()
-        tmp_str = formatTimestamp(tmp)
-        timestamp = QLabel(str(tmp_str))
+        timestamp = QLabel(self.created.value)
         timestamp.setObjectName('timestamp')
         tbox.addWidget(timestamp)
         sales = QLabel(str(self.sales.value) + ' sales')
@@ -358,7 +367,7 @@ class ProductDetail(Page):
         desc.setWordWrap(True)
         layout.addWidget(desc)
 
-        height += 200
+        height += 300
         layout.addStretch(1)
 
         widget_ = QWidget()

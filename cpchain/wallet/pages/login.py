@@ -1,35 +1,36 @@
-import sys
-import os
 import logging
+import os
+import shutil
+from datetime import datetime as dt
 
-from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, QVBoxLayout, QGridLayout, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel, QWidget, QLineEdit, QTableWidget, QTextEdit, QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
-from PyQt5.QtCore import Qt, QPoint, QBasicTimer
-from PyQt5.QtGui import QIcon, QCursor, QPixmap, QFont, QFontDatabase
-
+from PyQt5.QtCore import QPoint, Qt, pyqtSignal
+from PyQt5.QtGui import QMouseEvent, QPixmap
+from PyQt5.QtWidgets import (QDesktopWidget, QFileDialog, QHBoxLayout,
+                             QMainWindow, QMessageBox, QPushButton,
+                             QVBoxLayout, QWidget)
 from twisted.internet.threads import deferToThread
 
-from cpchain.crypto import ECCipher
-
-from cpchain.wallet.pages import load_stylesheet, wallet, main_wnd, app, get_icon, get_pixm, abs_path
-from cpchain.wallet.simpleqt.basic import Builder, Button, Input
-from cpchain.wallet.simpleqt import Model, validate
-from cpchain.wallet.components.agreement import Agreement
-from cpchain.wallet.components.upload import FileUpload
-from cpchain.wallet.components.loading import Loading
-from cpchain.wallet.components.gif import LoadingGif
 from cpchain.account import create_account, import_account
-
-from datetime import datetime as dt
-import shutil
+from cpchain.crypto import ECCipher
+from cpchain.wallet.components.agreement import Agreement
+from cpchain.wallet.components.gif import LoadingGif
+from cpchain.wallet.components.loading import Loading
+from cpchain.wallet.components.upload import FileUpload
+from cpchain.wallet.pages import abs_path, app, wallet
+from cpchain.wallet.simpleqt import Model, validate
+from cpchain.wallet.simpleqt.basic import Builder, Button, Input
 
 logger = logging.getLogger(__name__)
 
+
 class MyWindow(QMainWindow):
-    
+
     def __init__(self, reactor=None, parent=None):
         super().__init__()
         self.reactor = reactor
         self.parent = parent
+        if app.main_wnd:
+            app.main_wnd.mouseReleaseEvent = lambda _: app.event.emit(app.events.LOGIN_CLOSE)
         self.init()
         main = self.__ui()
         self.layout = QVBoxLayout()
@@ -45,12 +46,15 @@ class MyWindow(QMainWindow):
             self.parent.show()
             self.hide()
         else:
+            app.event.emit(app.events.LOGIN_CLOSE)
+            if app.main_wnd:
+                app.main_wnd.mouseReleaseEvent = None
             super().close()
-    
+
     def to(self, wnd):
         self.hide()
         wnd.show()
-    
+
     def init(self):
         self.setWindowTitle('CPChain Wallet')
         self.setObjectName("main_window")
@@ -67,12 +71,28 @@ class MyWindow(QMainWindow):
         self.setObjectName("main_window")
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setAcceptDrops(True)
-    
+
+    def mouseMoveEvent(self, e: QMouseEvent):
+        self._endPos = e.pos() - self._startPos
+        self.move(self.pos() + self._endPos)
+
+    def mousePressEvent(self, e: QMouseEvent):
+        if e.button() == Qt.LeftButton:
+            self._isTracking = True
+            self._startPos = QPoint(e.x(), e.y())
+
+    def mouseReleaseEvent(self, e: QMouseEvent):
+        if e.button() == Qt.LeftButton:
+            self._isTracking = False
+            self._startPos = None
+            self._endPos = None
+
     def __ui(self):
         main_layout = QVBoxLayout()
         main_layout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
         main_layout.setContentsMargins(0, 0, 0, 0)
-        close_btn = Builder(widget=QPushButton).text('x').name('close_btn').click(self.close).build()
+        close_btn = Builder(widget=QPushButton).text(
+            'x').name('close_btn').click(self.close).build()
 
         header = QHBoxLayout()
         header.addStretch(1)
@@ -84,7 +104,7 @@ class MyWindow(QMainWindow):
         wid.setLayout(main_layout)
         self.setCentralWidget(wid)
         return main_layout
-    
+
     def __style(self):
         return """
             QMainWindow, QWidget#main {
@@ -127,17 +147,17 @@ class MyWindow(QMainWindow):
             }
         """
 
-    def closeEvent(self, event):
+    def closeEvent(self, _):
         if self.reactor:
             self.reactor.stop()
             os._exit(0)
-    
+
     def style(self):
         return ""
-    
+
     def ui(self, layout):
         pass
-    
+
     def add(self, elem, space=None):
         if isinstance(elem, QWidget):
             self.layout.addWidget(elem)
@@ -145,17 +165,18 @@ class MyWindow(QMainWindow):
             self.layout.addLayout(elem)
         if space:
             self.spacing(space)
-    
+
     def spacing(self, space):
         self.layout.addSpacing(space)
 
+
 class GeneratingWindow(MyWindow):
-    
+
     def __init__(self, reactor, parent=None):
         super().__init__(reactor, parent)
-    
+
     def ok(self):
-        self.close()        
+        self.close()
 
     def ui(self, layout):
         self.spacing(40)
@@ -164,11 +185,8 @@ class GeneratingWindow(MyWindow):
                          .build()
         self.add(title)
         self.spacing(60)
-        # Loading
-        # loading  = QPixmap(abs_path('icons/loading.png'))
-        # loading = loading.scaled(228, 200)
-        # self.add(Builder().name('loading').pixmap(loading).click(lambda _: self.ok()).build())
-        loading = LoadingGif(path=abs_path('icons/GIF_3dot.gif'), width=228, height=228)
+        loading = LoadingGif(path=abs_path(
+            'icons/GIF_3dot.gif'), width=228, height=228)
         self.add(loading)
 
 
@@ -183,16 +201,17 @@ class UserNameWindow(MyWindow):
 
     def enter(self):
         if not validate(self, lambda x: x, 'Please input username', self.username.value) or \
-            not validate(self, lambda x: x, 'No Account!', self.account):
+                not validate(self, lambda x: x, 'No Account!', self.account):
             return
         self.hide()
         app.username = self.username.value
+        app.event.emit(app.events.LOGIN_CLOSE)
         app.enterPDash(self.account)
 
     @property
     def is_registered(self):
         return self.is_registered_
-    
+
     @is_registered.setter
     def is_registered(self, val):
         self.is_registered_ = val
@@ -217,27 +236,28 @@ class UserNameWindow(MyWindow):
                                   .build()
         self.username_elem = username
         self.add(username, 10)
-        self.add(Button.Builder().text('Enter PDash')\
-                                 .style('primary')\
-                                 .click(lambda _: self.enter())\
+        self.add(Button.Builder().text('Enter PDash')
+                                 .style('primary')
+                                 .click(lambda _: self.enter())
                                  .build())
 
     def style(self):
         return ""
 
+
 class BackupWindow(MyWindow):
-    
+
     def __init__(self, reactor, parent, path, next_):
         self.path = path
         self.next_ = next_
         super().__init__(reactor, parent)
-    
+
     def backup(self):
         select_path = QFileDialog.getExistingDirectory()
         name = self.path.split('/')[-1]
         shutil.copyfile(self.path, select_path + '/' + name)
         QMessageBox.information(self, "Success", "Successful!")
-    
+
     def ui(self, layout):
         title = Builder().text('Backup your wallet now')\
                          .name('title')\
@@ -250,18 +270,21 @@ class BackupWindow(MyWindow):
                         .build()
         self.add(title, 10)
         self.add(desc, 70)
-        self.add(Button.Builder().text('Check and Backup')\
-                                 .style('primary')\
-                                 .click(lambda _: self.backup())\
-                                 .build(), 10)
-        self.add(Builder().name('next')\
-                          .text('Next >')\
-                          .align(Qt.AlignRight)\
-                          .click(lambda _: self.to(self.next_))\
-                          .build(), 10)
+        self.add(Button.Builder()
+                 .text('Check and Backup')
+                 .style('primary')
+                 .click(lambda _: self.backup())
+                 .build(), 10)
+        self.add(Builder().name('next')
+                 .text('Next >')
+                 .align(Qt.AlignRight)
+                 .click(lambda _: self.to(self.next_))
+                 .build(), 10)
 
 
 class CreateWindow(MyWindow):
+
+    created = pyqtSignal()
 
     def __init__(self, reactor=None, parent=None):
         self.password = Model("")
@@ -272,7 +295,12 @@ class CreateWindow(MyWindow):
         super().__init__(reactor, parent)
         self.loading = GeneratingWindow(reactor, self)
         self.username = UserNameWindow(reactor, self)
-        self.backup = BackupWindow(reactor, self, self.PATH + '/' + self.NAME, self.username)
+        self.backup = BackupWindow(
+            reactor, self, self.PATH + '/' + self.NAME, self.username)
+        self.created.connect(self._after)
+
+    def _after(self):
+        self.loading.to(self.backup)
 
     def create(self):
         # Create Keystore
@@ -284,12 +312,11 @@ class CreateWindow(MyWindow):
             return
         if not validate(self, lambda x: x == True, "You haven't agreed to the agreement", self.check.value):
             return
+
         def _create():
-            self.username.account = create_account(self.password.value, self.PATH, self.NAME)
-        def _after(_):
-            self.loading.hide()
-            self.backup.show()
-        deferToThread(_create).addCallback(_after)
+            self.username.account = create_account(
+                self.password.value, self.PATH, self.NAME)
+        deferToThread(_create).addCallback(lambda _: self.created.emit())
         self.to(self.loading)
 
     def ui(self, layout):
@@ -316,9 +343,9 @@ class CreateWindow(MyWindow):
                                 .build()
         self.add(repeat, 10)
         self.add(Agreement(self.check, width=228, height=30), 40)
-        self.add(Button.Builder().text('Create')\
-                                 .style('primary')\
-                                 .click(lambda _: self.create())\
+        self.add(Button.Builder().text('Create')
+                                 .style('primary')
+                                 .click(lambda _: self.create())
                                  .build())
 
     def style(self):
@@ -326,13 +353,29 @@ class CreateWindow(MyWindow):
 
 
 class ImportWindow(MyWindow):
-    
+
+    error_signal = pyqtSignal()
+
+    imported = pyqtSignal(str)
+
     def __init__(self, reactor=None, parent=None):
         self.password = Model("")
         self.file = None
         super().__init__(reactor, parent)
         self.username = UserNameWindow(reactor, self)
-    
+        self.error_signal.connect(lambda: app.msgbox.error("Password mismatch"))
+        self.imported.connect(self.onImported)
+        @app.event.register(app.events.PASSWORD_ERROR)
+        def password_error(_):
+            self.loading_over()
+            self.error_signal.emit()
+
+    def onImported(self, status):
+        self.username.username_ = status
+        self.username.is_registered = True
+        self.loading_over()
+        self.to(self.username)
+
     def _import(self):
         self.loading_start()
         if not validate(self, lambda x: x, "Please input the password", self.password.value):
@@ -346,10 +389,7 @@ class ImportWindow(MyWindow):
                 account = import_account(self.file.file, self.password.value)
                 self.username.account = account
                 def cb(status):
-                    self.username.username_ = status
-                    self.username.is_registered = True
-                    self.loading_over()
-                    self.to(self.username)
+                    self.imported.emit(status)
                 public_key = ECCipher.serialize_public_key(account.public_key)
                 wallet.market_client.isRegistered(public_key).addCallbacks(cb)
             deferToThread(exec_)
@@ -357,11 +397,11 @@ class ImportWindow(MyWindow):
             logger.error(e)
             QMessageBox.information(self, "error", "Failed!")
             self.loading_over()
-    
+
     def loading_start(self):
         self.import_.setEnabled(False)
         self.loading.show()
-    
+
     def loading_over(self):
         self.import_.setEnabled(True)
         self.loading.hide()
@@ -391,9 +431,9 @@ class ImportWindow(MyWindow):
                                browse_text="browse…")
         self.add(self.file, 20)
         self.import_ = Button.Builder().text('Import')\
-                                 .style('primary')\
-                                 .click(lambda _: self._import())\
-                                 .build()
+            .style('primary')\
+            .click(lambda _: self._import())\
+            .build()
         self.add(self.import_, 5)
         self.loading = Loading()
         self.loading.hide()
@@ -402,12 +442,17 @@ class ImportWindow(MyWindow):
     def style(self):
         return """ """
 
+
 class LoginWindow(MyWindow):
 
     def __init__(self, reactor=None, parent=None):
         super().__init__(reactor)
         self.createWnd = CreateWindow(reactor, self)
         self.importWnd = ImportWindow(reactor, self)
+    
+    def show(self):
+        app.event.emit(app.events.LOGIN_OPEN)
+        super().show()
 
     def ui(self, layout):
         # Logo
@@ -436,4 +481,3 @@ class LoginWindow(MyWindow):
                 margin-top: 60px;
             }
         """
-

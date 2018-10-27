@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLine
                              QMenu, QAction, QCheckBox, QVBoxLayout, QWidget, QDialog, QFrame, QTableWidgetItem,
                              QAbstractItemView, QMessageBox, QTextEdit, QHeaderView, QTableWidget, QRadioButton,
                              QFileDialog, QListWidget, QListWidgetItem)
-from PyQt5.QtGui import QCursor, QFont, QFontDatabase
+from PyQt5.QtGui import QCursor, QFont, QFontDatabase, QColor
 
 from cpchain.crypto import ECCipher, RSACipher, Encoder
 
@@ -24,6 +24,8 @@ import logging
 
 from cpchain import config, root_dir
 from cpchain.wallet.pages import main_wnd
+from cpchain.wallet.simpleqt import Signals
+from cpchain.wallet.simpleqt.model import Model
 
 class TableWidget(QTableWidget):
     def __init__(self, parent=None):
@@ -32,8 +34,6 @@ class TableWidget(QTableWidget):
         self.init_ui()
 
     def init_ui(self):
-
-        self.setMinimumWidth(self.parent.width())
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -43,13 +43,20 @@ class TableWidget(QTableWidget):
         self.setAlternatingRowColors(True)
         self.horizontalHeader().setHighlightSections(False)
 
+        def scrolled(scrollbar, value):
+            if value == scrollbar.maximum():
+                self.setFocusPolicy(Qt.NoFocus)
+            if value == scrollbar.minimum():
+                self.setFocusPolicy(Qt.NoFocus)
+
+        scrollBar = self.verticalScrollBar()
+        scrollBar.valueChanged.connect(lambda value: scrolled(scrollBar, value))
+
 
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
 
 class Table(TableWidget):
-
-    change = QtCore.pyqtSignal(list, name="modelChanged")
 
     def __init__(self, parent, header=None, data=None, itemHandler=None, sort=None, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
@@ -60,10 +67,13 @@ class Table(TableWidget):
         self.resizeColumnsToContents()
         self.resizeRowsToContents()
         self.setFocusPolicy(Qt.NoFocus)
+        self.signals = Signals()
+        self.signals.change.connect(self.change)
 
         # Set Header
         self.setHeader(header)
         # Set Data
+        self.itemHandler = itemHandler
         self.setData(data, itemHandler)
         if header and data and sort:
             self.sortItems(sort)
@@ -123,12 +133,19 @@ class Table(TableWidget):
             self.setColumnWidth(i, header['width'][i])
             i += 1
 
+    def change(self, value):
+        self.setData(value, self.itemHandler)
+
     def setData(self, data, itemHandler):
         if not data:
+            self.setMaximumHeight(40)
             return
-        data.setView(self)
-        self.data = data.value
-        row_number = len(data.value)
+        if not isinstance(data, list):
+            data.setView(self)
+            self.data = data.value
+        else:
+            self.data = data
+        row_number = len(self.data)
         self.setRowCount(row_number)
         for cur_row in range(row_number):
             items = itemHandler(self.data[cur_row])
@@ -138,5 +155,15 @@ class Table(TableWidget):
                     widget = QTableWidgetItem(item)
                     self.setItem(cur_row, i, widget)
                 else:
-                    self.setCellWidget(cur_row, i, item)
+                    layout = QHBoxLayout()
+                    layout.addWidget(item)
+                    layout.setContentsMargins(0, 0, 0, 0)
+                    widget = QWidget()
+                    widget.setLayout(layout)
+                    widget.setStyleSheet("background: {}".format("#f3f3f3" if cur_row % 2 else "#ffffff"))
+                    self.setCellWidget(cur_row, i, widget)
                 i += 1
+        if row_number > 0:
+            self.setMinimumHeight(180 if row_number > 5 else row_number * 30)
+        else:
+            self.setMaximumHeight(32)

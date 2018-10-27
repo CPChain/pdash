@@ -194,7 +194,7 @@ class Broker:
                 logger.debug(urls)
                 event.emit(events.SELLER_DELIVERY, order_id)
         except Exception as e:
-            logger.error(e)
+            logger.exception(e)
 
 
     @defer.inlineCallbacks
@@ -221,7 +221,6 @@ class Broker:
             self.wallet.market_client.account.private_key,
             sign_message.data
         )
-
         error, AES_key, urls = yield start_proxy_request(sign_message, proxy_id)
 
         def update_buyer_db(file_uri, file_path):
@@ -250,7 +249,7 @@ class Broker:
             logger.debug("file has been downloaded")
             logger.debug("put order into confirmed queue, order id: %s", order_id)
         event.emit(events.BUYER_RECEIVE, order_id)
-    
+
     @defer.inlineCallbacks
     def buyer_send_request_stream(self, order_info):
         logger.debug("buyer send request to proxy ...")
@@ -305,7 +304,7 @@ class Handler:
         self.broker = broker
 
 
-    def buy_product(self, msg_hash, file_title, proxy, seller):
+    def buy_product(self, msg_hash, file_title, proxy, seller, value):
         logger.debug("start to buy product")
         seller_addr = get_address_from_public_key_object(seller)
         desc_hash = Encoder.str_to_base64_byte(msg_hash)
@@ -318,7 +317,7 @@ class Handler:
             proxy=self.broker.buyer.web3.toChecksumAddress(proxy),
             secondary_proxy=self.broker.buyer.web3.toChecksumAddress(proxy),
             proxy_value=10,
-            value=20,
+            value=value,
             time_allowed=3600 * 24
         )
         logger.debug("product info has been created")

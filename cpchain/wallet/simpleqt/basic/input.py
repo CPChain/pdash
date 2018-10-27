@@ -1,11 +1,12 @@
 from PyQt5.QtWidgets import QLineEdit
 from PyQt5.QtCore import Qt
 
-from . import Builder, operate
+from . import Builder as BasicBuilder, operate
 from .. import Signals
 
+
 class Input(QLineEdit):
-    
+
     signals = Signals()
 
     def __init__(self, model=None, width=228, height=30, *args, **kw):
@@ -24,19 +25,19 @@ class Input(QLineEdit):
         self.signals.change.connect(self.modelChange)
         self.textChanged.connect(self.viewChange)
 
-    class Builder(Builder):
-        
+    class Builder(BasicBuilder):
+
         def __init__(self, *args, **kw):
             super().__init__(Input, *args, **kw)
-        
+
         @operate
         def placeholder(self, text):
             self.widget.setPlaceholderText(text)
-        
+
         @operate
         def mode(self, mode):
             self.widget.setEchoMode(mode)
-    
+
     def modelChange(self, value):
         self.setText(value)
 

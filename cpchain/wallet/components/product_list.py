@@ -25,16 +25,18 @@ import sip
 from cpchain import config, root_dir
 from cpchain.wallet.pages import main_wnd
 from cpchain.wallet.components.product import Product
+from cpchain.wallet.components.loading import Loading
 from cpchain.wallet.simpleqt import Signals
 
 from datetime import datetime as dt
 
 class ProductList(QWidget):
 
-    def __init__(self, products, col=3, scroll=True):
+    def __init__(self, products, col=3, scroll=True, show_status=False):
         self.col = col
         self.scroll = scroll
         self.signals = Signals()
+        self.show_status = show_status
         super().__init__()
         self.signals.change.connect(self.modelChanged)
         self.setProducts(products)
@@ -46,6 +48,7 @@ class ProductList(QWidget):
     def _setProducts(self, products):
         arr = []
         for p in products:
+            p['show_status'] = self.show_status
             item = Product(**p)
             arr.append(item)
         self.products = arr
@@ -57,6 +60,7 @@ class ProductList(QWidget):
             QWidget().setLayout(self.layout())
         arr = []
         for p in value:
+            p['show_status'] = self.show_status
             item = Product(**p)
             arr.append(item)
         self.products = arr
@@ -87,13 +91,13 @@ class ProductList(QWidget):
             tmpLayout.addWidget(widget)
             self.setLayout(tmpLayout)
             return
-        row = int((len(pds) + self.col / 2) / self.col + 0.5)
+        row = int(len(pds) / self.col + 0.5) + 1
         if not layout:
             layout = QGridLayout()
             widget = QWidget()
             widget.setObjectName('parent_widget')
             widget.setLayout(layout)
-            widget.setFixedWidth(720)
+            # widget.setFixedWidth(720)
             widget.setFixedHeight(250 * row)
             widget.setStyleSheet("QWidget#parent_widget{background: transparent;}")
 
@@ -113,7 +117,7 @@ class ProductList(QWidget):
             self.setLayout(main)
             # self.setWidgetResizable(True)
 
-        layout.setAlignment(Qt.AlignTop)
+        layout.setAlignment(Qt.AlignTop | Qt.AlignHCenter)
         for i in range(row):
             for j in range(self.col):
                 index = i * self.col + j
@@ -124,9 +128,6 @@ class ProductList(QWidget):
                     layout.addWidget(tmp, i, j)
         self.setObjectName('main')
         self.setStyleSheet("""
-            #main_layout {
-                height: 800px;
-            }
             QWidget#product {
                 border: 1px solid red;
             }

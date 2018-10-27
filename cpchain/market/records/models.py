@@ -8,3 +8,9 @@ class Record(models.Model):
     to = models.CharField(max_length=200, null=True, blank=True)
     value = models.FloatField()
     txfee = models.FloatField()
+
+class Config(models.Model):
+    block_at = models.IntegerField()
+    trans_cnt = models.IntegerField()
+    start = models.DateTimeField()
+    end = models.DateTimeField()

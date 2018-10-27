@@ -9,6 +9,7 @@ router.register(r'wallet_users', UserViewSet)
 urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^login', UserLoginAPIView.as_view(), name='login'),
+    url(r'^username', UsernameAPIView.as_view(), name='username'),
     url(r'^isregistered', IsRegistered.as_view(), name='isregistered'),
     url(r'^confirm', UserLoginConfirmAPIView.as_view(), name='confirm'),
     url(r'^logout', LogoutAPIView.as_view(), name='logout'),

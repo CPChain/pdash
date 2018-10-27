@@ -1,0 +1,89 @@
+# -*- mode: conf; -*-
+
+# for sample configuration, cf. https://github.com/toml-lang/toml
+
+[core]
+rc_dir = "~/.cpchain"
+mode = 'wallet'
+
+[account]
+keystore_dir = "keystore"
+charge_server = 'http://192.168.0.132:8400'
+
+
+[chain]
+contract_src_path = "scripts/chain/contracts/contract.sol"
+contract_bin_path = "cpchain/assets/chain/contract.json"
+contract_name = "Contract"
+registrar_json = "cpchain/assets/chain/registrar.json"
+
+# mode can be "test", "falcon", "local"
+mode = "falcon"
+falcon_provider_addr = "http://192.168.0.132:8545"
+local_provider_addr = "http://127.0.0.1:8545"
+
+[wallet]
+# this file is relative to rc_dir
+dbpath = "wallet/wallet.db"
+download_dir = "downloads"
+rsa_private_key_file = "cpchain/assets/wallet/private_key.pem"
+rsa_private_key_password_file = 'cpchain/assets/wallet/password'
+private_key_file = 'cpchain/assets/chain/sheds/data_dir/keystore/UTC--2018-01-25T08-04-38.217120006Z--22114f40ed222e83bbd88dc6cbb3b9a136299a23'
+private_key_password_file = 'cpchain/assets/chain/sheds/password'
+hot_industry_num = 3
+
+[wallet.qss]
+main_window = "cpchain/assets/wallet/qss/main_window.qss"
+sidebar = "cpchain/assets/wallet/qss/sidebar.qss"
+
+
+[proxy]
+server_port = 8000
+server_file_port = 8001
+server_stream_ws_port = 8002
+server_stream_restful_port = 8003
+server_kad_port = 8102
+server_slave_port = 8200
+server_key = 'proxy/server.key'
+server_crt = 'proxy/server.crt'
+dbpath = 'proxy/proxy.db'
+server_root = 'proxy/server_root'
+boot_nodes = '192.168.0.132:8103'
+tracker = '192.168.0.132:8201'
+kafka_brokers = '192.168.0.132:29092'
+
+[market]
+dbpath = "cpchain/market/market.db"
+server_port = 8083
+es_hosts = '192.168.0.132:9200'
+market_url = "http://192.168.0.175:8083"
+default_password = "^-_-^cpchain@2018^-_-^"
+
+
+# logging
+[logging]
+version = 1
+disable_existing_loggers = false
+
+[logging.formatters.simple]
+format = '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+
+[logging.handlers.default]
+level = "DEBUG"
+class = "logging.StreamHandler"
+formatter = "simple"
+
+[logging.loggers.cpchain]
+handlers = ["default"]
+level = "DEBUG"
+propagate = false
+
+[logging.loggers.__main__]
+handlers = ["default"]
+level = "DEBUG"
+propagate = false
+
+[logging.loggers.kademlia]
+handlers = ["default"]
+level = "DEBUG"
+propagate = false

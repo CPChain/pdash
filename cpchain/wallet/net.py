@@ -22,7 +22,7 @@ class MarketClient:
     def __init__(self, wallet, account=None):
         self.wallet = wallet
         self.account = account or self.wallet.accounts.default_account
-        self.public_key = ECCipher.serialize_public_key(self.account.public_key)
+        self.public_key = ECCipher.serialize_public_key(self.account.public_key) if self.account else None
         self.url = config.market.market_url + '/'
         self.token = ''
         self.nonce = ''
@@ -109,7 +109,7 @@ class MarketClient:
             logger.debug('market_hash: %s', confirm_info['data']['market_hash'])
             market_hash = confirm_info['data']['market_hash']
         except Exception as e:
-            logger.exception()
+            logger.exception(e)
         if ptype == 'file' or ptype == 'stream':
             publish_file_update(market_hash, selected_id)
         return market_hash
@@ -365,7 +365,7 @@ class MarketClient:
         resp = yield treq.get(url, headers=header)
         product_info = yield treq.json_content(resp)
         return product_info
-    
+
     @inlineCallbacks
     def myproducts(self):
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
@@ -375,7 +375,7 @@ class MarketClient:
         resp = yield treq.get(url, headers=header)
         products_info = yield treq.json_content(resp)
         return products_info
-    
+
     @inlineCallbacks
     def query_data(self, market_hash):
         url = self.url + 'user_data/v1/uploaded_file/item/'
@@ -384,3 +384,21 @@ class MarketClient:
         resp = yield treq.get(url, headers=header, persistent=False)
         data_info = yield treq.json_content(resp)
         return data_info
+
+    @inlineCallbacks
+    def query_records(self, address):
+        url = self.url + 'records/v1/record/'
+        header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token, 'Content-Type': 'application/json'}
+        url = utils.build_url(url, {'address': address})
+        resp = yield treq.get(url, headers=header, persistent=False)
+        data_info = yield treq.json_content(resp)
+        return data_info
+
+    @inlineCallbacks
+    def query_username(self, app):
+        header = {'Content-Type': 'application/json'}
+        data = {'public_key': self.public_key}
+        resp = yield treq.post(url=self.url + 'account/v1/username/', headers=header, json=data,
+                               persistent=False)
+        username = yield treq.json_content(resp)
+        app.username = username['username']

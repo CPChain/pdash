@@ -3,12 +3,19 @@ import os
 import os.path as osp
 import sys
 import subprocess
+import time
+
+from PyQt5.QtWidgets import QApplication, QProgressBar
 
 import toml
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 
-root_dir = osp.abspath(osp.join(osp.dirname(osp.abspath(__file__)), '../'))
+
+if getattr(sys, 'frozen', False):
+    root_dir = os.path.dirname(sys.executable)
+else:
+    root_dir = osp.abspath(osp.join(osp.dirname(osp.abspath(__file__)), '../'))
 
 class Config:
     def __init__(self, conf):
@@ -47,10 +54,12 @@ def _get_config():
 
 config = _get_config()
 
+_Application = QApplication(sys.argv)
 
 # twisted reactor
 def _install_reactor():
     reactor_qual_name = "twisted.internet.reactor"
+    import sys
     if reactor_qual_name not in sys.modules:
         if config.core.mode == "proxy":
             import asyncio
@@ -60,15 +69,23 @@ def _install_reactor():
         elif config.core.mode == "wallet":
             # TODO, add qmuash support
             import asyncio
-            import time
-            from PyQt5.QtWidgets import QApplication, QProgressBar
             from quamash import QEventLoop, QThreadExecutor
-            app = QApplication(sys.argv)
-            loop = QEventLoop(app)
+            loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             from twisted.internet import asyncioreactor
             asyncioreactor.install(eventloop=loop)
             from twisted.internet import reactor
+    else:
+        import asyncio
+        from quamash import QEventLoop, QThreadExecutor
+        loop = asyncio.new_event_loop()#QEventLoop(_Application)
+        asyncio.set_event_loop(loop)
+
+        from twisted.internet import asyncioreactor
+        import twisted.internet
+        reactor = asyncioreactor.AsyncioSelectorReactor(loop)
+        twisted.internet.reactor = reactor
+        sys.modules[reactor_qual_name] = reactor
 
     return sys.modules.get(reactor_qual_name)
 

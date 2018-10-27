@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtCore import Qt, QPoint, pyqtSignal
 from PyQt5.QtWidgets import (QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLineEdit, QGridLayout, QPushButton,
                              QMenu, QAction, QCheckBox, QVBoxLayout, QWidget, QDialog, QFrame, QTableWidgetItem,
                              QAbstractItemView, QMessageBox, QTextEdit, QHeaderView, QTableWidget, QRadioButton,
@@ -39,35 +39,29 @@ from cpchain.wallet.simpleqt.decorator import page
 from cpchain.wallet.simpleqt.widgets.label import Label
 from cpchain.wallet.simpleqt.basic import Builder, Button, Line
 
+from cpchain.wallet.adapters import ProductAdapter
+
 logger = logging.getLogger(__name__)
 
 class MyDataTab(Page):
+
+    loaded = pyqtSignal(object)
 
     def __init__(self, parent=None, main_wnd=None):
         self.parent = parent
         self.main_wnd = main_wnd
         super().__init__(parent)
         self.setObjectName("my_data_tab")
+        self.loaded.connect(self.renderProducts)
+        self.loadProjects()
 
     @page.create
-    def create(self):
+    def loadProjects(self):
         # My Products
         wallet.market_client.myproducts().addCallbacks(self.renderProducts)
 
-    @page.method
     def renderProducts(self, products):
-        _products = []
-        for i in products:
-            test_dict = dict(image=i['cover_image'] or abs_path('icons/test.png'),
-                             icon=abs_path('icons/icon_batch@2x.png'),
-                             name=i['title'],
-                             cpc=i['price'],
-                             ptype=i['ptype'],
-                             description=i['description'],
-                             market_hash=i["msg_hash"],
-                             owner_address=i['owner_address'])
-            _products.append(test_dict)
-        self.products.value = _products
+        self.products.value = ProductAdapter(products).data
 
     @page.data
     def data(self):
@@ -107,10 +101,6 @@ class MyDataTab(Page):
             table = Table(self, header, self.table_data, itemHandler, sort=None)
             table.setObjectName('my_table')
             table.setFixedWidth(800)
-            if len(self.table_data.value) > 0:
-                table.setMinimumHeight(180)
-            else:
-                table.setMaximumHeight(40)
             return table
         table = buildTable()
         self.table = table
@@ -166,10 +156,6 @@ class MyDataTab(Page):
             table = Table(self, header, self.stream_data, itemHandler, sort=None)
             table.setObjectName('my_table')
             table.setFixedWidth(800)
-            if len(self.table_data.value) > 0:
-                table.setMinimumHeight(180)
-            else:
-                table.setMaximumHeight(40)
             def record_check(item):
                 right_menu(item.row())
             table.itemClicked.connect(record_check)
@@ -177,7 +163,7 @@ class MyDataTab(Page):
         stream_table = buildStreamTable()
         self.stream_table = stream_table
         self.buildStreamTable = buildStreamTable
-        
+
         self.addH(Button.Builder(width=150, height=30)
                         .style('primary').name('btn')
                         .text('Upload Batch Data')
@@ -209,7 +195,7 @@ class MyDataTab(Page):
         if len(self.table_data.value) == 0:
             # No Data
             self.add(Builder().text('0 Batch Data!').name('no_data').build())
-        
+
         # Stream Data
         self.add(Builder().text('Streaming Data').name('label_hint').build())
         self.add(stream_table)
@@ -220,7 +206,7 @@ class MyDataTab(Page):
 
         vLayout.addStretch(1)
         return vLayout
-    
+
     def style(self):
         margin_left = '20'
         return """
@@ -261,7 +247,7 @@ class MyDataTab(Page):
             self.upload.close()
         self.upload = UploadDialog(self, oklistener)
         self.upload.show()
-    
+
     def onClickStreamUpload(self):
         if wallet.market_client.token == '':
             QMessageBox.information(self, "Tips", "Please login first !")

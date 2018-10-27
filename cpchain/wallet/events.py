@@ -3,6 +3,9 @@ from cpchain.wallet.simpleqt.event import Event
 # enter pdash
 ENTER_PDASH = Event()
 
+# ROUTE_TO
+ROUTE_TO = Event()
+
 # Login Success
 LOGIN_COMPLETED = Event()
 
@@ -44,3 +47,15 @@ CANCEL_PURCHASE = Event()
 
 # New Record
 PREVIEW_NEW_RECORD = Event()
+
+# Login Dialog Open
+LOGIN_OPEN = Event()
+
+# Login Dialog Close
+LOGIN_CLOSE = Event()
+
+# Router Change
+ROUTER_CHANGE = Event()
+
+# Password Error
+PASSWORD_ERROR = Event()

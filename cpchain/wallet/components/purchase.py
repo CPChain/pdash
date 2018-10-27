@@ -6,21 +6,20 @@ from PyQt5.QtWidgets import (QHBoxLayout, QLabel, QPushButton, QComboBox,
 from cpchain.wallet.pages import wallet, app
 from cpchain.proxy.client import pick_proxy
 
+from cpchain.wallet.components.dialog import Dialog
 from cpchain.wallet.simpleqt.decorator import page
 from cpchain.wallet.simpleqt.widgets.label import Label
-from cpchain.wallet.simpleqt.widgets import Input, ComboBox
+from cpchain.wallet.simpleqt.basic import Input
+from cpchain.wallet.simpleqt.widgets import ComboBox
 from cpchain.wallet.simpleqt.model import ListModel
 
 logger = logging.getLogger(__name__)
 
-class PurchaseDialog(QDialog):
+class PurchaseDialog(Dialog):
 
     def __init__(self, parent, title="Purchase Confirmation", width=524, height=405,
                  price=None, gas=None, account=None, password=None, storagePath=None,
                  market_hash=None, name=None, owner_address=None):
-        super().__init__(parent)
-        self.setWindowTitle(title)
-        self.resize(width, height)
         self.price = price
         self.gas = gas
         self.account = account
@@ -30,8 +29,7 @@ class PurchaseDialog(QDialog):
         self.name = name
         self.proxy = ListModel([])
         self.owner_address = owner_address
-        self.ui()
-        self.style()
+        super().__init__(parent, title=title, width=width, height=height)
         self.init_proxy()
 
     @page.method
@@ -39,7 +37,7 @@ class PurchaseDialog(QDialog):
         def set_proxy(proxy):
             self.proxy.value = proxy
         pick_proxy().addCallbacks(set_proxy)
-    
+
 
     def gen_row(self, name, widget, width=None):
         layout = QHBoxLayout()
@@ -56,23 +54,22 @@ class PurchaseDialog(QDialog):
             unit.setObjectName('unit')
             widget.setObjectName('value')
             layout.addWidget(unit)
+        layout.addStretch(1)
         tmp = QWidget()
         tmp.setLayout(layout)
         tmp.setObjectName('item')
         return tmp
 
-    @page.ui
-    def ui(self):
+    def ui(self, _):
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignTop)
 
         layout.addWidget(self.gen_row('Price: ', Label(self.price)))
         layout.addWidget(self.gen_row('Gas: ', Label(self.gas)))
         layout.addWidget(self.gen_row('Account Ballance: ', Label(self.account)))
-        pwd = Input(self.password)
-        pwd.setEchoMode(Input.Password)
+        pwd = Input.Builder(width=280, height=25).model(self.password).mode(Input.Password).build()
         layout.addWidget(self.gen_row('Payment Password: ', pwd))
-        layout.addWidget(self.gen_row('Proxy: ', ComboBox(self.proxy), 160))
+        layout.addWidget(self.gen_row('Proxy: ', ComboBox(self.proxy), 303))
 
 
         # Bottom
@@ -100,18 +97,24 @@ class PurchaseDialog(QDialog):
             proxy = proxy_addr
             seller = self.owner_address
             app.unlock()
-            wallet.chain_broker.handler.buy_product(msg_hash, file_title, proxy, seller)
-        get_proxy_address(self.proxy.current)
-        app.event.emit(app.events.CLICK_PAY)
-        self.close()
+            wallet.chain_broker.handler.buy_product(msg_hash, file_title, proxy, seller, int(self.price.value))
+        if not self.password.value:
+            app.msgbox.warning("Please input password")
+            return
+        if app.valid_password(self.password.value):
+            app.unlock()
+            get_proxy_address(self.proxy.current)
+            app.event.emit(app.events.CLICK_PAY)
+            self.close()
+        else:
+            app.msgbox.error("Password mismatch")
 
     def handle_cancel(self):
         app.event.emit(app.events.CANCEL_PURCHASE)
         self.close()
 
-    @page.style
     def style(self):
-        return """
+        return super().style() + """
             QLabel#browse {
                 font-family:SFUIDisplay-Medium;
                 font-size:14px;

@@ -3,11 +3,11 @@ from PyQt5.QtWidgets import (QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLine
                              QMenu, QAction, QCheckBox, QVBoxLayout, QWidget, QDialog, QFrame, QTableWidgetItem,
                              QAbstractItemView, QMessageBox, QTextEdit, QHeaderView, QTableWidget, QRadioButton,
                              QFileDialog, QListWidget, QListWidgetItem)
-from PyQt5.QtGui import QCursor, QFont, QFontDatabase
+from PyQt5.QtGui import QCursor, QFont, QFontDatabase, QPalette, QBrush, QPixmap
 
 from cpchain.crypto import ECCipher, RSACipher, Encoder
 
-from cpchain.wallet.pages import load_stylesheet, HorizontalLine, wallet, main_wnd, get_pixm
+from cpchain.wallet.pages import load_stylesheet, HorizontalLine, wallet, main_wnd, get_pixm, abs_path
 from cpchain.wallet.pages.login import LoginWindow
 
 
@@ -69,6 +69,18 @@ class Header(QFrame):
         self.parent = parent
         # self.content_tabs = parent.content_tabs
         self.init_ui()
+        self.brush()
+        @app.event.register(app.events.ROUTER_CHANGE)
+        def change_router(_):
+            self.prev_btn.setEnabled(app.router.hasback())
+            self.nex_btn.setEnabled(app.router.hasprev())
+
+    def brush(self):
+        palette1 = QPalette()
+        path = abs_path('icons/header@x2.png')
+        palette1.setBrush(self.backgroundRole(), QBrush(QPixmap(path)))
+        self.setPalette(palette1)
+        self.setAutoFillBackground(True)
 
     def init_ui(self):
         def create_logos():

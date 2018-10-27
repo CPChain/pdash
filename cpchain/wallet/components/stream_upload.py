@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt, QPoint, QObjectCleanupHandler, QThread
+from PyQt5.QtCore import Qt, QPoint, QObjectCleanupHandler, QThread, pyqtSignal
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import (QApplication, QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLineEdit, QGridLayout, QPushButton,
                              QMenu, QAction, QCheckBox, QVBoxLayout, QWidget, QDialog, QFrame, QTableWidgetItem,
@@ -51,6 +51,9 @@ from datetime import datetime as dt
 logger = logging.getLogger(__name__)
 
 class StreamUploadDialog(Dialog):
+
+    uploaded = pyqtSignal(object)
+
     def __init__(self, parent=None, oklistener=None):
         width = 400
         height = 280
@@ -60,6 +63,7 @@ class StreamUploadDialog(Dialog):
         self.data()
         self.init_proxy()
         super().__init__(wallet.main_wnd, title=title, width=width, height=height)
+        self.uploaded.connect(self.uploadedSlot)
 
     @component.method
     def init_proxy(self):
@@ -96,7 +100,12 @@ class StreamUploadDialog(Dialog):
         layout.addStretch(1)
         layout.addLayout(hbox)
         return layout
-    
+
+    def uploadedSlot(self, path):
+        result = StreamUploadedDialog(oklistener=self.oklistener, data_name=self.data_name.value, stream_id=path['ws_url'])
+        result.show()
+        self.close()
+
     def toNext(self, _):
         # Upload to proxy, get streaming id
         def callback(path):
@@ -106,26 +115,24 @@ class StreamUploadDialog(Dialog):
                 self.aes_key = AESCipher.generate_key()
                 remote_uri = str(path)
                 new_file_info = FileInfo(name=self.data_name.value, data_type='stream', proxy=proxy,
-                                        remote_type='stream', remote_uri=remote_uri, public_key=wallet.market_client.public_key,
-                                        is_published=False, created=func.current_timestamp(), aes_key=self.aes_key)
+                                         remote_type='stream', remote_uri=remote_uri, public_key=wallet.market_client.public_key,
+                                         is_published=False, created=func.current_timestamp(), aes_key=self.aes_key)
                 fs.add_file(new_file_info)
                 self._id = new_file_info.id
                 encrypted_key = RSACipher.encrypt(self.aes_key)
                 encrypted_key = Encoder.bytes_to_base64_str(encrypted_key)
                 wallet.market_client.upload_file_info(None, None, 0, self._id, 'stream', json.dumps(remote_uri), self.data_name.value, encrypted_key)
                 path = json.loads(path)
-                result = StreamUploadedDialog(oklistener=self.oklistener, data_name=self.data_name.value, stream_id=path['ws_url'])
-                result.show()
-                self.close()
+                self.uploaded.emit(path)
             except Exception as err:
                 logger.error(err)
         self.upload().addCallbacks(callback)
-    
+
     @component.method
     def upload(self):
         proxy = self.proxy.current
         storage_type = 'stream'
-        storage_plugin = "cpchain.storage-plugin."
+        storage_plugin = "cpchain.storage_plugin."
         module = importlib.import_module(storage_plugin + storage_type)
         s = module.Storage()
         param = dict()
@@ -145,7 +152,7 @@ class StreamUploadedDialog(Dialog):
     def __init__(self, parent=None, oklistener=None, data_name=None, stream_id=None):
         width = 400
         height = 340
-        title = "Upload Streaming Data"
+        title = "Streaming ID"
         self.now_wid = None
         self.oklistener = oklistener
         self.data_name_ = data_name
@@ -202,122 +209,5 @@ class StreamUploadedDialog(Dialog):
         QLabel#copy {
             color: #1689e9;
             margin-left: 5px;
-        }
-        """
-
-class MyClientProtocol(WebSocketClientProtocol):
-    
-    def onMessage(self, payload, isBinary):
-        if isBinary:
-            pass
-        else:
-            self.factory.handler(payload.decode('utf8'))
-
-
-class PreviewDialog(Dialog):
-
-    def __init__(self, parent=None, oklistener=None, ws_url=None):
-        width = 460
-        height = 350
-        title = "Upload Streaming Data"
-        self.ws_url = ws_url
-        self.now_wid = None
-        self.oklistener = oklistener
-        self.data()
-        self.signals = Signals()
-        super().__init__(wallet.main_wnd, title=title, width=width, height=height)
-        self.signals.change.connect(self.modelChange)
-        self.stream.setView(self)
-        self.index = 1
-        
-        self.run_client(self.ws_url)
-
-    def run_client(self, ws_url):
-        self.factory = WebSocketClientFactory(ws_url + '?action=subscribe')
-        self.factory.protocol = MyClientProtocol
-        def handler(record):
-            self.stream.append(record)
-        self.factory.handler = handler
-        connectWS(self.factory)
-    
-    def close(self):
-        super().close()
-
-    def test(self):
-        import time
-        while True:
-            time.sleep(1)
-            self.stream.append('Hello{}'.format(self.index))
-            self.index += 1
-        
-    def modelChange(self, val):
-        data = Builder().name('ts').text(str(val)).build()
-        self._layout.insertLayout(0, self.row(data))
-
-    @component.data
-    def data(self):
-        return {
-            "stream": [
-                
-            ]
-        }
-
-    def row(self, data):
-        layout = QHBoxLayout()
-        layout.addWidget(data)
-        return layout
-
-    def ui(self, widget):
-        self.setContentsMargins(0, 0, 0, 0)
-        layout = QVBoxLayout(widget)
-        layout.setAlignment(Qt.AlignTop)
-        datas = self.stream.value
-
-        for i in datas:
-            data = Builder().name('ts').text(str(i)).build()
-            layout.insertLayout(0, self.row(data))
-        self._layout = layout
-        wid = QFrame()
-        wid.setLayout(layout)
-        wid.setContentsMargins(0, 0, 0, 0)
-        wid.setStyleSheet("""
-            QFrame {
-                background: #fff;
-            }
-            QWidget#ts {
-                border: none;
-            }
-            QLabel#header {
-                border: 1px solid black;
-            }
-
-        """)
-
-        scroll = QScrollArea()
-        scroll.setContentsMargins(0, 0, 0, 0)
-        scroll.setWidgetResizable(True)
-
-        scroll.setWidget(wid)
-
-        _main = QVBoxLayout()
-
-        _main.addWidget(Builder().text('Stream ID:').build())
-        _main.addWidget(Builder().text(self.ws_url).build())
-
-        _main.addWidget(scroll)
-        hbox = QHBoxLayout()
-        hbox.setAlignment(Qt.AlignRight)
-        hbox.addWidget(Button.Builder(width=100, height=30).text('OK').click(lambda _: self.close()).build())
-        _main.addLayout(hbox)
-        return _main
-
-    def style(self):
-        return super().style() + """
-        QLabel#header {
-            border: 1px solid black;
-        }
-        QScrollArea {
-            background: #fff;
-            border: 1px solid #666;
         }
         """

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QLabel, QWidget, QVBoxLayout
 from PyQt5.QtGui import  QPixmap
 
@@ -9,23 +10,29 @@ from cpchain.wallet.pages import wallet
 
 class Picture(QWidget):
 
+    loaded = pyqtSignal(object)
+
     def __init__(self, path=None, width=None, height=None):
         super().__init__()
         self.path = path
         self.width = width
         self.height = height
+        self.loaded.connect(self.loadedSlot)
         self.ui()
+
+    def loadedSlot(self, content):
+        photo = QPixmap()
+        photo.loadFromData(content)
+        photo = photo.scaled(self.width, self.height)
+        self.gif.deleteLater()
+        label = QLabel()
+        label.setPixmap(photo)
+        self.layout.addWidget(label)
 
     @component.method
     def get_picture(self):
         def cb(content):
-            photo = QPixmap()
-            photo.loadFromData(content)
-            photo = photo.scaled(self.width, self.height)
-            self.gif.deleteLater()
-            label = QLabel()
-            label.setPixmap(photo)
-            self.layout.addWidget(label)
+            self.loaded.emit(content)
         wallet.market_client.get('product/v1/allproducts/images/?path=' + self.path, True).addCallbacks(cb)
 
     @component.ui

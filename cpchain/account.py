@@ -4,12 +4,15 @@ import os.path as osp
 import json
 import logging
 
+from decimal import Decimal
 from datetime import datetime
 from getpass import getpass
 
 from cpchain import config, crypto
 from cpchain.utils import join_with_rc
 from cpchain.chain.utils import default_w3 as web3
+from cpchain.wallet.simpleqt import event
+from cpchain.wallet import events
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +23,7 @@ class Accounts(list):
     def __init__(self, *args):
         super().__init__(*args)
         self.default_account = None
-        self._populate_accounts()
+        # self._populate_accounts()
 
     def _populate_accounts(self):
         ptn = osp.join(_keystore_dir, 'UTC-*')
@@ -96,7 +99,9 @@ def create_account(passwd, filepath=_keystore_dir, name=None):
     with open(key_file, 'w') as f:
         f.write(json.dumps(encrypted_key))
 
-    return Account(key_passphrase=passwd, private_key=acct.privateKey)
+    account = Account(key_passphrase=passwd, private_key=acct.privateKey)
+    account.key_path = key_file
+    return account
 
 
 def import_account(key_file, passwd):
@@ -104,15 +109,22 @@ def import_account(key_file, passwd):
     with open(key_file) as f:
         encrypted_key = json.load(f)
 
-    private_key = web3.eth.account.decrypt(encrypted_key, passwd)
-    acct = web3.eth.account.privateKeyToAccount(private_key)
+    try:
+        private_key = web3.eth.account.decrypt(encrypted_key, passwd)
+        acct = web3.eth.account.privateKeyToAccount(private_key)
+    except ValueError as e:
+        logger.exception(e)
+        event.emit(events.PASSWORD_ERROR)
+        return None
 
     try:
         web3.personal.importRawKey(acct.privateKey, passwd)
     except:
         logger.info("account already in node's keychain")
 
-    return Account(key_passphrase=passwd, private_key=acct.privateKey)
+    account = Account(key_passphrase=passwd, private_key=acct.privateKey)
+    account.key_path = key_file
+    return account
 
 def get_keystore_list():
     ptn = osp.join(_keystore_dir, 'UTC-*')
@@ -149,6 +161,8 @@ def set_default_account():
     return account
 
 def get_balance(account):
+    if not web3:
+        return 0
     return web3.eth.getBalance(account)
 
 def send_tranaction(from_account, to_account, value):
@@ -166,11 +180,12 @@ def scan_transaction(start_block_id=None, end_block_id=None):
     start_block_id = start_block_id or 0
     end_block_id = end_block_id or web3.eth.blockNumber
 
-    transaction_records = []
     for block_id in range(start_block_id, end_block_id + 1):
         timestamp = web3.eth.getBlock(block_id).timestamp
         timestamp = datetime.fromtimestamp(timestamp).isoformat()
         transaction_cnt = web3.eth.getBlockTransactionCount(block_id)
+        if transaction_cnt == 0:
+            yield block_id
         for transaction_id in range(0, transaction_cnt):
             transaction = web3.eth.getTransactionByBlock(block_id, transaction_id)
             txhash = transaction.hash.hex()
@@ -180,8 +195,7 @@ def scan_transaction(start_block_id=None, end_block_id=None):
             value = transaction.value
             txfee = transaction.gas / transaction.gasPrice
             # follow ethersacn.io output format
-            transaction_records.append(
-                {
+            yield {
                     'txhash': txhash,
                     'block': block_id,
                     'date': timestamp,
@@ -189,10 +203,10 @@ def scan_transaction(start_block_id=None, end_block_id=None):
                     'to': to_account,
                     'value': value,
                     'txfee': txfee
-                })
-
-    return transaction_records
+                }
 
 def to_ether(value):
-    return web3.fromWei(value, 'ether')
-
+    value = web3.fromWei(value, 'ether')
+    if value:
+        return value.quantize(Decimal('0.000'))
+    return value
