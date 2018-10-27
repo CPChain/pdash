@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+
+from autobahn.twisted.websocket import WebSocketClientProtocol, \
+    WebSocketClientFactory, connectWS
+
+from cpchain import config
+from cpchain.kafka import KafkaProducer
+
+class MyClientProtocol(WebSocketClientProtocol):
+
+    def onConnect(self, response):
+        print("Server connected: {0}".format(response.peer))
+
+    def onOpen(self):
+        print("WebSocket connection open.")
+        brokers = config.proxy.kafka_brokers
+        self.producer = KafkaProducer(brokers, self.stream_id)
+
+    def onMessage(self, payload, isBinary):
+        self.producer.produce(self.stream_id, payload)
+
+    def onClose(self, wasClean, code, reason):
+        print("WebSocket connection closed: {0}".format(reason))
+        reactor.callLater(5, connect_ws)
+
+if __name__ == '__main__':
+
+    import sys
+
+    from twisted.python import log
+    from twisted.internet import reactor
+
+    log.startLogging(sys.stdout)
+
+    if len(sys.argv) != 3:
+        print("Usage: %s <remote stream websocket> <local stream id>" % sys.argv[0])
+        sys.exit(1)
+
+    ws_url = str(sys.argv[1])
+    stream_id = str(sys.argv[2])
+    factory = WebSocketClientFactory(ws_url + '?action=subscribe')
+    factory.protocol = MyClientProtocol
+    factory.protocol.stream_id = stream_id
+
+    def connect_ws():
+        connectWS(factory)
+
+    connect_ws()
+    reactor.run()
