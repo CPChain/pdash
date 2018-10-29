@@ -5,8 +5,6 @@ import sys
 import subprocess
 import time
 
-from PyQt5.QtWidgets import QApplication, QProgressBar
-
 import toml
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -54,7 +52,11 @@ def _get_config():
 
 config = _get_config()
 
-_Application = QApplication(sys.argv)
+def getApplication():
+    from PyQt5.QtWidgets import QApplication, QProgressBar
+    return QApplication(sys.argv)
+
+_Application = getApplication()
 
 # twisted reactor
 def _install_reactor():

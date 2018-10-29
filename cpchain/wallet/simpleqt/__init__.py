@@ -66,6 +66,8 @@ class Signals(QtCore.QObject):
 
     loading_over = QtCore.pyqtSignal(name='loading over')
 
+    payed = QtCore.pyqtSignal(name="Payed")
+
 
 class Page(QScrollArea):
 

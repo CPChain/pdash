@@ -17,7 +17,7 @@ from PyQt5.QtCore import (QObject, QObjectCleanupHandler, QPoint, Qt, QThread,
 from PyQt5.QtGui import QCursor, QFont, QFontDatabase
 from PyQt5.QtQuick import QQuickView
 from PyQt5.QtQuickWidgets import QQuickWidget
-from PyQt5.QtWidgets import (QAbstractItemView, QAction, QApplication, QGraphicsDropShadowEffect,
+from PyQt5.QtWidgets import (QAbstractItemView, QAction, QApplication,
                              QCheckBox, QComboBox, QDialog, QFileDialog,
                              QFrame, QGridLayout, QHBoxLayout, QHeaderView,
                              QLabel, QLineEdit, QListWidget, QListWidgetItem,
