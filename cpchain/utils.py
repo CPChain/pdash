@@ -52,12 +52,6 @@ def _get_config():
 
 config = _get_config()
 
-def getApplication():
-    from PyQt5.QtWidgets import QApplication, QProgressBar
-    return QApplication(sys.argv)
-
-_Application = getApplication()
-
 # twisted reactor
 def _install_reactor():
     reactor_qual_name = "twisted.internet.reactor"
@@ -80,7 +74,7 @@ def _install_reactor():
     else:
         import asyncio
         from quamash import QEventLoop, QThreadExecutor
-        loop = asyncio.new_event_loop()#QEventLoop(_Application)
+        loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
         from twisted.internet import asyncioreactor

@@ -34,7 +34,7 @@ from cpchain.wallet.simpleqt import event, MessageBox
 from cpchain.account import Account, get_balance
 from cpchain.wallet import utils
 from cpchain.chain.utils import default_w3 as web3
-from cpchain.utils import _Application, reactor
+from cpchain.utils import reactor
 
 from cpchain.wallet.router import Router
 
@@ -43,6 +43,8 @@ client._HTTP11ClientFactory.noisy = False
 globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
 logger = logging.getLogger(__name__)
 
+
+_Application = QApplication(sys.argv)
 
 sidebarMenu = [
     {
