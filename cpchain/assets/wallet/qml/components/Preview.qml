@@ -24,6 +24,8 @@ Rectangle {
     Connections {
         target: self
         onTickComing: {
+            // timestamp
+            var ts = tick
             // Raw Data
             raw.tick(tick)
             // Find Temperature
