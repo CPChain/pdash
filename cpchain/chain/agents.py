@@ -232,21 +232,25 @@ class ProxyAgent(Agent):
         return order_state == 1
 
     def claim_fetched(self, order_id,):
-        transaction = {'value': 0, 'from': self.account, 'gas': 100000}
-        # gas_estimate = self.contract.functions.proxyFetched(order_id).estimateGas(transaction)
-        # transaction['gas'] = gas_estimate + 10000
+        transaction = {'value': 0, 'from': self.account}
+        gas_estimate = self.contract.functions.proxyFetched(order_id).estimateGas(transaction)
+        transaction['gas'] = gas_estimate + 100000
         tx_hash = self.contract.functions.proxyFetched(order_id).transact(transaction)
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
     def claim_delivered(self, order_id, relay_hash, ):
-        transaction = {'value': 0, 'from': self.account, 'gas': 500000}
+        transaction = {'value': 0, 'from': self.account}
+        gas_estimate = self.contract.functions.proxyDelivered(relay_hash, order_id).estimateGas(transaction)
+        transaction['gas'] = gas_estimate + 100000
         tx_hash = self.contract.functions.proxyDelivered(relay_hash, order_id).transact(transaction)
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
 
     def handle_dispute(self, order_id, result,):
-        transaction = {'value': 0, 'from': self.account,}
+        transaction = {'value': 0, 'from': self.account}
+        gas_estimate = self.contract.functions.proxyProcessDispute(order_id, result).estimateGas(transaction)
+        transaction['gas'] = gas_estimate + 100000
         tx_hash = self.contract.functions.proxyProcessDispute(order_id, result).transact(transaction)
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash

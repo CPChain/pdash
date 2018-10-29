@@ -51,9 +51,10 @@ class FormPage(Resource):
             transaction = {
                 'from': payer_account,
                 'to': payee_account,
-                'value': 100000000
+                'value': 100000000000000000000
             }
-            web3.personal.sendTransaction(transaction, passwd)
+            tx_hash = web3.personal.sendTransaction(transaction, passwd)
+            web3.eth.waitForTransactionReceipt(tx_hash)
 
         except:
             return wrong_address_html.encode('utf8')
