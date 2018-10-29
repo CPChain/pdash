@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtCore import Qt, QPoint, pyqtSignal
 from PyQt5.QtWidgets import (QApplication, QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLineEdit, QGridLayout, QPushButton,
                              QMenu, QAction, QCheckBox, QVBoxLayout, QWidget, QDialog, QFrame, QTableWidgetItem,
                              QAbstractItemView, QMessageBox, QTextEdit, QHeaderView, QTableWidget, QRadioButton,
@@ -89,7 +89,6 @@ class ProductDetail(Page):
                  sales=0, cpc=0, description="", remain=0,
                  market_hash=None, owner_address=None, ptype=None):
         self.parent = parent
-        self.signals = Signals()
         self.product_id = product_id
         self.name_ = name
         self.image_ = image
@@ -107,6 +106,10 @@ class ProductDetail(Page):
         self.paying = False
         super().__init__(parent)
         self.setObjectName("product_detail")
+        self.signals.payed.connect(self.payedSlot)
+
+    def payedSlot(self):
+        app.router.redirectTo('purchased_page')
 
     @page.create
     def create(self):
@@ -115,14 +118,13 @@ class ProductDetail(Page):
             self.signals.refresh.emit()
         @app.event.register(app.events.NEW_ORDER)
         def listenNewOrder(event):
+            # redirect to purchased data
+            # self.signals.payed.emit()
             self.signals.refresh.emit()
         @app.event.register(app.events.CANCEL_PURCHASE)
         def cancel_purchase(event):
             self.signals.refresh.emit()
-        def render(_):
-            self.buying(False)
-            self.refresh()
-        self.signals.refresh.connect(render)
+
 
     def buying(self, is_buying):
         if is_buying:
@@ -328,19 +330,20 @@ class ProductDetail(Page):
         # Buy button
         def openPurchaseDialog(_):
             self.buying(True)
-            if not self.paying:
-                market_hash = self.market_hash
-                owner_address = self.owner_address
-                purchaseDlg = PurchaseDialog(self,
-                                             price=self.cpc,
-                                             gas=self.gas,
-                                             account=self.account,
-                                             storagePath=self.storagePath,
-                                             password=self.password,
-                                             market_hash=market_hash,
-                                             name=self.name.value,
-                                             owner_address=owner_address)
-                purchaseDlg.show()
+            app.event.emit(app.events.NEW_ORDER)
+            # if not self.paying:
+            #     market_hash = self.market_hash
+            #     owner_address = self.owner_address
+            #     purchaseDlg = PurchaseDialog(self,
+            #                                  price=self.cpc,
+            #                                  gas=self.gas,
+            #                                  account=self.account,
+            #                                  storagePath=self.storagePath,
+            #                                  password=self.password,
+            #                                  market_hash=market_hash,
+            #                                  name=self.name.value,
+            #                                  owner_address=owner_address)
+            #     purchaseDlg.show()
         self.buy = Button.Builder(width=100, height=30).text('Buy')\
                                    .style('primary')\
                                    .click(openPurchaseDialog)\

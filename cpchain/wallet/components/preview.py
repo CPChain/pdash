@@ -15,8 +15,8 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import (QObject, QObjectCleanupHandler, QPoint, Qt, QThread,
                           QUrl, pyqtProperty, pyqtSignal, pyqtSlot)
 from PyQt5.QtGui import QCursor, QFont, QFontDatabase
-from PyQt5.QtQuickWidgets import QQuickWidget
 from PyQt5.QtQuick import QQuickView
+from PyQt5.QtQuickWidgets import QQuickWidget
 from PyQt5.QtWidgets import (QAbstractItemView, QAction, QApplication,
                              QCheckBox, QComboBox, QDialog, QFileDialog,
                              QFrame, QGridLayout, QHBoxLayout, QHeaderView,
@@ -32,7 +32,7 @@ from twisted.python import log
 
 from autobahn.twisted.websocket import (WebSocketClientFactory,
                                         WebSocketClientProtocol, connectWS)
-from cpchain import root_dir
+from cpchain import root_dir, config
 from cpchain.crypto import AESCipher, ECCipher, Encoder, RSACipher
 from cpchain.proxy.client import pick_proxy
 from cpchain.utils import open_file, sizeof_fmt
@@ -55,11 +55,23 @@ logger = logging.getLogger(__name__)
 
 class MyClientProtocol(WebSocketClientProtocol):
 
+    def __init__(self, *args, **kwargs):
+        self.created_on = dt.now()
+        super().__init__(*args, **kwargs)
+
     def onMessage(self, payload, isBinary):
         if isBinary:
             pass
         else:
-            self.factory.handler(payload.decode('utf8'))
+            data = payload.decode('utf8')
+            try:
+                ts = data[:19]
+                ts = dt.strptime(ts, '%Y-%m-%d %H:%M:%S')
+                if ts < self.created_on:
+                    return
+            except Exception as e:
+                logger.error(e)
+            self.factory.handler(data)
 
 
 class PreviewObject(QObject):
@@ -68,16 +80,26 @@ class PreviewObject(QObject):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        # deferToThread(self.test)
+        self.val_min1_ = config.preview.val_min1
+        self.val_max1_ = config.preview.val_max1
+        self.val_min2_ = config.preview.val_min2
+        self.val_max2_ = config.preview.val_max2
 
-    def test(self):
-        while True:
-            ts = dt.now().strftime('%Y-%m-%d %H:%M:%S')
-            temperature = random.randint(20, 25)
-            huminity = random.randint(28, 35)
-            self.tickComing.emit(
-                "{} temperature:{} huminity:{}".format(ts, temperature, huminity))
-            time.sleep(1)
+    @pyqtProperty(float)
+    def val_min1(self):
+        return self.val_min1_
+
+    @pyqtProperty(float)
+    def val_max1(self):
+        return self.val_max1_
+
+    @pyqtProperty(float)
+    def val_min2(self):
+        return self.val_min2_
+
+    @pyqtProperty(float)
+    def val_max2(self):
+        return self.val_max2_
 
 
 class PreviewWidget(Component):
@@ -107,6 +129,8 @@ class PreviewWidget(Component):
 
 class PreviewDialog(Dialog):
 
+    NO_SHADOW = True
+
     def __init__(self, parent=None, oklistener=None, ws_url=None):
         width = 700
         height = 550
@@ -135,9 +159,6 @@ class PreviewDialog(Dialog):
         super().close()
 
     def modelChange(self, val):
-        # data = Builder().name('ts').text(str(val)).build()
-        # self._layout.insertLayout(0, self.row(data))
-        print(val)
         self.obj.tickComing.emit(val)
 
     @component.data
@@ -155,38 +176,15 @@ class PreviewDialog(Dialog):
 
     def ui(self, widget):
         self.setContentsMargins(0, 0, 0, 0)
-        layout = QVBoxLayout(widget)
-        layout.setAlignment(Qt.AlignTop)
         datas = self.stream.value
-
-        for i in datas:
-            data = Builder().name('ts').text(str(i)).build()
-            layout.insertLayout(0, self.row(data))
-        self._layout = layout
-        wid = QFrame()
-        wid.setLayout(layout)
-        wid.setContentsMargins(0, 0, 0, 0)
-        wid.setStyleSheet("""
-            QFrame {
-                background: #fff;
-            }
-            QWidget#ts {
-                border: none;
-            }
-            QLabel#header {
-                border: 1px solid black;
-            }
-
-        """)
 
         scroll = QScrollArea()
         scroll.setContentsMargins(0, 0, 0, 0)
         scroll.setWidgetResizable(True)
 
-        # scroll.setWidget(wid)
-        preview = PreviewWidget()
-        self.obj = preview.obj
-        scroll.setWidget(preview)
+        self.preview = PreviewWidget()
+        self.obj = self.preview.obj
+        scroll.setWidget(self.preview)
 
         _main = QVBoxLayout()
 

@@ -5,17 +5,20 @@ from cpchain.wallet.simpleqt.basic import Builder
 
 class Dialog(QDialog):
 
+    NO_SHADOW = False
+
     def __init__(self, parent, title="Title", width=500, height=180):
         self.parent = parent
         super().__init__(parent)
         self.setWindowFlags(Qt.FramelessWindowHint)
         # Dialog Shadow
-        # self.setAttribute(Qt.WA_TranslucentBackground)
-        # effect = QGraphicsDropShadowEffect()
-        # effect.setBlurRadius(15)
-        # effect.setXOffset(0)
-        # effect.setYOffset(0)
-        # self.setGraphicsEffect(effect)
+        if not self.NO_SHADOW:
+            self.setAttribute(Qt.WA_TranslucentBackground)
+            effect = QGraphicsDropShadowEffect()
+            effect.setBlurRadius(15)
+            effect.setXOffset(0)
+            effect.setYOffset(0)
+            self.setGraphicsEffect(effect)
 
         self.center(width, height)
         self.setContentsMargins(0, 0, 0, 0)
