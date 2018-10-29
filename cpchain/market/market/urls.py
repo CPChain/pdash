@@ -36,5 +36,5 @@ urlpatterns = [
     path('records/v1/', include('records.urls')) 
 ]
 
-# if sys.argv[1] == 'runserver':
-#     run_monitor()
+if sys.argv[1] == 'runserver':
+    run_monitor()
