@@ -119,8 +119,7 @@ class ProductDetail(Page):
         @app.event.register(app.events.NEW_ORDER)
         def listenNewOrder(event):
             # redirect to purchased data
-            # self.signals.payed.emit()
-            self.signals.refresh.emit()
+            self.signals.payed.emit()
         @app.event.register(app.events.CANCEL_PURCHASE)
         def cancel_purchase(event):
             self.signals.refresh.emit()
@@ -330,20 +329,19 @@ class ProductDetail(Page):
         # Buy button
         def openPurchaseDialog(_):
             self.buying(True)
-            app.event.emit(app.events.NEW_ORDER)
-            # if not self.paying:
-            #     market_hash = self.market_hash
-            #     owner_address = self.owner_address
-            #     purchaseDlg = PurchaseDialog(self,
-            #                                  price=self.cpc,
-            #                                  gas=self.gas,
-            #                                  account=self.account,
-            #                                  storagePath=self.storagePath,
-            #                                  password=self.password,
-            #                                  market_hash=market_hash,
-            #                                  name=self.name.value,
-            #                                  owner_address=owner_address)
-            #     purchaseDlg.show()
+            if not self.paying:
+                market_hash = self.market_hash
+                owner_address = self.owner_address
+                purchaseDlg = PurchaseDialog(self,
+                                             price=self.cpc,
+                                             gas=self.gas,
+                                             account=self.account,
+                                             storagePath=self.storagePath,
+                                             password=self.password,
+                                             market_hash=market_hash,
+                                             name=self.name.value,
+                                             owner_address=owner_address)
+                purchaseDlg.show()
         self.buy = Button.Builder(width=100, height=30).text('Buy')\
                                    .style('primary')\
                                    .click(openPurchaseDialog)\
