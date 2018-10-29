@@ -60,13 +60,20 @@ market_url = "http://192.168.0.101:8083"
 default_password = "^-_-^cpchain@2018^-_-^"
 
 
+[preview]
+val_min1 = 0
+val_max1 = 30
+val_min2 = 0
+val_max2 = 40
+
+
 # logging
 [logging]
 version = 1
 disable_existing_loggers = false
 
 [logging.formatters.simple]
-format = '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+format = '%(asctime)s [%(levelname)s][%(module)s:%(lineno)d] %(name)s: %(message)s'
 
 [logging.handlers.default]
 level = "DEBUG"
@@ -87,3 +94,4 @@ propagate = false
 handlers = ["default"]
 level = "DEBUG"
 propagate = false
+
