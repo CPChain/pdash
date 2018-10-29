@@ -17,7 +17,7 @@ from PyQt5.QtCore import (QObject, QObjectCleanupHandler, QPoint, Qt, QThread,
 from PyQt5.QtGui import QCursor, QFont, QFontDatabase
 from PyQt5.QtQuick import QQuickView
 from PyQt5.QtQuickWidgets import QQuickWidget
-from PyQt5.QtWidgets import (QAbstractItemView, QAction, QApplication,
+from PyQt5.QtWidgets import (QAbstractItemView, QAction, QApplication, QGraphicsDropShadowEffect,
                              QCheckBox, QComboBox, QDialog, QFileDialog,
                              QFrame, QGridLayout, QHBoxLayout, QHeaderView,
                              QLabel, QLineEdit, QListWidget, QListWidgetItem,
@@ -129,6 +129,8 @@ class PreviewWidget(Component):
 
 class PreviewDialog(Dialog):
 
+    NO_SHADOW = True
+
     def __init__(self, parent=None, oklistener=None, ws_url=None):
         width = 700
         height = 550
@@ -180,9 +182,9 @@ class PreviewDialog(Dialog):
         scroll.setContentsMargins(0, 0, 0, 0)
         scroll.setWidgetResizable(True)
 
-        preview = PreviewWidget()
-        self.obj = preview.obj
-        scroll.setWidget(preview)
+        self.preview = PreviewWidget()
+        self.obj = self.preview.obj
+        scroll.setWidget(self.preview)
 
         _main = QVBoxLayout()
 
