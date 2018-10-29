@@ -5,7 +5,7 @@ import webbrowser
 from datetime import datetime as dt
 
 from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QLabel, QMessageBox,
                              QVBoxLayout)
 from twisted.internet.threads import deferToThread
@@ -284,35 +284,55 @@ class PasswordDialog(Dialog):
 
 class WalletPage(Page):
 
+    loaded = pyqtSignal(list)
+
     def __init__(self, parent=None):
+        logger.debug('Wallet Page')
         self.parent = parent
+        self.nodata = None
         super().__init__(parent)
 
         def update(_):
             self.balance.value = account.to_ether(account.get_balance(app.addr))
         app.event.register(UPDATE, update)
+        self.loaded.connect(self.loadedSlot)
+        self.load()
+        logger.debug('inited')
 
-    def load_data(self, data):
+    def loadedSlot(self, records):
+        logger.debug('load records')
+        if self.nodata:
+            if len(records) == 0:
+                self.nodata.show()
+            else:
+                self.nodata.hide()
+        logger.debug('render table')
+        self.table_data.value = records
+        logger.debug('rendered table')
+        logger.debug('loaded')
+
+    def loaded_data(self, data):
+        logger.debug('load data')
         records = []
         for item in data:
             is_frm = app.addr == item['frm']
             amount = float(item['value'])
+            username = app.username or ""
             records.append(Record(category='Transfer Out' if is_frm else 'Transfer',
-                                  payer=app.username if is_frm or amount == 0 else item['frm'],
+                                  payer=username if is_frm or amount == 0 else item['frm'],
                                   amount=- amount if is_frm and amount != 0 else amount,
                                   time=dt.strptime(item['date'], '%Y-%m-%dT%H:%M:%SZ').strftime('%Y/%m/%d %H:%M')))
-        self.table_data.value = records
-        if len(records) == 0:
-            self.nodata.show()
-        else:
-            self.nodata.hide()
+        self.loaded.emit(records)
 
     @page.create
-    def create(self):
+    def load(self):
+        logger.debug('create')
         self.balance.value = account.to_ether(account.get_balance(app.addr))
+        logger.debug('get balance')
         # Load records
         wallet.market_client.query_records(
-            address=app.addr).addCallbacks(self.load_data)
+            address=app.addr).addCallbacks(self.loaded_data)
+        logger.debug('query records')
 
     @page.data
     def data(self):

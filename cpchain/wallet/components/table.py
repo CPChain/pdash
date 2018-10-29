@@ -27,6 +27,8 @@ from cpchain.wallet.pages import main_wnd
 from cpchain.wallet.simpleqt import Signals
 from cpchain.wallet.simpleqt.model import Model
 
+logger = logging.getLogger(__name__)
+
 class TableWidget(QTableWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -52,6 +54,9 @@ class TableWidget(QTableWidget):
         scrollBar = self.verticalScrollBar()
         scrollBar.valueChanged.connect(lambda value: scrolled(scrollBar, value))
 
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+
 
     def set_right_menu(self, func):
         self.customContextMenuRequested[QPoint].connect(func)
@@ -60,6 +65,7 @@ class Table(TableWidget):
 
     def __init__(self, parent, header=None, data=None, itemHandler=None, sort=None, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
+        self.row_number = 0
         self.horizontalHeader().setStretchLastSection(True)
         self.verticalHeader().setVisible(False)
         self.setShowGrid(False)
@@ -134,9 +140,12 @@ class Table(TableWidget):
             i += 1
 
     def change(self, value):
+        logger.debug('Table Change')
         self.setData(value, self.itemHandler)
+        logger.debug('Table Changed')
 
     def setData(self, data, itemHandler):
+        logger.debug('Set Data')
         if not data:
             self.setMaximumHeight(40)
             return
@@ -167,3 +176,10 @@ class Table(TableWidget):
             self.setMinimumHeight(180 if row_number > 5 else row_number * 30)
         else:
             self.setMaximumHeight(32)
+        self.row_number = row_number
+
+    def wheelEvent(self, event):
+        if self.row_number <= 5:
+            return self.parent.wheelEvent(event)
+        else:
+            return super().wheelEvent(event)
