@@ -1,42 +1,42 @@
 #!/usr/bin/python3
 
-import sys
-import os
-import logging
-import shelve
 import json
-import sha3
+import logging
+import os
+import shelve
+import sys
+import time
+from threading import Thread
 
-from PyQt5.QtWidgets import (QMainWindow, QApplication, QFrame, QDesktopWidget, QPushButton, QHBoxLayout, QMessageBox, QVBoxLayout, QGridLayout, QScrollArea, QListWidget, QListWidgetItem, QTabWidget, QLabel, QWidget, QLineEdit, QTableWidget, QTextEdit, QAbstractItemView, QTableWidgetItem, QMenu, QHeaderView, QAction, QFileDialog, QDialog, QRadioButton, QCheckBox, QProgressBar)
-from PyQt5.QtCore import Qt, QPoint, QBasicTimer
 from PyQt5 import QtCore, QtWidgets
-
-from cpchain.proxy.client import pick_proxy
-
-from twisted.web import client
+from PyQt5.QtCore import QBasicTimer, QPoint, Qt
+from PyQt5.QtWidgets import (QAbstractItemView, QAction, QApplication,
+                             QCheckBox, QDesktopWidget, QDialog, QFileDialog,
+                             QFrame, QGridLayout, QHBoxLayout, QHeaderView,
+                             QLabel, QLineEdit, QListWidget, QListWidgetItem,
+                             QMainWindow, QMenu, QMessageBox, QProgressBar,
+                             QPushButton, QRadioButton, QScrollArea,
+                             QTableWidget, QTableWidgetItem, QTabWidget,
+                             QTextEdit, QVBoxLayout, QWidget)
 from twisted.internet.task import LoopingCall
 from twisted.logger import globalLogBeginner, textFileLogObserver
+from twisted.web import client
 
+import sha3
+from cpchain.account import Account, get_balance
+from cpchain.chain.utils import default_w3 as web3
 from cpchain.crypto import ECCipher
-
-from cpchain.wallet.pages import load_stylesheet, wallet, main_wnd, app
-from cpchain.wallet.pages.header import Header
-from cpchain.wallet.pages.login import LoginWindow
-
-
+from cpchain.proxy.client import pick_proxy
+from cpchain.storage_plugin import ipfs, proxy, s3, stream, template
+from cpchain.utils import reactor
+from cpchain.wallet import events, utils
 # widgets
 from cpchain.wallet.components.sidebar import SideBar
-
-from cpchain.storage_plugin import s3, ipfs, stream, template, proxy
-
-from cpchain.wallet import events
-from cpchain.wallet.simpleqt import event, MessageBox
-from cpchain.account import Account, get_balance
-from cpchain.wallet import utils
-from cpchain.chain.utils import default_w3 as web3
-from cpchain.utils import reactor
-
+from cpchain.wallet.pages import app, load_stylesheet, main_wnd, wallet
+from cpchain.wallet.pages.header import Header
+from cpchain.wallet.pages.login import LoginWindow
 from cpchain.wallet.router import Router
+from cpchain.wallet.simpleqt import MessageBox, event
 
 client._HTTP11ClientFactory.noisy = False
 
@@ -202,8 +202,6 @@ def __login(account=None):
     public_key = ECCipher.serialize_public_key(account.public_key)
     addr = utils.get_address_from_public_key_object(public_key)
     addr = web3.toChecksumAddress(addr)
-    logger.info(addr)
-    logger.info(get_balance(addr))
     app.addr = addr
     if isinstance(account.key_passphrase, str):
         app.pwd = account.key_passphrase
@@ -227,6 +225,7 @@ def enterPDash(account=None):
     app.main_wnd = main_wnd
 
     wallet.set_main_wnd(main_wnd)
+    app.timing(logger, 'Build MainWnd')
     __login(account)
 
 
@@ -238,6 +237,7 @@ def login():
         key_path = file.get('key_path')
         key_passphrase = file.get('key_passphrase')
         try:
+            app.timing(logger, 'Data Init')
             if key_path and key_passphrase:
                 if isinstance(key_passphrase, str):
                     account = Account(key_path, key_passphrase.encode())
@@ -247,10 +247,10 @@ def login():
                 # Init market client account
                 wallet.market_client.account = account
                 wallet.market_client.public_key = public_key
+                app.timing(logger, 'Account Prepare')
                 addr = utils.get_address_from_public_key_object(public_key)
                 addr = web3.toChecksumAddress(addr)
                 logger.info(addr)
-                logger.info(get_balance(addr))
                 app.addr = addr
                 if isinstance(key_passphrase, str):
                     app.pwd = key_passphrase
@@ -258,11 +258,10 @@ def login():
                     app.pwd = key_passphrase.decode()
                 wallet.market_client.query_username(app)
                 __unlock()
+                app.timing(logger, 'Unlock')
                 enterPDash(account)
                 return
         except Exception as e:
-            import traceback
-            traceback.print_exc()
             logger.error(e)
     logger.debug('Init')
     wnd = LoginWindow(reactor)
@@ -289,21 +288,21 @@ def init_handlers():
 
 
 if __name__ == '__main__':
-    
+    app.start_at = time.time()
     app.unlock = __unlock
     app.valid_password = valid_password
     wallet.app = app
     app.enterPDash = enterPDash
     init_handlers()
+    app.timing(logger, 'init')
 
     login()
+
+    app.timing(logger, 'Login')
 
     app.msgbox = MessageBox()
     app.msgbox.parent = app.main_wnd
     app.msgbox1 = MessageBox
-
-    from twisted.internet import reactor
-    from threading import Thread
 
     Thread(target=reactor.run, args=(False,)).start()
 
