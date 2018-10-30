@@ -7,16 +7,18 @@ from datetime import datetime as dt
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QLabel, QMessageBox,
-                             QVBoxLayout)
+                             QVBoxLayout, QWidget, QFrame)
 from twisted.internet.threads import deferToThread
 
 from cpchain import account
 from cpchain.chain.utils import default_w3 as web3
 from cpchain.utils import config
+from cpchain.wallet import utils
 from cpchain.wallet.components.dialog import Dialog
 from cpchain.wallet.components.loading import Loading
 from cpchain.wallet.components.table import Table
-from cpchain.wallet.pages import app, wallet
+from cpchain.wallet.components.picture import Picture
+from cpchain.wallet.pages import app, wallet, abs_path
 from cpchain.wallet.simpleqt import Page
 from cpchain.wallet.simpleqt.basic import Builder, Button, Input, Label, Line
 from cpchain.wallet.simpleqt.decorator import component, page
@@ -40,7 +42,7 @@ class Record:
 class ReceiveDialog(Dialog):
 
     def __init__(self, parent=None, oklistener=None, address=None):
-        width = 540
+        width = 580
         height = 230
         title = "Receive Token"
         self.oklistener = oklistener
@@ -58,18 +60,13 @@ class ReceiveDialog(Dialog):
         app.event.emit(UPDATE)
         super().close()
 
-    def show_copyed(self):
-        self.copyed.show()
+    def show_copied(self):
+        self.copied.show()
 
-        def hide():
-            time.sleep(2)
-            self.copyed.hide()
-        deferToThread(hide)
-
-    def copy_address(self):
+    def copy_address(self, _):
         clipboard = QApplication.clipboard()
         clipboard.setText(self.address.value)
-        self.show_copyed()
+        self.show_copied()
 
     def openUrl(self, url):
         try:
@@ -80,18 +77,45 @@ class ReceiveDialog(Dialog):
     def ui(self, widget):
         layout = QVBoxLayout(widget)
         row = QHBoxLayout()
+        row.setSpacing(0)
         row.addWidget(Builder().text('Address:').name('address_hint').build())
-        row.addWidget(Builder().text(
-            self.address.value).name('address').build())
+        row.addWidget(Builder().text(self.address.value).name('address').build())
+        row.addSpacing(10)
+        picture = Picture(abs_path('icons/copy@2x.png'), width=30, height=30)
+        picture.setObjectName('picture')
+        row.addWidget(picture)
+        row.addSpacing(8)
+        row.addWidget(Builder().click(self.copy_address).text('Copy').name('copy').build())
         row.addStretch(1)
         layout.addLayout(row)
         row2 = QHBoxLayout()
+        row2.setSpacing(0)
+        row2.addSpacing(15)
         row2.setAlignment(Qt.AlignBottom)
-        row2.addWidget(Button.Builder(width=50, height=25).click(
-            self.copy_address).text('copy').name('copy').build())
-        self.copyed = Builder().text('copyed!').name('copyed').build()
-        row2.addWidget(self.copyed)
-        self.copyed.hide()
+        qrcode = Picture(utils.get_cpc_free_qrcode(), width=96, height=96)
+        qrcode.setObjectName('qrcode')
+        row2.addWidget(qrcode)
+        row2.addSpacing(10)
+
+        copied_icon = Picture(abs_path('icons/copied@2x.png'), width=30, height=30)
+        copied_layout = QHBoxLayout()
+        copied_layout.setContentsMargins(0, 0, 0, 0)
+        copied_layout.setSpacing(0)
+        copied_layout.addWidget(copied_icon)
+        copied_text = Builder().text('copied!').name('copied').build()
+        copied_layout.addWidget(copied_text)
+        copied_layout.addStretch(1)
+        self.copied = QFrame(self)
+        self.copied.setObjectName('copied_frame')
+        self.copied.setLayout(copied_layout)
+
+        vbox = QVBoxLayout()
+        vbox.setContentsMargins(0, 0, 0, 0)
+        vbox.setAlignment(Qt.AlignTop)
+        vbox.addWidget(self.copied)
+
+        row2.addLayout(vbox)
+        self.copied.hide()
         row2.addStretch(1)
         layout.addLayout(row2)
         layout.addWidget(Builder().text('Get CPC for free').name('get_cpc').click(
@@ -105,12 +129,10 @@ class ReceiveDialog(Dialog):
             font-size:15px;
         }
         QLabel#address_hint {
-            margin-top: 10px;
             font-weight: 700;
             margin-left: 15px;
         }
         QLabel#address {
-            margin-top: 10px;
             font-weight: 500;
         }
         QLabel#get_cpc {
@@ -119,14 +141,16 @@ class ReceiveDialog(Dialog):
             font-size: 12px;
             margin-left: 15px;
         }
-        QPushButton#copy {
-            margin-top: 10px;
-            margin-left: 15px;
+        QLabel#copy {
+            color: #0073DF;
         }
-        QLabel#copyed {
-            color: #0073df;
+        QLabel#copied {
+            margin-left: 3px;
+            color: #aaa;
             font-size: 12px;
-            margin-top: 8px;
+        }
+        QFrame#copied_frame {
+            /*margin-bottom: 45px;*/
         }
         """
 
