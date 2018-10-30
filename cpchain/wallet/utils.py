@@ -2,6 +2,25 @@ import urllib.parse
 import time
 from datetime import datetime as dt
 from cpchain.crypto import ECCipher, Encoder
+import qrcode
+from cpchain.utils import root_dir, config
+
+def get_cpc_free_qrcode():
+    path = root_dir + '/tmp_cpc_free.png'
+    data = config.account.charge_server
+    qr = qrcode.QRCode(
+        version=1,
+        # 4 level: L, M, Q, H
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=1,
+    )
+    qr.add_data(data)
+    qr.make(fit=True)
+
+    img = qr.make_image()
+    img.save(path)
+    return path
 
 
 def build_url(url, values):

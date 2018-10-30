@@ -144,13 +144,14 @@ class MainWindow(QMainWindow):
         self.show()
 
 
-    def closeEvent(self, event):
+    def closeEvent(self, _):
         self.reactor.stop()
         os._exit(0)
 
 def _handle_keyboard_interrupt():
     def sigint_handler(*args):
-        _Application.quit()
+        # _Application.quit()
+        pass
 
     import signal
     signal.signal(signal.SIGINT, sigint_handler)
