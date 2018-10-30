@@ -9,8 +9,8 @@ class Storage:
         # fixme: should get user input from UI
 
         return {
-            'host': '192.168.0.132',
-            'port': '5001'
+            'host': '',
+            'port': ''
         }
 
     def upload_data(self, src, dst):

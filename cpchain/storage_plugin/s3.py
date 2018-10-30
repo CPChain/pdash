@@ -9,10 +9,10 @@ class Storage:
     def user_input_param(self):
 
         return {
-            'bucket': 'cpchain-bucket',
-            'aws_secret_access_key': 'TlLYyyb6avQvdf8BU0UzEj7P83tbVjSLyv9kTppd',
-            'aws_access_key_id': 'AKIAI34GNTRZVNJ5ZMZA',
-            'key': 'test'
+            'bucket': '',
+            'aws_secret_access_key': '',
+            'aws_access_key_id': '',
+            'key': ''
         }
 
     def upload_data(self, src, dst):
