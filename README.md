@@ -14,4 +14,4 @@ Visit us at [cpchain.io](http://cpchain.io/).
 
 ![My data](images/my_data.png)
 
-![Wallet](images/Wallet.png)
+![Wallet](images/wallet.png)
