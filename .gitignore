@@ -15,10 +15,11 @@ migrations/
 *.qmlc
 
 # pyinstaller
-*.spec
+# *.spec
 
 # tmp
 pdash-account*
+tmp_*
 
 # python
 .pytest_cache
