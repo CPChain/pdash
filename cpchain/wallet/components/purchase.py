@@ -14,6 +14,7 @@ from cpchain.wallet.simpleqt.widgets.label import Label
 from cpchain.wallet.simpleqt.basic import Input
 from cpchain.wallet.simpleqt.widgets import ComboBox
 from cpchain.wallet.simpleqt.model import ListModel
+from cpchain.wallet.components.gif import LoadingGif
 
 logger = logging.getLogger(__name__)
 
@@ -84,10 +85,10 @@ class PurchaseDialog(Dialog):
         cancel.setObjectName('pinfo_cancel_btn')
         cancel.clicked.connect(self.handle_cancel)
         btm.addWidget(cancel)
-        ok = QPushButton('Pay')
-        ok.setObjectName('pinfo_publish_btn')
-        ok.clicked.connect(self.handle_confirm)
-        btm.addWidget(ok)
+        self.ok = QPushButton('Pay')
+        self.ok.setObjectName('pinfo_publish_btn')
+        self.ok.clicked.connect(self.handle_confirm)
+        btm.addWidget(self.ok)
         layout.addSpacing(30)
         layout.addLayout(btm)
         return layout

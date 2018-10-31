@@ -185,6 +185,23 @@ class SendDialog(Dialog):
         self.close()
         pwd.show()
 
+    def gen_row(self, left_text, *widgets, **kw):
+        row = QHBoxLayout()
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(0)
+        row.addSpacing(16)
+        left_widget = Builder().text(left_text).name('left').build()
+        width = kw.get('left_width', 130)
+        left_widget.setMinimumWidth(width)
+        left_widget.setMaximumWidth(width)
+        row.addWidget(left_widget)
+        for widget in widgets:
+            if isinstance(widget, QWidget):
+                row.addWidget(widget)
+                row.addSpacing(5)
+        row.addStretch(1)
+        return row
+
     def ui(self, widget):
         layout = QVBoxLayout(widget)
         layout.setSpacing(20)
@@ -206,6 +223,9 @@ class SendDialog(Dialog):
 
         hbox = QHBoxLayout()
         hbox.addStretch(1)
+        cancel = Button.Builder(width=100, height=28).click(
+            lambda _: self.close()).text('Cancel').build()
+        hbox.addWidget(cancel)
         next_ = Button.Builder(width=100, height=28).style(
             'primary').click(self.openPassword).text('Next').build()
         hbox.addWidget(next_)
@@ -218,6 +238,7 @@ class SendDialog(Dialog):
         return super().style() + """
         QLabel#left {
             text-align: right;
+            color: #333333;
         }
         """
 
@@ -280,6 +301,23 @@ class PasswordDialog(Dialog):
         else:
             self.loading.hide()
             self.ok.setEnabled(True)
+
+    def gen_row(self, left_text, *widgets, **kw):
+        row = QHBoxLayout()
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(0)
+        row.addSpacing(16)
+        left_widget = Builder().text(left_text).name('left').build()
+        width = kw.get('left_width', 130)
+        left_widget.setMinimumWidth(width)
+        left_widget.setMaximumWidth(width)
+        row.addWidget(left_widget)
+        for widget in widgets:
+            if isinstance(widget, QWidget):
+                row.addWidget(widget)
+                row.addSpacing(5)
+        row.addStretch(1)
+        return row
 
     def ui(self, widget):
         layout = QVBoxLayout(widget)
