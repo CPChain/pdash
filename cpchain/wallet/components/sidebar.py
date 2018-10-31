@@ -62,9 +62,7 @@ class SideBar(Component):
         }
 
         QListWidget#menu {
-            font-family:SFUIDisplay-Regular;
-            font-size:14px;
-            color: #000000;
+            font-size: 14px;
             border: none;
             outline: none;
             text-align: left;

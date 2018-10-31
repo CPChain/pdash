@@ -2,6 +2,8 @@ from enum import Enum
 import os.path as osp
 import string
 import copy
+import time
+import logging
 from cpchain import config, root_dir
 
 from PyQt5.QtWidgets import QFrame, QMessageBox
@@ -88,6 +90,8 @@ class OrderStatus(Enum):
 class App:
 
     def __init__(self):
+        self.start_at = time.time()
+        self.last_at = 0
         self.main_wnd = None
         self.username = None
         self.products_order = {}
@@ -97,6 +101,10 @@ class App:
         self.login_open = False
         self.status_ = {}
         self.init()
+    
+    def timing(self, logger, hint):
+        self.last_at = time.time()
+        logger.debug('[%s] %.4fs'%(hint, (self.last_at - self.start_at)))
 
     def init(self):
         @event.register(events.SELLER_DELIVERY)

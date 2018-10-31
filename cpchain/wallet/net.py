@@ -391,14 +391,20 @@ class MarketClient:
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token, 'Content-Type': 'application/json'}
         url = utils.build_url(url, {'address': address})
         resp = yield treq.get(url, headers=header, persistent=False)
+        print(resp)
         data_info = yield treq.json_content(resp)
         return data_info
 
     @inlineCallbacks
-    def query_username(self, app):
+    def query_username(self, app=None, public_key=None):
         header = {'Content-Type': 'application/json'}
-        data = {'public_key': self.public_key}
+        if not public_key:
+            public_key = self.public_key
+        logger.debug('Query Username of %s' % public_key)
+        data = {'public_key': public_key}
         resp = yield treq.post(url=self.url + 'account/v1/username/', headers=header, json=data,
                                persistent=False)
         username = yield treq.json_content(resp)
-        app.username = username['username']
+        if app:
+            app.username = username['username']
+        return username

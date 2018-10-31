@@ -96,7 +96,6 @@ class Table(TableWidget):
             }
 
             QTableWidget::item {
-                font-family: SFUIDisplay-Regular;
                 font-size: 14px;
                 padding-left: 12px;
                 border: none;
@@ -107,7 +106,6 @@ class Table(TableWidget):
             }
 
             QHeaderView::section{
-                font-family: SFUIDisplay-Regular;
                 font-size: 14px;
                 padding-left: 15px;
                 background: #f3f3f3;
@@ -173,7 +171,7 @@ class Table(TableWidget):
                     self.setCellWidget(cur_row, i, widget)
                 i += 1
         if row_number > 0:
-            self.setMinimumHeight(180 if row_number > 5 else row_number * 30)
+            self.setMinimumHeight(180)
         else:
             self.setMaximumHeight(32)
         self.row_number = row_number

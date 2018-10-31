@@ -22,6 +22,7 @@ import os.path as osp
 import string
 import logging
 
+from cpchain import account
 from cpchain import root_dir
 
 from cpchain.wallet.utils import formatTimestamp
@@ -65,7 +66,6 @@ class DetailHeader(QWidget):
         self.setObjectName('main')
         name = QLabel(self.name)
         name.setStyleSheet("""
-            font-family:SFUIDisplay-Medium;
             font-size:16px;
             color:#000000;
             text-align:left;
@@ -135,6 +135,7 @@ class ProductDetail(Page):
 
     @page.data
     def data(self):
+        account_ = account.to_ether(account.get_balance(app.addr))
         return {
             "id": self.product_id,
             "image": self.image_,
@@ -147,7 +148,7 @@ class ProductDetail(Page):
             "remain": self.remain,
             "description": self.description_,
             "gas": 1,
-            "account": 15,
+            "account": account_,
             "password": "",
             "storagePath": "",
             "status_text": "Delivered on May 2, 08:09:08"
@@ -205,7 +206,7 @@ class ProductDetail(Page):
                     current = 3
                 else:
                     current = 4
-                sale1 = Sale(image=abs_path('icons/avatar.jpeg'),
+                sale1 = Sale(image=abs_path('icons/avatar_circle.png'),
                              name=order['public_key'],
                              current=current,
                              timestamps=["May 2, 08:09:08", "May 2, 08:09:08", "May 2, 08:09:08", "May 2, 08:09:08"],
@@ -399,7 +400,6 @@ class ProductDetail(Page):
                 background: #fafafa;
             }
             QLabel {
-                font-family:SFUIDisplay-Regular;
             }
             #desc_tap {
                 margin-top: 20px;
@@ -407,7 +407,6 @@ class ProductDetail(Page):
                 padding-bottom: 5px;
             }
             #name {
-                font-family:SFUIDisplay-Semibold;
                 font-size:20px;
                 color:#000000;
                 text-align:left;
@@ -417,7 +416,6 @@ class ProductDetail(Page):
                 text-align: center;
                 border:1px solid #e9eff5;
                 border-radius:3px;
-                font-family:SFUIText-Regular;
                 font-size:10px;
                 color:#3393ed;
                 text-align:center;

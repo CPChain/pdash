@@ -308,7 +308,8 @@ class Handler:
         logger.debug("start to buy product")
         seller_addr = get_address_from_public_key_object(seller)
         desc_hash = Encoder.str_to_base64_byte(msg_hash)
-        rsa_key = RSACipher.load_public_key()
+        # rsa_key = RSACipher.load_public_key()
+        rsa_key = self.broker.wallet.market_client.public_key
         logger.debug("desc hash: %s", desc_hash)
         product = OrderInfo(
             desc_hash=desc_hash,

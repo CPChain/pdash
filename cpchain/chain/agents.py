@@ -30,7 +30,7 @@ class Agent:
         for i in range(num):
             order = self.contract.call().orderRecords(i+1)
             market_hash = Encoder.bytes_to_base64_str(order[0])
-            rsa = Encoder.bytes_to_base64_str(order[1])[:10]+"..."
+            rsa = order[1].hex()
             status = order[10]
             item = data.get(market_hash, [])
             seller_addr = order[3]

@@ -113,7 +113,7 @@ def import_account(key_file, passwd):
         private_key = web3.eth.account.decrypt(encrypted_key, passwd)
         acct = web3.eth.account.privateKeyToAccount(private_key)
     except ValueError as e:
-        logger.exception(e)
+        logger.error(e)
         event.emit(events.PASSWORD_ERROR)
         return None
 
@@ -210,3 +210,6 @@ def to_ether(value):
     if value:
         return value.quantize(Decimal('0.000'))
     return value
+
+def to_wei(value):
+    return web3.toWei(value, 'ether')

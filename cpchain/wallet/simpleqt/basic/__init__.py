@@ -31,11 +31,25 @@ class Line(QFrame):
         self.setLineWidth(self.wid)
         self.setStyleSheet("QFrame{{ border-top: {}px solid {};}}".format(wid, color))
 
+class Label(QLabel):
+
+    def __init__(self, *args, **kwargs):
+        args, kwargs = init(self, *args, **kwargs)
+        new_args = []
+        for i in args:
+            new_args.append(str(i))
+        super().__init__(*new_args, **kwargs)
+        self.signals = Signals()
+        self.signals.change.connect(self.modelChange)
+
+    def modelChange(self, value):
+        self.setText(str(value))
+
 class Builder:
 
-    def __init__(self, widget=QLabel, *args, **kw):
+    def __init__(self, widget=Label, *args, **kw):
         self.widget = widget("", *args, **kw)
-        if widget == QLabel:
+        if widget == Label:
             self.widget.setTextInteractionFlags(Qt.TextSelectableByMouse)
 
     @operate
@@ -97,19 +111,5 @@ def init(self, *args, **kwargs):
         else:
             new_args.append(i)
     return new_args, kwargs
-
-class Label(QLabel):
-
-    def __init__(self, *args, **kwargs):
-        args, kwargs = init(self, *args, **kwargs)
-        new_args = []
-        for i in args:
-            new_args.append(str(i))
-        super().__init__(*new_args, **kwargs)
-        self.signals = Signals()
-        self.signals.change.connect(self.modelChange)
-
-    def modelChange(self, value):
-        self.setText(str(value))
 
 __all__ = [Builder, Button, Input, CheckBox, Label, Text]

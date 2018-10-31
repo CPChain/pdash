@@ -1,6 +1,5 @@
 
 import logging
-import time
 import webbrowser
 from datetime import datetime as dt
 
@@ -125,7 +124,6 @@ class ReceiveDialog(Dialog):
     def style(self):
         return super().style() + """
         QLabel {
-            font-family:SFUIDisplay-Medium;
             font-size:15px;
         }
         QLabel#address_hint {
@@ -186,6 +184,23 @@ class SendDialog(Dialog):
         self.close()
         pwd.show()
 
+    def gen_row(self, left_text, *widgets, **kw):
+        row = QHBoxLayout()
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(0)
+        row.addSpacing(16)
+        left_widget = Builder().text(left_text).name('left').build()
+        width = kw.get('left_width', 130)
+        left_widget.setMinimumWidth(width)
+        left_widget.setMaximumWidth(width)
+        row.addWidget(left_widget)
+        for widget in widgets:
+            if isinstance(widget, QWidget):
+                row.addWidget(widget)
+                row.addSpacing(5)
+        row.addStretch(1)
+        return row
+
     def ui(self, widget):
         layout = QVBoxLayout(widget)
         layout.setSpacing(20)
@@ -207,6 +222,9 @@ class SendDialog(Dialog):
 
         hbox = QHBoxLayout()
         hbox.addStretch(1)
+        cancel = Button.Builder(width=100, height=28).click(
+            lambda _: self.close()).text('Cancel').build()
+        hbox.addWidget(cancel)
         next_ = Button.Builder(width=100, height=28).style(
             'primary').click(self.openPassword).text('Next').build()
         hbox.addWidget(next_)
@@ -219,6 +237,7 @@ class SendDialog(Dialog):
         return super().style() + """
         QLabel#left {
             text-align: right;
+            color: #333333;
         }
         """
 
@@ -256,10 +275,11 @@ class PasswordDialog(Dialog):
         else:
             self.error.emit('wrong passphrase')
             return True
+        value = account.to_wei(self.value)
         transaction = {
             'from': self.payer_account,
             'to': self.payee_account,
-            'value': self.value
+            'value': value
         }
         web3.personal.sendTransaction(transaction, passwd)
         return False
@@ -280,6 +300,23 @@ class PasswordDialog(Dialog):
         else:
             self.loading.hide()
             self.ok.setEnabled(True)
+
+    def gen_row(self, left_text, *widgets, **kw):
+        row = QHBoxLayout()
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(0)
+        row.addSpacing(16)
+        left_widget = Builder().text(left_text).name('left').build()
+        width = kw.get('left_width', 130)
+        left_widget.setMinimumWidth(width)
+        left_widget.setMaximumWidth(width)
+        row.addWidget(left_widget)
+        for widget in widgets:
+            if isinstance(widget, QWidget):
+                row.addWidget(widget)
+                row.addSpacing(5)
+        row.addStretch(1)
+        return row
 
     def ui(self, widget):
         layout = QVBoxLayout(widget)
@@ -327,10 +364,12 @@ class WalletPage(Page):
         logger.debug('load records')
         if self.nodata:
             if len(records) == 0:
+                logger.debug('Show nodata')
                 self.nodata.show()
             else:
+                logger.debug('Hide nodata')
                 self.nodata.hide()
-        logger.debug('render table')
+        logger.debug('render table %s' % len(records))
         self.table_data.value = records
         logger.debug('rendered table')
         logger.debug('loaded')
@@ -405,8 +444,15 @@ class WalletPage(Page):
                 items = []
                 items.append(data.category)
                 items.append(data.payer)
-                wid = QLabel(('+' if data.amount >= 0 else '') +
-                             str(data.amount))
+                try:
+                    amount = str(account.to_ether(abs(data.amount)))
+                    if data.amount > 0:
+                        amount = '+' + amount
+                    elif data.amount < 0:
+                        amount = '-' + amount
+                except Exception as e:
+                    logger.error(e)
+                wid = QLabel(amount)
                 wid.setStyleSheet("QLabel{{color: {};}}".format(
                     '#00a20e' if data.amount >= 0 else '#d0021b'))
                 items.append(wid)

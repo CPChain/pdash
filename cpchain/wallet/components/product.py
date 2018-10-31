@@ -182,14 +182,12 @@ class Product(QWidget):
                 border-radius:5px;
             }
             QLabel {
-                font-family:SFUIDisplay-Regular;
             }
             QLabel#image {
                 border:1px solid #dddddd;
                 border-radius:5px;
             }
             #name {
-                font-family:SFUIDisplay-Semibold;
                 font-size:14px;
                 color:#000000;
                 text-align:left;
@@ -199,7 +197,6 @@ class Product(QWidget):
                 text-align: center;
                 border:1px solid #e9eff5;
                 border-radius:3px;
-                font-family:SFUIText-Regular;
                 font-size:10px;
                 color:#3393ed;
                 text-align:center;
