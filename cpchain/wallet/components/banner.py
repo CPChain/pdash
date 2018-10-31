@@ -56,7 +56,6 @@ class Banner(QWidget):
     def style(self):
         return """
             QLabel {
-                font-family:DINCondensed-Bold;
                 color:#ffffff;
                 text-align:left;
                 padding-left: 32px;

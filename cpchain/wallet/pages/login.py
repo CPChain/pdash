@@ -129,19 +129,16 @@ class MyWindow(QMainWindow):
             }
 
             QLabel#title {
-                font-family:SFUIDisplay-Semibold;
                 font-size:20px;
                 color:#222222;
                 text-align:left;
             }
             QLabel#desc {
-                font-family:SFUIDisplay-Regular;
                 font-size:13px;
                 color:#222222;
                 text-align:left;
             }
             QLabel#next {
-                font-family:SFUIDisplay-Medium;
                 font-size:15px;
                 color:#0073df;
             }
@@ -220,10 +217,10 @@ class UserNameWindow(MyWindow):
             self.username.value = self.username_
 
     def ui(self, layout):
-        title = Builder().text('Create a user name')\
+        title = Builder().text('Create a username')\
                          .name('title')\
                          .build()
-        desc = Builder().text('The user name will be bound to the keystore file and cannot be modified.')\
+        desc = Builder().text('The username will be bound to the keystore file and cannot be modified.')\
                         .name('desc')\
                         .wrap(True)\
                         .height(80)\
@@ -390,8 +387,9 @@ class ImportWindow(MyWindow):
                 self.username.account = account
                 def cb(status):
                     self.imported.emit(status)
-                public_key = ECCipher.serialize_public_key(account.public_key)
-                wallet.market_client.isRegistered(public_key).addCallbacks(cb)
+                if account:
+                    public_key = ECCipher.serialize_public_key(account.public_key)
+                    wallet.market_client.isRegistered(public_key).addCallbacks(cb)
             deferToThread(exec_)
         except Exception as e:
             logger.error(e)

@@ -108,7 +108,6 @@ class Status(QWidget):
         self.setStyleSheet("""
                 #status {{
                     padding: 6px 2px;
-                    font-family: SFUIDisplay-Regular;
                     font-size: 12px;
                     color: {};
                     border: 1px solid #d0d0d0;

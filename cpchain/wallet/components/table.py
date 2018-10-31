@@ -96,7 +96,6 @@ class Table(TableWidget):
             }
 
             QTableWidget::item {
-                font-family: SFUIDisplay-Regular;
                 font-size: 14px;
                 padding-left: 12px;
                 border: none;
@@ -107,7 +106,6 @@ class Table(TableWidget):
             }
 
             QHeaderView::section{
-                font-family: SFUIDisplay-Regular;
                 font-size: 14px;
                 padding-left: 15px;
                 background: #f3f3f3;

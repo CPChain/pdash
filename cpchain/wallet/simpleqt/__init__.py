@@ -119,7 +119,6 @@ class Page(QScrollArea):
                 background: #fafafa;
             }
             QLabel {
-                font-family:SFUIDisplay-Regular;
             }
         """
 

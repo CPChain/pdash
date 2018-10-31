@@ -58,8 +58,6 @@ class Input(QLineEdit):
                 background: #ffffff;
                 min-width: {width}px;
                 max-width: {width}px;
-
-                font-family:SFUIDisplay-Medium;
                 font-size:14px;
                 color:#9b9b9b;
             }}

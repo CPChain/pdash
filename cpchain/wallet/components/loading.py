@@ -30,7 +30,6 @@ class Loading(QFrame):
         layout.addWidget(text)
         self.setStyleSheet("""
         QLabel#Text {{
-            font-family:SFUIDisplay-Semibold;
             font-size: {}px;
             color: #9B9B9B;
             padding-bottom: 3px;

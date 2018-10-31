@@ -69,8 +69,6 @@ class Button(QPushButton):
                 background: #ffffff;
                 min-width: {width}px;
                 max-width: {width}px;
-
-                font-family:SFUIDisplay-Medium;
                 font-size:15px;
                 color:#0073df;
                 text-align:center;

@@ -1,10 +1,12 @@
 import logging
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QHBoxLayout, QLabel, QPushButton, QComboBox,
-                             QVBoxLayout, QWidget, QDialog, QFileDialog)
+from PyQt5.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+
+from twisted.internet.threads import deferToThread
 
 from cpchain.wallet.pages import wallet, app
 from cpchain.proxy.client import pick_proxy
+
 
 from cpchain.wallet.components.dialog import Dialog
 from cpchain.wallet.simpleqt.decorator import page
@@ -102,8 +104,7 @@ class PurchaseDialog(Dialog):
             app.msgbox.warning("Please input password")
             return
         if app.valid_password(self.password.value):
-            app.unlock()
-            get_proxy_address(self.proxy.current)
+            deferToThread(get_proxy_address, self.proxy.current)
             app.event.emit(app.events.CLICK_PAY)
             self.close()
         else:
@@ -116,19 +117,16 @@ class PurchaseDialog(Dialog):
     def style(self):
         return super().style() + """
             QLabel#browse {
-                font-family:SFUIDisplay-Medium;
                 font-size:14px;
                 color:#0073df;
                 text-align:right;
                 margin-left: 440px;
             }
             QLabel#name {
-                font-family:SFUIDisplay-Regular;
                 font-size:14px;
                 color:#000000;
             }
             Label#value {
-                font-family:SFUIDisplay-Regular;
                 font-size:18px;
                 color:#000000;
             }

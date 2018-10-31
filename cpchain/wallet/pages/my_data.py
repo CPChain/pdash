@@ -203,7 +203,7 @@ class MyDataTab(Page):
         if len(self.stream_data.value) == 0:
             # No Data
             self.add(Builder().text('0 Streaming Data!').name('no_data').build())
-
+        vLayout.addSpacing(100)
         vLayout.addStretch(1)
         return vLayout
 
@@ -221,7 +221,6 @@ class MyDataTab(Page):
         }
 
         QLabel#label_hint {
-            font-family:SFUIDisplay-Regular;
             font-size: 24px;
             font-weight: 700;
             margin-top: 20px;

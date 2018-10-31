@@ -125,7 +125,6 @@ class ReceiveDialog(Dialog):
     def style(self):
         return super().style() + """
         QLabel {
-            font-family:SFUIDisplay-Medium;
             font-size:15px;
         }
         QLabel#address_hint {
@@ -256,10 +255,11 @@ class PasswordDialog(Dialog):
         else:
             self.error.emit('wrong passphrase')
             return True
+        value = account.to_wei(self.value)
         transaction = {
             'from': self.payer_account,
             'to': self.payee_account,
-            'value': self.value
+            'value': value
         }
         web3.personal.sendTransaction(transaction, passwd)
         return False

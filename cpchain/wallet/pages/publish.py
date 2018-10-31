@@ -265,7 +265,6 @@ class PublishProduct(Page):
 
             }
             QLabel, QCheckBox, QPushButton {
-                font-family:SFUIDisplay-Regular;
             }
 
             #title {

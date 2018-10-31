@@ -1,52 +1,47 @@
-from PyQt5.QtCore import Qt, QPoint, QObjectCleanupHandler, QThread, pyqtSignal
-from PyQt5 import QtCore
-from PyQt5.QtWidgets import (QApplication, QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLineEdit, QGridLayout, QPushButton,
-                             QMenu, QAction, QCheckBox, QVBoxLayout, QWidget, QDialog, QFrame, QTableWidgetItem,
-                             QAbstractItemView, QMessageBox, QTextEdit, QHeaderView, QTableWidget, QRadioButton,
-                             QFileDialog, QListWidget, QListWidgetItem, QComboBox)
-from PyQt5.QtGui import QCursor, QFont, QFontDatabase
-
-from cpchain.crypto import ECCipher, RSACipher, Encoder
-
-from cpchain.wallet.pages import load_stylesheet, HorizontalLine, wallet, main_wnd, app
-
-from twisted.internet.defer import inlineCallbacks
-from twisted.internet.threads import deferToThread
-from cpchain.wallet import fs
-from cpchain.crypto import AESCipher
-from cpchain.utils import open_file, sizeof_fmt
-from cpchain.proxy.client import pick_proxy
-
 import importlib
+import json
+import logging
 import os
 import os.path as osp
-import string
-import logging
 import re
-import traceback
-import json
+import string
 import sys
-from sqlalchemy import func
+import traceback
+from datetime import datetime as dt
 
-from autobahn.twisted.websocket import WebSocketClientProtocol, \
-    WebSocketClientFactory, connectWS
+from PyQt5 import QtCore
+from PyQt5.QtCore import QObjectCleanupHandler, QPoint, Qt, QThread, pyqtSignal
+from PyQt5.QtGui import QCursor, QFont, QFontDatabase
+from PyQt5.QtWidgets import (QAbstractItemView, QAction, QApplication,
+                             QCheckBox, QComboBox, QDialog, QFileDialog,
+                             QFrame, QGridLayout, QHBoxLayout, QHeaderView,
+                             QLabel, QLineEdit, QListWidget, QListWidgetItem,
+                             QMenu, QMessageBox, QPushButton, QRadioButton,
+                             QScrollArea, QTableWidget, QTableWidgetItem,
+                             QTabWidget, QTextEdit, QVBoxLayout, QWidget)
+from sqlalchemy import func
+from twisted.internet.defer import inlineCallbacks
 from twisted.internet.threads import deferToThread
 from twisted.python import log
 
+from autobahn.twisted.websocket import (WebSocketClientFactory,
+                                        WebSocketClientProtocol, connectWS)
 from cpchain import root_dir
-
-from cpchain.wallet.db import FileInfo
-from cpchain.wallet.pages import main_wnd, HorizontalLine, abs_path, get_icon, Binder, warning, wallet
+from cpchain.crypto import AESCipher, ECCipher, Encoder, RSACipher
+from cpchain.proxy.client import pick_proxy
+from cpchain.utils import open_file, sizeof_fmt
+from cpchain.wallet import fs
 from cpchain.wallet.components.dialog import Dialog
+from cpchain.wallet.components.gif import LoadingGif
+from cpchain.wallet.db import FileInfo
+from cpchain.wallet.pages import (Binder, HorizontalLine, abs_path, app,
+                                  get_icon, load_stylesheet, main_wnd, wallet,
+                                  warning)
+from cpchain.wallet.simpleqt import Signals
+from cpchain.wallet.simpleqt.basic import Builder, Button, Input
 from cpchain.wallet.simpleqt.decorator import component
 from cpchain.wallet.simpleqt.widgets import ComboBox
 from cpchain.wallet.simpleqt.widgets.label import Label
-from cpchain.wallet.components.gif import LoadingGif
-
-from cpchain.wallet.simpleqt.basic import Builder, Input, Button
-from cpchain.wallet.simpleqt import Signals
-
-from datetime import datetime as dt
 
 logger = logging.getLogger(__name__)
 
@@ -95,13 +90,28 @@ class StreamUploadDialog(Dialog):
         hbox.setAlignment(Qt.AlignRight)
         hbox.addWidget(Button.Builder(width=100, height=30).text('Cancel').click(lambda _: self.close()).build())
         hbox.addSpacing(10)
-        hbox.addWidget(Button.Builder(width=100, height=30).text('Next').click(self.toNext).style('primary').build())
+        self.next_btn = Button.Builder(width=100, height=30).text('Next').click(self.toNext).style('primary').build()
+        hbox.addWidget(self.next_btn)
+
+        self.loading = LoadingGif()
+        hbox.addWidget(self.loading)
+        self.loading.hide()
 
         layout.addStretch(1)
         layout.addLayout(hbox)
         return layout
 
+    def show_loading(self, flag):
+        if flag:
+            self.loading.show()
+            self.next_btn.hide()
+        else:
+            self.loading.hide()
+            self.next_btn.show()
+
+
     def uploadedSlot(self, path):
+        self.show_loading(False)
         result = StreamUploadedDialog(oklistener=self.oklistener, data_name=self.data_name.value, stream_id=path['ws_url'])
         result.show()
         self.close()
@@ -126,6 +136,7 @@ class StreamUploadDialog(Dialog):
                 self.uploaded.emit(path)
             except Exception as err:
                 logger.error(err)
+        self.show_loading(True)
         self.upload().addCallbacks(callback)
 
     @component.method
@@ -148,7 +159,7 @@ class StreamUploadDialog(Dialog):
         """
 
 class StreamUploadedDialog(Dialog):
-    
+
     def __init__(self, parent=None, oklistener=None, data_name=None, stream_id=None):
         width = 400
         height = 340
@@ -167,7 +178,7 @@ class StreamUploadedDialog(Dialog):
             "data_name": self.data_name_,
             "stream_id": self.stream_id_
         }
-    
+
     def copyText(self, _):
         clipboard = QApplication.clipboard()
         clipboard.setText(self.stream_id.value)
@@ -183,7 +194,7 @@ class StreamUploadedDialog(Dialog):
         layout.addWidget(Builder().name('field').text('Data name:').build())
         layout.addWidget(Builder(Label).name('value').text(self.data_name.value).wrap(True).model(self.data_name).build())
         layout.addSpacing(10)
-    
+
         layout.addWidget(Builder().name('field').text('Stream ID:').build())
         layout.addWidget(Builder(Label).name('value').text(self.stream_id.value).wrap(True).model(self.stream_id).build())
         layout.addSpacing(10)

@@ -10,6 +10,7 @@ from threading import Thread
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import QBasicTimer, QPoint, Qt
+from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (QAbstractItemView, QAction, QApplication,
                              QCheckBox, QDesktopWidget, QDialog, QFileDialog,
                              QFrame, QGridLayout, QHBoxLayout, QHeaderView,
@@ -32,7 +33,7 @@ from cpchain.utils import reactor
 from cpchain.wallet import events, utils
 # widgets
 from cpchain.wallet.components.sidebar import SideBar
-from cpchain.wallet.pages import app, load_stylesheet, main_wnd, wallet
+from cpchain.wallet.pages import app, load_stylesheet, main_wnd, wallet, abs_path
 from cpchain.wallet.pages.header import Header
 from cpchain.wallet.pages.login import LoginWindow
 from cpchain.wallet.router import Router
@@ -43,8 +44,13 @@ client._HTTP11ClientFactory.noisy = False
 globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
 logger = logging.getLogger(__name__)
 
-
 _Application = QApplication(sys.argv)
+
+# load fonts
+utils.load_fonts(abs_path('fonts'))
+font = QFont('SF UI Display')
+_Application.setFont(font)
+
 
 sidebarMenu = [
     {

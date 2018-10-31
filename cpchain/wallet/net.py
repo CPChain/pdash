@@ -391,6 +391,7 @@ class MarketClient:
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token, 'Content-Type': 'application/json'}
         url = utils.build_url(url, {'address': address})
         resp = yield treq.get(url, headers=header, persistent=False)
+        print(resp)
         data_info = yield treq.json_content(resp)
         return data_info
 
