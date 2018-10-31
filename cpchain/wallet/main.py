@@ -9,7 +9,7 @@ import time
 from threading import Thread
 
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtCore import QBasicTimer, QPoint, Qt
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (QAbstractItemView, QAction, QApplication,
                              QCheckBox, QDesktopWidget, QDialog, QFileDialog,
@@ -24,10 +24,9 @@ from twisted.logger import globalLogBeginner, textFileLogObserver
 from twisted.web import client
 
 import sha3
-from cpchain.account import Account, get_balance
+from cpchain.account import Account
 from cpchain.chain.utils import default_w3 as web3
 from cpchain.crypto import ECCipher
-from cpchain.proxy.client import pick_proxy
 from cpchain.storage_plugin import ipfs, proxy, s3, stream, template
 from cpchain.utils import reactor
 from cpchain.wallet import events, utils
