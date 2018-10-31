@@ -1,45 +1,43 @@
-from PyQt5.QtCore import Qt, QPoint, pyqtSignal
-from PyQt5.QtWidgets import (QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLineEdit, QGridLayout, QPushButton,
-                             QMenu, QAction, QCheckBox, QVBoxLayout, QWidget, QDialog, QFrame, QTableWidgetItem,
-                             QAbstractItemView, QMessageBox, QTextEdit, QHeaderView, QTableWidget, QRadioButton,
-                             QFileDialog, QListWidget, QListWidgetItem)
-from PyQt5.QtGui import QCursor, QFont, QFontDatabase
-
-from cpchain.crypto import ECCipher, RSACipher, Encoder
-
-from cpchain.wallet.pages import load_stylesheet, HorizontalLine, wallet, main_wnd, get_pixm
-
-from twisted.internet.defer import inlineCallbacks
-from twisted.internet.threads import deferToThread
-from cpchain.wallet import fs
-from cpchain.utils import open_file, sizeof_fmt
-from cpchain.proxy.client import pick_proxy
-
 import importlib
+import json
+import logging
 import os
 import os.path as osp
 import string
-import logging
-import json
+
+from PyQt5.QtCore import QPoint, Qt, pyqtSignal
+from PyQt5.QtGui import QCursor, QFont, QFontDatabase
+from PyQt5.QtWidgets import (QAbstractItemView, QAction, QCheckBox, QDialog,
+                             QFileDialog, QFrame, QGridLayout, QHBoxLayout,
+                             QHeaderView, QLabel, QLineEdit, QListWidget,
+                             QListWidgetItem, QMenu, QMessageBox, QPushButton,
+                             QRadioButton, QScrollArea, QTableWidget,
+                             QTableWidgetItem, QTabWidget, QTextEdit,
+                             QVBoxLayout, QWidget)
+from twisted.internet.defer import inlineCallbacks
+from twisted.internet.threads import deferToThread
 
 from cpchain import root_dir
-
-from cpchain.wallet.pages import main_wnd, HorizontalLine, abs_path, get_icon, Binder, app
-
-from cpchain.wallet.components.table import Table
+from cpchain.crypto import ECCipher, Encoder, RSACipher
+from cpchain.proxy.client import pick_proxy
+from cpchain.utils import open_file, sizeof_fmt
+from cpchain.wallet import fs
+from cpchain.wallet.adapters import ProductAdapter
+from cpchain.wallet.components.loading import Loading
 from cpchain.wallet.components.product import Product
 from cpchain.wallet.components.product_list import ProductList
+from cpchain.wallet.components.stream_upload import (StreamUploadDialog,
+                                                     StreamUploadedDialog)
+from cpchain.wallet.components.table import Table
 from cpchain.wallet.components.upload import UploadDialog
-from cpchain.wallet.components.stream_upload import StreamUploadDialog, StreamUploadedDialog
-from cpchain.wallet.components.loading import Loading
+from cpchain.wallet.pages import (Binder, HorizontalLine, abs_path, app,
+                                  get_icon, get_pixm, load_stylesheet,
+                                  main_wnd, wallet)
 from cpchain.wallet.pages.publish import PublishProduct
-
 from cpchain.wallet.simpleqt import Page
+from cpchain.wallet.simpleqt.basic import Builder, Button, Line
 from cpchain.wallet.simpleqt.decorator import page
 from cpchain.wallet.simpleqt.widgets.label import Label
-from cpchain.wallet.simpleqt.basic import Builder, Button, Line
-
-from cpchain.wallet.adapters import ProductAdapter
 
 logger = logging.getLogger(__name__)
 

@@ -1,56 +1,55 @@
-from PyQt5.QtCore import Qt, QPoint, pyqtSignal
-from PyQt5.QtWidgets import (QApplication, QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLineEdit, QGridLayout, QPushButton,
-                             QMenu, QAction, QCheckBox, QVBoxLayout, QWidget, QDialog, QFrame, QTableWidgetItem,
-                             QAbstractItemView, QMessageBox, QTextEdit, QHeaderView, QTableWidget, QRadioButton,
-                             QFileDialog, QListWidget, QListWidgetItem, QComboBox)
-from PyQt5.QtGui import QCursor, QFont, QFontDatabase, QPixmap
-from PyQt5 import QtGui
-
-from cpchain.crypto import ECCipher, RSACipher, Encoder
-
-from cpchain.wallet.pages import load_stylesheet, HorizontalLine, wallet, main_wnd, get_pixm
-
-from twisted.internet.defer import inlineCallbacks
-from twisted.internet.threads import deferToThread
-from cpchain.wallet import fs
-from cpchain.utils import open_file, sizeof_fmt
-from cpchain.proxy.client import pick_proxy
-
 import importlib
+import logging
 import os
 import os.path as osp
 import string
-import logging
+from datetime import datetime as dt
 
-from cpchain import account
-from cpchain import root_dir
+from PyQt5 import QtGui
+from PyQt5.QtCore import QPoint, Qt, pyqtSignal, QUrl
+from PyQt5.QtGui import QCursor, QFont, QFontDatabase, QPixmap
+from PyQt5.QtQuickWidgets import QQuickWidget
+from PyQt5.QtWidgets import (QAbstractItemView, QAction, QApplication,
+                             QCheckBox, QComboBox, QDialog, QFileDialog,
+                             QFrame, QGridLayout, QHBoxLayout, QHeaderView,
+                             QLabel, QLineEdit, QListWidget, QListWidgetItem,
+                             QMenu, QMessageBox, QPushButton, QRadioButton,
+                             QScrollArea, QTableWidget, QTableWidgetItem,
+                             QTabWidget, QTextEdit, QVBoxLayout, QWidget)
+from twisted.internet.defer import inlineCallbacks
+from twisted.internet.threads import deferToThread
 
-from cpchain.wallet.utils import formatTimestamp
-from cpchain.wallet.utils import eth_addr_to_string, get_address_from_public_key_object
-
-from cpchain.wallet.pages import HorizontalLine, abs_path, get_icon, app, Binder
-
-from cpchain.wallet.components.table import Table
-from cpchain.wallet.components.product import Product
-from cpchain.wallet.components.product_list import ProductList
-from cpchain.wallet.components.upload import UploadDialog
-from cpchain.wallet.components.loading import Loading
-from cpchain.wallet.components.sales import Sale
-from cpchain.wallet.components.purchase import PurchaseDialog
-from cpchain.wallet.components.picture import Picture
-from cpchain.wallet.components.order_detail import OrderDetail
+from cpchain import account, root_dir
+from cpchain.crypto import ECCipher, Encoder, RSACipher
+from cpchain.proxy.client import pick_proxy
+from cpchain.utils import open_file, sizeof_fmt, config
+from cpchain.wallet import fs
 from cpchain.wallet.components.gif import LoadingGif
 from cpchain.wallet.components.loading import Loading
-
+from cpchain.wallet.components.order_detail import OrderDetail
+from cpchain.wallet.components.picture import Picture
+from cpchain.wallet.components.product import Product
+from cpchain.wallet.components.product_list import ProductList
+from cpchain.wallet.components.purchase import PurchaseDialog
+from cpchain.wallet.components.sales import Sale
+from cpchain.wallet.components.table import Table
+from cpchain.wallet.components.upload import UploadDialog
+from cpchain.wallet.pages import (Binder, HorizontalLine, abs_path, app,
+                                  get_icon, get_pixm, load_stylesheet,
+                                  main_wnd, qml_path, wallet)
 from cpchain.wallet.simpleqt import Signals
-from cpchain.wallet.simpleqt.page import Page
-from cpchain.wallet.simpleqt.decorator import page
-from cpchain.wallet.simpleqt.widgets.label import Label
-from cpchain.wallet.simpleqt.widgets import Input
-from cpchain.wallet.simpleqt.model import Model
 from cpchain.wallet.simpleqt.basic import Button
+from cpchain.wallet.simpleqt.decorator import page
+from cpchain.wallet.simpleqt.model import Model
+from cpchain.wallet.simpleqt.page import Page
+from cpchain.wallet.simpleqt.component import Component
+from cpchain.wallet.simpleqt.decorator import component
+from cpchain.wallet.simpleqt.widgets import Input
+from cpchain.wallet.simpleqt.widgets.label import Label
+from cpchain.wallet.utils import (eth_addr_to_string, formatTimestamp,
+                                  get_address_from_public_key_object)
 
-from datetime import datetime as dt
+from ..components import ImageObject
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +78,31 @@ class DetailHeader(QWidget):
             border: none;
             border-bottom: 1px solid #ddd;
         """)
+
+
+class ProductQML(Component):
+
+    qml = qml_path('ProductDetail.qml')
+
+    def __init__(self, parent, image=None, img_width=None, img_height=None, market_hash=None, show_status=False):
+        self.obj = ImageObject(None, image, img_width,
+                               img_height, market_hash=market_hash, show_status=show_status)
+        super().__init__(parent)
+
+    @component.create
+    def create(self):
+        pass
+
+    @component.ui
+    def ui(self):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        widget = QQuickWidget(self)
+        widget.setContentsMargins(0, 0, 0, 0)
+        widget.rootContext().setContextProperty('self', self.obj)
+        widget.setSource(QUrl(self.qml))
+        layout.addWidget(widget)
+        return layout
 
 
 class ProductDetail(Page):
@@ -274,7 +298,9 @@ class ProductDetail(Page):
 
         # Image
         imageWid = Picture(self.image.value, 240, 160)
-        Binder.click(imageWid, lambda _: app.event.emit(app.events.DETAIL_UPDATE))
+        image_path = config.market.market_url + '/product/v1/allproducts/images/?path=' + self.image.value
+        imageWid = ProductQML(self, image=image_path, img_width=240, img_height=160)
+        imageWid.obj.signals.click.connect(lambda: app.event.emit(app.events.DETAIL_UPDATE))
         header.addWidget(imageWid)
 
         right = QVBoxLayout()

@@ -1,36 +1,43 @@
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt, QPoint
-from PyQt5.QtWidgets import (QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLineEdit, QGridLayout, QPushButton,
-                             QMenu, QAction, QCheckBox, QVBoxLayout, QWidget, QDialog, QFrame, QTableWidgetItem,
-                             QAbstractItemView, QMessageBox, QTextEdit, QHeaderView, QTableWidget, QRadioButton,
-                             QFileDialog, QListWidget, QListWidgetItem)
-from PyQt5.QtGui import QCursor, QFont, QFontDatabase, QColor
-
-from cpchain.crypto import ECCipher, RSACipher, Encoder
-
-from cpchain.wallet.pages import load_stylesheet, HorizontalLine, wallet, main_wnd, get_pixm
-
-from twisted.internet.defer import inlineCallbacks
-from twisted.internet.threads import deferToThread
-from cpchain.wallet import fs
-from cpchain.utils import open_file, sizeof_fmt
-from cpchain.proxy.client import pick_proxy
-
 import importlib
+import logging
 import os
 import os.path as osp
 import string
-import logging
+from enum import Enum
+
+from PyQt5 import QtCore
+from PyQt5.QtCore import QPoint, Qt
+from PyQt5.QtGui import QColor, QCursor, QFont, QFontDatabase
+from PyQt5.QtWidgets import (QAbstractItemView, QAction, QCheckBox, QDialog,
+                             QFileDialog, QFrame, QGridLayout, QHBoxLayout,
+                             QHeaderView, QLabel, QLineEdit, QListWidget,
+                             QListWidgetItem, QMenu, QMessageBox, QPushButton,
+                             QRadioButton, QScrollArea, QTableWidget,
+                             QTableWidgetItem, QTabWidget, QTextEdit,
+                             QVBoxLayout, QWidget)
+from twisted.internet.defer import inlineCallbacks
+from twisted.internet.threads import deferToThread
 
 from cpchain import config, root_dir
-from cpchain.wallet.pages import main_wnd
+from cpchain.crypto import ECCipher, Encoder, RSACipher
+from cpchain.proxy.client import pick_proxy
+from cpchain.utils import open_file, sizeof_fmt
+from cpchain.wallet import fs
+from cpchain.wallet.pages import (HorizontalLine, get_pixm, load_stylesheet,
+                                  main_wnd, wallet)
 from cpchain.wallet.simpleqt import Signals
 from cpchain.wallet.simpleqt.model import Model
 
 logger = logging.getLogger(__name__)
 
+class ScrollStatus(Enum):
+    TOP = 1
+    BOTTOM = 2
+    MIDDLE = 3
+
 class TableWidget(QTableWidget):
     def __init__(self, parent=None):
+        self.scroll_status = ScrollStatus.MIDDLE
         super().__init__(parent)
         self.parent = parent
         self.init_ui()
@@ -47,9 +54,11 @@ class TableWidget(QTableWidget):
 
         def scrolled(scrollbar, value):
             if value == scrollbar.maximum():
-                self.setFocusPolicy(Qt.NoFocus)
-            if value == scrollbar.minimum():
-                self.setFocusPolicy(Qt.NoFocus)
+                self.scroll_status = ScrollStatus.BOTTOM
+            elif value == scrollbar.minimum():
+                self.scroll_status = ScrollStatus.TOP
+            else:
+                self.scroll_status = ScrollStatus.MIDDLE
 
         scrollBar = self.verticalScrollBar()
         scrollBar.valueChanged.connect(lambda value: scrolled(scrollBar, value))
@@ -132,7 +141,7 @@ class Table(TableWidget):
         i = 0
         for label in headers:
             item = QTableWidgetItem(label)
-            item.setTextAlignment(Qt.AlignLeft)
+            item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
             self.setHorizontalHeaderItem(i, item)
             self.setColumnWidth(i, header['width'][i])
             i += 1
@@ -175,6 +184,10 @@ class Table(TableWidget):
         else:
             self.setMaximumHeight(32)
         self.row_number = row_number
+
+    def enterEvent(self, event):
+        self.scroll_status = ScrollStatus.MIDDLE
+        return super().enterEvent(event)
 
     def wheelEvent(self, event):
         if self.row_number <= 5:

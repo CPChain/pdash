@@ -1,6 +1,5 @@
-from PyQt5.QtWidgets import (QLabel, QHBoxLayout, QWidget, QFrame)
-from PyQt5.QtGui import QPixmap, QMovie
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtWidgets import QLabel, QHBoxLayout, QFrame
+from PyQt5.QtCore import Qt
 from cpchain.wallet.pages import abs_path
 
 from cpchain.wallet.components.gif import LoadingGif

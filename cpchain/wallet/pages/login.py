@@ -16,7 +16,7 @@ from cpchain.wallet.components.agreement import Agreement
 from cpchain.wallet.components.gif import LoadingGif
 from cpchain.wallet.components.loading import Loading
 from cpchain.wallet.components.upload import FileUpload
-from cpchain.wallet.pages import abs_path, app, wallet
+from cpchain.wallet.pages import abs_path, app, wallet, root_dir
 from cpchain.wallet.simpleqt import Model, validate
 from cpchain.wallet.simpleqt.basic import Builder, Button, Input
 
@@ -26,6 +26,8 @@ logger = logging.getLogger(__name__)
 class MyWindow(QMainWindow):
 
     def __init__(self, reactor=None, parent=None):
+        self._isTracking = None
+        self._endPos = 0
         super().__init__()
         self.reactor = reactor
         self.parent = parent
@@ -287,7 +289,9 @@ class CreateWindow(MyWindow):
         self.password = Model("")
         self.repeat = Model("")
         self.check = Model(False)
-        self.PATH = os.getcwd()
+        self.PATH = os.path.expanduser('~/.cpchain/keystore')
+        if not os.path.exists(self.PATH):
+            os.mkdir(self.PATH)
         self.NAME = 'pdash-account-' + dt.now().strftime('%Y-%m-%d %H:%M:%S')
         super().__init__(reactor, parent)
         self.loading = GeneratingWindow(reactor, self)
