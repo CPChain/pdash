@@ -19,6 +19,7 @@ Rectangle {
             source: self.icon;
             width: 102;
             height: 102;
+            fillMode: Image.PreserveAspectFit;
         }
         Rectangle {
             x: 116

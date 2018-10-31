@@ -1,7 +1,29 @@
-import urllib.parse
+import glob
 import time
+import urllib.parse
 from datetime import datetime as dt
+
+import qrcode
 from cpchain.crypto import ECCipher, Encoder
+from cpchain.utils import config, root_dir
+
+
+def get_cpc_free_qrcode():
+    path = root_dir + '/tmp_cpc_free.png'
+    data = config.account.charge_server
+    qr = qrcode.QRCode(
+        version=1,
+        # 4 level: L, M, Q, H
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=1,
+    )
+    qr.add_data(data)
+    qr.make(fit=True)
+
+    img = qr.make_image()
+    img.save(path)
+    return path
 
 
 def build_url(url, values):
@@ -46,3 +68,9 @@ def formatTimestamp(timestamp):
 
 def to_datetime(created):
     return dt.strptime(created, '%Y-%m-%dT%H:%M:%SZ')
+
+def load_fonts(path):
+    # load fonts
+    from PyQt5.QtGui import QGuiApplication, QFontDatabase, QFont
+    for font in glob.glob('{}/*'.format(path)):
+        font_id = QFontDatabase.addApplicationFont(font)

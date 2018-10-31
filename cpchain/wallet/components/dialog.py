@@ -11,14 +11,6 @@ class Dialog(QDialog):
         self.parent = parent
         super().__init__(parent)
         self.setWindowFlags(Qt.FramelessWindowHint)
-        # Dialog Shadow
-        if not self.NO_SHADOW:
-            self.setAttribute(Qt.WA_TranslucentBackground)
-            effect = QGraphicsDropShadowEffect()
-            effect.setBlurRadius(15)
-            effect.setXOffset(0)
-            effect.setYOffset(0)
-            self.setGraphicsEffect(effect)
 
         self.center(width, height)
         self.setContentsMargins(0, 0, 0, 0)
@@ -37,6 +29,7 @@ class Dialog(QDialog):
         header.addWidget(title)
         header.addStretch(1)
         header.addWidget(close_btn)
+        self.close_btn = close_btn
 
         dlgHeader = QFrame()
         dlgHeader.setObjectName('header')
@@ -50,6 +43,15 @@ class Dialog(QDialog):
         layout.addWidget(widget)
         self.setLayout(layout)
         self.setStyleSheet(self.style())
+
+        # Dialog Shadow
+        if not self.NO_SHADOW:
+            self.setAttribute(Qt.WA_TranslucentBackground)
+            effect = QGraphicsDropShadowEffect(self)
+            effect.setBlurRadius(15)
+            effect.setXOffset(0)
+            effect.setYOffset(0)
+            # self.setGraphicsEffect(effect)
 
     def gen_row(self, left_text, *widgets, **kw):
         row = QHBoxLayout()
@@ -109,7 +111,6 @@ class Dialog(QDialog):
                 border:1px solid #cccccc;
                 border-top-left-radius:5px;
                 border-top-right-radius:5px;
-                font-family:SFUIDisplay-Medium;
                 text-align:left;
                 padding-top: 5px;
                 padding-bottom:5px;
@@ -126,7 +127,6 @@ class Dialog(QDialog):
                 color: #ee4040;
             }
             QWidget#main Qlabel{
-                font-family:SFUIDisplay-Regular;
                 font-size:14px;
                 color:#000000;
             }

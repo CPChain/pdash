@@ -47,7 +47,6 @@ class Agreement(QWidget):
     def style(self):
         return """
             QLabel {
-                font-family:SFUIDisplay-Regular;
                 font-size:12px;
                 color:#101010;
                 text-align:left;

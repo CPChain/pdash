@@ -285,10 +285,10 @@ class UploadDialog(Dialog):
         bottom.setSpacing(20)
         bottom.addStretch(1)
 
-        cancel = QPushButton('Cancel')
-        cancel.setObjectName('pinfo_cancel_btn')
-        cancel.clicked.connect(self.closeListener)
-        bottom.addWidget(cancel)
+        self.cancel = QPushButton('Cancel')
+        self.cancel.setObjectName('pinfo_cancel_btn')
+        self.cancel.clicked.connect(lambda _: self.close())
+        bottom.addWidget(self.cancel)
 
         ok = QPushButton('OK')
         ok.setObjectName('pinfo_publish_btn')
@@ -301,9 +301,6 @@ class UploadDialog(Dialog):
         bottom.addWidget(self.loading)
         layout.addLayout(bottom)
         return layout
-
-    def closeListener(self, _):
-        self.close()
 
     def okListener(self, _):
         # Find All needed values
@@ -370,13 +367,11 @@ class UploadDialog(Dialog):
     def style(self):
         return super().style() + """
         QLabel {
-            font-family:SFUIDisplay-Regular;
             font-size:14px;
             color:#000000;
             text-align:left;
         }
         QLineEdit, QComboBox {
-            font-family:SFUIDisplay-Regular;
             font-size:13px;        
         }
         QLineEdit {

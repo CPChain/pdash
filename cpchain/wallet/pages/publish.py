@@ -174,9 +174,9 @@ class PublishProduct(Page):
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignTop)
         layout.setSpacing(21)
-
+        type_label = 'Batch' if self.type_ == 'Batch' else 'Streaming'
         # Title
-        title = QLabel('Publish Batch Data')
+        title = QLabel('Publish {} Data'.format(type_label))
         title.setObjectName('title')
         layout.addWidget(title)
 
@@ -185,7 +185,6 @@ class PublishProduct(Page):
         layout.addLayout(self.gen_row("Name:", Input.Builder(width=536, height=30).model(self.name).build()))
 
         # Type
-        type_label = 'Batch' if self.type_ == 'Batch' else 'Streaming'
         layout.addLayout(self.gen_row('Type:', QLabel('{} data'.format(type_label))))
 
         # Category
@@ -266,7 +265,6 @@ class PublishProduct(Page):
 
             }
             QLabel, QCheckBox, QPushButton {
-                font-family:SFUIDisplay-Regular;
             }
 
             #title {

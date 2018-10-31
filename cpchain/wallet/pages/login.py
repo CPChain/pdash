@@ -129,19 +129,16 @@ class MyWindow(QMainWindow):
             }
 
             QLabel#title {
-                font-family:SFUIDisplay-Semibold;
                 font-size:20px;
                 color:#222222;
                 text-align:left;
             }
             QLabel#desc {
-                font-family:SFUIDisplay-Regular;
                 font-size:13px;
                 color:#222222;
                 text-align:left;
             }
             QLabel#next {
-                font-family:SFUIDisplay-Medium;
                 font-size:15px;
                 color:#0073df;
             }
@@ -220,10 +217,10 @@ class UserNameWindow(MyWindow):
             self.username.value = self.username_
 
     def ui(self, layout):
-        title = Builder().text('Create a user name')\
+        title = Builder().text('Create a username')\
                          .name('title')\
                          .build()
-        desc = Builder().text('The user name will be bound to the keystore file and cannot be modified.')\
+        desc = Builder().text('The username will be bound to the keystore file and cannot be modified.')\
                         .name('desc')\
                         .wrap(True)\
                         .height(80)\
@@ -344,9 +341,9 @@ class CreateWindow(MyWindow):
         self.add(repeat, 10)
         self.add(Agreement(self.check, width=228, height=30), 40)
         self.add(Button.Builder().text('Create')
-                                 .style('primary')
-                                 .click(lambda _: self.create())
-                                 .build())
+                 .style('primary')
+                 .click(lambda _: self.create())
+                 .build())
 
     def style(self):
         return """ """
@@ -390,8 +387,9 @@ class ImportWindow(MyWindow):
                 self.username.account = account
                 def cb(status):
                     self.imported.emit(status)
-                public_key = ECCipher.serialize_public_key(account.public_key)
-                wallet.market_client.isRegistered(public_key).addCallbacks(cb)
+                if account:
+                    public_key = ECCipher.serialize_public_key(account.public_key)
+                    wallet.market_client.isRegistered(public_key).addCallbacks(cb)
             deferToThread(exec_)
         except Exception as e:
             logger.error(e)
@@ -418,18 +416,18 @@ class ImportWindow(MyWindow):
                         .build()
         self.add(title)
         self.add(desc, 25)
+        self.file = FileUpload(width=247,
+                               height=110,
+                               text="Drop keystore file here or",
+                               browse_text="browse…")
+        self.add(self.file, 5)
         password = Input.Builder().placeholder('Password')\
                                   .name('pwd')\
                                   .mode(Input.Password)\
                                   .model(self.password)\
                                   .build()
-        self.add(password, 5)
 
-        self.file = FileUpload(width=247,
-                               height=110,
-                               text="Drop keystore file here or",
-                               browse_text="browse…")
-        self.add(self.file, 20)
+        self.add(password, 20)
         self.import_ = Button.Builder().text('Import')\
             .style('primary')\
             .click(lambda _: self._import())\
@@ -449,7 +447,7 @@ class LoginWindow(MyWindow):
         super().__init__(reactor)
         self.createWnd = CreateWindow(reactor, self)
         self.importWnd = ImportWindow(reactor, self)
-    
+
     def show(self):
         app.event.emit(app.events.LOGIN_OPEN)
         super().show()

@@ -8,10 +8,13 @@ from PyQt5.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.threads import deferToThread
 
+from cpchain.wallet import utils
 from cpchain.wallet.components.gif import LoadingGif
 from cpchain.wallet.components.loading import Loading
 from cpchain.wallet.pages import Binder, app, wallet, HorizontalLine
 from cpchain.wallet.simpleqt import Signals
+from cpchain.wallet.simpleqt.model import Model
+from cpchain.wallet.simpleqt.basic import Builder
 from cpchain.wallet.simpleqt.decorator import component
 
 logger = logging.getLogger(__name__)
@@ -108,7 +111,6 @@ class Status(QWidget):
         self.setStyleSheet("""
                 #status {{
                     padding: 6px 2px;
-                    font-family: SFUIDisplay-Regular;
                     font-size: 12px;
                     color: {};
                     border: 1px solid #d0d0d0;
@@ -175,7 +177,10 @@ class Sale(QWidget):
     def __init__(self, image, name, current, timestamps, order_id=None, mhash=None,
                  is_buyer=False, is_seller=False, order_type='file'):
         self.image = image
-        self.name = name
+        self.pub_key = Model(name)
+        if not name:
+            name = ""
+        self.name = Model('...')
         # currrent status index
         self.current = current
         # action's timestamp, a list
@@ -189,6 +194,13 @@ class Sale(QWidget):
         super().__init__()
         self.init()
         self.ui()
+        deferToThread(self.get_username)
+
+    def get_username(self):
+        key = self.pub_key.value
+        def cb(r):
+            self.name.value = r['username']
+        wallet.market_client.query_username(public_key=key).addCallbacks(cb)
 
     def init(self):
         @app.event.register(app.events.SELLER_DELIVERY)
@@ -260,7 +272,7 @@ class Sale(QWidget):
         image.setPixmap(pix)
         first.addWidget(image)
 
-        name = QLabel(self.name)
+        name = Builder().model(self.name).build()
         first.addWidget(name)
         first.addStretch(1)
         layout.addLayout(first)

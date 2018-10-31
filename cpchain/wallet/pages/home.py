@@ -83,7 +83,7 @@ class Home(Page):
     def create(self):
         # balance
         amount = account.to_ether(account.get_balance(app.addr))
-        self.obj.icon = abs_path('icons/person.png')
+        self.obj.icon = abs_path('icons/avatar_home@2x.png')
         self.obj.username = 'Hi, {}'.format(app.username)
         self.obj.amount = '{}'.format(amount)
         wallet.market_client.products().addCallbacks(self.renderProducts)

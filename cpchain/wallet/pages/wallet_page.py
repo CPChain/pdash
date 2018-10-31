@@ -1,22 +1,23 @@
 
 import logging
-import time
 import webbrowser
 from datetime import datetime as dt
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QLabel, QMessageBox,
-                             QVBoxLayout)
+                             QVBoxLayout, QWidget, QFrame)
 from twisted.internet.threads import deferToThread
 
 from cpchain import account
 from cpchain.chain.utils import default_w3 as web3
 from cpchain.utils import config
+from cpchain.wallet import utils
 from cpchain.wallet.components.dialog import Dialog
 from cpchain.wallet.components.loading import Loading
 from cpchain.wallet.components.table import Table
-from cpchain.wallet.pages import app, wallet
+from cpchain.wallet.components.picture import Picture
+from cpchain.wallet.pages import app, wallet, abs_path
 from cpchain.wallet.simpleqt import Page
 from cpchain.wallet.simpleqt.basic import Builder, Button, Input, Label, Line
 from cpchain.wallet.simpleqt.decorator import component, page
@@ -40,7 +41,7 @@ class Record:
 class ReceiveDialog(Dialog):
 
     def __init__(self, parent=None, oklistener=None, address=None):
-        width = 540
+        width = 580
         height = 230
         title = "Receive Token"
         self.oklistener = oklistener
@@ -58,18 +59,13 @@ class ReceiveDialog(Dialog):
         app.event.emit(UPDATE)
         super().close()
 
-    def show_copyed(self):
-        self.copyed.show()
+    def show_copied(self):
+        self.copied.show()
 
-        def hide():
-            time.sleep(2)
-            self.copyed.hide()
-        deferToThread(hide)
-
-    def copy_address(self):
+    def copy_address(self, _):
         clipboard = QApplication.clipboard()
         clipboard.setText(self.address.value)
-        self.show_copyed()
+        self.show_copied()
 
     def openUrl(self, url):
         try:
@@ -80,18 +76,45 @@ class ReceiveDialog(Dialog):
     def ui(self, widget):
         layout = QVBoxLayout(widget)
         row = QHBoxLayout()
+        row.setSpacing(0)
         row.addWidget(Builder().text('Address:').name('address_hint').build())
-        row.addWidget(Builder().text(
-            self.address.value).name('address').build())
+        row.addWidget(Builder().text(self.address.value).name('address').build())
+        row.addSpacing(10)
+        picture = Picture(abs_path('icons/copy@2x.png'), width=30, height=30)
+        picture.setObjectName('picture')
+        row.addWidget(picture)
+        row.addSpacing(8)
+        row.addWidget(Builder().click(self.copy_address).text('Copy').name('copy').build())
         row.addStretch(1)
         layout.addLayout(row)
         row2 = QHBoxLayout()
+        row2.setSpacing(0)
+        row2.addSpacing(15)
         row2.setAlignment(Qt.AlignBottom)
-        row2.addWidget(Button.Builder(width=50, height=25).click(
-            self.copy_address).text('copy').name('copy').build())
-        self.copyed = Builder().text('copyed!').name('copyed').build()
-        row2.addWidget(self.copyed)
-        self.copyed.hide()
+        qrcode = Picture(utils.get_cpc_free_qrcode(), width=96, height=96)
+        qrcode.setObjectName('qrcode')
+        row2.addWidget(qrcode)
+        row2.addSpacing(10)
+
+        copied_icon = Picture(abs_path('icons/copied@2x.png'), width=30, height=30)
+        copied_layout = QHBoxLayout()
+        copied_layout.setContentsMargins(0, 0, 0, 0)
+        copied_layout.setSpacing(0)
+        copied_layout.addWidget(copied_icon)
+        copied_text = Builder().text('copied!').name('copied').build()
+        copied_layout.addWidget(copied_text)
+        copied_layout.addStretch(1)
+        self.copied = QFrame(self)
+        self.copied.setObjectName('copied_frame')
+        self.copied.setLayout(copied_layout)
+
+        vbox = QVBoxLayout()
+        vbox.setContentsMargins(0, 0, 0, 0)
+        vbox.setAlignment(Qt.AlignTop)
+        vbox.addWidget(self.copied)
+
+        row2.addLayout(vbox)
+        self.copied.hide()
         row2.addStretch(1)
         layout.addLayout(row2)
         layout.addWidget(Builder().text('Get CPC for free').name('get_cpc').click(
@@ -101,16 +124,13 @@ class ReceiveDialog(Dialog):
     def style(self):
         return super().style() + """
         QLabel {
-            font-family:SFUIDisplay-Medium;
             font-size:15px;
         }
         QLabel#address_hint {
-            margin-top: 10px;
             font-weight: 700;
             margin-left: 15px;
         }
         QLabel#address {
-            margin-top: 10px;
             font-weight: 500;
         }
         QLabel#get_cpc {
@@ -119,14 +139,16 @@ class ReceiveDialog(Dialog):
             font-size: 12px;
             margin-left: 15px;
         }
-        QPushButton#copy {
-            margin-top: 10px;
-            margin-left: 15px;
+        QLabel#copy {
+            color: #0073DF;
         }
-        QLabel#copyed {
-            color: #0073df;
+        QLabel#copied {
+            margin-left: 3px;
+            color: #aaa;
             font-size: 12px;
-            margin-top: 8px;
+        }
+        QFrame#copied_frame {
+            /*margin-bottom: 45px;*/
         }
         """
 
@@ -162,6 +184,23 @@ class SendDialog(Dialog):
         self.close()
         pwd.show()
 
+    def gen_row(self, left_text, *widgets, **kw):
+        row = QHBoxLayout()
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(0)
+        row.addSpacing(16)
+        left_widget = Builder().text(left_text).name('left').build()
+        width = kw.get('left_width', 130)
+        left_widget.setMinimumWidth(width)
+        left_widget.setMaximumWidth(width)
+        row.addWidget(left_widget)
+        for widget in widgets:
+            if isinstance(widget, QWidget):
+                row.addWidget(widget)
+                row.addSpacing(5)
+        row.addStretch(1)
+        return row
+
     def ui(self, widget):
         layout = QVBoxLayout(widget)
         layout.setSpacing(20)
@@ -183,6 +222,9 @@ class SendDialog(Dialog):
 
         hbox = QHBoxLayout()
         hbox.addStretch(1)
+        cancel = Button.Builder(width=100, height=28).click(
+            lambda _: self.close()).text('Cancel').build()
+        hbox.addWidget(cancel)
         next_ = Button.Builder(width=100, height=28).style(
             'primary').click(self.openPassword).text('Next').build()
         hbox.addWidget(next_)
@@ -195,6 +237,7 @@ class SendDialog(Dialog):
         return super().style() + """
         QLabel#left {
             text-align: right;
+            color: #333333;
         }
         """
 
@@ -232,10 +275,11 @@ class PasswordDialog(Dialog):
         else:
             self.error.emit('wrong passphrase')
             return True
+        value = account.to_wei(self.value)
         transaction = {
             'from': self.payer_account,
             'to': self.payee_account,
-            'value': self.value
+            'value': value
         }
         web3.personal.sendTransaction(transaction, passwd)
         return False
@@ -256,6 +300,23 @@ class PasswordDialog(Dialog):
         else:
             self.loading.hide()
             self.ok.setEnabled(True)
+
+    def gen_row(self, left_text, *widgets, **kw):
+        row = QHBoxLayout()
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(0)
+        row.addSpacing(16)
+        left_widget = Builder().text(left_text).name('left').build()
+        width = kw.get('left_width', 130)
+        left_widget.setMinimumWidth(width)
+        left_widget.setMaximumWidth(width)
+        row.addWidget(left_widget)
+        for widget in widgets:
+            if isinstance(widget, QWidget):
+                row.addWidget(widget)
+                row.addSpacing(5)
+        row.addStretch(1)
+        return row
 
     def ui(self, widget):
         layout = QVBoxLayout(widget)
@@ -303,10 +364,12 @@ class WalletPage(Page):
         logger.debug('load records')
         if self.nodata:
             if len(records) == 0:
+                logger.debug('Show nodata')
                 self.nodata.show()
             else:
+                logger.debug('Hide nodata')
                 self.nodata.hide()
-        logger.debug('render table')
+        logger.debug('render table %s' % len(records))
         self.table_data.value = records
         logger.debug('rendered table')
         logger.debug('loaded')
@@ -381,8 +444,15 @@ class WalletPage(Page):
                 items = []
                 items.append(data.category)
                 items.append(data.payer)
-                wid = QLabel(('+' if data.amount >= 0 else '') +
-                             str(data.amount))
+                try:
+                    amount = str(account.to_ether(abs(data.amount)))
+                    if data.amount > 0:
+                        amount = '+' + amount
+                    elif data.amount < 0:
+                        amount = '-' + amount
+                except Exception as e:
+                    logger.error(e)
+                wid = QLabel(amount)
                 wid.setStyleSheet("QLabel{{color: {};}}".format(
                     '#00a20e' if data.amount >= 0 else '#d0021b'))
                 items.append(wid)

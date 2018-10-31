@@ -143,7 +143,6 @@ class OrderDetail(QWidget):
             storage = QLabel('Open Storage Path…')
             storage.setStyleSheet("""
                 margin-top: 12px;
-                font-family:SFUIDisplay-Medium;
                 font-size:14px;
                 color:#0073df;
             """)
@@ -186,13 +185,11 @@ class OrderDetail(QWidget):
                 margin-bottom: 20px;
             }
             QLabel#order_item_name {
-                font-family:SFUIDisplay-Regular;
                 font-size:14px;
                 color:#666666;
                 text-align:left;
             }
             Label#order_item_value {
-                font-family:SFUIDisplay-Regular;
                 font-size:14px;
                 color:#000000;
                 text-align:left;
