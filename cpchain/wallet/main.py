@@ -11,14 +11,11 @@ from threading import Thread
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import (QAbstractItemView, QAction, QApplication,
-                             QCheckBox, QDesktopWidget, QDialog, QFileDialog,
-                             QFrame, QGridLayout, QHBoxLayout, QHeaderView,
-                             QLabel, QLineEdit, QListWidget, QListWidgetItem,
-                             QMainWindow, QMenu, QMessageBox, QProgressBar,
+from PyQt5.QtWidgets import (QApplication,
+                             QDesktopWidget, QHBoxLayout, QLineEdit, QListWidget, QListWidgetItem,
+                             QMainWindow, QProgressBar,
                              QPushButton, QRadioButton, QScrollArea,
-                             QTableWidget, QTableWidgetItem, QTabWidget,
-                             QTextEdit, QVBoxLayout, QWidget)
+                             QVBoxLayout, QWidget)
 from twisted.internet.task import LoopingCall
 from twisted.logger import globalLogBeginner, textFileLogObserver
 from twisted.web import client
@@ -97,7 +94,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('CPChain Wallet')
         self.setObjectName("main_window")
         self.setWindowFlags(Qt.FramelessWindowHint)
-        # self.setWindowOpacity(1) 
+        # self.setWindowOpacity(1)
         self.main_tab_index = {}
 
         def set_geometry():
