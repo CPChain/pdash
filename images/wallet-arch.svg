@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="-68 194 866 357" width="866" height="357">
+  <defs>
+    <font-face font-family="Helvetica Neue" font-size="16" panose-1="2 0 8 3 0 0 0 9 0 4" units-per-em="1000" underline-position="-100" underline-thickness="50" slope="0" x-height="517" cap-height="714" ascent="975.0061" descent="-216.99524" font-weight="700">
+      <font-face-src>
+        <font-face-name name="HelveticaNeue-Bold"/>
+      </font-face-src>
+    </font-face>
+    <font-face font-family="Helvetica Neue" font-size="16" panose-1="2 0 5 3 0 0 0 2 0 4" units-per-em="1000" underline-position="-100" underline-thickness="50" slope="0" x-height="517" cap-height="714" ascent="951.9958" descent="-212.99744" font-weight="400">
+      <font-face-src>
+        <font-face-name name="HelveticaNeue"/>
+      </font-face-src>
+    </font-face>
+    <font-face font-family="Helvetica Neue" font-size="18" panose-1="2 0 5 3 0 0 0 2 0 4" units-per-em="1000" underline-position="-100" underline-thickness="50" slope="0" x-height="517" cap-height="714" ascent="951.9958" descent="-212.99744" font-weight="400">
+      <font-face-src>
+        <font-face-name name="HelveticaNeue"/>
+      </font-face-src>
+    </font-face>
+    <font-face font-family="Helvetica Neue" font-size="22" panose-1="2 0 8 3 0 0 0 9 0 4" units-per-em="1000" underline-position="-100" underline-thickness="50" slope="0" x-height="517" cap-height="714" ascent="975.0061" descent="-216.99524" font-weight="700">
+      <font-face-src>
+        <font-face-name name="HelveticaNeue-Bold"/>
+      </font-face-src>
+    </font-face>
+  </defs>
+  <metadata> Produced by OmniGraffle 7.7.1 
+    <dc:date>2018-03-09 22:27:15 +0000</dc:date>
+  </metadata>
+  <g id="wallet-arch" fill-opacity="1" stroke-dasharray="none" stroke="none" stroke-opacity="1" fill="none">
+    <title>wallet-arch</title>
+    <g id="wallet-arch: Layer 1">
+      <title>Layer 1</title>
+      <g id="Graphic_18">
+        <rect x="-66.5" y="271.5" width="862.9519" height="278.5" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_27">
+        <rect x="-66.5" y="195.92188" width="148" height="59" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(-61.5 205.95776)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="700" fill="black" x="26.496" y="16">Blockchain </tspan>
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="700" fill="black" x="36.56" y="35.46411">Network</tspan>
+        </text>
+      </g>
+      <g id="Graphic_15">
+        <rect x="97.5" y="196.51188" width="166.65384" height="59" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(102.5 206.54776)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="700" fill="black" x="46.78292" y="16">External </tspan>
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="700" fill="black" x="48.24692" y="35.46411">Storage</tspan>
+        </text>
+      </g>
+      <g id="Graphic_14">
+        <rect x="-50.45192" y="302.6875" width="131.95192" height="47" fill="white"/>
+        <path d="M -50.45192 302.6875 L 81.5 302.6875 L 81.5 349.6875 L -50.45192 349.6875 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.0,3.0" stroke-width="1"/>
+        <text transform="translate(-45.45192 307.7395)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="21.41596" y="15">Blockchain </tspan>
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="32.23196" y="33.448">Adaptor</tspan>
+        </text>
+      </g>
+      <g id="Graphic_12">
+        <rect x="-50.45192" y="454.53906" width="829.6058" height="32" fill="white"/>
+        <rect x="-50.45192" y="454.53906" width="829.6058" height="32" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(-45.45192 459.78706)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="18" font-weight="400" fill="black" x="400.9739" y="17">UI</tspan>
+        </text>
+      </g>
+      <g id="Graphic_11">
+        <rect x="97.5" y="403" width="176.34616" height="30" fill="white"/>
+        <path d="M 97.5 403 L 273.84616 403 L 273.84616 433 L 97.5 433 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.0,3.0" stroke-width="1"/>
+        <text transform="translate(102.5 408.776)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="8.20508" y="15">File System Interface</tspan>
+        </text>
+      </g>
+      <g id="Graphic_10">
+        <rect x="98.75" y="351.46094" width="112" height="30" fill="white"/>
+        <path d="M 98.75 351.46094 L 210.75 351.46094 L 210.75 381.46094 L 98.75 381.46094 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.0,3.0" stroke-width="1"/>
+        <text transform="translate(103.75 357.23694)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x=".032" y="15">En/Decryption</tspan>
+        </text>
+      </g>
+      <g id="Graphic_9">
+        <rect x="97.5" y="301.3047" width="176.34616" height="30" fill="white"/>
+        <path d="M 97.5 301.3047 L 273.84616 301.3047 L 273.84616 331.3047 L 97.5 331.3047 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.0,3.0" stroke-width="1"/>
+        <text transform="translate(102.5 307.0807)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="24.06108" y="15">Storage Adaptor</tspan>
+        </text>
+      </g>
+      <g id="Graphic_8">
+        <text transform="translate(-45.45192 509.87624)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="22" font-weight="700" fill="black" x="0" y="21">Wallet (Desktop)</tspan>
+        </text>
+      </g>
+      <g id="Graphic_6">
+        <rect x="464.5" y="196.51188" width="158.65384" height="59" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(469.5 215.03982)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="700" fill="black" x="47.36692" y="16">Market</tspan>
+        </text>
+      </g>
+      <g id="Graphic_5">
+        <rect x="464.5" y="351.46094" width="158.65384" height="30" fill="white"/>
+        <path d="M 464.5 351.46094 L 623.15384 351.46094 L 623.15384 381.46094 L 464.5 381.46094 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.0,3.0" stroke-width="1"/>
+        <text transform="translate(469.5 357.23694)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="7.79092" y="15">Market Operations</tspan>
+        </text>
+      </g>
+      <g id="Graphic_3">
+        <rect x="464.5" y="301.3047" width="158.65384" height="30" fill="white"/>
+        <path d="M 464.5 301.3047 L 623.15384 301.3047 L 623.15384 331.3047 L 464.5 331.3047 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.0,3.0" stroke-width="1"/>
+        <text transform="translate(469.5 307.0807)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="18.46292" y="15">Market Adaptor</tspan>
+        </text>
+      </g>
+      <g id="Graphic_19">
+        <rect x="-50.45192" y="386" width="131.95192" height="47" fill="white"/>
+        <path d="M -50.45192 386 L 81.5 386 L 81.5 433 L -50.45192 433 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.0,3.0" stroke-width="1"/>
+        <text transform="translate(-45.45192 391.052)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="21.41596" y="15">Blockchain</tspan>
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="29.71996" y="33.448">Interface</tspan>
+        </text>
+      </g>
+      <g id="Graphic_20">
+        <rect x="289.84616" y="301.3047" width="158.65384" height="30" fill="white"/>
+        <path d="M 289.84616 301.3047 L 448.5 301.3047 L 448.5 331.3047 L 289.84616 331.3047 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.0,3.0" stroke-width="1"/>
+        <text transform="translate(294.84616 307.0807)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="26.17492" y="15">CDN Adaptor</tspan>
+        </text>
+      </g>
+      <g id="Graphic_21">
+        <rect x="464.5" y="403" width="158.65384" height="30" fill="white"/>
+        <path d="M 464.5 403 L 623.15384 403 L 623.15384 433 L 464.5 433 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.0,3.0" stroke-width="1"/>
+        <text transform="translate(469.5 408.776)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="15.95092" y="15">Market Interface</tspan>
+        </text>
+      </g>
+      <g id="Graphic_22">
+        <rect x="639.15384" y="403" width="140" height="30" fill="white"/>
+        <path d="M 639.15384 403 L 779.1538 403 L 779.1538 433 L 639.15384 433 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.0,3.0" stroke-width="1"/>
+        <text transform="translate(644.15384 408.776)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="1.736" y="15">Account Interface</tspan>
+        </text>
+      </g>
+      <g id="Graphic_23">
+        <rect x="221.84616" y="351.46094" width="52" height="30" fill="white"/>
+        <path d="M 221.84616 351.46094 L 273.84616 351.46094 L 273.84616 381.46094 L 221.84616 381.46094 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.0,3.0" stroke-width="1"/>
+        <text transform="translate(226.84616 357.23694)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x=".256" y="15">List…</tspan>
+        </text>
+      </g>
+      <g id="Graphic_24">
+        <rect x="289.84616" y="351.46094" width="158.65384" height="30" fill="white"/>
+        <path d="M 289.84616 351.46094 L 448.5 351.46094 L 448.5 381.46094 L 289.84616 381.46094 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.0,3.0" stroke-width="1"/>
+        <text transform="translate(294.84616 357.23694)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="12.24692" y="15">Proxy Operations</tspan>
+        </text>
+      </g>
+      <g id="Graphic_25">
+        <rect x="289.84616" y="403" width="158.65384" height="30" fill="white"/>
+        <path d="M 289.84616 403 L 448.5 403 L 448.5 433 L 289.84616 433 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.0,3.0" stroke-width="1"/>
+        <text transform="translate(294.84616 408.776)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="23.66292" y="15">CDN Interface</tspan>
+        </text>
+      </g>
+      <g id="Graphic_26">
+        <rect x="639.15384" y="324" width="140" height="47" fill="white"/>
+        <path d="M 639.15384 324 L 779.1538 324 L 779.1538 371 L 639.15384 371 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.0,3.0" stroke-width="1"/>
+        <text transform="translate(644.15384 329.052)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="42.488" y="15">Profile </tspan>
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="18.016" y="33.448">Management</tspan>
+        </text>
+      </g>
+      <g id="Graphic_30">
+        <rect x="281.64904" y="196.51188" width="166.65384" height="59" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(286.64904 206.54776)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="700" fill="black" x="0" y="16">Content Distribution</tspan>
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="700" fill="black" x="0" y="35.46411">Network</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>
