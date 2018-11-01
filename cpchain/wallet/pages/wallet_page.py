@@ -131,7 +131,6 @@ class ReceiveDialog(Dialog):
             margin-left: 15px;
         }
         QLabel#address {
-            font-weight: 500;
         }
         QLabel#get_cpc {
             margin-top: 10px;
@@ -155,7 +154,7 @@ class ReceiveDialog(Dialog):
 
 class SendDialog(Dialog):
 
-    def __init__(self, parent=None, oklistener=None, gas=10, account_amount=None, address=None):
+    def __init__(self, parent=None, oklistener=None, gas=0.001, account_amount=None, address=None):
         width = 480
         height = 380
         title = "Send Token"

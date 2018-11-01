@@ -99,4 +99,5 @@ class Home(Page):
         layout.addWidget(widget)
         pdsWidget = ProductList(self.products)
         layout.addWidget(pdsWidget)
+        layout.addStretch(1)
         return layout

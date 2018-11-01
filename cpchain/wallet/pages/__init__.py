@@ -1,8 +1,10 @@
 from enum import Enum
 import os.path as osp
+import os
 import string
 import copy
 import time
+import json
 import logging
 from cpchain import config, root_dir
 
@@ -100,8 +102,38 @@ class App:
         self.addr = None
         self.login_open = False
         self.status_ = {}
+        self.storage = self.load_params()
         self.init()
-    
+
+    def load_params(self):
+        path = osp.expanduser('~/.cpchain') + '/storage_prams'
+        if osp.exists(path):
+            with open(path, 'r') as file:
+                return json.loads(file.read())
+        return {
+            's3': {
+                'bucket': '',
+                'aws_secret_access_key': '',
+                'aws_access_key_id': '',
+                'key': 'test'
+            },
+            'ipfs': {
+                'host': '',
+                'port': ''
+            },
+            'proxy': {
+                'proxy_id': ''
+            }
+        }
+
+    def save_params(self, type_, dst):
+        self.storage[type_] = dst
+        path = osp.expanduser('~/.cpchain')
+        if not osp.exists(path):
+            os.mkdir(path)
+        with open(path + '/storage_prams', 'w') as file:
+            file.write(json.dumps(self.storage))
+
     def timing(self, logger, hint):
         self.last_at = time.time()
         logger.debug('[%s] %.4fs'%(hint, (self.last_at - self.start_at)))
