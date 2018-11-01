@@ -6,6 +6,8 @@ import os
 import shelve
 import sys
 import time
+import random
+import string
 from threading import Thread
 
 from PyQt5 import QtCore, QtWidgets
@@ -23,9 +25,10 @@ from twisted.web import client
 import sha3
 from cpchain.account import Account
 from cpchain.chain.utils import default_w3 as web3
-from cpchain.crypto import ECCipher
+from cpchain.crypto import ECCipher, RSACipher
 from cpchain.storage_plugin import ipfs, proxy, s3, stream, template
-from cpchain.utils import reactor
+from cpchain.utils import reactor, config
+
 from cpchain.wallet import events, utils
 # widgets
 from cpchain.wallet.components.sidebar import SideBar
@@ -290,6 +293,17 @@ def init_handlers():
     event.register(events.SEARCH, search)
 
 
+def create_rsa_key():
+    path = os.path.expanduser('~/.cpchain')
+    password_file = path + '/password'
+    key_file = path + '/private_key.pem'
+    config.conf['wallet']['rsa_private_key_password_file'] = password_file
+    config.conf['wallet']['rsa_private_key_file'] = key_file
+    # if private.pem
+    if not os.path.exists(password_file) or not os.path.exists(key_file):
+        salt = ''.join(random.sample(string.ascii_letters + string.digits, 20))
+        RSACipher.generate_private_key(password=salt.encode())
+
 if __name__ == '__main__':
     app.start_at = time.time()
     app.unlock = __unlock
@@ -297,11 +311,14 @@ if __name__ == '__main__':
     wallet.app = app
     app.enterPDash = enterPDash
     init_handlers()
-    app.timing(logger, 'init')
+    app.timing(logger, 'Init')
 
     login()
 
     app.timing(logger, 'Login')
+
+    create_rsa_key()
+    app.timing(logger, 'Create rsa_key')
 
     app.msgbox = MessageBox()
     app.msgbox.parent = app.main_wnd

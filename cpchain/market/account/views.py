@@ -1,4 +1,5 @@
 from django.core.cache import cache
+from django.db.models import Q
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -20,7 +21,6 @@ class IsRegistered(APIView):
     def post(self, request):
         data = request.data
         public_key = data.get(PUBLIC_KEY)
-        username = data.get('username')
 
         # if is existing public key, generate verify code and put it into cache
         qs = WalletUser.objects.filter(public_key__exact=public_key)
@@ -43,7 +43,7 @@ class UsernameAPIView(APIView):
 
         # if is existing public key, generate verify code and put it into cache
         print(public_key)
-        qs = WalletUser.objects.filter(public_key=public_key)
+        qs = WalletUser.objects.filter(Q(public_key=public_key)|Q(address__icontains=public_key))
         username = None
         if qs.count() > 0:
             username = qs[0].username

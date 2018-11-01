@@ -400,7 +400,6 @@ class MarketClient:
         header = {'Content-Type': 'application/json'}
         if not public_key:
             public_key = self.public_key
-        logger.debug('Query Username of %s' % public_key)
         data = {'public_key': public_key}
         resp = yield treq.post(url=self.url + 'account/v1/username/', headers=header, json=data,
                                persistent=False)
