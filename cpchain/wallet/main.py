@@ -246,10 +246,8 @@ def login():
             app.timing(logger, 'Data Init')
             if key_path and key_passphrase:
                 if isinstance(key_passphrase, str):
-                    # load private_key
                     account = Account(key_path, key_passphrase.encode())
                 else:
-                    # load private_key
                     account = Account(key_path, key_passphrase)
                 public_key = ECCipher.serialize_public_key(account.public_key)
                 # Init market client account
