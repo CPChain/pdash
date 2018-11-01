@@ -120,7 +120,7 @@ class Dialog(QDialog):
             QLabel#title {
                 font-size:16px;
                 color:#333333;
-                font-weight: 700;
+                font-weight: 500;
             }
             QLabel#close_btn {
                 font-size: 16px;

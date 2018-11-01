@@ -106,7 +106,7 @@ class App:
         self.init()
 
     def load_params(self):
-        path = osp.expanduser('~/.cpchain') + '/storage_prams'
+        path = osp.expanduser('~/.cpchain') + '/storage_params'
         if osp.exists(path):
             with open(path, 'r') as file:
                 return json.loads(file.read())
@@ -131,7 +131,7 @@ class App:
         path = osp.expanduser('~/.cpchain')
         if not osp.exists(path):
             os.mkdir(path)
-        with open(path + '/storage_prams', 'w') as file:
+        with open(path + '/storage_params', 'w') as file:
             file.write(json.dumps(self.storage))
 
     def timing(self, logger, hint):

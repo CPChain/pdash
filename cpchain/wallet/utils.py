@@ -1,6 +1,7 @@
 import glob
 import time
 import urllib.parse
+import os
 from datetime import datetime as dt
 
 import qrcode
@@ -9,7 +10,9 @@ from cpchain.utils import config, root_dir
 
 
 def get_cpc_free_qrcode():
-    path = root_dir + '/tmp_cpc_free.png'
+    path = os.path.expanduser('~/.cpchain') + '/tmp_cpc_free.png'
+    if os.path.exists(path):
+        return path
     data = config.account.charge_server
     qr = qrcode.QRCode(
         version=1,

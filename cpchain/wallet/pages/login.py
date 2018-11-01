@@ -287,7 +287,9 @@ class CreateWindow(MyWindow):
         self.password = Model("")
         self.repeat = Model("")
         self.check = Model(False)
-        self.PATH = os.getcwd()
+        self.PATH = os.path.expanduser('~/.cpchain/keystore')
+        if not os.path.exists(self.PATH):
+            os.mkdir(self.PATH)
         self.NAME = 'pdash-account-' + dt.now().strftime('%Y-%m-%d %H:%M:%S')
         super().__init__(reactor, parent)
         self.loading = GeneratingWindow(reactor, self)

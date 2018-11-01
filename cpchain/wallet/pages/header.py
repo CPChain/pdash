@@ -85,8 +85,8 @@ class Header(QFrame):
     def init_ui(self):
         def create_logos():
             self.logo_label = logo_label = QLabel(self)
-            pixmap = get_pixm('header_logo@2x.png')# 'cpc-logo-single.png')
-            pixmap = pixmap.scaled(280, 64)
+            pixmap = get_pixm('PDASH logo@3x.png')# 'cpc-logo-single.png')
+            pixmap = pixmap.scaled(150, 33)
             logo_label.setPixmap(pixmap)
             # self.word_label = QLabel(self)
             # self.word_label.setText("<b>CPChain</b>")
@@ -173,6 +173,7 @@ class Header(QFrame):
             self.main_layout = main_layout = QHBoxLayout(self)
             main_layout.setSpacing(0)
             main_layout.setContentsMargins(0, 0, 0, 0)
+            main_layout.addSpacing(13)
             main_layout.addWidget(self.logo_label)
             main_layout.addSpacing(5)
             # main_layout.addWidget(self.word_label)

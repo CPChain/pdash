@@ -111,7 +111,7 @@ class MainWindow(QMainWindow):
 
         header = Header(self)
         header.setObjectName('header')
-        header.setMinimumHeight(90)
+        header.setMinimumHeight(100)
         sidebar = SideBar(sidebarMenu)
 
         def set_layout():

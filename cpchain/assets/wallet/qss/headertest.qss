@@ -185,7 +185,7 @@ QPushButton#profile_page_btn {
     min-width: 35px;  
     max-width: 35px; 
     max-height: 35px;
-    border-image: url(${asset_dir}/icons/avatar_circle.png);
+    border-image: url(${asset_dir}/icons/user_2x.png);
     background-color: #006bcf;
 }
 
