@@ -1,7 +1,12 @@
 import glob
+import os
+import shelve
 import time
 import urllib.parse
 from datetime import datetime as dt
+
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes, serialization
 
 import qrcode
 from cpchain.crypto import ECCipher, Encoder

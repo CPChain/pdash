@@ -23,12 +23,13 @@ logger = logging.getLogger(__name__)
 class Status(QWidget):
 
     def __init__(self, name, mode=None, timestamp=None, line=True, h1=100,
-                 h2=20, width=100, status=False):
+                 h2=20, width=100, status=False, order_id=None):
         """
         @param mode: finish, active, todo
         """
         self.signals = Signals()
         self.name = name
+        self.order_id = order_id
         self.mode = mode
         self.timestamp = timestamp
         self.line = line
@@ -44,6 +45,9 @@ class Status(QWidget):
     def init(self):
         @app.event.register(app.events.UPDATE_ORDER_STATUS)
         def callback(event):
+            order_id = event.data['order_id']
+            if order_id != self.order_id:
+                return
             status = event.data['status']
             tmp_map = {
                 'Deliver': ('delivering', 'delivery'),
@@ -177,7 +181,7 @@ class Sale(QWidget):
     def __init__(self, image, name, current, timestamps, order_id=None, mhash=None,
                  is_buyer=False, is_seller=False, order_type='file'):
         self.image = image
-        self.pub_key = Model(name)
+        self.address = name
         if not name:
             name = ""
         self.name = Model('...')
@@ -197,7 +201,7 @@ class Sale(QWidget):
         deferToThread(self.get_username)
 
     def get_username(self):
-        key = self.pub_key.value
+        key = utils.eth_addr_to_string(self.address)
         def cb(r):
             self.name.value = r['username']
         wallet.market_client.query_username(public_key=key).addCallbacks(cb)
@@ -312,7 +316,8 @@ class Sale(QWidget):
                          timestamp=timestamp,
                          h1=h1,
                          h2=h2,
-                         width=width)
+                         width=width,
+                         order_id=self.order_id)
             cb = callbacks.get(item)
             if cb and mode == 'active':
                 Binder.click(tmp, cb)

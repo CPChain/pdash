@@ -207,7 +207,7 @@ class ProductDetail(Page):
                 else:
                     current = 4
                 sale1 = Sale(image=abs_path('icons/avatar_circle.png'),
-                             name=order['public_key'],
+                             name=order['buyer_addr'],
                              current=current,
                              timestamps=["May 2, 08:09:08", "May 2, 08:09:08", "May 2, 08:09:08", "May 2, 08:09:08"],
                              order_id=order["order_id"],
