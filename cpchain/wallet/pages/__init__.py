@@ -1,18 +1,20 @@
-from enum import Enum
+import copy
+import json
+import logging
+import os
 import os.path as osp
 import string
-import copy
 import time
-import logging
-from cpchain import config, root_dir
+from enum import Enum
 
+from PyQt5.QtGui import QCursor, QFont, QFontDatabase, QIcon, QPixmap
 from PyQt5.QtWidgets import QFrame, QMessageBox
-from PyQt5.QtGui import QIcon, QCursor, QPixmap, QFont, QFontDatabase
-
 from twisted.internet import reactor
+
+from cpchain import config, root_dir
 from cpchain.wallet import events
-from cpchain.wallet.wallet import Wallet
 from cpchain.wallet.simpleqt import event
+from cpchain.wallet.wallet import Wallet
 
 wallet = Wallet(reactor)
 
@@ -100,11 +102,41 @@ class App:
         self.addr = None
         self.login_open = False
         self.status_ = {}
+        self.storage = self.load_params()
         self.init()
-    
+
+    def load_params(self):
+        path = osp.expanduser('~/.cpchain') + '/storage_params'
+        if osp.exists(path):
+            with open(path, 'r') as file:
+                return json.loads(file.read())
+        return {
+            's3': {
+                'bucket': '',
+                'aws_secret_access_key': '',
+                'aws_access_key_id': '',
+                'key': 'test'
+            },
+            'ipfs': {
+                'host': '',
+                'port': ''
+            },
+            'proxy': {
+                'proxy_id': ''
+            }
+        }
+
+    def save_params(self, type_, dst):
+        self.storage[type_] = dst
+        path = osp.expanduser('~/.cpchain')
+        if not osp.exists(path):
+            os.mkdir(path)
+        with open(path + '/storage_params', 'w') as file:
+            file.write(json.dumps(self.storage))
+
     def timing(self, logger, hint):
         self.last_at = time.time()
-        logger.debug('[%s] %.4fs'%(hint, (self.last_at - self.start_at)))
+        logger.debug('[%s] %.4fs' % (hint, (self.last_at - self.start_at)))
 
     def init(self):
         @event.register(events.SELLER_DELIVERY)
@@ -147,6 +179,7 @@ class App:
     def update(self, pre_event=None, data=None):
         if self.login_open:
             return
+
         def callback(orders):
             # Trigger Events
             self.products_order = copy.deepcopy(orders)

@@ -206,7 +206,7 @@ class ProductDetail(Page):
                     current = 3
                 else:
                     current = 4
-                sale1 = Sale(image=abs_path('icons/avatar_circle.png'),
+                sale1 = Sale(image=abs_path('icons/user2@2x.png'),
                              name=order['buyer_addr'],
                              current=current,
                              timestamps=["May 2, 08:09:08", "May 2, 08:09:08", "May 2, 08:09:08", "May 2, 08:09:08"],

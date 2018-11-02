@@ -1,39 +1,39 @@
-from PyQt5.QtCore import Qt, QPoint, QObjectCleanupHandler, pyqtSignal
-from PyQt5.QtWidgets import (QScrollArea, QHBoxLayout, QTabWidget, QLabel, QLineEdit, QGridLayout, QPushButton,
-                             QMenu, QAction, QCheckBox, QVBoxLayout, QWidget, QDialog, QFrame, QTableWidgetItem,
-                             QAbstractItemView, QMessageBox, QTextEdit, QHeaderView, QTableWidget, QRadioButton,
-                             QFileDialog, QListWidget, QListWidgetItem, QComboBox)
-from PyQt5.QtGui import QCursor, QFont, QFontDatabase
-
-from cpchain.crypto import ECCipher, RSACipher, Encoder
-
-from cpchain.wallet.pages import load_stylesheet, HorizontalLine, wallet, main_wnd, get_pixm
-
-from twisted.internet.defer import inlineCallbacks, Deferred
-from twisted.internet.threads import deferToThread
-from twisted.internet import reactor
-from cpchain.wallet import fs
-from cpchain.utils import open_file, sizeof_fmt
-from cpchain.proxy.client import pick_proxy
-
 import importlib
+import logging
 import os
 import os.path as osp
-import string
-import logging
 import re
-import traceback
+import string
 import time
+import traceback
+
+from PyQt5.QtCore import QObjectCleanupHandler, QPoint, Qt, pyqtSignal
+from PyQt5.QtGui import QCursor, QFont, QFontDatabase
+from PyQt5.QtWidgets import (QAbstractItemView, QAction, QCheckBox, QComboBox,
+                             QDialog, QFileDialog, QFrame, QGridLayout,
+                             QHBoxLayout, QHeaderView, QLabel, QLineEdit,
+                             QListWidget, QListWidgetItem, QMenu, QMessageBox,
+                             QPushButton, QRadioButton, QScrollArea,
+                             QTableWidget, QTableWidgetItem, QTabWidget,
+                             QTextEdit, QVBoxLayout, QWidget)
+from twisted.internet import reactor
+from twisted.internet.defer import Deferred, inlineCallbacks
+from twisted.internet.threads import deferToThread
 
 from cpchain import root_dir
-
-from cpchain.wallet.pages import main_wnd, HorizontalLine, abs_path, get_icon, Binder, warning, app
+from cpchain.crypto import ECCipher, Encoder, RSACipher
+from cpchain.proxy.client import pick_proxy
+from cpchain.utils import open_file, sizeof_fmt
+from cpchain.wallet import fs
 from cpchain.wallet.components.dialog import Dialog
-from cpchain.wallet.simpleqt.model import ListModel
-from cpchain.wallet.simpleqt.decorator import component
-from cpchain.wallet.simpleqt.widgets import Input, ComboBox
-from cpchain.wallet.simpleqt.widgets.label import Label
 from cpchain.wallet.components.gif import LoadingGif
+from cpchain.wallet.pages import (Binder, HorizontalLine, abs_path, app,
+                                  get_icon, get_pixm, load_stylesheet,
+                                  main_wnd, wallet, warning)
+from cpchain.wallet.simpleqt.decorator import component
+from cpchain.wallet.simpleqt.model import ListModel
+from cpchain.wallet.simpleqt.widgets import ComboBox, Input
+from cpchain.wallet.simpleqt.widgets.label import Label
 
 logger = logging.getLogger(__name__)
 
@@ -192,7 +192,7 @@ class UploadDialog(Dialog):
         storage_module = importlib.import_module(
             "cpchain.storage_plugin." + storage['type']
         )
-        self.dst = storage_module.Storage().user_input_param()
+        self.dst = app.storage[storage['type']]
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -257,7 +257,8 @@ class UploadDialog(Dialog):
     def ui(self, widget):
         layout = QVBoxLayout(widget)
         layout.setSpacing(1)
-        layout.addWidget(self.gen_row('Data Name:', Input(self.data_name)))
+        self.input_name = Input(self.data_name)
+        layout.addWidget(self.gen_row('Data Name:', self.input_name))
 
         # Storage
         storage = QComboBox()
@@ -270,7 +271,7 @@ class UploadDialog(Dialog):
         self.now_wid = self.build_option_widget(self.storage[self.storage_index])
         layout.addWidget(self.now_wid)
 
-        # File Drop or Open
+        # # File Drop or Open
         fileSlt = FileUpload()
         fileSlt.setMinimumHeight(120)
         fileSlt.setMaximumHeight(120)
@@ -302,7 +303,16 @@ class UploadDialog(Dialog):
         layout.addLayout(bottom)
         return layout
 
+    def show_loading(self, flag):
+        if flag:
+            self.loading.show()
+            self.ok.hide()
+        else:
+            self.loading.hide()
+            self.ok.show()
+
     def okListener(self, _):
+        self.show_loading(True)
         # Find All needed values
         storage = self.storage[self.storage_index]
         dst = dict()
@@ -315,25 +325,27 @@ class UploadDialog(Dialog):
                 dst[option['id']] = child.text()
                 if not dst[option['id']]:
                     warning(self)
+                    self.show_loading(False)
                     return
+        # save storage params
+        deferToThread(app.save_params, storage['type'], dst)
         # Data Name
-        dataname = self.data_name.value
+        dataname = self.data_name.value or self.input_name.text()
         if not dataname:
             warning(self, "Please input data name first")
+            self.show_loading(False)
             return
         # File
         file = self.fileSlt.file
         if not file:
             warning(self, "Please drag a file or open a file first")
+            self.show_loading(False)
             return
-        self.loading.show()
-        self.ok.hide()
         fs.upload_file(file, storage['type'], dst, dataname).addCallbacks(self.handle_ok_callback)
 
 
     def handle_upload_resp(self, status):
-        self.loading.hide()
-        self.ok.show()
+        self.show_loading(False)
         try:
             if status == 1:
                 app.msgbox.info("Uploaded successfuly")

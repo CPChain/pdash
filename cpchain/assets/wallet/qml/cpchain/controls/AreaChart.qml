@@ -5,6 +5,7 @@ import QtQuick.Controls 2.0
 import QtCharts 2.2
 
 ChartView {
+    property var is_first: true
     property real limit: 10
     property string x_format: "%.0f&deg;C"
     property string y_format: "%.0f"
@@ -12,36 +13,32 @@ ChartView {
     property string series_name: "Series"
     property var chart_opacity: 1
 
-    property real min_: 0
-    property real max_: 0
+    property var min_: new Date()
+    // property var max_: new Date(2018, 11, 1, 18, 07, 0)
+    property var max_ : new Date()
     property real val_min: 0
     property real val_max: 30
     property real x_tick_count: 1
 
-
     function append(x, y) {
+        if(is_first) {
+            is_first = false
+            min_ = x
+        }
         if(data1.count >= limit) {
             data1.remove(0)
-            // val_min = data1.at(0).y
+            min_ = new Date(data1.at(0).x)
             for(var i = 1; i < data1.count; i++) {
                 var item = data1.at(i)
-                // val_min = Math.min(val_min, item.y)
                 val_max = Math.max(val_max, item.y + 1)
             }
-            min_ += 1
         } else {
             x_tick_count = data1.count
         }
-        // if(val_min == -100000) {
-        //     val_min = y
-        // } else {
-        //     val_min = Math.min(val_min, y)
-        // }
         val_max = Math.max(val_max, y + 1)
-        if(x > 0) {
-            max_ += 1
-        }
-        data1.append(x, y)
+        max_ = x
+        console.log(x.getTime())
+        data1.append(x.getTime(), y)
     }
 
 
@@ -51,25 +48,19 @@ ChartView {
     legend.alignment: Qt.AlignBottom
     antialiasing: true
 
-    ValueAxis {
-        id: valueAxis
-        min: min_
-        max: max_
-        tickCount: x_tick_count
-        labelFormat: y_format
-    }
-
-    ValueAxis {
-        id: temperature1
-        min: val_min
-        max: val_max
-        labelFormat: x_format
-    }
-
     AreaSeries {
         name: series_name
-        axisX: valueAxis
-        axisY: temperature1
+        axisX: DateTimeAxis {
+            format: "mm:ss"
+            tickCount: 5
+            min: min_
+            max: max_
+        }
+        axisY: ValueAxis {
+            min: val_min
+            max: val_max
+            labelFormat: x_format
+        }
         opacity: chart_opacity
         color: chart_color
         

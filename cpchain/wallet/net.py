@@ -45,7 +45,7 @@ class MarketClient:
     @staticmethod
     def str_to_timestamp(s):
         return s
-    
+
     @inlineCallbacks
     def isRegistered(self, public_key):
         header = {'Content-Type': 'application/json'}

@@ -13,14 +13,6 @@ Rectangle {
     width: 650
     height: 480
 
-    property real min_: 0
-    property real max_: 0
-
-    property real val_min: 0
-    property real val_max: 0
-    property real x_tick_count: 1
-    
-    property int x_pos: 0
     Connections {
         target: self
         onTickComing: {
@@ -30,9 +22,12 @@ Rectangle {
             var temperature = parseInt(tick.match(/temperature:(\d+)/)[1])
             // Find Huminity
             var huminity = parseInt(tick.match(/huminity:(\d+)/)[1])
-            chart.append(x_pos, temperature)
-            chart2.append(x_pos, huminity)
-            x_pos += 1
+            // Timestamp
+            var splits = tick.split(' ')
+            var timestamp = Date.parse(splits[0] + ' ' + splits[1])
+            var x = new Date(timestamp)
+            chart.append(x, temperature)
+            chart2.append(x, huminity)
         }
     }
     
@@ -89,49 +84,30 @@ Rectangle {
                     id: vtab
                     width: preview.width
                     height: preview.height - bar.height
-                    
-                        ColumnLayout {
-                            id: test
-                            CPC.AreaChart {
-                                id: chart
-                                limit: 20
-                                width: 600
-                                height: 380
-                                chart_color: "#00ffff"
-                                chart_opacity: 0.6
-                                title: "Temperature"
-                                series_name: "Temperature"
-                                val_min: self.val_min1
-                                val_max: self.val_max1
-                            }
-                            CPC.AreaChart {
-                                id: chart2
-                                limit: 20
-                                width: 600
-                                height: 380
-                                chart_color: "#8a2be2"
-                                chart_opacity: 0.6
-                                title: "Huminity"
-                                series_name: "Huminity"
-                                x_format: "%.0f%"
-                                val_min: self.val_min2
-                                val_max: self.val_max2
-                            }
-
-                            property int year: 0
-                            function testAdd() {
-                                var val = Math.round(Math.random() * 20)
-                                chart.append(year, val)
-                                chart2.append(year, val)
-                                year += 1
-                            }
-
-                            // Timer {
-                            //     interval: 1000; running: true; repeat: true
-                            //     // onTriggered: test.testAdd()
-                            // }
+                    ColumnLayout {
+                        id: test
+                        CPC.AreaChart {
+                            id: chart
+                            limit: 10
+                            width: 600
+                            height: 380
+                            chart_color: "#00ffff"
+                            chart_opacity: 0.6
+                            title: "Temperature"
+                            series_name: "Temperature"
                         }
-                    // }
+                        CPC.AreaChart {
+                            id: chart2
+                            limit: 10
+                            width: 600
+                            height: 380
+                            chart_color: "#8a2be2"
+                            chart_opacity: 0.6
+                            title: "Huminity"
+                            series_name: "Huminity"
+                            x_format: "%.0f%"
+                        }
+                    }
                 }
                 Item {
                     id: rawTab
@@ -142,22 +118,8 @@ Rectangle {
                         width: preview.width
                         height: preview.height - bar.height
                     }
-                    property int num: 0
-                    function testAdd() {
-                        var val = Math.round(Math.random() * 20)
-                        raw.tick("data item - " + num)
-                        num += 1
-                    }
-
-                    // Timer {
-                    //     interval: 1000;
-                    //     running: true;
-                    //     repeat: true
-                    //     // onTriggered: rawTab.testAdd()
-                    // }
                 }
             }
         }
-
     }
 }

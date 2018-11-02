@@ -3,21 +3,20 @@
 import json
 import logging
 import os
+import random
 import shelve
+import string
 import sys
 import time
-import random
-import string
 from threading import Thread
+
+sys.path.append('.')
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import (QApplication,
-                             QDesktopWidget, QHBoxLayout, QLineEdit, QListWidget, QListWidgetItem,
-                             QMainWindow, QProgressBar,
-                             QPushButton, QRadioButton, QScrollArea,
-                             QVBoxLayout, QWidget)
+from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QHBoxLayout,
+                             QMainWindow, QVBoxLayout, QWidget)
 from twisted.internet.task import LoopingCall
 from twisted.logger import globalLogBeginner, textFileLogObserver
 from twisted.web import client
@@ -27,12 +26,11 @@ from cpchain.account import Account
 from cpchain.chain.utils import default_w3 as web3
 from cpchain.crypto import ECCipher, RSACipher
 from cpchain.storage_plugin import ipfs, proxy, s3, stream, template
-from cpchain.utils import reactor, config
-
+from cpchain.utils import config, reactor
 from cpchain.wallet import events, utils
 # widgets
 from cpchain.wallet.components.sidebar import SideBar
-from cpchain.wallet.pages import app, load_stylesheet, main_wnd, wallet, abs_path
+from cpchain.wallet.pages import (abs_path, app, load_stylesheet, wallet)
 from cpchain.wallet.pages.header import Header
 from cpchain.wallet.pages.login import LoginWindow
 from cpchain.wallet.router import Router
@@ -77,6 +75,7 @@ sidebarMenu = [
     }
 ]
 
+
 class MainWindow(QMainWindow):
 
     def search_handler(self, val):
@@ -91,7 +90,6 @@ class MainWindow(QMainWindow):
         self.search_signal.connect(self.search_handler)
         self.init_ui()
         self.content_tabs = None
-
 
     def init_ui(self):
         self.setWindowTitle('CPChain Wallet')
@@ -111,7 +109,7 @@ class MainWindow(QMainWindow):
 
         header = Header(self)
         header.setObjectName('header')
-        header.setMinimumHeight(90)
+        header.setMinimumHeight(100)
         sidebar = SideBar(sidebarMenu)
 
         def set_layout():
@@ -148,13 +146,13 @@ class MainWindow(QMainWindow):
 
         self.show()
 
-
     def closeEvent(self, _):
         self.reactor.stop()
         os._exit(0)
 
+
 def _handle_keyboard_interrupt():
-    def sigint_handler(*args):
+    def sigint_handler(*_):
         # _Application.quit()
         pass
 
@@ -168,11 +166,13 @@ def _handle_keyboard_interrupt():
     timer.start(300)
     timer.timeout.connect(lambda: None)
 
+
 def __unlock():
     try:
         web3.personal.unlockAccount(app.addr, app.pwd)
     except Exception as e:
         logger.exception(e)
+
 
 def valid_password(password):
     path = os.path.expanduser('~/.cpchain')
@@ -214,11 +214,14 @@ def __login(account=None):
     else:
         app.pwd = account.key_passphrase.decode()
     wallet.market_client.account = account
-    wallet.market_client.public_key = ECCipher.serialize_public_key(wallet.market_client.account.public_key)
-    wallet.market_client.login(app.username).addCallbacks(lambda _: event.emit(events.LOGIN_COMPLETED))
+    wallet.market_client.public_key = ECCipher.serialize_public_key(
+        wallet.market_client.account.public_key)
+    wallet.market_client.login(app.username).addCallbacks(
+        lambda _: event.emit(events.LOGIN_COMPLETED))
     wallet.init()
     initialize_system()
     app.router.redirectTo('market_page')
+
 
 def enterPDash(account=None):
     if app.main_wnd:
@@ -274,6 +277,7 @@ def login():
     wnd.show()
     wallet.set_main_wnd(wnd)
 
+
 def save_login_info():
     path = os.path.expanduser('~/.cpchain')
     if not os.path.exists(path):
@@ -303,6 +307,7 @@ def create_rsa_key():
     if not os.path.exists(password_file) or not os.path.exists(key_file):
         salt = ''.join(random.sample(string.ascii_letters + string.digits, 20))
         RSACipher.generate_private_key(password=salt.encode())
+
 
 if __name__ == '__main__':
     app.start_at = time.time()

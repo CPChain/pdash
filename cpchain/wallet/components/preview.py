@@ -8,6 +8,7 @@ import re
 import string
 import sys
 import time
+import random
 import traceback
 from datetime import datetime as dt
 
@@ -146,6 +147,8 @@ class PreviewDialog(Dialog):
 
         deferToThread(self.run_client)
 
+        # deferToThread(self.test)
+
     def run_client(self):
         self.factory = WebSocketClientFactory(self.ws_url + '?action=subscribe')
         self.factory.protocol = MyClientProtocol
@@ -154,6 +157,13 @@ class PreviewDialog(Dialog):
             self.stream.append(record)
         self.factory.handler = handler
         connectWS(self.factory)
+
+    def test(self):
+        while True:
+            record = f"{dt.now().strftime('%Y-%m-%d %H:%M:%S')} temperature:{random.randint(0, 50)} huminity:{random.randint(0, 50)}"
+            self.stream.append(record)
+            time.sleep(3)
+
 
     def close(self):
         super().close()

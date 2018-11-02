@@ -63,7 +63,6 @@ def _install_reactor():
             loop = asyncio.get_event_loop()
             asyncioreactor.install(eventloop=loop)
         elif config.core.mode == "wallet":
-            # TODO, add qmuash support
             import asyncio
             from quamash import QEventLoop, QThreadExecutor
             loop = asyncio.new_event_loop()
@@ -99,7 +98,7 @@ def join_with_rc(path):
 
 
 def sizeof_fmt(num, suffix='B'):
-    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+    for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
         if num is None:
             return 0
         if abs(num) < 1024.0:

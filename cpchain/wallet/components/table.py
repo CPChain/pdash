@@ -132,7 +132,7 @@ class Table(TableWidget):
         i = 0
         for label in headers:
             item = QTableWidgetItem(label)
-            item.setTextAlignment(Qt.AlignLeft)
+            item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
             self.setHorizontalHeaderItem(i, item)
             self.setColumnWidth(i, header['width'][i])
             i += 1
