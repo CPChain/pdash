@@ -165,13 +165,13 @@ class MyDataTab(Page):
         self.buildStreamTable = buildStreamTable
 
         self.addH(Button.Builder(width=150, height=30)
-                        .style('primary').name('btn')
-                        .text('Upload Batch Data')
-                        .click(self.onClickUpload).build(), 6)
+                  .style('primary').name('btn')
+                  .text('Upload Batch Data')
+                  .click(self.onClickUpload).build(), 6)
         self.addH(Button.Builder(width=180, height=30)
-                        .name('btn')
-                        .text('Upload Streaming Data')
-                        .click(self.onClickStreamUpload).build())
+                  .name('btn')
+                  .text('Upload Streaming Data')
+                  .click(self.onClickStreamUpload).build())
         self.add(space=10)
 
         # Line

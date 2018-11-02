@@ -192,7 +192,6 @@ class UploadDialog(Dialog):
         storage_module = importlib.import_module(
             "cpchain.storage_plugin." + storage['type']
         )
-        # self.dst = storage_module.Storage().user_input_param()
         self.dst = app.storage[storage['type']]
 
         layout = QVBoxLayout()
@@ -272,7 +271,7 @@ class UploadDialog(Dialog):
         self.now_wid = self.build_option_widget(self.storage[self.storage_index])
         layout.addWidget(self.now_wid)
 
-        # File Drop or Open
+        # # File Drop or Open
         fileSlt = FileUpload()
         fileSlt.setMinimumHeight(120)
         fileSlt.setMaximumHeight(120)

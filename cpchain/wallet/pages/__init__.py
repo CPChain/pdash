@@ -1,20 +1,20 @@
-from enum import Enum
-import os.path as osp
-import os
-import string
 import copy
-import time
 import json
 import logging
-from cpchain import config, root_dir
+import os
+import os.path as osp
+import string
+import time
+from enum import Enum
 
+from PyQt5.QtGui import QCursor, QFont, QFontDatabase, QIcon, QPixmap
 from PyQt5.QtWidgets import QFrame, QMessageBox
-from PyQt5.QtGui import QIcon, QCursor, QPixmap, QFont, QFontDatabase
-
 from twisted.internet import reactor
+
+from cpchain import config, root_dir
 from cpchain.wallet import events
-from cpchain.wallet.wallet import Wallet
 from cpchain.wallet.simpleqt import event
+from cpchain.wallet.wallet import Wallet
 
 wallet = Wallet(reactor)
 
@@ -136,7 +136,7 @@ class App:
 
     def timing(self, logger, hint):
         self.last_at = time.time()
-        logger.debug('[%s] %.4fs'%(hint, (self.last_at - self.start_at)))
+        logger.debug('[%s] %.4fs' % (hint, (self.last_at - self.start_at)))
 
     def init(self):
         @event.register(events.SELLER_DELIVERY)
@@ -179,6 +179,7 @@ class App:
     def update(self, pre_event=None, data=None):
         if self.login_open:
             return
+
         def callback(orders):
             # Trigger Events
             self.products_order = copy.deepcopy(orders)

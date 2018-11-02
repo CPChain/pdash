@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QDialog, QWidget, QHBoxLayout, QFrame, QGraphicsDropShadowEffect
+from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QDialog, QWidget, QHBoxLayout, QFrame, QGraphicsDropShadowEffect, QStackedLayout
 from PyQt5.QtCore import Qt, QEvent
 
 from cpchain.wallet.simpleqt.basic import Builder
@@ -9,11 +9,13 @@ class Dialog(QDialog):
 
     def __init__(self, parent, title="Title", width=500, height=180):
         self.parent = parent
+        self.dragPosition = None
         super().__init__(parent)
         self.setWindowFlags(Qt.FramelessWindowHint)
 
-        self.center(width, height)
-        self.setContentsMargins(0, 0, 0, 0)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+
+        self.center(width + 10, height + 10)
         self.setAcceptDrops(True)
         layout = QVBoxLayout()
         layout.setSpacing(0)
@@ -33,25 +35,44 @@ class Dialog(QDialog):
 
         dlgHeader = QFrame()
         dlgHeader.setObjectName('header')
+        dlgHeader.setMaximumWidth(width)
         dlgHeader.setLayout(header)
         layout.addWidget(dlgHeader)
         widget = QWidget(self)
         self.main = self.ui(widget)
         widget.setObjectName('main')
         widget.setLayout(self.main)
-
+        widget.setMaximumWidth(width)
         layout.addWidget(widget)
-        self.setLayout(layout)
-        self.setStyleSheet(self.style())
 
-        # Dialog Shadow
-        if not self.NO_SHADOW:
-            self.setAttribute(Qt.WA_TranslucentBackground)
-            effect = QGraphicsDropShadowEffect(self)
-            effect.setBlurRadius(15)
-            effect.setXOffset(0)
-            effect.setYOffset(0)
-            # self.setGraphicsEffect(effect)
+        _main = QWidget()
+        _main.setContentsMargins(0, 0, 0, 10)
+        _main.setLayout(layout)
+        _main.setStyleSheet(self.style())
+        _main.setWindowOpacity(0.5)
+
+        _main_layout = QStackedLayout()
+        _main_layout.setContentsMargins(20, 20, 20, 20)
+        _main_layout.setAlignment(Qt.AlignCenter)
+        _main_layout.setStackingMode(QStackedLayout.StackAll)
+
+        _backgound = QFrame()
+        _backgound.setMinimumWidth(width)
+        _backgound.setMinimumHeight(height)
+        _backgound.setMaximumWidth(width)
+        _backgound.setMaximumHeight(height)
+        _backgound.setStyleSheet("background: #fafafa; border-radius:5px;")
+
+        _main_layout.addWidget(_backgound)
+        _main_layout.addWidget(_main)
+
+        self.setLayout(_main_layout)
+
+        self.effect = QGraphicsDropShadowEffect(_backgound)
+        self.effect.setOffset(0, 0)
+        self.effect.setBlurRadius(30)
+        # self.effect.setEnabled(False)
+        _backgound.setGraphicsEffect(self.effect)
 
     def gen_row(self, left_text, *widgets, **kw):
         row = QHBoxLayout()
@@ -95,7 +116,8 @@ class Dialog(QDialog):
     def style(self):
         return """
             QDialog {
-                background: #fafafa;
+                /*background: #fafafa;*/
+                background: blue;
                 border:1px solid #cccccc;
                 border-radius:5px;
             }

@@ -26,6 +26,9 @@ logger = logging.getLogger(__name__)
 class MyWindow(QMainWindow):
 
     def __init__(self, reactor=None, parent=None):
+        self._endPos = None
+        self._isTracking = None
+        self._startPos = None
         super().__init__()
         self.reactor = reactor
         self.parent = parent
@@ -234,9 +237,9 @@ class UserNameWindow(MyWindow):
         self.username_elem = username
         self.add(username, 10)
         self.add(Button.Builder().text('Enter PDash')
-                                 .style('primary')
-                                 .click(lambda _: self.enter())
-                                 .build())
+                 .style('primary')
+                 .click(lambda _: self.enter())
+                 .build())
 
     def style(self):
         return ""
@@ -309,7 +312,7 @@ class CreateWindow(MyWindow):
             return
         if not validate(self, lambda x, y: x == y, "The passwords do not match", self.password.value, self.repeat.value):
             return
-        if not validate(self, lambda x: x == True, "You haven't agreed to the agreement", self.check.value):
+        if not validate(self, lambda x: x is True, "You haven't agreed to the agreement", self.check.value):
             return
 
         def _create():

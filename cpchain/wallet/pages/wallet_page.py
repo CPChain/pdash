@@ -449,7 +449,7 @@ class WalletPage(Page):
                         amount = '+' + amount
                     elif data.amount < 0:
                         amount = '-' + amount
-                except Exception as e:
+                except ValueError as e:
                     logger.error(e)
                 wid = QLabel(amount)
                 wid.setStyleSheet("QLabel{{color: {};}}".format(

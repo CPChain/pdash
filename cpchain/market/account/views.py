@@ -73,7 +73,7 @@ class UserLoginAPIView(APIView):
             WalletUser(address=address,
                        public_key=public_key,
                        username=username
-                       ).save()
+                      ).save()
             return self.generate_verify_code(public_key, is_new=True)
         except:
             logger.exception("login error with public_key:%s" % public_key)
@@ -134,7 +134,7 @@ class LogoutAPIView(APIView):
         public_key = get_header(request)
         token = get_header(request, HTTP_MARKET_TOKEN)
 
-        logger.info("public_key:%s,code:%s" % (public_key,token))
+        logger.info("public_key:%s,code:%s" % (public_key, token))
         if public_key is None or token is None:
             logger.info("public_key is None or token is None. public_key:%s" % public_key)
             return create_invalid_response()
@@ -168,7 +168,7 @@ class UpdateProfileAPIView(APIView):
         serializer = UserRegisterSerializer(user, data=data)
 
         if serializer.is_valid(raise_exception=True):
-            serializer.update(user,data)
+            serializer.update(user, data)
             return create_success_response()
 
 
