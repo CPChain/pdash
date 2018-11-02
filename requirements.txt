@@ -85,6 +85,7 @@ python-debianbts==2.6.1
 pytoml==0.1.2
 pytz==2018.7
 pyxdg==0.25
+qrcode==6.0
 qt5reactor==0.5
 Quamash==0.6.1
 reportbug==7.1.7
@@ -96,6 +97,7 @@ s3transfer==0.1.13
 SecretStorage==2.3.1
 semantic-version==2.6.0
 service-identity==17.0.0
+sha3==0.2.1
 sip==4.19.8
 six==1.11.0
 SQLAlchemy==1.2.10
