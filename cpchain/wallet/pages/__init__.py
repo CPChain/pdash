@@ -24,19 +24,19 @@ main_wnd = None
 
 
 def abs_path(path):
-    return osp.join(root_dir, "cpchain/assets/wallet", path)
+    return osp.join(root_dir, "cpchain/assets/wallet", path).replace('\\', '/')
 
 
 def load_stylesheet(wid, name):
     path = osp.join(root_dir, "cpchain/assets/wallet/qss", name)
-    subs = dict(asset_dir=osp.join(root_dir, "cpchain/assets/wallet"))
+    subs = dict(asset_dir=osp.join(root_dir, "cpchain/assets/wallet").replace('\\', '/'))
     with open(path) as f:
         s = string.Template(f.read())
         wid.setStyleSheet(s.substitute(subs))
 
 
 def qml_path(path):
-    return osp.join(root_dir, "cpchain/assets/wallet/qml", path)
+    return osp.join(root_dir, "cpchain/assets/wallet/qml", path).replace('\\', '/')
 
 
 class HorizontalLine(QFrame):

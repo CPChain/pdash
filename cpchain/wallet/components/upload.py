@@ -101,6 +101,10 @@ class FileUpload(QFrame):
     def dropEvent(self, event):
         st = str(event.mimeData().urls())
         st = re.compile(r'\'file:\/\/(.*?)\'').findall(st)[0]
+        import platform
+        sysstr = platform.system()
+        if sysstr == "Windows":
+            st = st[1:]
         self.target.setText(st)
 
 class UploadDialog(Dialog):
