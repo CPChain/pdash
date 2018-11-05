@@ -20,7 +20,7 @@ form_input_html = """
         <form method="POST">
             <label for="eth_addr"> Please input your address to get free CPC: </label>
             <input type="text" id="eth_addr" name="form-field" />
-            <input type="submit" />
+            <input type="submit" value="submit" />
         </form>
     </body>
 </html>
