@@ -4,6 +4,7 @@ import logging
 import os
 import os.path as osp
 import string
+import platform
 import time
 from enum import Enum
 
@@ -23,8 +24,12 @@ global main_wnd
 main_wnd = None
 
 
-def abs_path(path):
-    return osp.join(root_dir, "cpchain/assets/wallet", path).replace('\\', '/')
+def abs_path(path, need_file=False):
+    sysstr = platform.system()
+    path_ = osp.join(root_dir, "cpchain/assets/wallet", path).replace('\\', '/')
+    if sysstr == "Windows" and need_file:
+        path_ = "file:///" + path_
+    return path_
 
 
 def load_stylesheet(wid, name):
@@ -36,7 +41,11 @@ def load_stylesheet(wid, name):
 
 
 def qml_path(path):
-    return osp.join(root_dir, "cpchain/assets/wallet/qml", path).replace('\\', '/')
+    sysstr = platform.system()
+    path_ = osp.join(root_dir, "cpchain/assets/wallet/qml", path).replace('\\', '/')
+    if sysstr == "Windows":
+        path_ = "file:///" + path_
+    return path_
 
 
 class HorizontalLine(QFrame):

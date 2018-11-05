@@ -19,7 +19,7 @@ class HomeObject(QObject):
 
     def __init__(self, parent=None):
         QObject.__init__(self, parent)
-        self._icon = abs_path('icons/person.png')
+        self._icon = abs_path('icons/person.png', True)
         self._username = ""
         self._amount = "0"
 
@@ -83,7 +83,7 @@ class Home(Page):
     def create(self):
         # balance
         amount = account.to_ether(account.get_balance(app.addr))
-        self.obj.icon = abs_path('icons/user_home@2x.png')
+        self.obj.icon = abs_path('icons/user_home@2x.png', True)
         self.obj.username = 'Hi, {}'.format(app.username)
         self.obj.amount = '{}'.format(amount)
         wallet.market_client.products().addCallbacks(self.renderProducts)

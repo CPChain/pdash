@@ -2,7 +2,9 @@ import tempfile
 import os
 import logging
 import importlib
+import platform
 import hashlib
+import uuid
 import json
 from sqlalchemy import func
 from twisted.internet.defer import inlineCallbacks, Deferred
@@ -137,8 +139,15 @@ def decrypt_file(file_in_path, file_out_path):
 @inlineCallbacks
 def upload_file(file_path, storage_type, dest, data_name=None):
     # fixed previous bugs of temporary file being deleted after function return
-    tmp = tempfile.NamedTemporaryFile(delete=True)
-    encrypted_path = tmp.name
+    sysstr = platform.system()
+    if sysstr == "Windows":
+        tmp = os.path.expanduser('~/.cpchain/temp')
+        if not os.path.exists(tmp):
+            os.mkdir(tmp)
+        encrypted_path = tmp + '/' + uuid.uuid1().hex
+    else:
+        tmp = tempfile.NamedTemporaryFile(delete=True)
+        encrypted_path = tmp.name
     this_key = encrypt_file(file_path, encrypted_path)
     storage_module = importlib.import_module(
         "cpchain.storage_plugin." + storage_type
@@ -159,11 +168,12 @@ def upload_file(file_path, storage_type, dest, data_name=None):
         hashcode['file_hash'] = file_md5
         from cpchain.wallet.pages import wallet
         new_file_info = FileInfo(hashcode=json.dumps(hashcode), name=file_name, path=file_path, size=file_size,
-                                 remote_type=str(storage_type), remote_uri=str(file_uri), public_key= wallet.market_client.public_key,
+                                 remote_type=str(storage_type), remote_uri=str(file_uri), public_key=wallet.market_client.public_key,
                                  is_published=False, aes_key=this_key, created=func.current_timestamp())
         add_file(new_file_info)
         logger.debug('file id: %s', new_file_info.id)
-        tmp.close()
+        if sysstr != "Windows":
+            tmp.close()
         file_id = new_file_info.id
         return file_id
     if storage_type == 'proxy':
