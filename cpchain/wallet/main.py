@@ -45,7 +45,8 @@ _Application = QApplication(sys.argv)
 
 # load fonts
 utils.load_fonts(abs_path('fonts'))
-font = QFont('SF UI Display')
+font_name = "Arial" if app.is_windows() else "SF UI Display"
+font = QFont(font_name)
 _Application.setFont(font)
 
 
@@ -148,6 +149,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, _):
         self.reactor.stop()
+        _Application.exit()
         os._exit(0)
 
 

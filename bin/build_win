@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+START=`date +%s`;
+
+cd "$(dirname "${BASH_SOURCE[0]}")"/..
+
+echo "Clean up..."
+rm -rf build/
+rm -rf dist/
+
+APP_NAME="PDash.win10"
+APP_ICON="lib/pdash_1024x1024x32.ico"
+
+echo "Build..."
+python -O -m PyInstaller -F -w cpchain/wallet/main.py \
+    --hidden-import=eth_hash.backends.pycryptodome --name $APP_NAME \
+    --icon $APP_ICON
+
+echo "Copy cpchain..."
+
+cpc_path="cpchain/assets/"
+dist_path="dist/"
+
+mkdir -p $dist_path/$cpc_path
+cp -r $cpc_path/* $dist_path/$cpc_path/
+cp lib/cpchain.toml $dist_path/cpchain/
+
+echo "done."
+
+END=`date +%s`;
+time=$[ END - START ]
+echo "$time s, done"
+

@@ -38,7 +38,7 @@ class ImageObject(QObject):
             self.status = app.get_status_enum(status)
         else:
             self.need_mask_ = False
-        self.downloading_gif_ = abs_path('icons/downloading.gif')
+        self.downloading_gif_ = abs_path('icons/downloading.gif', True)
         self.is_downloading_ = False
         self.show_text_ = ""
         self.init()
