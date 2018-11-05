@@ -6,15 +6,10 @@ Visit us at [cpchain.io](http://cpchain.io/).
 
 **Preview:**
 
-![Login](images/login.png)
+<img src="images/pdash-login.png" width = 30%>
 
-![Market](images/market.png)
+<img src="images/pdash-ui.png" width = 55%>
 
-![Home](images/home.png)
-
-![My data](images/my_data.png)
-
-![Wallet](images/wallet.png)
 
 
 **Table of Contents**
@@ -32,19 +27,19 @@ Visit us at [cpchain.io](http://cpchain.io/).
         - [Geth](#geth)
         - [Smart contract](#smart-contract)
         - [Charge server](#charge-server)
-        - [Configuration](#configuration)
+        - [Configuration](#chain-configuration)
     - [Market deploy](#market-deploy)
         - [Django web service](#django-web-service)
         - [Elastic search](#elastic-search)
         - [Kibana](#kibana)
-        - [Configuration](configuration)
+        - [Configuration](#market-configuration)
     - [Proxy deploy](#proxy-deploy)
-        - [Configuration](#configuration)
+        - [Configuration](#proxy-configuration)
         - [Kafka](#kafka)
         - [Tracker and Bootnode](#tracker-and-bootnode)
-        - [Proxy](#proxy)
+        - [Proxy node](#proxy-node)
     - [Wallet run](#wallet-run)
-        - [Configuration](#configuration)
+        - [Configuration](#wallet-configuration)
         - [QT Client](#QT-client)
 
 
@@ -67,7 +62,9 @@ The CPChain platform involves the following major components:
 | [Market](#market)       | Supports publishing/searching shared data.      |
 | [Proxy](#proxy)        | Supports data relay and auditing.     |
 | [Chain](#chain)        | Supports secure transaction.    |
-|
+
+
+
 
 ![Inter-Component Relation](images/inter-component.svg)
 
@@ -111,7 +108,7 @@ Follow the instructions below to deploy the Pdash to start your data sharing, en
 - pip3
 - docker engine (for proxy only): [install docker CE](https://store.docker.com/search?type=edition&offering=community)
 - docker compose (for proxy only): [install docker compose](https://docs.docker.com/compose/install/)
-- install all depended python package
+- depended python packages
 ```
 $ cd <Pdash dir>
 $ pip3 install-deps.sh -r requirements.txt
@@ -148,7 +145,7 @@ cd bin
 
 The password for accounts in genesis block is stored in 'eth/data_dir/keystore/password'.
 
-### Configuration
+### Chain configuration
 
 Create your cpchain.toml under ~/.cpchain/ and add the following configuration into the file:
 ```
@@ -182,7 +179,7 @@ python3 cpchain/market/manage.py runserver 0.0.0.0:8083
 - start service with ：nohup /opt/kibana-6.2.3-linux-x86_64/bin/kibana >/dev/null 2>&1 &
 - access http://localhost:5601/app/kibana#/home?_g=() to verify it.
 
-### Configuration
+### Market configuration
 Add the following configuration into cpchain.toml:
 ```
 [market]
@@ -192,7 +189,7 @@ es_hosts = 'http://localhost:9200'
 
 ## Proxy deploy
 
-### Configuration
+### Proxy configuration
 
 Add the following configuration into cpchain.toml:
 ```
@@ -230,11 +227,9 @@ $ cd bin
 $ ./proxy-start
 ```
 
-
-
 ## Wallet run
 
-### Configuration
+### Wallet configuration
 
 Add the following configuration into cpchain.toml:
 ```
