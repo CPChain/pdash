@@ -149,6 +149,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, _):
         self.reactor.stop()
+        _Application.exit()
         os._exit(0)
 
 
