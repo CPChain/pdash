@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QDialog, QWidget, QHBoxLayout, QFrame, QGraphicsDropShadowEffect, QStackedLayout
 from PyQt5.QtCore import Qt, QEvent
 
+from cpchain.wallet.pages import app
 from cpchain.wallet.simpleqt.basic import Builder
 
 class Dialog(QDialog):
@@ -63,7 +64,8 @@ class Dialog(QDialog):
         _backgound.setMaximumHeight(height)
         _backgound.setStyleSheet("background: #fafafa; border-radius:5px;")
 
-        _main_layout.addWidget(_backgound)
+        if not app.is_windows():
+            _main_layout.addWidget(_backgound)
         _main_layout.addWidget(_main)
 
         self.setLayout(_main_layout)

@@ -24,6 +24,10 @@ global main_wnd
 main_wnd = None
 
 
+def is_windows():
+    sysstr = platform.system()
+    return sysstr == "Windows"
+
 def abs_path(path, need_file=False):
     sysstr = platform.system()
     path_ = osp.join(root_dir, "cpchain/assets/wallet", path).replace('\\', '/')
@@ -110,6 +114,7 @@ class App:
         self.events = events
         self.addr = None
         self.login_open = False
+        self.is_windows = is_windows
         self.status_ = {}
         self.storage = self.load_params()
         self.init()
