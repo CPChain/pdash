@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (QFrame, QHBoxLayout, QMessageBox, QScrollArea,
                              QVBoxLayout, QWidget)
 
 from .model import Model
+from .component import Component
 
 sys.path.append('.')
 

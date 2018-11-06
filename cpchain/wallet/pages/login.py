@@ -15,7 +15,7 @@ from cpchain.crypto import ECCipher
 from cpchain.wallet.components.agreement import Agreement
 from cpchain.wallet.components.gif import LoadingGif
 from cpchain.wallet.components.loading import Loading
-from cpchain.wallet.components.upload import FileUpload
+from cpchain.wallet.components.upload import FileUpload, FileUploadQml
 from cpchain.wallet.pages import abs_path, app, wallet
 from cpchain.wallet.simpleqt import Model, validate
 from cpchain.wallet.simpleqt.basic import Builder, Button, Input
@@ -410,6 +410,7 @@ class ImportWindow(MyWindow):
         self.loading.hide()
 
     def ui(self, layout):
+        layout.addSpacing(30)
         title = Builder().text('Import a keystore file')\
                          .name('title')\
                          .build()
@@ -420,11 +421,12 @@ class ImportWindow(MyWindow):
                         .height(100)\
                         .build()
         self.add(title)
-        self.add(desc, 25)
-        self.file = FileUpload(width=247,
-                               height=110,
-                               text="Drop keystore file here or",
-                               browse_text="browse…")
+        self.add(desc, 15)
+        self.file = FileUploadQml(width=247,
+                                  height=74,
+                                  background="#f8f8f8",
+                                  text="Drop keystore file here or",
+                                  browse_text="browse…")
         self.add(self.file, 5)
         password = Input.Builder().placeholder('Password')\
                                   .name('pwd')\
