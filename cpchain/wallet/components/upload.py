@@ -2,14 +2,16 @@ import importlib
 import logging
 import os
 import os.path as osp
+import platform
 import re
 import string
-import platform
 import time
 import traceback
 
-from PyQt5.QtCore import QObjectCleanupHandler, QPoint, Qt, pyqtSignal
+from PyQt5.QtCore import (QObject, QObjectCleanupHandler, QPoint, Qt, QUrl,
+                          pyqtProperty, pyqtSignal)
 from PyQt5.QtGui import QCursor, QFont, QFontDatabase
+from PyQt5.QtQuickWidgets import QQuickWidget
 from PyQt5.QtWidgets import (QAbstractItemView, QAction, QCheckBox, QComboBox,
                              QDialog, QFileDialog, QFrame, QGridLayout,
                              QHBoxLayout, QHeaderView, QLabel, QLineEdit,
@@ -30,13 +32,95 @@ from cpchain.wallet.components.dialog import Dialog
 from cpchain.wallet.components.gif import LoadingGif
 from cpchain.wallet.pages import (Binder, HorizontalLine, abs_path, app,
                                   get_icon, get_pixm, load_stylesheet,
-                                  main_wnd, wallet, warning)
+                                  main_wnd, qml_path, wallet, warning)
+from cpchain.wallet.simpleqt import Component
 from cpchain.wallet.simpleqt.decorator import component
 from cpchain.wallet.simpleqt.model import ListModel
 from cpchain.wallet.simpleqt.widgets import ComboBox, Input
 from cpchain.wallet.simpleqt.widgets.label import Label
 
 logger = logging.getLogger(__name__)
+
+class FileUploadObject(QObject):
+
+    def __init__(self, parent, width, height, background, text, browse_text, gap=3):
+        self._width = width
+        self._height = height
+        self._background = background
+        self._icon = abs_path('icons/add@2x.jpg')
+        self._text = text
+        self._browse_text = browse_text
+        self._file = ""
+        self._gap = gap
+        return super().__init__(parent)
+
+    @pyqtProperty(float)
+    def width(self):
+        return self._width
+
+    @pyqtProperty(float)
+    def height(self):
+        return self._height
+
+    @pyqtProperty(float)
+    def gap(self):
+        return self._gap
+
+    @pyqtProperty(str)
+    def background(self):
+        return self._background
+
+    @pyqtProperty(str)
+    def icon(self):
+        return self._icon
+
+    @pyqtProperty(str)
+    def text(self):
+        return self._text
+
+    @pyqtProperty(str)
+    def browse_text(self):
+        return self._browse_text
+
+    @pyqtProperty(str)
+    def file(self):
+        return self._file
+
+    @file.setter
+    def file(self, _file):
+        self._file = _file
+
+
+class FileUploadQml(Component):
+    qml = qml_path('components/FileUpload.qml')
+
+    def __init__(self, parent=None, width=None, height=None,
+                 text="Drop file here or",
+                 browse_text="browse",
+                 background="#fafafa",
+                 gap=3):
+        self.obj = FileUploadObject(None, width, height,
+                                    background, text,
+                                    browse_text,
+                                    gap)
+        return super().__init__(parent)
+
+    @property
+    def file(self):
+        return self.obj.file
+
+    @component.ui
+    def ui(self):
+        self.setContentsMargins(0, 0, 0, 0)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        widget = QQuickWidget(self)
+        widget.setContentsMargins(0, 0, 0, 0)
+        widget.rootContext().setContextProperty('self', self.obj)
+        widget.setSource(QUrl(self.qml))
+        layout.addWidget(widget)
+        return layout
+
 
 class FileUpload(QFrame):
 
@@ -275,10 +359,9 @@ class UploadDialog(Dialog):
         self.now_wid = self.build_option_widget(self.storage[self.storage_index])
         layout.addWidget(self.now_wid)
 
+        print(self.input_name.width())
         # # File Drop or Open
-        fileSlt = FileUpload()
-        fileSlt.setMinimumHeight(120)
-        fileSlt.setMaximumHeight(120)
+        fileSlt = FileUploadQml(width=330, height=121, gap=1)
         layout.addWidget(self.gen_row("File:", fileSlt))
         self.fileSlt = fileSlt
 
@@ -346,7 +429,6 @@ class UploadDialog(Dialog):
             self.show_loading(False)
             return
         fs.upload_file(file, storage['type'], dst, dataname).addCallbacks(self.handle_ok_callback)
-
 
     def handle_upload_resp(self, status):
         self.show_loading(False)
