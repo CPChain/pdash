@@ -6,9 +6,10 @@ import os.path as osp
 import string
 
 from PyQt5 import QtGui
-from PyQt5.QtCore import QPoint, Qt, pyqtSignal
+from PyQt5.QtCore import QPoint, Qt, pyqtSignal, QObject, QUrl, pyqtProperty
 from PyQt5.QtGui import *
 from PyQt5.QtGui import QCursor, QFont, QFontDatabase, QPixmap
+from PyQt5.QtQuickWidgets import QQuickWidget
 from PyQt5.QtWidgets import (QAbstractItemView, QAction, QCheckBox, QComboBox,
                              QDialog, QFileDialog, QFrame, QGridLayout,
                              QHBoxLayout, QHeaderView, QLabel, QLineEdit,
@@ -31,7 +32,7 @@ from cpchain.wallet.components.table import Table
 from cpchain.wallet.components.upload import UploadDialog
 from cpchain.wallet.pages import (Binder, HorizontalLine, abs_path, app,
                                   get_icon, get_pixm, load_stylesheet,
-                                  main_wnd, wallet)
+                                  main_wnd, wallet, qml_path)
 from cpchain.wallet.simpleqt.component import Component
 from cpchain.wallet.simpleqt.decorator import component, page
 from cpchain.wallet.simpleqt.page import Page
@@ -42,94 +43,87 @@ from cpchain.wallet.simpleqt.widgets.label import Label
 logger = logging.getLogger(__name__)
 
 
-class Picture(QWidget):
+class ImageUploadObject(QObject):
 
-    def __init__(self, path, width, height):
-        self.width = width
-        self.height = height
-        self.path = path
-        super().__init__()
-        self.ui()
-        self.style()
+    def __init__(self, parent, width, height, background, text, browse_text, gap=3):
+        self._width = width
+        self._height = height
+        self._background = background
+        self._icon = abs_path('icons/add@2x.jpg')
+        self._text = text
+        self._browse_text = browse_text
+        self._file = ""
+        self._gap = gap
+        return super().__init__(parent)
 
-    @component.method
-    def brush(self):
-        palette1 = QtGui.QPalette()
-        palette1.setBrush(self.backgroundRole(), QtGui.QBrush(
-            QtGui.QPixmap(abs_path('icons/close'))))
-        self.setPalette(palette1)
-        self.setAutoFillBackground(True)
+    @pyqtProperty(float)
+    def width(self):
+        return self._width
+
+    @pyqtProperty(float)
+    def height(self):
+        return self._height
+
+    @pyqtProperty(float)
+    def gap(self):
+        return self._gap
+
+    @pyqtProperty(str)
+    def background(self):
+        return self._background
+
+    @pyqtProperty(str)
+    def icon(self):
+        return self._icon
+
+    @pyqtProperty(str)
+    def text(self):
+        return self._text
+
+    @pyqtProperty(str)
+    def browse_text(self):
+        return self._browse_text
+
+    @pyqtProperty(str)
+    def file(self):
+        return self._file
+
+    @file.setter
+    def file(self, _file):
+        self._file = _file
+
+
+class ImageUploadQml(Component):
+    qml = qml_path('components/ImageUpload.qml')
+
+    def __init__(self, parent=None, width=None, height=None,
+                 text="Drop file here or",
+                 browse_text="browse",
+                 background="#fafafa",
+                 gap=3):
+        self.obj = ImageUploadObject(None, width, height,
+                                     background, text,
+                                     browse_text,
+                                     gap)
+        return super().__init__(parent)
+
+    @property
+    def file(self):
+        return self.obj.file
 
     @component.ui
     def ui(self):
-        if self.layout():
-            QWidget().setLayout(self.layout())
-        # self.setMinimumWidth(self.width)
-        # self.setMaximumWidth(self.width)
-        # self.setMinimumHeight(self.height)
-        # self.setMaximumHeight(self.height)
-        pic = QLabel()
-        pic.setPixmap(QPixmap(self.path))
-        pic.setMinimumWidth(self.width)
-        pic.setMaximumWidth(self.width)
-        pic.setMinimumHeight(self.height)
-        pic.setMaximumHeight(self.height)
-
-        mylayout = QVBoxLayout()
-        mylayout.addWidget(pic)
-        mylayout.setAlignment(Qt.AlignHCenter)
-        return mylayout
-
-    @component.style
-    def style(self):
-        return """
-
-        """
-
-
-class Pictures(QFrame):
-
-    def __init__(self):
-        super().__init__()
-        self.data()
-        self.ui()
-        self.style()
-
-    @component.data
-    def data(self):
-        return {
-            'pictures': [abs_path('icons/add@2x.jpg')]
-        }
-
-    def read_file(self, _):
-        file_choice = QFileDialog.getOpenFileName()[0]
-
-    @component.ui
-    def ui(self):
-        width = 150
-        height = 150
-        layout = QHBoxLayout()
+        self.setContentsMargins(0, 0, 0, 0)
+        layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setAlignment(Qt.AlignLeft)
-        for pic in self.pictures.value:
-            tmp = Picture(path=pic, width=width, height=height)
-            layout.addWidget(tmp)
-        add = Picture(path=abs_path('icons/add@2x.jpg'),
-                      width=width, height=height)
-        Binder.click(add, self.read_file)
-        layout.addWidget(add)
+        widget = QQuickWidget(self)
+        widget.setContentsMargins(0, 0, 0, 0)
+        widget.rootContext().setContextProperty('self', self.obj)
+        widget.setSource(QUrl(self.qml))
+        layout.addWidget(widget)
         return layout
 
-    @component.style
-    def style(self):
-        return """
-            QFrame {
-                background: white;
-            }
-        """
-
-
-class PublishProduct(Page):
+class PublishProduct(QScrollArea):
 
     published = pyqtSignal(int)
 
@@ -138,7 +132,14 @@ class PublishProduct(Page):
         self.product_id = product_id
         self.type_ = type_
         super().__init__(parent)
-        self.setObjectName("publish_product_page")
+        self.setWidgetResizable(True)
+        self.data()
+        layout = self.ui()
+        widget = QWidget()
+        widget.setLayout(layout)
+        self.setStyleSheet(self.style())
+        widget.setObjectName("publish_product_page")
+        self.setWidget(widget)
         self.published.connect(self.handle_update_file)
 
     @page.data
@@ -148,7 +149,6 @@ class PublishProduct(Page):
             'description': '',
             'price': '',
             'checked': False,
-            'cover_image': '',
             'category': 'Advertising'
         }
 
@@ -169,7 +169,6 @@ class PublishProduct(Page):
         row.addStretch(1)
         return row
 
-    @page.ui
     def ui(self):
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignTop)
@@ -218,17 +217,11 @@ class PublishProduct(Page):
         layout.addLayout(self.gen_row("Category:", categoryWid))
 
         # Cover Picture
-        openBtn = QLabel('browse...')
-        openBtn.setObjectName('openBtn')
-
-        def onOpen(_):
-            tmp = QFileDialog.getOpenFileName()[0]
-            if tmp:
-                self.cover_image.value = tmp
-        Binder.click(openBtn, onOpen)
-        path = Label(self.cover_image)
-        layout.addLayout(self.gen_row('Cover picture:', openBtn))
-        layout.addLayout(self.gen_row("", path))
+        height = 150
+        img = ImageUploadQml(width=547, height=height, gap=1)
+        img.setMinimumHeight(height)
+        self.cover_image = img
+        layout.addLayout(self.gen_row('Cover picture:', img))
 
         # Description
         text = Text.Builder(width=536, height=80).model(self.description).build()
@@ -254,15 +247,20 @@ class PublishProduct(Page):
         ok.setObjectName('pinfo_publish_btn')
         ok.clicked.connect(self.handle_publish)
         layout.addLayout(self.gen_row("", cancel, 20, ok))
+        layout.addSpacing(30)
         layout.addStretch(1)
+
         return layout
 
-    @page.style
     def style(self):
         return """
-            QScrollArea#publish_product_page {
+            QScrollArea {
+                background: #fafafa;
                 padding-left: 47px;
 
+            }
+            QWidget#publish_product_page {
+                background: #fafafa;
             }
             QLabel, QCheckBox, QPushButton {
             }
@@ -362,7 +360,7 @@ class PublishProduct(Page):
         tag = 'tag1'
         price = self.price.value
         checked = self.checked.value
-        if name and description and tag and price and checked and self.category.value and self.cover_image.value:
+        if name and description and tag and price and checked and self.category.value and self.cover_image.file:
             file_info = fs.get_file_by_id(self.product_id)
             self.size = file_info.size
             self.start_date = '2018-04-01 10:10:10'
@@ -370,7 +368,7 @@ class PublishProduct(Page):
             self.path = file_info.path
             d_publish = wallet.market_client.publish_product(self.product_id, name, _type,
                                                              description, price, tag, self.start_date,
-                                                             self.end_date, self.category.value, self.cover_image.value)
+                                                             self.end_date, self.category.value, self.cover_image.file)
 
             def update_table(market_hash):
                 d = wallet.market_client.update_file_info(

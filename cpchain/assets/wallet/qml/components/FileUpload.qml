@@ -83,6 +83,10 @@ Shape {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
+
+                    onClicked: function(e) {
+                        fileDialog.open()
+                    }
                 }
             }
             Row {
