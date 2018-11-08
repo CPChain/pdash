@@ -4,12 +4,16 @@ PDash is a blockchain-based data sharing platform.
 
 Visit us at [cpchain.io](http://cpchain.io/).
 
-**Preview:**
+**Preview**
 
 <img src="images/pdash-login.png" width = 30%>
 
 <img src="images/pdash-ui.png" width = 55%>
 
+
+**Transaction Demo**
+
+See the demo at [youtube](https://www.youtube.com/watch?v=YkksHqoIWI0).
 
 
 **Table of Contents**
