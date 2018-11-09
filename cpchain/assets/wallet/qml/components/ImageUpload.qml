@@ -85,8 +85,42 @@ Shape {
         height: parent.height - 20
         color: "transparent"
 
-        Flickable {
+        Column {
+            visible: _size >= _MAX
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 10
+            Rectangle {
+                width: 126
+                height: 79
+                anchors.verticalCenter: target.verticalCenter
+                color: "transparent"
+                Image {
+                    source: file_path
+                    anchors.fill: parent
+                }
+            }
+            Text {
+                text: "Delete"
+                color: "#0073df"
+                font.pixelSize: 13
+                font.weight: Font.DemiBold
 
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+
+                    onClicked: function(e) {
+                        file_path = null
+                        _size -= 1
+                        images.remove(0)
+                        self.file = ""
+                    }
+                }
+            }
+        }
+
+        Flickable {
+            visible: _size < _MAX
             anchors.fill: parent
             contentWidth: parent.width
             contentHeight: images_grid.height
@@ -102,6 +136,7 @@ Shape {
                     Rectangle {
                         width: 126
                         height: 79
+                        color: "transparent"
                         Image {
                             source: src
                             anchors.fill: parent
@@ -148,9 +183,8 @@ Shape {
     
 
     ShapePath {
-        visible: _size < _MAX
         strokeWidth: 1
-        strokeColor: self.background
+        strokeColor: _size < _MAX? self.background: "transparent"
         fillColor: self.background
         strokeStyle: ShapePath.DashLine
         startX: 0
@@ -162,10 +196,9 @@ Shape {
     }
     
     ShapePath {
-        visible: _size < _MAX
         strokeWidth: 1
-        strokeColor: "#bbb"
-        fillColor: "#fcfcfc"
+        strokeColor: _size < _MAX? "#bbb": "transparent"
+        fillColor: _size < _MAX? "#fcfcfc": "transparent"
         strokeStyle: ShapePath.DashLine
         dashPattern: [3, 6]
         startX: _start_x + radius

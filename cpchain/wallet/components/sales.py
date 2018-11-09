@@ -265,7 +265,7 @@ class Sale(QWidget):
         self.operator.buyer_confirm(self.order_id)
 
     def comment(self, _):
-        print('>>>>>>comment')
+        pass
 
     def ui(self):
         layout = QVBoxLayout()

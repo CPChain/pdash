@@ -159,7 +159,11 @@ class PublishProduct(QScrollArea):
         width = kw.get('left_width', 110)
         left_widget.setMinimumWidth(width)
         left_widget.setMaximumWidth(width)
-        row.addWidget(left_widget)
+        left_widget.setMaximumHeight(30)
+        left = QVBoxLayout()
+        left.setAlignment(Qt.AlignTop)
+        left.addWidget(left_widget)
+        row.addLayout(left)
         row.addSpacing(10)
         for widget in widgets:
             if isinstance(widget, QWidget):
