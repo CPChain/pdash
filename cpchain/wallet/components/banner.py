@@ -34,19 +34,16 @@ class Banner(QFrame):
         self.setMaximumWidth(self.width)
         self.setMinimumHeight(self.height)
         self.setMaximumHeight(self.height)
-        # self.brush()
 
         _main_layout = QStackedLayout()
         _main_layout.setContentsMargins(0, 0, 0, 0)
-        _main_layout.setAlignment(Qt.AlignCenter)
+        # _main_layout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
         _main_layout.setStackingMode(QStackedLayout.StackAll)
 
         background = QLabel()
         pix = QtGui.QPixmap(self.path)
         pix = pix.scaled(self.width, self.height)
         background.setPixmap(pix)
-
-        _main_layout.addWidget(background)
 
         mylayout = QVBoxLayout()
         title = QLabel(self.title)
@@ -67,6 +64,7 @@ class Banner(QFrame):
         wid.setStyleSheet('background: transparent')
         wid.setLayout(mylayout)
 
+        _main_layout.addWidget(background)
         _main_layout.addWidget(wid)
         return _main_layout
 

@@ -148,6 +148,7 @@ Shape {
     
 
     ShapePath {
+        visible: _size < _MAX
         strokeWidth: 1
         strokeColor: self.background
         fillColor: self.background
@@ -161,6 +162,7 @@ Shape {
     }
     
     ShapePath {
+        visible: _size < _MAX
         strokeWidth: 1
         strokeColor: "#bbb"
         fillColor: "#fcfcfc"

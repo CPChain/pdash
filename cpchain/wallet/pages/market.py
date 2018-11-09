@@ -79,17 +79,8 @@ class MarketPage(Page):
                         title="PDASH",
                         subtitle="Parallel Distributed Architecture for Data Storage and Sharing")
         banner.setObjectName('banner')
-        wrapper_banner = QWidget()
-        wrapper_banner.setContentsMargins(0, 0, 0, 0)
-        wrapper_layout = QHBoxLayout()
-        wrapper_layout.addWidget(banner)
-        wrapper_layout.setContentsMargins(0, 0, 0, 0)
-        wrapper_banner.setLayout(wrapper_layout)
 
-        wrapper_banner.setMinimumWidth(width)
-        wrapper_banner.setMaximumWidth(width)
-
-        layout.addWidget(wrapper_banner)
+        layout.addWidget(banner)
         layout.addSpacing(15)
         self.loading = Loading(text='Loading')
         layout.addWidget(self.loading)
@@ -110,17 +101,8 @@ class MarketPage(Page):
         scroll.setWidget(wid)
 
         _layout = QVBoxLayout()
+        _layout.setAlignment(Qt.AlignTop)
         _layout.addWidget(scroll)
-        banner.brush()
         wid.setStyleSheet("""
-            QWidget#scroll {
-                background: transparent
-            }
-            QWidget#banner {
-                /*background: red;*/
-            }
-            QWidget#products_list {
-                width: 720;
-            }
         """)
         return _layout
