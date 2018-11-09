@@ -105,7 +105,7 @@ class PurchaseDialog(Dialog):
         if app.valid_password(self.password.value):
             deferToThread(get_proxy_address, self.proxy.current)
             app.event.emit(app.events.CLICK_PAY)
-            self.close()
+            super().close()
         else:
             app.msgbox.error("Password mismatch")
 

@@ -45,7 +45,7 @@ _Application = QApplication(sys.argv)
 
 # load fonts
 utils.load_fonts(abs_path('fonts'))
-font_name = "Arial" if app.is_windows() else "SF UI Display"
+font_name = "Microsoft Sans Serif" if app.is_windows() else "SF UI Display"
 font = QFont(font_name)
 _Application.setFont(font)
 
