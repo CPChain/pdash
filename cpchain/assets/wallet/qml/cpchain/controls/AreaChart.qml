@@ -14,7 +14,6 @@ ChartView {
     property var chart_opacity: 1
 
     property var min_: new Date()
-    // property var max_: new Date(2018, 11, 1, 18, 07, 0)
     property var max_ : new Date()
     property real val_min: 0
     property real val_max: 30

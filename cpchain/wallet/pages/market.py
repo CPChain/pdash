@@ -65,6 +65,8 @@ class MarketPage(Page):
 
     @page.ui
     def ui(self):
+        scroll = QScrollArea()
+        scroll.setStyleSheet("background: #fafafa;")
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
 
@@ -93,19 +95,32 @@ class MarketPage(Page):
         layout.addWidget(self.loading)
 
         # Product List
-        pdsWidget = ProductList(self.products)
+        pdsWidget = ProductList(self.products, scroll=False)
         pdsWidget.setObjectName('products_list')
         pdsWidget.setMinimumWidth(width)
         pdsWidget.setMaximumWidth(width)
+
         layout.addWidget(pdsWidget)
-        self.setStyleSheet("""
-            QWidget#banner {
-                
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setWidgetResizable(True)
+        wid = QWidget()
+        wid.setLayout(layout)
+        wid.setContentsMargins(0, 0, 0, 0)
+        scroll.setWidget(wid)
+
+        _layout = QVBoxLayout()
+        _layout.addWidget(scroll)
+        banner.brush()
+        wid.setStyleSheet("""
+            QWidget#scroll {
+                background: transparent
             }
-            QScrollArea#market_page {
+            QWidget#banner {
+                /*background: red;*/
             }
             QWidget#products_list {
                 width: 720;
             }
         """)
-        return layout
+        return _layout
