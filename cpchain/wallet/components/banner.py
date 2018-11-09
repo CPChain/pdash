@@ -1,14 +1,13 @@
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, QPoint
-from PyQt5.QtGui import *
 from PyQt5.QtWidgets import (QScrollArea, QVBoxLayout, QFrame, QWidget,
-                             QListWidget, QListWidgetItem, QLabel)
+                             QListWidget, QListWidgetItem, QLabel, QStackedLayout)
 from cpchain.wallet.simpleqt.component import Component
 from cpchain.wallet.simpleqt.decorator import component
 from cpchain.wallet.pages import load_stylesheet, get_icon, app, HorizontalLine
 
 
-class Banner(QWidget):
+class Banner(QFrame):
 
     def __init__(self, path, width, height, title, subtitle):
         self.width = width
@@ -20,7 +19,7 @@ class Banner(QWidget):
         self.ui()
         self.style()
 
-    @component.method
+    # @component.method
     def brush(self):
         palette1 = QtGui.QPalette()
         palette1.setBrush(self.backgroundRole(), QtGui.QBrush(QtGui.QPixmap(self.path)))
@@ -35,7 +34,17 @@ class Banner(QWidget):
         self.setMaximumWidth(self.width)
         self.setMinimumHeight(self.height)
         self.setMaximumHeight(self.height)
-        self.brush()
+
+        _main_layout = QStackedLayout()
+        _main_layout.setContentsMargins(0, 0, 0, 0)
+        # _main_layout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
+        _main_layout.setStackingMode(QStackedLayout.StackAll)
+
+        background = QLabel()
+        pix = QtGui.QPixmap(self.path)
+        pix = pix.scaled(self.width, self.height)
+        background.setPixmap(pix)
+
         mylayout = QVBoxLayout()
         title = QLabel(self.title)
         title.setObjectName('title')
@@ -50,7 +59,14 @@ class Banner(QWidget):
         mylayout.addWidget(title)
         mylayout.addWidget(subtitle)
         mylayout.addWidget(line)
-        return mylayout
+
+        wid = QWidget()
+        wid.setStyleSheet('background: transparent')
+        wid.setLayout(mylayout)
+
+        _main_layout.addWidget(background)
+        _main_layout.addWidget(wid)
+        return _main_layout
 
     @component.style
     def style(self):

@@ -108,14 +108,12 @@ class ProductList(QWidget):
                 scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
                 scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
                 scroll.setWidgetResizable(True)
-                # scroll.setFixedHeight(800)
                 scroll.setWidget(widget)
                 main.addWidget(scroll)
             else:
                 main.addWidget(widget)
 
             self.setLayout(main)
-            # self.setWidgetResizable(True)
 
         layout.setAlignment(Qt.AlignTop | Qt.AlignHCenter)
         for i in range(row):

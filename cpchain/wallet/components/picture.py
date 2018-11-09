@@ -43,8 +43,6 @@ class Picture(QWidget):
 
         if os.path.exists(self.path):
             photo = QPixmap(self.path)
-            #photo.loadFromData(req.content, "JPG")
-            # photo.loadFromData(req.content)
             photo = photo.scaled(self.width, self.height)
 
             label = QLabel()

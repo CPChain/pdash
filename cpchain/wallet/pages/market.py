@@ -65,6 +65,8 @@ class MarketPage(Page):
 
     @page.ui
     def ui(self):
+        scroll = QScrollArea()
+        scroll.setStyleSheet("background: #fafafa;")
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
 
@@ -77,35 +79,30 @@ class MarketPage(Page):
                         title="PDASH",
                         subtitle="Parallel Distributed Architecture for Data Storage and Sharing")
         banner.setObjectName('banner')
-        wrapper_banner = QWidget()
-        wrapper_banner.setContentsMargins(0, 0, 0, 0)
-        wrapper_layout = QHBoxLayout()
-        wrapper_layout.addWidget(banner)
-        wrapper_layout.setContentsMargins(0, 0, 0, 0)
-        wrapper_banner.setLayout(wrapper_layout)
 
-        wrapper_banner.setMinimumWidth(width)
-        wrapper_banner.setMaximumWidth(width)
-
-        layout.addWidget(wrapper_banner)
+        layout.addWidget(banner)
         layout.addSpacing(15)
         self.loading = Loading(text='Loading')
         layout.addWidget(self.loading)
 
         # Product List
-        pdsWidget = ProductList(self.products)
+        pdsWidget = ProductList(self.products, scroll=False)
         pdsWidget.setObjectName('products_list')
         pdsWidget.setMinimumWidth(width)
         pdsWidget.setMaximumWidth(width)
+
         layout.addWidget(pdsWidget)
-        self.setStyleSheet("""
-            QWidget#banner {
-                
-            }
-            QScrollArea#market_page {
-            }
-            QWidget#products_list {
-                width: 720;
-            }
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setWidgetResizable(True)
+        wid = QWidget()
+        wid.setLayout(layout)
+        wid.setContentsMargins(0, 0, 0, 0)
+        scroll.setWidget(wid)
+
+        _layout = QVBoxLayout()
+        _layout.setAlignment(Qt.AlignTop)
+        _layout.addWidget(scroll)
+        wid.setStyleSheet("""
         """)
-        return layout
+        return _layout

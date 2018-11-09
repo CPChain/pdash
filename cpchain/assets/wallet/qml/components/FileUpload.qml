@@ -20,10 +20,11 @@ Shape {
     property var _width: self.width - 1
     property var _height: self.height - 1
 
-    property var _TEXT : "<font color=\"#BBBBBB\">" + self.text + "</font><br>" + "<font color=\"#0073df\">" + self.browse_text + "</font> "
+    property var _normal_color: "#BBBBBB"
+    property var _TEXT : "<font color=\"" + _normal_color + "\">" + self.text + "</font><br>" + "<font color=\"#0073df\">" + self.browse_text + "</font> "
     property var _text : _TEXT;
     property var _uploaded: false;
-    property var show_delete: false;
+    property var _show_delete: false;
 
     property var file_path: null
 
@@ -41,7 +42,7 @@ Shape {
         }
         _text = "<font color=\"#BBBBBB\">" + target_str + "</font> "
         _uploaded = true
-        show_delete = true
+        _show_delete = true
         self.file = file_path
     }
 
@@ -82,13 +83,15 @@ Shape {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
+
+                    onClicked: function(e) {
+                        fileDialog.open()
+                    }
                 }
             }
             Row {
                 id: text_parent
-                anchors.verticalCenter: target.verticalCenter
                 Column {
-                    anchors.verticalCenter: target.verticalCenter
                     spacing: 0
                     Text {
                         id: file_text
@@ -107,7 +110,7 @@ Shape {
                         }
                     }
                     Text {
-                        visible: show_delete
+                        visible: _show_delete
                         text: 'delete'
                         color: "#0073df"
                         MouseArea {
@@ -115,7 +118,7 @@ Shape {
                             cursorShape: Qt.PointingHandCursor
 
                             onClicked: function(e) {
-                                show_delete = false
+                                _show_delete = false
                                 _uploaded = false
                                 _text = _TEXT
                                 file_path = ""
@@ -182,9 +185,9 @@ Shape {
         }
     }
 
-    
+
     Component.onCompleted: function() {
-        
+
     }
     
 }

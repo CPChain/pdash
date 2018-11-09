@@ -1,20 +1,18 @@
 import logging
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (QHBoxLayout, QLabel, QPushButton, QVBoxLayout,
+                             QWidget)
 from twisted.internet.threads import deferToThread
 
-from cpchain.wallet.pages import wallet, app
 from cpchain.proxy.client import pick_proxy
-
-
 from cpchain.wallet.components.dialog import Dialog
-from cpchain.wallet.simpleqt.decorator import page
-from cpchain.wallet.simpleqt.widgets.label import Label
+from cpchain.wallet.pages import app, wallet
 from cpchain.wallet.simpleqt.basic import Input
-from cpchain.wallet.simpleqt.widgets import ComboBox
+from cpchain.wallet.simpleqt.decorator import page
 from cpchain.wallet.simpleqt.model import ListModel
-from cpchain.wallet.components.gif import LoadingGif
+from cpchain.wallet.simpleqt.widgets import ComboBox
+from cpchain.wallet.simpleqt.widgets.label import Label
 
 logger = logging.getLogger(__name__)
 
@@ -107,12 +105,15 @@ class PurchaseDialog(Dialog):
         if app.valid_password(self.password.value):
             deferToThread(get_proxy_address, self.proxy.current)
             app.event.emit(app.events.CLICK_PAY)
-            self.close()
+            super().close()
         else:
             app.msgbox.error("Password mismatch")
 
-    def handle_cancel(self):
+    def close(self):
         app.event.emit(app.events.CANCEL_PURCHASE)
+        super().close()
+
+    def handle_cancel(self):
         self.close()
 
     def style(self):

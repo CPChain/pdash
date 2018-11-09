@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (QFrame, QHBoxLayout, QMessageBox, QScrollArea,
 
 from .model import Model
 from .component import Component
+from .decorator import page, component
 
 sys.path.append('.')
 

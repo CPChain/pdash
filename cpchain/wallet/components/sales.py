@@ -264,6 +264,9 @@ class Sale(QWidget):
     def confirm(self, _):
         self.operator.buyer_confirm(self.order_id)
 
+    def comment(self, _):
+        pass
+
     def ui(self):
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignTop)
@@ -286,12 +289,13 @@ class Sale(QWidget):
             'Deliver',
             'Receive',
             'Confirm',
-            # 'Comment'
+            'Comment'
         ]
         callbacks = {
             'Deliver': self.deliver,
             'Receive': self.receive,
-            'Confirm': self.confirm
+            'Confirm': self.confirm,
+            'Comment': self.comment
         }
         second = QHBoxLayout()
         second.setAlignment(Qt.AlignLeft)
@@ -309,6 +313,8 @@ class Sale(QWidget):
             if item == 'Receive' and self.current == 2 and self.is_seller:
                 mode = 'todo'
             if item == 'Confirm' and self.current == 3 and self.is_seller:
+                mode = 'todo'
+            if item == 'Comment' and self.current == 4 and self.is_seller:
                 mode = 'todo'
             timestamp = self.timestamps[i] if i < self.current else None
             tmp = Status(name=item,
