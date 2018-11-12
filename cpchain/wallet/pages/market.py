@@ -92,6 +92,7 @@ class MarketPage(Page):
         pdsWidget.setMaximumWidth(width)
 
         layout.addWidget(pdsWidget)
+        layout.addStretch(1)
         scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         scroll.setWidgetResizable(True)

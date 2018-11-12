@@ -1,0 +1,13 @@
+---
+version: '2'
+services:
+  zookeeper:
+    image: mysql:5.6
+    hostname: pdash
+    container_name: market_db
+    ports:
+      - "3306:3306"
+    env_file:
+      - .env
+    volumes:
+      - ~/.pdash_db:/var/lib/mysql

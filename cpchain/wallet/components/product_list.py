@@ -75,6 +75,7 @@ class ProductList(QWidget):
             return
         if len(self.products) == 0:
             layout = QVBoxLayout()
+            layout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
             nodata = QLabel('0 Products!')
             nodata.setObjectName('no_data')
             nodata.setStyleSheet("""
