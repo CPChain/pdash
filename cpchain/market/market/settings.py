@@ -109,7 +109,7 @@ if not os.path.exists(dir_name):
     os.makedirs(dir_name)
 
 # Read MySQL config from <Project Home>/mysql/.env
-mysql_env_path = config.market.mysql.env_file
+mysql_env_path = os.path.expanduser(config.market.mysql.env_file)
 MYSQL_NAME = None
 MYSQL_PASSWORD = None
 MYSQL_USER = None

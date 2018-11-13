@@ -62,7 +62,7 @@ default_password = "^-_-^cpchain@2018^-_-^"
 [market.mysql]
 host="127.0.0.1"
 port=3306
-env_file="./mysql/.env"
+env_file="~/.cpchain/.mysql_env"
 
 [preview]
 val_min1 = 0
