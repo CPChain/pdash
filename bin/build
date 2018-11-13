@@ -47,6 +47,7 @@ elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]; then
     mkdir -p $dist_path/$cpc_path
     cp -r $cpc_path/* $dist_path/$cpc_path/
     cp lib/cpchain.toml $dist_path/cpchain/
+    cp lib/Uninstall.bat $dist_path/
 fi
 
 # Timing
