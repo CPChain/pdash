@@ -3,9 +3,10 @@
 # custom
 _local*
 
-# sqlite3
+# sqlite3/mysql
 *.db
 migrations/
+mysql/.env
 
 # editor
 .vscode

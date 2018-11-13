@@ -1,4 +1,12 @@
 ---
+
+# .mysql_env:
+#
+# MYSQL_ROOT_PASSWORD=
+# MYSQL_DATABASE=
+# MYSQL_USER=
+# MYSQL_PASSWORD=
+
 version: '2'
 services:
   zookeeper:
@@ -8,6 +16,6 @@ services:
     ports:
       - "3306:3306"
     env_file:
-      - .env
+      - ~/.cpchain/.mysql_env
     volumes:
-      - ~/.pdash_db:/var/lib/mysql
+      - ~/.cpchain/pdash_db:/var/lib/mysql
