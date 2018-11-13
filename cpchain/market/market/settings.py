@@ -108,24 +108,42 @@ dir_name = os.path.dirname(db_path)
 if not os.path.exists(dir_name):
     os.makedirs(dir_name)
 
+# Read MySQL config from <Project Home>/mysql/.env
+mysql_env_path = config.market.mysql.env_file
+MYSQL_NAME = None
+MYSQL_PASSWORD = None
+MYSQL_USER = None
+if os.path.exists(mysql_env_path):
+    mysql_config = dict()
+    with open(mysql_env_path, 'r') as file:
+        for line in file.readlines():
+            if line:
+                item = line.split('=')
+                if len(item) != 2:
+                    raise Exception('Wrong config "{}" in mysql/.env'.format(line))
+                key = item[0].strip()
+                value = item[1].strip()
+                mysql_config[key] = value
+    MYSQL_NAME = mysql_config['MYSQL_DATABASE']
+    MYSQL_PASSWORD = mysql_config['MYSQL_PASSWORD']
+    MYSQL_USER = mysql_config['MYSQL_USER']
+else:
+    raise Exception('No Mysql ENV file in /mysql/.env.')
+
 DATABASES = {
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': db_path,
+    #     # 'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    # }
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': db_path,
-        # 'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': MYSQL_NAME,
+        'USER': MYSQL_USER,
+        'PASSWORD': MYSQL_PASSWORD,
+        'HOST': config.market.mysql.host,
+        'PORT': config.market.mysql.port
     }
-
-    #  'default': {
-    #      'ENGINE': 'django.db.backends.postgresql',
-    #      'NAME': 'dev',
-    #      'USER': 'dev',
-    #      'PASSWORD': '123456',
-    #      'HOST': '127.0.0.1',
-    #      # 'HOST': '192.168.0.132',
-    #      'PORT': '5432',
-    #  }
-
-
 }
 
 

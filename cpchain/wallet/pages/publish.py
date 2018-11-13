@@ -49,7 +49,7 @@ class ImageUploadObject(QObject):
         self._width = width
         self._height = height
         self._background = background
-        self._icon = abs_path('icons/add@2x.jpg')
+        self._icon = '../../icons/add@2x.jpg'
         self._text = text
         self._browse_text = browse_text
         self._file = ""

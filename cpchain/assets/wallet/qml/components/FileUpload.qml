@@ -98,6 +98,7 @@ Shape {
                         width: 136
                         height: _uploaded? 16: 32
                         textFormat: Text.RichText;
+                        font.pixelSize: 11
                         wrapMode: _uploaded? Text.NoWrap: Text.WrapAnywhere;
                         text: _text
                         MouseArea {

@@ -11,12 +11,15 @@ class Dialog(QDialog):
     def __init__(self, parent, title="Title", width=500, height=180):
         self.parent = parent
         self.dragPosition = None
+        self.width = width
+        self.height = height
         super().__init__(parent)
         self.setWindowFlags(Qt.FramelessWindowHint)
 
         self.setAttribute(Qt.WA_TranslucentBackground)
 
-        self.center(width + 10, height + 10)
+        self.gap = 10
+        self.center(self.width + self.gap, self.height + self.gap)
         self.setAcceptDrops(True)
         layout = QVBoxLayout()
         layout.setSpacing(0)
@@ -109,6 +112,15 @@ class Dialog(QDialog):
         center_x = (_w - width) / 2
         center_y = (_h - height) / 2
         self.setGeometry(center_x, center_y, width, height)
+
+    def setHeight(self, height):
+        geometry = self.parent.geometry()
+        _w = geometry.width()
+        _h = geometry.height()
+        height = height + self.gap
+        center_x = (_w - self.width) / 2
+        center_y = (_h - height) / 2
+        self.setGeometry(center_x, center_y, self.width, height)
 
     def ui(self, widget):
         main = QVBoxLayout(widget)

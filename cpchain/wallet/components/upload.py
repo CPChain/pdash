@@ -47,7 +47,7 @@ class FileUploadObject(QObject):
         self._width = width
         self._height = height
         self._background = background
-        self._icon = abs_path('icons/add@2x.jpg')
+        self._icon = '../../icons/add@2x.jpg'
         self._text = text
         self._browse_text = browse_text
         self._file = ""
@@ -196,14 +196,25 @@ class UploadDialog(Dialog):
     okSignal = pyqtSignal(int)
 
     def __init__(self, parent=None, oklistener=None):
-        width = 550
-        height = 630
+        self.width_ = 550
+        self.height_ = 630
         title = "Upload your file"
         self.storage_index = 0
         self.now_wid = None
         self.oklistener = oklistener
 
         self.storage = [
+            {
+                'name': 'Proxy',
+                'type': 'proxy',
+                'height': self.height_ - 200,
+                'options': [
+                    {
+                        'type': 'combo',
+                        'items': []
+                    }
+                ]
+            },
             {
                 'name': 'Amazon S3',
                 'type': 's3',
@@ -233,6 +244,7 @@ class UploadDialog(Dialog):
             }, {
                 'name': 'IPFS',
                 'type': 'ipfs',
+                'height': self.height_ - 100,
                 'options': [
                     {
                         'type': 'edit',
@@ -245,15 +257,6 @@ class UploadDialog(Dialog):
                     }
                 ],
                 'listener': None
-            }, {
-                'name': 'Proxy',
-                'type': 'proxy',
-                'options': [
-                    {
-                        'type': 'combo',
-                        'items': []
-                    }
-                ]
             }
         ]
         self.proxy = ListModel([])
@@ -263,16 +266,19 @@ class UploadDialog(Dialog):
             if i:
                 self.max_row = max(self.max_row, len(i['options']))
         self.data()
-        super().__init__(wallet.main_wnd, title=title, width=width, height=height)
+        super().__init__(wallet.main_wnd, title=title, width=self.width_, height=self.height_)
         self.okSignal.connect(self.handle_upload_resp)
 
     def onChangeStorage(self, index):
         self.storage_index = index
         new_wid = self.build_option_widget(self.storage[self.storage_index])
+        height = self.storage[self.storage_index].get('height', self.height_)
+        self.setHeight(height)
         self.main.replaceWidget(self.now_wid, new_wid)
         self.now_wid.deleteLater()
         del self.now_wid
         self.now_wid = new_wid
+
 
     def build_option_widget(self, storage):
         if not storage:
@@ -294,6 +300,7 @@ class UploadDialog(Dialog):
                 layout.addWidget(self.gen_row(option['name'] + ":", wid))
             if option['type'] == 'combo':
                 wid = ComboBox(self.proxy)
+                wid.setMinimumWidth(340)
                 layout.addWidget(self.gen_row("Proxy:", wid))
 
             row += 1
@@ -339,7 +346,8 @@ class UploadDialog(Dialog):
     @component.create
     def create(self):
         def set_proxy(proxy):
-            self.proxy.value = proxy
+            if proxy:
+                self.proxy.value = list(set(proxy))
         pick_proxy().addCallbacks(set_proxy)
 
     def ui(self, widget):
@@ -357,6 +365,8 @@ class UploadDialog(Dialog):
         layout.addWidget(self.gen_row('Storage Location:', storage))
 
         self.now_wid = self.build_option_widget(self.storage[self.storage_index])
+        height = self.storage[self.storage_index].get('height', self.height_)
+        self.setHeight(height)
         layout.addWidget(self.now_wid)
 
         print(self.input_name.width())

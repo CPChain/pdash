@@ -59,6 +59,11 @@ es_hosts = '192.168.0.132:9200'
 market_url = "http://192.168.0.132:8083"
 default_password = "^-_-^cpchain@2018^-_-^"
 
+[market.mysql]
+host="127.0.0.1"
+port=3306
+env_file="./mysql/.env"
+
 [preview]
 val_min1 = 0
 val_max1 = 30
