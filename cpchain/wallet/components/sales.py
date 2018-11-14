@@ -18,7 +18,7 @@ from cpchain.wallet.simpleqt.model import Model
 from cpchain.wallet.simpleqt.basic import Builder
 from cpchain.wallet.simpleqt.decorator import component
 
-from .comment import Comment
+from .comment import CommentDialog
 
 logger = logging.getLogger(__name__)
 
@@ -194,6 +194,7 @@ class Sale(QWidget):
         self.timestamps = timestamps
         self.order_id = order_id
         self.mhash = mhash
+        self.comment_opened = False
         self.is_buyer = is_buyer
         self.is_seller = is_seller
         self.order_type = order_type
@@ -268,7 +269,12 @@ class Sale(QWidget):
         self.operator.buyer_confirm(self.order_id)
 
     def comment(self, _):
-        pass
+        if self.comment_opened:
+            return
+        self.comment_opened = True
+        comment = CommentDialog()
+        comment.exec_()
+        self.comment_opened = False
 
     def ui(self):
         layout = QVBoxLayout()
