@@ -70,6 +70,7 @@ class ProductList(QWidget):
         self.exec_(None, True)
 
     def exec_(self, layout=None, flag=False):
+        self.setContentsMargins(0, 0, 0, 0)
         pds = self.products
         if flag:
             return
@@ -77,11 +78,10 @@ class ProductList(QWidget):
             layout = QVBoxLayout()
             layout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
             nodata = QLabel('0 Products!')
-            nodata.setObjectName('no_data')
+            nodata.setObjectName('_product_list_no_data')
             nodata.setStyleSheet("""
                 text-align: center;
                 color: #aaa;
-                margin-left: 310px;
             """)
             layout.addWidget(nodata)
             widget = QWidget()
@@ -95,15 +95,17 @@ class ProductList(QWidget):
         row = int(len(pds) / self.col + 0.5) + 1
         if not layout:
             layout = QGridLayout()
+            layout.setContentsMargins(0, 0, 0, 0)
             widget = QWidget()
+            widget.setContentsMargins(0, 0, 0, 0)
             widget.setObjectName('parent_widget')
             widget.setLayout(layout)
-            # widget.setFixedWidth(720)
-            widget.setFixedHeight(250 * row)
+            # widget.setFixedHeight(250 * row)
             widget.setStyleSheet("QWidget#parent_widget{background: transparent;}")
 
             # Scroll Area Properties
             main = QVBoxLayout()
+            main.setContentsMargins(0, 0, 0, 0)
             if self.scroll:
                 scroll = QScrollArea()
                 scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -117,6 +119,7 @@ class ProductList(QWidget):
             self.setLayout(main)
 
         layout.setAlignment(Qt.AlignTop | Qt.AlignHCenter)
+        layout.setSpacing(30)
         for i in range(row):
             for j in range(self.col):
                 index = i * self.col + j
@@ -125,9 +128,3 @@ class ProductList(QWidget):
                 else:
                     tmp = QLabel('')
                     layout.addWidget(tmp, i, j)
-        self.setObjectName('main')
-        self.setStyleSheet("""
-            QWidget#product {
-                border: 1px solid red;
-            }
-        """)

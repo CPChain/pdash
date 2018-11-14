@@ -72,16 +72,19 @@ class Banner(QFrame):
     def style(self):
         return """
             QLabel {
-                color:#ffffff;
-                text-align:left;
-                padding-left: 32px;
             }
             QLabel#title {
+                color:#ffffff;
+                text-align:left;
                 padding-left: 28px;
                 font-size: 32px;
+                padding-left: 32px;
             }
             QLabel#subtitle {
+                color:#ffffff;
+                text-align:left;
                 font-size:20px;
+                padding-left: 32px;
             }
             QFrame#line {
                 margin-left: 38px;

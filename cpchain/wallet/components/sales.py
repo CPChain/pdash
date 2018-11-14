@@ -2,20 +2,23 @@ import asyncio
 import logging
 import traceback
 
-from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QUrl
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PyQt5.QtQuickWidgets import QQuickWidget
 from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.threads import deferToThread
 
 from cpchain.wallet import utils
 from cpchain.wallet.components.gif import LoadingGif
 from cpchain.wallet.components.loading import Loading
-from cpchain.wallet.pages import Binder, app, wallet, HorizontalLine
+from cpchain.wallet.pages import Binder, app, wallet, HorizontalLine, qml_path
 from cpchain.wallet.simpleqt import Signals
 from cpchain.wallet.simpleqt.model import Model
 from cpchain.wallet.simpleqt.basic import Builder
 from cpchain.wallet.simpleqt.decorator import component
+
+from .comment import Comment
 
 logger = logging.getLogger(__name__)
 

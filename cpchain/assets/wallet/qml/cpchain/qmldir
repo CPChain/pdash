@@ -3,3 +3,5 @@ Text 1.0 ./controls/Text.qml
 Image 1.0 ./controls/Image.qml
 AreaChart 1.0 ./controls/AreaChart.qml
 Raw 1.0 ./controls/Raw.qml
+
+Dialog 1.0 ./basic/Dialog.qml

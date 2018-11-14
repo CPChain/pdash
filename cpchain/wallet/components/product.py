@@ -82,12 +82,18 @@ class Product(QWidget):
         self.initUI()
 
     def initUI(self):
-        self.setMaximumWidth(220)
-        self.setMaximumHeight(415)
+        width = 220
+        self.setMinimumWidth(width)
+        self.setMaximumWidth(width)
+        height = 250
+        self.setMaximumHeight(height)
+        self.setMinimumHeight(height)
 
+        vbox_wrapper = QVBoxLayout()
+        vbox_wrapper.setAlignment(Qt.AlignTop | Qt.AlignHCenter)
+        vbox_wrapper.setContentsMargins(0, 0, 0, 0)
         vbox = QVBoxLayout()
-        # vbox.addStretch(1)
-
+        vbox.setContentsMargins(10, 10, 10, 10)
         def listener():
             app.router.redirectTo('product_detail',
                                   image=self.image,
@@ -105,10 +111,12 @@ class Product(QWidget):
         image_url = wallet.market_client.url + \
             'product/v1/allproducts/images/?path=' + self.image
 
-        image = ProductQML(None, image_url, 220, int(
+        image = ProductQML(None, image_url, width, int(
             self.h), market_hash=self.market_hash, show_status=self.show_status)
         image.obj.signals.click.connect(listener)
-        vbox.addWidget(image)
+        vbox_wrapper.addWidget(image)
+        vbox_wrapper.addLayout(vbox)
+        vbox_wrapper.addStretch(1)
 
         # Name
         name = QLabel(self.name)
@@ -141,12 +149,10 @@ class Product(QWidget):
         cpc.setObjectName('cpc')
         cpc_unit = QLabel('CPC')
         cpc_unit.setObjectName('cpc_unit')
-        sales = QLabel(str(self.sales) + ' sales')
-        sales.setObjectName('sales')
 
         hbox.addWidget(cpc)
         hbox.addWidget(cpc_unit)
-        hbox.addWidget(sales)
+
         hbox.addStretch(1)
 
         vbox.addLayout(hbox)
@@ -157,17 +163,22 @@ class Product(QWidget):
         timestamp.setObjectName('timestamp')
         tbox.addWidget(timestamp)
 
-        if self.remain != None:
-            remain = QLabel(str(self.remain) + ' Days Left')
-            remain.setObjectName('remain')
+        # add verticle-line
+        vline = QLabel("|")
+        vline.setObjectName('vline')
+        tbox.addWidget(vline)
 
-        # tbox.addWidget(remain)
+        sales = QLabel(str(self.sales) + ' sales')
+        sales.setObjectName('sales')
+        tbox.addWidget(sales)
+
         tbox.addStretch(1)
-
         vbox.addLayout(tbox)
 
+        vbox.addStretch(1)
+
         tmp = QWidget()
-        tmp.setLayout(vbox)
+        tmp.setLayout(vbox_wrapper)
         tmp.setContentsMargins(0, 0, 0, 0)
         tmp.setObjectName('main_product')
         layout = QVBoxLayout()
@@ -187,37 +198,47 @@ class Product(QWidget):
                 border:1px solid #dddddd;
                 border-radius:5px;
             }
-            #name {
+            QLabel#name {
                 font-size:14px;
                 color:#000000;
                 text-align:left;
+                background: transparent
+            }
+
+            QLabel#vline {
+                color: #dadada;
+                padding-bottom: 2px;
             }
 
             #category {
                 text-align: center;
-                border:1px solid #e9eff5;
+                border:1px solid #dadada;
                 border-radius:3px;
                 font-size:10px;
-                color:#3393ed;
+                color:#999;
                 text-align:center;
                 padding: 3px 4px;
+                background: transparent
             }
 
             #cpc_unit, #sales, #sales_unit{
                 font-size:12px;
-                color:#999999;
-                padding-top: 4px;
+                color:#777777;
+                padding-top: 0px;
+                background: transparent
             }
 
             #timestamp {
                 font-size:12px;
-                color:#999999;
+                color:#777777;
+                background: transparent
             }
 
             #cpc {
                 font-size:18px;
                 color:#000000;
                 text-align:left;
+                background: transparent
             }
 
             QHBoxLayout#hbox1::hover {

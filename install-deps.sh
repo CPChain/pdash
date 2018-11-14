@@ -97,6 +97,9 @@ fi
 # # compiler is only needed for dev.
 # # sudo apt install -y protobuf-compiler python3-protobuf
 
+# MySQL
+# sudo apt install libmysqlclient-dev
+
 # sudo apt install -y python3-cryptography python3-sqlalchemy python3-toml python3-boto3
 
 # sudo apt install -y python3-flake8
