@@ -284,7 +284,7 @@ class Sale(QWidget):
         image = QLabel()
         image.setObjectName('image')
         pix = QPixmap(self.image)
-        pix = pix.scaled(48, 48)
+        pix = pix.scaled(96, 96)
         image.setPixmap(pix)
         first.addWidget(image)
 
