@@ -1,8 +1,8 @@
 import QtQuick 2.7
 import QtQuick.Layouts 1.1
+import QtGraphicalEffects 1.0
 import QtQuick.Controls 2.0
 import "../cpchain" as CPC
-
 
 Rectangle {
     id: product;
@@ -14,11 +14,28 @@ Rectangle {
         width: self.width
         height: self.height
         Image {
+            id: img
             source: self.src
             width: self.width
             height: self.height
             fillMode: Image.Stretch
             anchors.centerIn: parent
+
+            property bool rounded: true
+
+            layer.enabled: rounded
+            layer.effect: OpacityMask {
+                maskSource: Item {
+                    width: img.width
+                    height: img.height
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: img.width
+                        height: img.height
+                        radius: 5
+                    }
+                }
+            }
 
             MouseArea {
                 id: image

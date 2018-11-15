@@ -93,6 +93,10 @@ class Builder:
     @operate
     def pixmap(self, pixmap):
         self.widget.setPixmap(pixmap)
+    
+    @operate
+    def style(self, style):
+        self.widget.setStyleSheet(style)
 
     def build(self):
         return self.widget

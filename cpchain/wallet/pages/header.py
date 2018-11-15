@@ -85,7 +85,7 @@ class Header(QFrame):
     def init_ui(self):
         def create_logos():
             self.logo_label = logo_label = QLabel(self)
-            pixmap = get_pixm('PDASH logo@3x.png')# 'cpc-logo-single.png')
+            pixmap = get_pixm('PDASH logo@3x.png')
             pixmap = pixmap.scaled(150, 33)
             logo_label.setPixmap(pixmap)
             # self.word_label = QLabel(self)

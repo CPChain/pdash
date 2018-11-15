@@ -70,11 +70,11 @@ class MarketPage(Page):
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
 
-        width = 750
+        width = 720
 
         path = abs_path('icons/banner 2.png')
         banner = Banner(path,
-                        width=720,
+                        width=width,
                         height=155,
                         title="PDASH",
                         subtitle="Parallel Distributed Architecture for Data Storage and Sharing")

@@ -2,20 +2,23 @@ import asyncio
 import logging
 import traceback
 
-from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QUrl
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PyQt5.QtQuickWidgets import QQuickWidget
 from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.threads import deferToThread
 
 from cpchain.wallet import utils
 from cpchain.wallet.components.gif import LoadingGif
 from cpchain.wallet.components.loading import Loading
-from cpchain.wallet.pages import Binder, app, wallet, HorizontalLine
+from cpchain.wallet.pages import Binder, app, wallet, HorizontalLine, qml_path
 from cpchain.wallet.simpleqt import Signals
 from cpchain.wallet.simpleqt.model import Model
 from cpchain.wallet.simpleqt.basic import Builder
 from cpchain.wallet.simpleqt.decorator import component
+
+from .comment import CommentDialog
 
 logger = logging.getLogger(__name__)
 
@@ -191,6 +194,7 @@ class Sale(QWidget):
         self.timestamps = timestamps
         self.order_id = order_id
         self.mhash = mhash
+        self.comment_opened = False
         self.is_buyer = is_buyer
         self.is_seller = is_seller
         self.order_type = order_type
@@ -265,7 +269,12 @@ class Sale(QWidget):
         self.operator.buyer_confirm(self.order_id)
 
     def comment(self, _):
-        pass
+        if self.comment_opened:
+            return
+        self.comment_opened = True
+        comment = CommentDialog()
+        comment.exec_()
+        self.comment_opened = False
 
     def ui(self):
         layout = QVBoxLayout()
@@ -275,7 +284,7 @@ class Sale(QWidget):
         image = QLabel()
         image.setObjectName('image')
         pix = QPixmap(self.image)
-        pix = pix.scaled(48, 48)
+        pix = pix.scaled(96, 96)
         image.setPixmap(pix)
         first.addWidget(image)
 

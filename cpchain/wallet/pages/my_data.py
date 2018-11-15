@@ -182,11 +182,11 @@ class MyDataTab(Page):
 
         # Product List
         pdsWidget = ProductList(self.products, scroll=False)
-        width = 800
+        width = 750
         height = 200
         pdsWidget.setMinimumWidth(width)
         pdsWidget.setMaximumWidth(width)
-        self.add(pdsWidget)
+        self.addH(pdsWidget, align=Qt.AlignTop | Qt.AlignHCenter)
 
         # Batch Data
         self.add(Builder().text('Batch Data').name('label_hint').build())

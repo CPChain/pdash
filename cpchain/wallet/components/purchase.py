@@ -98,7 +98,7 @@ class PurchaseDialog(Dialog):
             proxy = proxy_addr
             seller = self.owner_address
             app.unlock()
-            wallet.chain_broker.handler.buy_product(msg_hash, file_title, proxy, seller, int(self.price.value))
+            wallet.chain_broker.handler.buy_product(msg_hash, file_title, proxy, seller, float(self.price.value))
         if not self.password.value:
             app.msgbox.warning("Please input password")
             return
