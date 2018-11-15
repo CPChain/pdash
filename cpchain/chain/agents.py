@@ -75,7 +75,7 @@ class BuyerAgent(Agent):
         event_filter = self.contract.eventFilter('OrderInitiated', {'filter': {'from': self.account}})
         # Initiate an order
         logger.debug("initiate an order")
-        offered_price = self.ONE_ETH_IN_WEI * order_info.value
+        offered_price = int(self.ONE_ETH_IN_WEI * order_info.value)
         transaction = {
             'value': offered_price,
             'from': self.account,

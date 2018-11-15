@@ -311,6 +311,7 @@ class Handler:
         rsa_key = RSACipher.load_public_key()
         # rsa_key = self.broker.wallet.market_client.public_key
         logger.debug("desc hash: %s", desc_hash)
+        logger.info('Value: %s', value)
         product = OrderInfo(
             desc_hash=desc_hash,
             buyer_rsa_pubkey=rsa_key,
