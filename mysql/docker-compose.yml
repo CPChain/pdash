@@ -9,7 +9,7 @@
 
 version: '2'
 services:
-  zookeeper:
+  pdash_market:
     image: mysql:5.6
     hostname: pdash
     container_name: market_db
@@ -19,3 +19,4 @@ services:
       - ~/.cpchain/.mysql_env
     volumes:
       - ~/.cpchain/pdash_db:/var/lib/mysql
+      - ./mysqld.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf
