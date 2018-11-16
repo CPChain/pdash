@@ -310,6 +310,9 @@ def create_rsa_key():
         salt = ''.join(random.sample(string.ascii_letters + string.digits, 20))
         RSACipher.generate_private_key(password=salt.encode())
 
+@app.event.register(app.events.PASSWORD_ERROR)
+def password_error(_):
+    app.msgbox.error("Password mismatch")
 
 if __name__ == '__main__':
     app.start_at = time.time()
