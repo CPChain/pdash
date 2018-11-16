@@ -80,18 +80,18 @@ disable_existing_loggers = false
 format = '%(asctime)s [%(levelname)s][%(module)s:%(lineno)d] %(name)s: %(message)s'
 
 [logging.handlers.default]
-level = "DEBUG"
+level = "INFO"
 class = "logging.StreamHandler"
 formatter = "simple"
 
 [logging.loggers.cpchain]
 handlers = ["default"]
-level = "DEBUG"
+level = "INFO"
 propagate = false
 
 [logging.loggers.__main__]
 handlers = ["default"]
-level = "DEBUG"
+level = "INFO"
 propagate = false
 
 [logging.loggers.kademlia]

@@ -125,8 +125,8 @@ class BuyerAgent(Agent):
         transaction = {'value': 0, 'from': self.account, 'gas': 100000}
         tx_hash = self.contract.functions.buyerConfirmDeliver(order_id).transact(transaction)
         logger.debug("Thank you for confirming deliver! Tx hash {tx}".format(tx=tx_hash))
-        wait_for_transaction_receipt(self.web3, tx_hash)
-        return tx_hash
+        tx_receipt = wait_for_transaction_receipt(self.web3, tx_hash)
+        return tx_receipt
 
     def dispute(self, order_id,):
         transaction = {'value': 0, 'from': self.account,}
@@ -177,14 +177,14 @@ class SellerAgent(Agent):
         if offered_price < 0:
             return None
         try:
-            transaction = {'value': offered_price, 'from': self.account, 'gas': 100000, 'sender': self.account}
+            transaction = {'value': offered_price, 'from': self.account, 'gas': 100000} #, 'sender': self.account}
             logger.debug("transaction: %s", transaction)
             tx_hash = self.contract.functions.sellerConfirm(order_id).transact(transaction)
             logger.debug("You have confirmed the order:{order_id} and deposited {value} to contract {address}".format(order_id=order_id, value=offered_price, address=self.contract.address))
-            wait_for_transaction_receipt(self.web3, tx_hash)
+            tx_receipt = wait_for_transaction_receipt(self.web3, tx_hash)
         except Exception as e:
             raise e
-        return tx_hash
+        return tx_receipt
 
     def confirm_dispute(self, order_id, if_agree,):
         transaction = {'value': 0, 'from': self.account,}
@@ -234,23 +234,23 @@ class ProxyAgent(Agent):
     def claim_fetched(self, order_id,):
         transaction = {'value': 0, 'from': self.account}
         gas_estimate = self.contract.functions.proxyFetched(order_id).estimateGas(transaction)
-        transaction['gas'] = gas_estimate + 100000
+        transaction['gas'] = gas_estimate * 2
         tx_hash = self.contract.functions.proxyFetched(order_id).transact(transaction)
-        wait_for_transaction_receipt(self.web3, tx_hash)
-        return tx_hash
+        tx_receipt = wait_for_transaction_receipt(self.web3, tx_hash)
+        return tx_receipt
 
     def claim_delivered(self, order_id, relay_hash, ):
         transaction = {'value': 0, 'from': self.account}
         gas_estimate = self.contract.functions.proxyDelivered(relay_hash, order_id).estimateGas(transaction)
-        transaction['gas'] = gas_estimate + 100000
+        transaction['gas'] = gas_estimate * 2
         tx_hash = self.contract.functions.proxyDelivered(relay_hash, order_id).transact(transaction)
-        wait_for_transaction_receipt(self.web3, tx_hash)
-        return tx_hash
+        tx_receipt = wait_for_transaction_receipt(self.web3, tx_hash)
+        return tx_receipt
 
     def handle_dispute(self, order_id, result,):
         transaction = {'value': 0, 'from': self.account}
         gas_estimate = self.contract.functions.proxyProcessDispute(order_id, result).estimateGas(transaction)
-        transaction['gas'] = gas_estimate + 100000
+        transaction['gas'] = gas_estimate * 2
         tx_hash = self.contract.functions.proxyProcessDispute(order_id, result).transact(transaction)
         wait_for_transaction_receipt(self.web3, tx_hash)
         return tx_hash
