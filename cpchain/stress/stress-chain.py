@@ -2,6 +2,7 @@ import sys
 import time
 from signal import signal, SIGABRT, SIGILL, SIGINT, SIGSEGV, SIGTERM
 from random import randint
+from threading import current_thread
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -17,7 +18,7 @@ from cpchain.chain.agents import BuyerAgent, SellerAgent, ProxyAgent
 
 from cpchain.chain.models import OrderInfo
 
-from cpchain.stress.account import create_test_accounts
+from cpchain.stress.account import create_test_accounts, _passphrase
 
 
 def functrace(func):
@@ -48,9 +49,9 @@ class Player:
     def __init__(self, account):
         self.account = account
 
-        self.buyer_agent = BuyerAgent(w3, self.contract_path, self.contract_name, self.account)
-        self.seller_agent = SellerAgent(w3, self.contract_path, self.contract_name, self.account)
-        self.proxy_agent = ProxyAgent(w3, self.contract_path, self.contract_name, self.account)
+        self.buyer_agent = BuyerAgent(w3, self.contract_path, self.contract_name, self.account.address)
+        self.seller_agent = SellerAgent(w3, self.contract_path, self.contract_name, self.account.address)
+        self.proxy_agent = ProxyAgent(w3, self.contract_path, self.contract_name, self.account.address)
 
         self.rsa_public_key = generate_rsa_public_key()
 
@@ -65,7 +66,7 @@ class Player:
 
         return OrderInfo(
             desc_hash=desc_hash,
-            seller=self.account,
+            seller=self.account.address,
             value=value,
 
             buyer_rsa_pubkey=None,
@@ -83,66 +84,58 @@ class Player:
             desc_hash=product.desc_hash,
             buyer_rsa_pubkey=buyer_rsa_pubkey,
             seller=product.seller,
-            proxy=proxy.account,
-            secondary_proxy=proxy.account,
+            proxy=proxy.account.address,
+            secondary_proxy=proxy.account.address,
             proxy_value=10,
             value=product.value,
             time_allowed=3600 * 24
         )
 
-        w3.personal.unlockAccount(self.account, 'cpc')
+        w3.personal.unlockAccount(self.account.address, _passphrase)
 
         order_id = self.buyer_agent.place_order(product)
-        # w3.personal.lockAccount(self.account)
+        # w3.personal.lockAccount(self.account.address)
 
         # return -1 if failure
         return order_id
 
     @functrace
     def seller_confirm_order(self, order_id):
-        w3.personal.unlockAccount(self.account, 'cpc')
+        w3.personal.unlockAccount(self.account.address, _passphrase)
         tx_receipt = self.seller_agent.confirm_order(order_id)
-        # w3.personal.lockAccount(self.account)
+        # w3.personal.lockAccount(self.account.address)
 
         return tx_receipt
 
     @functrace
     def proxy_claim_fetched(self, order_id):
-        w3.personal.unlockAccount(self.account, 'cpc')
+        w3.personal.unlockAccount(self.account.address, _passphrase)
         tx_receipt = self.proxy_agent.claim_fetched(order_id)
-        # w3.personal.lockAccount(self.account)
+        # w3.personal.lockAccount(self.account.address)
 
         return tx_receipt
 
     @functrace
     def proxy_claim_delivered(self, order_id):
-        w3.personal.unlockAccount(self.account, 'cpc')
+        w3.personal.unlockAccount(self.account.address, _passphrase)
         tx_receipt = self.proxy_agent.claim_delivered(order_id, b'dummy')
-        # w3.personal.lockAccount(self.account)
+        # w3.personal.lockAccount(self.account.address)
 
         return tx_receipt
 
     @functrace
     def buyer_confirm_order(self, order_id):
-        w3.personal.unlockAccount(self.account, 'cpc')
+        w3.personal.unlockAccount(self.account.address, _passphrase)
         tx_receipt = self.buyer_agent.confirm_order(order_id)
-        # w3.personal.lockAccount(self.account)
+        # w3.personal.lockAccount(self.account.address)
 
         return tx_receipt
 
-def signal_handler(*args):
-    print("Killed by user")
-    sys.exit(1)
-
-def install_signal():
-    for sig in (SIGABRT, SIGILL, SIGINT, SIGSEGV, SIGTERM):
-        signal(sig, signal_handler)
 
 players = {}
 
 @functrace
 def job_loop(accounts):
-    install_signal()
 
     test_players = []
     for account in accounts:
@@ -191,14 +184,24 @@ def do_one_order(seller, buyer, proxy):
         print('buyer %s failed to confirm order' % buyer.account)
         print(tx_receipt)
         return
-    print('success order flow: seller %s, buyer %s, proxy %s' % (seller.account, buyer.account, proxy.account))
+    print('success order flow: seller %s, buyer %s, proxy %s' % (
+        seller.account.address, buyer.account.address, proxy.account.address)
+        )
 
+def signal_handler(*args):
+    sys.exit(1)
+
+def install_signal():
+    for sig in (SIGABRT, SIGILL, SIGINT, SIGSEGV, SIGTERM):
+        signal(sig, signal_handler)
 
 def main():
+    install_signal()
+
     account_num = 100
     accounts = create_test_accounts(account_num)
 
-    concurrence_num = 100
+    concurrence_num = 10
 
     while concurrence_num:
         test_accounts = []
@@ -213,4 +216,5 @@ def main():
 if __name__ == '__main__':
 
     main()
+
     reactor.run()
