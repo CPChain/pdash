@@ -104,6 +104,8 @@ class MarketPage(Page):
         _layout = QVBoxLayout()
         _layout.setAlignment(Qt.AlignTop)
         _layout.addWidget(scroll)
+        # add spacing with bottom
+        _layout.addSpacing(30)
         wid.setStyleSheet("""
         """)
         return _layout
