@@ -1,14 +1,22 @@
 #!/usr/bin/env bash
 
 # version
-VERSION="2.0.1"
+VERSION="2.0.0"
+
+if [ $PDASH_VERSION ];then
+    export PDASH_VERSION=$VERSION
+else
+    VERSION=$PDASH_VERSION
+fi
+
+echo "Build PDash $VERSION..."
 
 START=`date +%s`;
 
 cd "$(dirname "${BASH_SOURCE[0]}")"/..
 
 # Clean up
-echo "Clean up..."
+echo "Clean up"
 rm -rf build/
 rm -rf dist/
 
