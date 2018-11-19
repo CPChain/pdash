@@ -42,8 +42,17 @@ class Status(QWidget):
         self.width = width
         self.status_elem = None
         super().__init__()
+        self.handler_map = {
+            'Deliver': ('delivering', 'delivery'),
+            'Receive': ('receiving', 'receive'),
+            'Confirm': ('confirming', 'confirm')
+        }
         self.init()
         self.ui()
+        # is loading
+        if self.order_id in app.is_order_handling.get(self.name, set()):
+            self.signals.loading.emit()
+
 
     def init(self):
         @app.event.register(app.events.UPDATE_ORDER_STATUS)
@@ -52,17 +61,17 @@ class Status(QWidget):
             if order_id != self.order_id:
                 return
             status = event.data['status']
-            tmp_map = {
-                'Deliver': ('delivering', 'delivery'),
-                'Receive': ('receiving', 'receive'),
-                'Confirm': ('confirming', 'confirm')
-            }
-            for k, v in tmp_map.items():
+            
+            for k, v in self.handler_map.items():
+                _set = app.is_order_handling.get(k, set())
                 if self.name == k:
                     if status == v[0]:
                         self.signals.loading.emit()
+                        _set.add(order_id)
                     elif status == v[1]:
                         self.signals.loading_over.emit()
+                        _set.remove(order_id)
+                app.is_order_handling[k] = _set
         self.signals.loading.connect(self.setLoading)
         self.signals.loading_over.connect(self.hideLoading)
 
@@ -94,6 +103,8 @@ class Status(QWidget):
         layout.setAlignment(Qt.AlignTop)
         status = QLabel(self.name)
         status.setObjectName('status')
+        if self.mode == 'active':
+            status.setCursor(Qt.PointingHandCursor)
         status.setAlignment(Qt.AlignCenter)
         status.setMinimumWidth(miniWidth)
         status.setMinimumHeight(self.h1)
@@ -239,7 +250,7 @@ class Sale(QWidget):
             order_info[self.order_id] = wallet.chain_broker.buyer.query_order(
                 self.order_id)
             app.unlock()
-            if self.order_type == 'file':
+            if self.order_type == 'file': 
                 wallet.chain_broker.seller_send_request(order_info)
             else:
                 wallet.chain_broker.seller_send_request_stream(order_info)

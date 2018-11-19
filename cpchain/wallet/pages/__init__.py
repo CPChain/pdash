@@ -126,6 +126,7 @@ class App:
         self.is_windows = is_windows
         self.status_ = {}
         self.storage = self.load_params()
+        self.is_order_handling = dict()
         self.init()
 
     def load_params(self):
