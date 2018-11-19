@@ -10,8 +10,6 @@ import sys
 import time
 from threading import Thread
 
-sys.path.append('.')
-
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
