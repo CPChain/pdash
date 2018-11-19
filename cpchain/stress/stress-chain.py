@@ -19,14 +19,7 @@ from cpchain.chain.agents import BuyerAgent, SellerAgent, ProxyAgent
 from cpchain.chain.models import OrderInfo
 
 from cpchain.stress.account import create_test_accounts, _passphrase
-
-
-def functrace(func):
-    def newfunc(*args, **kwargs):
-        print(func.__name__)
-        ret = func(*args, **kwargs)
-        return ret
-    return newfunc
+from cpchain.stress.debug import functrace
 
 @functrace
 def generate_rsa_public_key():

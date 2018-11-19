@@ -9,17 +9,12 @@ from twisted.internet.threads import deferToThread
 
 from cpchain.utils import reactor, join_with_rc, config
 from cpchain.chain.utils import default_w3 as w3
+from cpchain.stress.debug import functrace
 
 _passphrase = 'cpc'
 _keystore_dir = join_with_rc(config.account.keystore_dir)
 os.makedirs(_keystore_dir, exist_ok=True)
 
-def functrace(func):
-    def newfunc(*args, **kwargs):
-        print(func.__name__)
-        ret = func(*args, **kwargs)
-        return ret
-    return newfunc
 
 @functrace
 def create_eth_account():
