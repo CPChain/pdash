@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# version
+VERSION="2.0.1"
+
 START=`date +%s`;
 
 cd "$(dirname "${BASH_SOURCE[0]}")"/..
@@ -12,12 +15,14 @@ rm -rf dist/
 # OS
 if [ "$(uname)" == "Darwin" ]; then
     # Mac OS
-    APP_NAME="PDash"
+    APP_NAME="pdash-macos-$VERSION"
     APP_ICON="lib/pdash.icns"
 
     echo "Build..."
     # python -O -m PyInstaller -F -w cpchain/wallet/main.py --hidden-import=eth_hash.backends.pycryptodome --name $APP_NAME --icon $APP_ICON
-    python -O -m PyInstaller PDash.spec
+    sed "s/'PDash/'$APP_NAME/g" PDash.spec > $APP_NAME.spec
+    python -O -m PyInstaller $APP_NAME.spec
+    rm $APP_NAME.spec
 
     echo "Copy cpchain..."
     cpc_path="cpchain/assets/"
@@ -32,7 +37,7 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
     echo "Linux"
 elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]; then
     # Windows
-    APP_NAME="PDash.win10"
+    APP_NAME="pdash-win10-$VERSION"
     APP_ICON="lib/pdash_1024x1024x32.ico"
 
     python -O -m PyInstaller -F -w cpchain/wallet/main.py \
