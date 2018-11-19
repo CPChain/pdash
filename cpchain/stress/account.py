@@ -4,16 +4,28 @@ import glob
 import json
 from datetime import datetime
 
-from cpchain.utils import join_with_rc, config
+from twisted.internet.defer import DeferredList, inlineCallbacks, Deferred
+from twisted.internet.threads import deferToThread
+
+from cpchain.utils import reactor, join_with_rc, config
 from cpchain.chain.utils import default_w3 as w3
 
 _passphrase = 'cpc'
 _keystore_dir = join_with_rc(config.account.keystore_dir)
 os.makedirs(_keystore_dir, exist_ok=True)
 
+def functrace(func):
+    def newfunc(*args, **kwargs):
+        print(func.__name__)
+        ret = func(*args, **kwargs)
+        return ret
+    return newfunc
+
+@functrace
 def create_eth_account():
     return w3.eth.account.create()
 
+@functrace
 def backup_eth_account(eth_account, passphrase=_passphrase, keystore_dir=_keystore_dir):
 
     file_name = "UTC--%s--%s" % (datetime.utcnow().isoformat(), eth_account.address[2:].lower())
@@ -25,10 +37,12 @@ def backup_eth_account(eth_account, passphrase=_passphrase, keystore_dir=_keysto
     with open(keystore, 'w') as f:
         f.write(json.dumps(encrypted_key))
 
+@functrace
 def get_keystore_list(keystore_dir=_keystore_dir):
     ptn = os.path.join(keystore_dir, 'UTC-*')
     return glob.glob(ptn)
 
+@functrace
 def load_eth_account(keystore, passphrase=_passphrase):
     with open(keystore) as f:
         encrypted_key = json.load(f)
@@ -38,46 +52,105 @@ def load_eth_account(keystore, passphrase=_passphrase):
 
     return eth_account
 
+@functrace
 def load_eth_account_list(account_num):
 
     eth_account_list = []
+    ds = []
 
     for keystore in get_keystore_list():
-        eth_account_list.append(load_eth_account(keystore))
+        d = deferToThread(load_eth_account, keystore)
+        ds.append(d)
+        # eth_account_list.append(load_eth_account(keystore))
         account_num -= 1
         if account_num == 0:
             break
 
-    return eth_account_list
+    def handle_result(result):
+        for (success, value) in result:
+            if success:
+                account = value
+                print('Loading account success: ', account.address)
+                eth_account_list.append(account)
+            else:
+                print('Loading account failure: ', value.getErrorMessage())
 
+        return eth_account_list
 
-def create_test_accounts(account_num, passphrase=_passphrase):
+    if ds:
+        dl = DeferredList(ds, consumeErrors=True)
+        dl.addCallback(handle_result)
+    else:
+        dl = Deferred()
+        dl.callback([])
+
+    return dl
+
+@functrace
+def prepare_eth_account():
     ETH = 10**18
 
-    eth_account_list = load_eth_account_list(account_num)
+    eth_account = create_eth_account()
+    transaction = {
+        'from': w3.eth.coinbase,
+        'to': eth_account.address,
+        'value': 100000 * ETH
+        }
+
+    w3.personal.sendTransaction(transaction, _passphrase)
+
+    # TODO: to be removed when PDASH swithing to eth.sendRawTransaction()
+    w3.personal.importRawKey(eth_account.privateKey, _passphrase)
+
+    backup_eth_account(eth_account)
+
+    return eth_account
+
+@functrace
+def prepare_eth_account_list(account_num):
+    eth_account_list = []
+    ds = []
+
+    for i in range(0, account_num):
+        d = deferToThread(prepare_eth_account)
+        ds.append(d)
+        account_num -= 1
+        if account_num == 0:
+            break
+
+    def handle_result(result):
+        for (success, value) in result:
+            if success:
+                account = value
+                print('Creating account success: ', account.address)
+                eth_account_list.append(account)
+            else:
+                print('Creating account failure: ', value.getErrorMessage())
+
+        return eth_account_list
+
+    if ds:
+        dl = DeferredList(ds, consumeErrors=True)
+        dl.addCallback(handle_result)
+
+    return dl
+
+
+@inlineCallbacks
+def create_test_accounts(account_num, passphrase=_passphrase):
+    eth_account_list = yield load_eth_account_list(account_num)
 
     if len(eth_account_list) < account_num:
         missing_num = account_num - len(eth_account_list)
-
-        for i in range(0, missing_num):
-            eth_account = create_eth_account()
-            backup_eth_account(eth_account)
-
-            eth_account_list.append(eth_account)
-
-            # TODO: to be removed when PDASH swithing to eth.sendRawTransaction()
-            w3.personal.importRawKey(eth_account.privateKey, _passphrase)
-
-            transaction = {
-                'from': w3.eth.coinbase,
-                'to': eth_account.address,
-                'value': 100000 * ETH
-            }
-            w3.personal.sendTransaction(transaction, _passphrase)
+        missing_account_list = yield prepare_eth_account_list(missing_num)
+        eth_account_list += missing_account_list
 
     print('eth accout list for testing is ready.')
 
     return eth_account_list
 
 if __name__ == '__main__':
-    create_test_accounts(100)
+
+    create_test_accounts(3)
+
+    reactor.run()
