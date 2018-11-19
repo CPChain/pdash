@@ -9,6 +9,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 
 from twisted.internet.threads import deferToThread
+from twisted.internet.defer import DeferredList, inlineCallbacks, Deferred
 
 from cpchain.utils import reactor, config, join_with_root
 from cpchain.crypto import Encoder
@@ -128,7 +129,7 @@ class Player:
 players = {}
 
 @functrace
-def job_loop(accounts):
+def job_loop(loop_num, accounts):
 
     test_players = []
     for account in accounts:
@@ -144,10 +145,21 @@ def job_loop(accounts):
     buyer = test_players[1]
     proxy = test_players[2]
 
-    while True:
-        do_one_order(seller, buyer, proxy)
-        time.sleep(1)
+    while loop_num:
+        success = do_one_order(seller, buyer, proxy)
+        if not success:
+            print('failure order flow: seller %s, buyer %s, proxy %s' % (
+                seller.account.address, buyer.account.address, proxy.account.address)
+                )
+            break
+        else:
+            print('success order flow: seller %s, buyer %s, proxy %s' % (
+                seller.account.address, buyer.account.address, proxy.account.address)
+                )
 
+        loop_num -= 1
+
+    return success
 
 @functrace
 def do_one_order(seller, buyer, proxy):
@@ -155,31 +167,29 @@ def do_one_order(seller, buyer, proxy):
     product = seller.publish_product()
     order_id = buyer.buyer_place_order(product, proxy)
     if order_id < 0:
-        print('buyer %s failed to place order!' % buyer.account)
-        return
+        print('buyer %s failed to place order!' % buyer.account.address)
+        return False
     tx_receipt = seller.seller_confirm_order(order_id)
     if tx_receipt.status == 0:
-        print('seller %s failed to confirm order' % seller.account)
+        print('seller %s failed to confirm order' % seller.account.address)
         print(tx_receipt)
-        return
+        return False
     tx_receipt = proxy.proxy_claim_fetched(order_id)
     if tx_receipt.status == 0:
-        print('proxy %s failed to claim fetched' % proxy.account)
+        print('proxy %s failed to claim fetched' % proxy.account.address)
         print(tx_receipt)
-        return
+        return False
     tx_receipt = proxy.proxy_claim_delivered(order_id)
     if tx_receipt.status == 0:
-        print('proxy %s failed to claim delivered' % proxy.account)
+        print('proxy %s failed to claim delivered' % proxy.account.address)
         print(tx_receipt)
-        return
+        return False
     tx_receipt = buyer.buyer_confirm_order(order_id)
     if tx_receipt.status == 0:
         print('buyer %s failed to confirm order' % buyer.account)
         print(tx_receipt)
-        return
-    print('success order flow: seller %s, buyer %s, proxy %s' % (
-        seller.account.address, buyer.account.address, proxy.account.address)
-        )
+        return False
+    return True
 
 def signal_handler(*args):
     sys.exit(1)
@@ -188,13 +198,17 @@ def install_signal():
     for sig in (SIGABRT, SIGILL, SIGINT, SIGSEGV, SIGTERM):
         signal(sig, signal_handler)
 
+@inlineCallbacks
 def main():
     install_signal()
 
-    account_num = 100
-    accounts = create_test_accounts(account_num)
-
+    account_num = 10
     concurrence_num = 10
+    loop_num = 2
+
+    ds = []
+
+    accounts = yield create_test_accounts(account_num)
 
     while concurrence_num:
         test_accounts = []
@@ -202,9 +216,29 @@ def main():
             account = accounts[randint(0, account_num - 1)]
             test_accounts.append(account)
 
-        deferToThread(job_loop, test_accounts)
+        d = deferToThread(job_loop, loop_num, test_accounts)
+        ds.append(d)
 
         concurrence_num -= 1
+
+    def handle_result(result):
+        success_num = 0
+        failure_num = 0
+        for (success, value) in result:
+            if success:
+                if value:
+                    success_num += 1
+                else:
+                    failure_num += 1
+            else:
+                print('job failure with exception: %s' % value.getErrorMessage())
+                failure_num += 1
+
+        print('job stat: %d succeed, %d failed.' % (success_num, failure_num))
+
+    if ds:
+        dl = DeferredList(ds, consumeErrors=True)
+        dl.addCallback(handle_result)
 
 if __name__ == '__main__':
 
