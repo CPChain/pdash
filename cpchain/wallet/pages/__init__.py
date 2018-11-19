@@ -3,21 +3,30 @@ import json
 import logging
 import os
 import os.path as osp
+import random
+import sys
 import string
 import platform
 import time
 from enum import Enum
+
+from twisted.web import client
+from twisted.logger import globalLogBeginner, textFileLogObserver
 
 from PyQt5.QtGui import QCursor, QFont, QFontDatabase, QIcon, QPixmap
 from PyQt5.QtWidgets import QFrame, QMessageBox
 from twisted.internet import reactor
 
 from cpchain import config, root_dir
-from cpchain.wallet import events
+from cpchain.crypto import RSACipher
+from cpchain.wallet import events, utils
 from cpchain.wallet.simpleqt import event
 from cpchain.wallet.wallet import Wallet
 
 wallet = Wallet(reactor)
+
+client._HTTP11ClientFactory.noisy = False
+globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
 
 global main_wnd
 
@@ -235,5 +244,22 @@ class App:
             orders += order_list
         return orders
 
+def create_rsa_key():
+    path = os.path.expanduser('~/.cpchain')
+    password_file = path + '/password'
+    key_file = path + '/private_key.pem'
+    config.conf['wallet']['rsa_private_key_password_file'] = password_file
+    config.conf['wallet']['rsa_private_key_file'] = key_file
+    # if private.pem
+    if not os.path.exists(password_file) or not os.path.exists(key_file):
+        salt = ''.join(random.sample(string.ascii_letters + string.digits, 20))
+        RSACipher.generate_private_key(password=salt.encode())
+
+def init_font(application):
+    # load fonts
+    utils.load_fonts(abs_path('fonts'))
+    font_name = "Microsoft Sans Serif" if app.is_windows() else "SF UI Display"
+    font = QFont(font_name)
+    application.setFont(font)
 
 app = App()
