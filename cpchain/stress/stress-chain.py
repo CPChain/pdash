@@ -2,7 +2,6 @@ import sys
 import time
 from signal import signal, SIGABRT, SIGILL, SIGINT, SIGSEGV, SIGTERM
 from random import randint
-from threading import current_thread
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
