@@ -15,6 +15,8 @@ from cpchain.proxy.client import pick_proxy, start_proxy_request, download_proxy
 from cpchain.stress.account import create_test_accounts
 
 order_id = 0
+slave_port = 10000
+kad_port = 20000
 
 class Player:
 
@@ -27,16 +29,20 @@ class Player:
 
     @inlineCallbacks
     def upload_data(self, storage_type, file_path):
+        global slave_port
+        global kad_port
 
         storage_plugin = "cpchain.storage_plugin."
         module = importlib.import_module(storage_plugin + storage_type)
         s = module.Storage()
         data_type = s.data_type
 
-        param = yield s.user_input_param()
+        slave_port += 1
+        param = yield s.user_input_param(slave_port)
         param['proxy_id'] = param['proxy_id'][0] # should be selected by UI
 
-        storage_path = yield s.upload_data(file_path, param)
+        kad_port += 1
+        storage_path = yield s.upload_data(file_path, param, kad_port)
 
         return {
             'type': storage_type,
@@ -47,8 +53,10 @@ class Player:
     @inlineCallbacks
     def mockup_order(self, storage, buyer):
         global order_id
+        global slave_port
 
-        proxy_list = yield pick_proxy()
+        slave_port += 1
+        proxy_list = yield pick_proxy(slave_port)
         proxy_id = proxy_list[0]
 
         if not proxy_id:
@@ -70,6 +78,7 @@ class Player:
 
     @inlineCallbacks
     def send_seller_message(self, order):
+        global kad_port
 
         message = Message()
         seller_data = message.seller_data
@@ -94,9 +103,11 @@ class Player:
             sign_message.data
             )
 
+        kad_port += 1
+
         proxy_id = order['proxy']
 
-        error, AES_key, urls = yield start_proxy_request(sign_message, proxy_id)
+        error, AES_key, urls = yield start_proxy_request(sign_message, proxy_id, kad_port)
 
         if error:
             print(error)
@@ -106,6 +117,7 @@ class Player:
 
     @inlineCallbacks
     def send_buyer_message(self, order):
+        global kad_port
 
         message = Message()
         buyer_data = message.buyer_data
@@ -124,9 +136,11 @@ class Player:
             sign_message.data
             )
 
+        kad_port += 1
+
         proxy_id = order['proxy']
 
-        error, AES_key, urls = yield start_proxy_request(sign_message, proxy_id)
+        error, AES_key, urls = yield start_proxy_request(sign_message, proxy_id, kad_port)
 
         if error:
             print(error)
@@ -176,7 +190,7 @@ def do_one_order(seller, buyer):
     yield buyer.send_buyer_message(order)
 
 def signal_handler(*args):
-    sys.exit(1)
+    os._exit(0)
 
 def install_signal():
     for sig in (SIGABRT, SIGILL, SIGINT, SIGSEGV, SIGTERM):
@@ -187,8 +201,8 @@ def main():
     install_signal()
 
     account_num = 10
-    concurrence_num = 1
-    loop_num = 1
+    concurrence_num = 10
+    loop_num = 2
 
     ds = []
 

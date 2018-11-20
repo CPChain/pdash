@@ -112,10 +112,10 @@ class ProxyClient:
         self.trans.disconnect()
 
 
-def pick_proxy():
-    return Slave().pick_peer()
+def pick_proxy(port=None):
+    return Slave().pick_peer(port)
 
-def start_proxy_request(sign_message, proxy_id):
+def start_proxy_request(sign_message, proxy_id, port=None):
     '''send request to proxy server
 
     Args:
@@ -144,12 +144,12 @@ def start_proxy_request(sign_message, proxy_id):
         else:
             d.callback(('failed to get proxy addr', None, None))
 
-    get_proxy(proxy_id).addCallback(get_proxy_done)
+    get_proxy(proxy_id, port).addCallback(get_proxy_done)
 
     return d
 
-def get_proxy(proxy_id):
-    return KadNode().get_peer(proxy_id)
+def get_proxy(proxy_id, port=None):
+    return KadNode().get_peer(proxy_id, port)
 
 def concat_url(ip, proxy_reply):
 

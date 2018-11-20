@@ -107,13 +107,13 @@ class KadNode(Server):
 
         return d
 
-    def get_peer(self, proxy_id):
+    def get_peer(self, proxy_id, port=None):
 
         boot_nodes = []
         nodes = (config.proxy.boot_nodes.split())
         for node in nodes:
-            addr, port = node.split(':')
-            boot_nodes.append((str(addr), int(port)))
+            _addr, _port = node.split(':')
+            boot_nodes.append((str(_addr), int(_port)))
 
         d = defer.Deferred()
 
@@ -138,7 +138,7 @@ class KadNode(Server):
                     )
                 ).add_done_callback(bootstrap_done)
 
-        port = config.proxy.server_kad_port + 2
+        port = port or config.proxy.server_kad_port + 2
         self.listen(port).addCallback(listen_done)
 
         return d
