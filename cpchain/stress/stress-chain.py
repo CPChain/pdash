@@ -202,9 +202,9 @@ def install_signal():
 def main():
     install_signal()
 
-    account_num = 10
-    concurrence_num = 10
-    loop_num = 2
+    account_num = 100
+    concurrence_num = 100
+    loop_num = 10
 
     ds = []
 

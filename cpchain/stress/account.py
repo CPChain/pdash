@@ -146,6 +146,6 @@ def create_test_accounts(account_num, passphrase=_passphrase):
 
 if __name__ == '__main__':
 
-    create_test_accounts(3)
+    create_test_accounts(100)
 
     reactor.run()
