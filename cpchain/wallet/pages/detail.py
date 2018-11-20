@@ -38,7 +38,7 @@ from cpchain.wallet.pages import (Binder, HorizontalLine, abs_path, app,
                                   get_icon, get_pixm, load_stylesheet,
                                   main_wnd, wallet, qml_path)
 from cpchain.wallet.simpleqt import Signals, Component, component
-from cpchain.wallet.simpleqt.basic import Button
+from cpchain.wallet.simpleqt.basic import Builder, Button
 from cpchain.wallet.simpleqt.decorator import page
 from cpchain.wallet.simpleqt.model import Model
 from cpchain.wallet.simpleqt.page import Page
@@ -309,14 +309,17 @@ class ProductDetail(Page):
 
         # category
         catbox = QHBoxLayout()
+        catbox.setSpacing(5)
+        type_text = 'Batch' if self.ptype == 'file' else 'Streaming'
         icon = self.icon.value
         if icon:
             iconL = QLabel()
-            iconL.setMaximumWidth(20)
-            iconL.setMaximumHeight(20)
             iconL.setObjectName('icon')
             iconL.setPixmap(QPixmap(icon))
             catbox.addWidget(iconL)
+        type_wid = Builder().text(type_text).name('type_text').style("color: #444;font-size:14").build()
+        catbox.addWidget(type_wid)
+        catbox.addSpacing(10)
         category = Label(self.category)
         category.setObjectName('category')
         category.setAlignment(Qt.AlignCenter)

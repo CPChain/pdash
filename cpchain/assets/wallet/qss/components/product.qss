@@ -1,0 +1,56 @@
+QWidget#main_product {
+    background:#ffffff;
+    border:1px solid #dddddd;
+    border-radius:5px;
+}
+
+QLabel#image {
+    border:1px solid #dddddd;
+    border-radius:5px;
+}
+QLabel#name {
+    font-size:14px;
+    color:#000000;
+    text-align:left;
+    background: transparent
+}
+
+QLabel#vline {
+    color: #dadada;
+    padding-bottom: 2px;
+}
+
+#category {
+    text-align: center;
+    border:1px solid #dadada;
+    border-radius:3px;
+    font-size:10px;
+    color:#999;
+    text-align:center;
+    padding: 3px 4px;
+    background: transparent
+}
+
+#cpc_unit, #sales, #sales_unit{
+    font-size:12px;
+    color:#777777;
+    padding-top: 0px;
+    background: transparent
+}
+
+#timestamp {
+    font-size:12px;
+    color:#777777;
+    background: transparent
+}
+
+#cpc {
+    font-size:18px;
+    color:#000000;
+    text-align:left;
+    background: transparent
+}
+
+QHBoxLayout#hbox1::hover {
+    color:#4a90e2;
+}

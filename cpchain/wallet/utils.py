@@ -77,3 +77,18 @@ def load_fonts(path):
     from PyQt5.QtGui import QGuiApplication, QFontDatabase, QFont
     for font in glob.glob('{}/*'.format(path)):
         font_id = QFontDatabase.addApplicationFont(font)
+
+def _handle_keyboard_interrupt():
+    def sigint_handler(*_):
+        # _Application.quit()
+        pass
+
+    import signal
+    signal.signal(signal.SIGINT, sigint_handler)
+
+    from PyQt5.QtCore import QTimer
+
+    _handle_keyboard_interrupt.timer = QTimer()
+    timer = _handle_keyboard_interrupt.timer
+    timer.start(300)
+    timer.timeout.connect(lambda: None)

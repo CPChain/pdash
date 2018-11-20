@@ -178,6 +178,11 @@ class PublishProduct(QScrollArea):
         layout.setAlignment(Qt.AlignTop)
         layout.setSpacing(21)
         type_label = 'Batch' if self.type_ == 'Batch' else 'Streaming'
+        icon_dict = {
+            'file': 'icons/icon_batch@2x.png',
+            'stream': 'icons/icon_stream@2x.png',
+        }
+        type_icon = abs_path(icon_dict['file']) if self.type_ == 'Batch' else abs_path(icon_dict['stream'])
         # Title
         title = QLabel('Publish {} Data'.format(type_label))
         title.setObjectName('title')
@@ -188,7 +193,11 @@ class PublishProduct(QScrollArea):
         layout.addLayout(self.gen_row("Name:", Input.Builder(width=536, height=30).model(self.name).build()))
 
         # Type
-        layout.addLayout(self.gen_row('Type:', QLabel('{} data'.format(type_label))))
+        type_icon_wid = QLabel()
+        type_pix = QPixmap(type_icon)
+        type_pix = type_pix.scaled(20, 20)
+        type_icon_wid.setPixmap(type_pix)
+        layout.addLayout(self.gen_row('Type:', type_icon_wid, 7, QLabel('{} data'.format(type_label))))
 
         # Category
         category = [

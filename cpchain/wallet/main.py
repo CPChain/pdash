@@ -10,16 +10,13 @@ import sys
 import time
 from threading import Thread
 
-sys.path.append('.')
-
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QHBoxLayout,
                              QMainWindow, QVBoxLayout, QWidget)
 from twisted.internet.task import LoopingCall
-from twisted.logger import globalLogBeginner, textFileLogObserver
-from twisted.web import client
+
 
 import sha3
 from cpchain.account import Account
@@ -30,24 +27,17 @@ from cpchain.utils import config, reactor
 from cpchain.wallet import events, utils
 # widgets
 from cpchain.wallet.components.sidebar import SideBar
-from cpchain.wallet.pages import (abs_path, app, load_stylesheet, wallet)
+from cpchain.wallet.pages import (abs_path, app, load_stylesheet, wallet, create_rsa_key, init_font)
 from cpchain.wallet.pages.header import Header
 from cpchain.wallet.pages.login import LoginWindow
 from cpchain.wallet.router import Router
 from cpchain.wallet.simpleqt import MessageBox, event
 
-client._HTTP11ClientFactory.noisy = False
-
-globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stdout)])
 logger = logging.getLogger(__name__)
 
 _Application = QApplication(sys.argv)
 
-# load fonts
-utils.load_fonts(abs_path('fonts'))
-font_name = "Microsoft Sans Serif" if app.is_windows() else "SF UI Display"
-font = QFont(font_name)
-_Application.setFont(font)
+init_font(_Application)
 
 
 sidebarMenu = [
@@ -153,22 +143,6 @@ class MainWindow(QMainWindow):
         os._exit(0)
 
 
-def _handle_keyboard_interrupt():
-    def sigint_handler(*_):
-        # _Application.quit()
-        pass
-
-    import signal
-    signal.signal(signal.SIGINT, sigint_handler)
-
-    from PyQt5.QtCore import QTimer
-
-    _handle_keyboard_interrupt.timer = QTimer()
-    timer = _handle_keyboard_interrupt.timer
-    timer.start(300)
-    timer.timeout.connect(lambda: None)
-
-
 def __unlock():
     try:
         web3.personal.unlockAccount(app.addr, app.pwd)
@@ -199,7 +173,7 @@ def initialize_system():
 
 def buildMainWnd():
     main_wnd = MainWindow(reactor)
-    _handle_keyboard_interrupt()
+    utils._handle_keyboard_interrupt()
     return main_wnd
 
 
@@ -299,17 +273,9 @@ def init_handlers():
     event.register(events.SEARCH, search)
 
 
-def create_rsa_key():
-    path = os.path.expanduser('~/.cpchain')
-    password_file = path + '/password'
-    key_file = path + '/private_key.pem'
-    config.conf['wallet']['rsa_private_key_password_file'] = password_file
-    config.conf['wallet']['rsa_private_key_file'] = key_file
-    # if private.pem
-    if not os.path.exists(password_file) or not os.path.exists(key_file):
-        salt = ''.join(random.sample(string.ascii_letters + string.digits, 20))
-        RSACipher.generate_private_key(password=salt.encode())
-
+@app.event.register(app.events.PASSWORD_ERROR)
+def password_error(_):
+    app.msgbox.error("Password mismatch")
 
 if __name__ == '__main__':
     app.start_at = time.time()
@@ -329,7 +295,6 @@ if __name__ == '__main__':
 
     app.msgbox = MessageBox()
     app.msgbox.parent = app.main_wnd
-    app.msgbox1 = MessageBox
 
     Thread(target=reactor.run, args=(False,)).start()
 

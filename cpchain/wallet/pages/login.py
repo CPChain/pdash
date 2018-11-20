@@ -365,7 +365,7 @@ class ImportWindow(MyWindow):
         self.file = None
         super().__init__(reactor, parent)
         self.username = UserNameWindow(reactor, self)
-        self.error_signal.connect(lambda: app.msgbox.error("Password mismatch"))
+        # self.error_signal.connect(lambda: app.msgbox.error("Password mismatch"))
         self.imported.connect(self.onImported)
         @app.event.register(app.events.PASSWORD_ERROR)
         def password_error(_):

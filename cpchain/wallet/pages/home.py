@@ -1,7 +1,7 @@
 from PyQt5 import QtCore
 from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 from PyQt5.QtQuickWidgets import QQuickWidget
-from PyQt5.QtWidgets import QVBoxLayout
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout
 
 from cpchain import account
 from cpchain.wallet.pages import abs_path, app, qml_path, wallet
@@ -98,6 +98,17 @@ class Home(Page):
         widget.setSource(QtCore.QUrl(self.qml))
         layout.addWidget(widget)
         pdsWidget = ProductList(self.products)
-        layout.addWidget(pdsWidget)
+
+        width = 750
+        pdsWidget.setMinimumWidth(width)
+        pdsWidget.setMaximumWidth(width)
+
+        product_layout = QHBoxLayout(self)
+        product_layout.setContentsMargins(0, 0, 0, 0)
+        product_layout.addSpacing(30)
+        product_layout.addWidget(pdsWidget)
+        product_layout.addStretch(1)
+
+        layout.addLayout(product_layout)
         layout.addStretch(1)
         return layout

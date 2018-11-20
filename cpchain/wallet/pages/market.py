@@ -32,6 +32,7 @@ from cpchain.wallet.components.product_list import ProductList
 from cpchain.wallet.components.upload import UploadDialog
 from cpchain.wallet.components.loading import Loading
 
+from cpchain.wallet.simpleqt.basic import Builder
 from cpchain.wallet.simpleqt.page import Page
 from cpchain.wallet.simpleqt.decorator import page
 from cpchain.wallet.simpleqt.widgets.label import Label
@@ -81,6 +82,11 @@ class MarketPage(Page):
         banner.setObjectName('banner')
 
         layout.addWidget(banner)
+
+        # add market title
+        layout.addSpacing(15)
+        layout.addWidget(Builder().text("Market Products").style("font-size:24px;color:#333333;").build())
+
         layout.addSpacing(15)
         self.loading = Loading(text='Loading')
         layout.addWidget(self.loading)
@@ -104,6 +110,8 @@ class MarketPage(Page):
         _layout = QVBoxLayout()
         _layout.setAlignment(Qt.AlignTop)
         _layout.addWidget(scroll)
+        # add spacing with bottom
+        _layout.addSpacing(30)
         wid.setStyleSheet("""
         """)
         return _layout
