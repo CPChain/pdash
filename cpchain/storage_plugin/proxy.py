@@ -9,17 +9,17 @@ class Storage:
     data_type = 'file'
 
     @defer.inlineCallbacks
-    def user_input_param(self):
-        proxy_id = yield pick_proxy()
+    def user_input_param(self, port=None):
+        proxy_id = yield pick_proxy(port)
         return {
             'proxy_id': proxy_id
             }
 
     @defer.inlineCallbacks
-    def upload_data(self, src, dst):
+    def upload_data(self, src, dst, port=None):
         proxy_id = dst['proxy_id']
 
-        proxy_addr = yield get_proxy(proxy_id)
+        proxy_addr = yield get_proxy(proxy_id, port)
 
         if proxy_addr:
             # proxy addr format: (ip, ctrl_port, file_port, stream_ws_port, stream_restful_port)

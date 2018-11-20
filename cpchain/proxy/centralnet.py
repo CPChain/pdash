@@ -206,8 +206,8 @@ class Slave:
     def stop(self):
         self.trans.stopListening()
 
-    def pick_peer(self):
-        port = config.proxy.server_slave_port + 2
+    def pick_peer(self, port=None):
+        port = port or config.proxy.server_slave_port + 2
         self.trans = reactor.listenUDP(port, self.protocol)
 
         def stop_listening(response):
