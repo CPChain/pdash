@@ -4,7 +4,7 @@ import importlib
 from signal import signal, SIGABRT, SIGILL, SIGINT, SIGSEGV, SIGTERM
 from random import randint
 
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import DeferredList, inlineCallbacks
 
 from cpchain.utils import reactor, join_with_rc, config
 
@@ -17,7 +17,6 @@ from cpchain.stress.account import create_test_accounts
 order_id = 0
 
 class Player:
-    global order_id
 
     def __init__(self, eth_account):
         self.private_key = ECCipher.create_private_key(eth_account.privateKey)
@@ -28,12 +27,15 @@ class Player:
 
     @inlineCallbacks
     def upload_data(self, storage_type, file_path):
+
         storage_plugin = "cpchain.storage_plugin."
         module = importlib.import_module(storage_plugin + storage_type)
         s = module.Storage()
         data_type = s.data_type
+
         param = yield s.user_input_param()
         param['proxy_id'] = param['proxy_id'][0] # should be selected by UI
+
         storage_path = yield s.upload_data(file_path, param)
 
         return {
@@ -44,6 +46,7 @@ class Player:
 
     @inlineCallbacks
     def mockup_order(self, storage, buyer):
+        global order_id
 
         proxy_list = yield pick_proxy()
         proxy_id = proxy_list[0]
@@ -92,6 +95,7 @@ class Player:
             )
 
         proxy_id = order['proxy']
+
         error, AES_key, urls = yield start_proxy_request(sign_message, proxy_id)
 
         if error:
@@ -138,6 +142,38 @@ class Player:
 
                 yield download_proxy_file(urls[0], file_path)
 
+players = {}
+
+@inlineCallbacks
+def job_loop(loop_num, accounts):
+
+    test_players = []
+    for account in accounts:
+        if account in players:
+            player = players[account]
+        else:
+            player = Player(account)
+            players[account] = player
+
+        test_players.append(player)
+
+    seller = test_players[0]
+    buyer = test_players[1]
+
+    while loop_num:
+        yield do_one_order(seller, buyer)
+        loop_num -= 1
+
+
+@inlineCallbacks
+def do_one_order(seller, buyer):
+    storage = yield seller.upload_data('proxy', '/bin/bash')
+
+    order = yield seller.mockup_order(storage, buyer)
+
+    yield seller.send_seller_message(order)
+
+    yield buyer.send_buyer_message(order)
 
 def signal_handler(*args):
     sys.exit(1)
@@ -150,20 +186,40 @@ def install_signal():
 def main():
     install_signal()
 
-    account_num = 5
+    account_num = 10
+    concurrence_num = 1
+    loop_num = 1
+
+    ds = []
 
     accounts = yield create_test_accounts(account_num)
 
-    seller = Player(accounts[randint(0, account_num - 1)])
-    buyer = Player(accounts[randint(0, account_num - 1)])
+    while concurrence_num:
+        test_accounts = []
+        for i in range(0, 2):
+            account = accounts[randint(0, account_num - 1)]
+            test_accounts.append(account)
 
-    storage = yield seller.upload_data('proxy', '/bin/bash')
+        d = job_loop(loop_num, test_accounts)
+        ds.append(d)
 
-    order = yield seller.mockup_order(storage, buyer)
+        concurrence_num -= 1
 
-    yield seller.send_seller_message(order)
+    def handle_result(result):
+        success_num = 0
+        failure_num = 0
+        for (success, value) in result:
+            if success:
+                success_num += 1
+            else:
+                print('job failure with exception: %s' % value.getErrorMessage())
+                failure_num += 1
 
-    yield buyer.send_buyer_message(order)
+        print('job stat: %d succeed, %d failed.' % (success_num, failure_num))
+
+    if ds:
+        dl = DeferredList(ds, consumeErrors=True)
+        dl.addCallback(handle_result)
 
 
 if __name__ == '__main__':
