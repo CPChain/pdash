@@ -1,6 +1,4 @@
-import sys
 import time
-from signal import signal, SIGABRT, SIGILL, SIGINT, SIGSEGV, SIGTERM
 from random import randint
 
 from cryptography.hazmat.backends import default_backend
@@ -20,6 +18,7 @@ from cpchain.chain.models import OrderInfo
 
 from cpchain.stress.account import create_test_accounts, _passphrase
 from cpchain.stress.debug import functrace
+from cpchain.stress.signal import install_signal
 
 @functrace
 def generate_rsa_public_key():
@@ -189,13 +188,6 @@ def do_one_order(seller, buyer, proxy):
         print(tx_receipt)
         return False
     return True
-
-def signal_handler(*args):
-    sys.exit(1)
-
-def install_signal():
-    for sig in (SIGABRT, SIGILL, SIGINT, SIGSEGV, SIGTERM):
-        signal(sig, signal_handler)
 
 @inlineCallbacks
 def main():

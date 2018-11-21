@@ -1,7 +1,6 @@
 import sys, os, json
 import importlib
 
-from signal import signal, SIGABRT, SIGILL, SIGINT, SIGSEGV, SIGTERM
 from random import randint
 
 from twisted.internet.defer import DeferredList, inlineCallbacks
@@ -13,6 +12,7 @@ from cpchain.proxy.msg.trade_msg_pb2 import Message, SignMessage
 from cpchain.proxy.client import pick_proxy, start_proxy_request, download_proxy_file
 
 from cpchain.stress.account import create_test_accounts
+from cpchain.stress.signal import install_signal
 
 order_id = 0
 slave_port = 10000
@@ -188,13 +188,6 @@ def do_one_order(seller, buyer):
     yield seller.send_seller_message(order)
 
     yield buyer.send_buyer_message(order)
-
-def signal_handler(*args):
-    os._exit(0)
-
-def install_signal():
-    for sig in (SIGABRT, SIGILL, SIGINT, SIGSEGV, SIGTERM):
-        signal(sig, signal_handler)
 
 @inlineCallbacks
 def main():
