@@ -186,10 +186,13 @@ class MarketClient:
 
     @inlineCallbacks
     def add_product_sales_quantity(self, market_hash):
-        url = self.url + '/product/v1/product/sales_quantity/add/'
+        url = self.url + 'product/v1/product/sales_quantity/add/'
         payload = {'market_hash': market_hash}
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
                   'Content-Type': 'application/json'}
+        logger.debug("add product sales quantity url: %s" % url)
+        logger.debug("add product sales quantity header: %s" % header)
+        logger.debug("add product sales quantity payload: %s" % payload)
         resp = yield treq.post(url, headers=header, json=payload)
         confirm_info = yield treq.json_content(resp)
         return confirm_info
@@ -198,7 +201,6 @@ class MarketClient:
     @inlineCallbacks
     def upload_file_info(self, hashcode, path, size, product_id, remote_type, remote_uri, name, encrypted_key):
         # fixme: another argument aes_key should be passed and encrypted
-        logger.debug("upload file info to market")
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
                   'Content-Type': 'application/json'}
         data = {"public_key": self.public_key, "hashcode": hashcode, "path": path, "size": size,
@@ -206,11 +208,12 @@ class MarketClient:
                 "remote_type": remote_type, "remote_uri": remote_uri, "is_published": "False",
                 "aes_key": encrypted_key, "market_hash": "hash", "name": name}
         url = self.url + 'user_data/v1/uploaded_file/add/'
-        logger.debug('upload file info payload: %s', data)
         logger.debug('upload file info url: %s', url)
+        logger.debug('upload file info header: %s', header)
+        logger.debug('upload file info payload: %s', data)
         resp = yield treq.post(url, headers=header, json=data, persistent=False)
         confirm_info = yield treq.json_content(resp)
-        logger.debug('upload file info to market: %s', confirm_info)
+        logger.debug('upload file info response: %s', confirm_info)
         return confirm_info['status']
 
 
@@ -221,12 +224,12 @@ class MarketClient:
                   'Content-Type': 'application/json'}
         data = {"client_id": product_id, "market_hash": market_hash, "is_published": True}
         url = self.url + 'user_data/v1/uploaded_file/update/'
-        logger.debug('upload file info payload: %s', data)
-        logger.debug('upload file info url: %s', url)
+        logger.debug('update file info payload: %s', data)
+        logger.debug('update file info url: %s', url)
         logger.debug('product id: %s', product_id)
         resp = yield treq.post(url, headers=header, json=data, persistent=False)
         confirm_info = yield treq.json_content(resp)
-        logger.debug('upload file info to market confirm: %s', confirm_info)
+        logger.debug('update file info to market response: %s', confirm_info)
         return confirm_info['status']
 
 
@@ -250,9 +253,8 @@ class MarketClient:
         url = utils.build_url(self.url + "comment/v1/comment/list/", {'market_hash': market_hash})
         logger.debug(url)
         resp = yield treq.get(url, headers=header)
-        logger.debug(resp)
         comment_info = yield treq.json_content(resp)
-        logger.debug('upload file info to market confirm: %s', comment_info)
+        logger.debug('query comment by hash response: %s', comment_info)
         return comment_info['data']
 
 
@@ -266,7 +268,7 @@ class MarketClient:
 
         resp = yield treq.post(url, headers=header, json=data, persistent=False)
         comment_info = yield treq.json_content(resp)
-        logger.debug('upload file info to market confirm: %s', comment_info)
+        logger.debug('add comment by hash response: %s', comment_info)
         return comment_info['status']
 
     @inlineCallbacks
@@ -276,27 +278,27 @@ class MarketClient:
                   'Content-Type': 'application/json'}
         data = {"client_id": product_id}
         url = self.url + 'user_data/v1/uploaded_file/delete/'
-        logger.debug('upload file info payload: %s', data)
-        logger.debug('upload file info url: %s', url)
+        logger.debug('delete file info payload: %s', data)
+        logger.debug('delete file info url: %s', url)
         logger.debug('product id: %s', product_id)
         resp = yield treq.post(url, headers=header, json=data, persistent=False)
         confirm_info = yield treq.json_content(resp)
-        logger.debug('upload file info to market confirm: %s', confirm_info)
+        logger.debug('delete file info to market confirm: %s', confirm_info)
         return confirm_info['status']
 
     @inlineCallbacks
     def add_follow_seller(self, seller_public_key=""):
-        logger.debug("add seller following info to market")
+        logger.debug("add following seller to market")
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token,
                   'Content-Type': 'application/json'}
         logger.debug(self.public_key)
         data = {'public_key': self.public_key, 'seller_public_key': seller_public_key}
         url = self.url + 'product/v1/my_seller/subscribe/'
-        logger.debug('upload file info payload: %s', data)
-        logger.debug('upload file info url: %s', url)
+        logger.debug('add following seller payload: %s', data)
+        logger.debug('add following seller url: %s', url)
         resp = yield treq.post(url, headers=header, json=data, persistent=False)
         confirm_info = yield treq.json_content(resp)
-        logger.debug('upload file info to market confirm: %s', confirm_info)
+        logger.debug('add following seller to market confirm: %s', confirm_info)
         return confirm_info['status']
 
     @inlineCallbacks
@@ -306,11 +308,11 @@ class MarketClient:
         logger.debug(self.public_key)
         data = {'public_key': self.public_key, 'tag': tag}
         url = self.url + 'product/v1/my_tag/subscribe/'
-        logger.debug('upload file info payload: %s', data)
-        logger.debug('upload file info url: %s', url)
+        logger.debug('add following tag payload: %s', data)
+        logger.debug('add following tag url: %s', url)
         resp = yield treq.post(url, headers=header, json=data, persistent=False)
         confirm_info = yield treq.json_content(resp)
-        logger.debug('upload file info to market confirm: %s', confirm_info)
+        logger.debug('add following tag to market confirm: %s', confirm_info)
         return confirm_info['status']
 
     @inlineCallbacks
@@ -320,11 +322,11 @@ class MarketClient:
         logger.debug(self.public_key)
         data = {'market_hash': market_hash}
         url = self.url + 'product/v1/product/hide/'
-        logger.debug('upload file info payload: %s', data)
-        logger.debug('upload file info url: %s', url)
+        logger.debug('hide product payload: %s', data)
+        logger.debug('hide product url: %s', url)
         resp = yield treq.post(url, headers=header, json=data, persistent=False)
         confirm_info = yield treq.json_content(resp)
-        logger.debug('upload file info to market confirm: %s', confirm_info)
+        logger.debug('hide product to market confirm: %s', confirm_info)
         return confirm_info['status']
 
 
@@ -337,7 +339,7 @@ class MarketClient:
         resp = yield treq.get(url, headers=header)
         logger.debug(resp)
         comment_info = yield treq.json_content(resp)
-        logger.debug('upload file info to market confirm: %s', comment_info)
+        logger.debug('query by following tag to market confirm: %s', comment_info)
         return comment_info['data']
 
 
@@ -350,7 +352,7 @@ class MarketClient:
         resp = yield treq.get(url, headers=header)
         logger.debug(resp)
         comment_info = yield treq.json_content(resp)
-        logger.debug('query by following tag confirm: %s', comment_info)
+        logger.debug('query by following seller confirm: %s', comment_info)
         return comment_info['data']
 
     @inlineCallbacks
@@ -391,7 +393,6 @@ class MarketClient:
         header = {"MARKET-KEY": self.public_key, "MARKET-TOKEN": self.token, 'Content-Type': 'application/json'}
         url = utils.build_url(url, {'address': address})
         resp = yield treq.get(url, headers=header, persistent=False)
-        print(resp)
         data_info = yield treq.json_content(resp)
         return data_info
 
