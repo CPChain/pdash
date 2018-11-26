@@ -35,7 +35,7 @@ def build_url(url, values):
             values['timestamp'] = str(time.time())
     else:
         values = dict(timestamp=str(time.time()))
-    data = urllib.parse.urlencode(values)
+    data = urllib.parse.urlencode(query=values, quote_via=urllib.parse.quote)
     new_url = url + "?" + data
     return new_url
 
