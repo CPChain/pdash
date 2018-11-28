@@ -24,7 +24,7 @@ if __name__ == "__main__":
     from cpchain.chain.utils import default_w3 as web3
 
     if len(sys.argv) != 2:
-        print("Need pre-funded account as sender, i.e. 22114f40ed222e83bbd88dc6cbb3b9a136299a23")
+        print("Need pre-funded account as sender, i.e. 4a8f38c0d4b398ae3253689808454c88e8a16376")
         sys.exit(1)
 
     account = web3.toChecksumAddress(sys.argv[1])
