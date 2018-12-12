@@ -33,6 +33,7 @@ See the demo at [youtube](https://www.youtube.com/watch?v=L9nGxp9HbYE).
         - [Charge server](#charge-server)
         - [Configuration](#chain-configuration)
     - [Market deploy](#market-deploy)
+        - [Mysql database](#mysql-database)
         - [Django web service](#django-web-service)
         - [Elastic search](#elastic-search)
         - [Kibana](#kibana)
@@ -163,6 +164,23 @@ charge_server = 'http://192.168.0.132:8400'
 ```
 
 ## Market deploy
+
+### Mysql database
+Market uses mysql database, so we need to start mysql daemon first.
+
+create mysql configuration file ~/.cpchain/.mysql_env as following:
+```
+MYSQL_ROOT_PASSWORD=<passwd>
+MYSQL_DATABASE=<database name>
+MYSQL_USER=<username>
+MYSQL_PASSWORD=<passwd>
+```
+
+run mysql in docker
+```
+cd mysql
+docker-compose up -d
+```
 
 ### Django web service
 Market is built on django + rest_framework infrastructure, so just start the django app as following:
