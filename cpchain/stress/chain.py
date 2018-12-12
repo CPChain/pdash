@@ -1,6 +1,8 @@
 import time
 from random import randint
 
+from twisted.internet.threads import deferToThread
+
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
@@ -129,28 +131,33 @@ class Player:
 
 def do_one_order(seller, buyer, proxy):
 
-    product = seller.mockup_product()
-    order_id = buyer.buyer_place_order(product, proxy.account.address)
-    if order_id < 0:
-        print('buyer %s failed to place order!' % buyer.account.address)
-        return False
-    status = seller.seller_confirm_order(order_id)
-    if status == 0:
-        print('seller %s failed to confirm order' % seller.account.address)
-        return False
-    status = proxy.proxy_claim_fetched(order_id)
-    if status == 0:
-        print('proxy %s failed to claim fetched' % proxy.account.address)
-        return False
-    status = proxy.proxy_claim_delivered(order_id)
-    if status == 0:
-        print('proxy %s failed to claim delivered' % proxy.account.address)
-        return False
-    status = buyer.buyer_confirm_order(order_id)
-    if status == 0:
-        print('buyer %s failed to confirm order' % buyer.account.address)
-        return False
-    return True
+    def one_order(seller, buyer, proxy):
+
+        product = seller.mockup_product()
+        order_id = buyer.buyer_place_order(product, proxy.account.address)
+        if order_id < 0:
+            print('buyer %s failed to place order!' % buyer.account.address)
+            return False
+        status = seller.seller_confirm_order(order_id)
+        if status == 0:
+            print('seller %s failed to confirm order' % seller.account.address)
+            return False
+        status = proxy.proxy_claim_fetched(order_id)
+        if status == 0:
+            print('proxy %s failed to claim fetched' % proxy.account.address)
+            return False
+        status = proxy.proxy_claim_delivered(order_id)
+        if status == 0:
+            print('proxy %s failed to claim delivered' % proxy.account.address)
+            return False
+        status = buyer.buyer_confirm_order(order_id)
+        if status == 0:
+            print('buyer %s failed to confirm order' % buyer.account.address)
+            return False
+        return True
+
+    return deferToThread(one_order, seller, buyer, proxy)
+
 
 if __name__ == '__main__':
 
